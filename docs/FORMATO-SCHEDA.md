@@ -1,6 +1,6 @@
 # Formato scheda locale — v8
 
-Il backup è un singolo JSON UTF-8. Non è un formato D&D Beyond. Il prototipo gestisce un solo personaggio attivo; per conservarne altri esportare i rispettivi file prima di sostituirlo.
+Il backup individuale è un singolo JSON UTF-8. Non è un formato D&D Beyond. Dalla versione 0.9 l'app conserva una raccolta di fino a 20 personaggi, uno attivo alla volta. Lo schema individuale rimane v8; il formato della raccolta è descritto in fondo al documento.
 
 | Campo | Significato e limiti |
 | --- | --- |
@@ -28,7 +28,7 @@ Il backup è un singolo JSON UTF-8. Non è un formato D&D Beyond. Il prototipo g
 
 L'importazione rifiuta versioni sconosciute, campi necessari mancanti e valori fuori limite prima di sostituire lo stato. I campi sconosciuti non sono conservati. Il file è limitato a 250 KB dall'interfaccia. Nome e titolo vengono trattati come testo.
 
-I backup v1/v2 ricevono il profilo originale di Elian e conservano PF, condizioni, impostazioni dei dadi e, per v2, consumi ed equipaggiamento. I backup v3 conservano il profilo personalizzato. Tutte le versioni precedenti alla v4 inizializzano le competenze a zero e lo storico vuoto; non si inferiscono competenze dalla classe. Non cambiare la chiave localStorage durante la migrazione.
+I backup v1/v2 ricevono il profilo originale di Elian e conservano PF, condizioni, impostazioni dei dadi e, per v2, consumi ed equipaggiamento. I backup v3 conservano il profilo personalizzato. Tutte le versioni precedenti alla v4 inizializzano le competenze a zero e lo storico vuoto; non si inferiscono competenze dalla classe. La migrazione della raccolta conserva la chiave localStorage storica senza modificarla.
 
 ## Valori derivati
 
@@ -40,7 +40,7 @@ I backup v1/v2 ricevono il profilo originale di Elian e conservano PF, condizion
 - Avvelenato impone svantaggio ad attacchi, prove semplici e abilità; non alle salvezze. Se è selezionato vantaggio, i due si annullano. Il dado libero mantiene la modalità manuale.
 - Il tiro selezionato mantiene il proprio contesto e calcola il bonus al momento del lancio. Per inserire un bonus manuale si passa a “Dado libero”.
 
-Modificare il profilo conserva PF attuali e consumi, limitando i PF al nuovo massimo. Creare un nuovo eroe parte a PF pieni e con l'inventario dimostrativo, previa conferma di sostituzione. L'editor è una funzione dell'app di supporto nel browser: non si propone di inserire un'intera scheda sul piccolo display.
+Modificare il profilo conserva PF attuali e consumi, limitando i PF al nuovo massimo. Creare un nuovo eroe parte a PF pieni e con l'inventario dimostrativo e lo aggiunge alla raccolta. L'editor è una funzione dell'app di supporto nel browser: non si propone di inserire un'intera scheda sul piccolo display.
 
 Questo schema è sperimentale. In futuro serviranno definizioni del personaggio e stato di sessione separati, versione esplicita del regolamento, inventario estensibile e migrazioni dedicate.
 
@@ -51,7 +51,7 @@ Questo schema è sperimentale. In futuro serviranno definizioni del personaggio 
 
 Si registrano prove, salvezze, abilità, dado libero, attacchi e danni. Le pozioni non entrano nello storico dei tiri. Il lancio non riceve un esito automatico di successo/fallimento fuori dall'attacco: per prove e salvezze decide il DM. Un 1 o 20 naturale su una prova non implica un effetto automatico.
 
-Annullare una modifica di PF, inventario, condizione o profilo conserva lo storico dei tiri successivi. Annullare la sostituzione del personaggio tramite creazione o importazione ripristina anche lo storico precedente. Si conserva un solo livello di annullamento, non persistente dopo il riavvio.
+Annullare una modifica di PF, inventario, condizione o profilo conserva lo storico dei tiri successivi. Si conserva un solo livello di annullamento, non persistente dopo il riavvio e azzerato al cambio personaggio. Le operazioni sulla raccolta (creazione, duplicazione, eliminazione e importazione) non rientrano nell'annullamento della singola scheda.
 
 
 ## Magie e capacità (v5)
@@ -120,3 +120,24 @@ La linea di vista è il segmento tra i centri delle due celle. Tutte le celle to
 Se entrambe le pedine sono piazzate, l'attacco con l'arma è disabilitato quando fuori portata o bloccato da muri. **Il DM consente questo attacco** abilita una singola eccezione: il tiro viene marcato `DM` nello storico e l'override viene consumato. La scelta non è salvata e viene azzerata quando cambiano bersaglio o contesto del combattimento. I calcoli dei danni restano invariati.
 
 Se manca una posizione o si usa la CA manuale, distanza e vista sono dichiarate non verificate e si lasciano al DM. Questi controlli riguardano la singola arma dimostrativa, non costituiscono un validatore completo delle regole e non limitano attacchi fuori turno.
+
+## Raccolta personaggi (app 0.9, formato raccolta v1)
+
+```json
+{
+  "type": "pocketdd-library",
+  "version": 1,
+  "activeId": "identita-locale",
+  "characters": [
+    {"id": "identita-locale", "state": {"version": 8, "...": "campi della scheda"}}
+  ]
+}
+```
+
+L'esempio è schematico: `state` deve contenere una scheda completa valida. La raccolta ha da 1 a 20 personaggi, con ID univoci di 1–64 caratteri alfanumerici, trattino o underscore. I nomi possono coincidere. `activeId` deve riferirsi a un elemento esistente. I nuovi ID sono generati con il generatore crittografico del browser. L'importazione della raccolta è limitata a 5.000.000 byte UTF-8 e valida tutte le schede prima di sostituire alcun dato. Le esportazioni contengono schede v8; in lettura sono accettate anche le versioni individuali precedenti.
+
+`src/library.js` gestisce raccolta, validazione e persistenza. La chiave nuova è `pocketdd-library-v1`. Se è assente, viene letta `pocketdd-demo-v1` e il suo personaggio viene inserito nella raccolta con ID `first-hero`. La raccolta viene salvata all'avvio, preservando la chiave storica. Una raccolta esistente ha priorità; se è corrotta non si ripiega sul vecchio salvataggio e non la si sovrascrive con la demo. La UI offre una sessione temporanea, il download del contenuto originale e il ripristino esplicito da una raccolta valida.
+
+Una scrittura confronta il contenuto persistente con quello letto in precedenza per rifiutare i salvataggi di una scheda browser già non aggiornata. Non è sincronizzazione multiplayer né un protocollo di fusione: per recuperare il lavoro temporaneo si esporta la raccolta e si ricarica. In caso di quota esaurita il contenuto persistente precedente resta valido e l'archivio in memoria resta esportabile.
+
+Ogni elemento include l'intero combattimento locale; non collega i personaggi della raccolta come partecipanti dello stesso party. Cambiare personaggio ripristina la sua sessione e azzera solo i controlli temporanei dell'interfaccia. Duplicare conserva anche lo stato corrente del combattimento nella copia indipendente. Eliminare l'attivo seleziona il primo elemento rimanente; eliminare un altro personaggio mantiene la selezione.

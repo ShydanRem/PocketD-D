@@ -2,7 +2,7 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato:** primo prototipo web interattivo. Il firmware ESP32 non è ancora implementato.
+**Stato:** prototipo web interattivo **v0.9**, con raccolta di più personaggi. Il firmware ESP32 non è ancora implementato.
 
 Hardware previsto: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, display touch rotondo da 466 × 466 pixel. La descrizione del produttore fornita dall’utente indica 8 MB di PSRAM, 16 MB di flash e slot microSD integrato, con controller CO5300 e touch CST9217. Pin, driver e prestazioni restano da verificare sugli esempi ufficiali e sul dispositivo.
 
@@ -28,7 +28,7 @@ npm test
 npm run build
 ```
 
-La demo include avatar originale, tre sezioni, prove con modificatore, vantaggio/svantaggio, gestione PF con annullamento, condizione dimostrativa e salvataggio locale. I dati rimangono nel browser; “Ricomincia la demo” li ripristina. Nessun account richiesto. I font remoti sono opzionali e hanno alternative locali. La demo non è una PWA installabile e non garantisce il riavvio offline del browser.
+La demo include cinque sezioni (Eroe, Scheda, Dadi, Azioni, Zaino), avatar personalizzabile, abilità e salvezze, attacchi, risorse manuali e griglia tattica. La raccolta conserva fino a 20 personaggi indipendenti, con selezione, creazione, duplicazione e backup. “Ricomincia” ripristina soltanto il personaggio attivo. I dati rimangono nel browser: esporta la raccolta per conservarla o trasferirla. Nessun account richiesto. I font remoti sono opzionali e hanno alternative locali. La demo non è una PWA installabile e non garantisce il riavvio offline del browser.
 
 Il layout riproduce l'area circolare, ma non dimostra leggibilità o prestazioni sul display reale. Non include Beyond, regole complete o sincronizzazione. Avvelenato applica svantaggio ad attacchi, prove e abilità; le salvezze e il dado libero mantengono la modalità selezionata.
 
@@ -102,3 +102,19 @@ Nella mappa, il pulsante **＋** passa alla vista 5 × 5; le frecce spostano la 
 La vista Arma mostra distanza, portata e presenza di muri sulla linea tra l'eroe e il bersaglio. Un controllo negativo richiede l'override esplicito del DM per un singolo tiro, registrato nello storico. Se mancano le posizioni, il controllo resta manuale. **Personalizza eroe** permette di impostare la portata dell'arma; il backup v8 conserva il valore e legge v1–v7.
 
 Verifica 0.8: 43 test passati (incluse linee geometriche in tutte le direzioni), compilazione e flusso browser dell'HTML autonomo su desktop e mobile 390/320 px. Verificati zoom, bordi, ricentramento dopo movimento, coordinate globali, selezione bersaglio, portata, muri, override consumato/non persistente, modifica della portata e backup. Nessun errore JavaScript rilevato. La precisione touch sul dispositivo fisico resta da verificare.
+
+## Incremento 0.9 — raccolta personaggi
+
+Il selettore sopra il dispositivo cambia il personaggio attivo. **Gestisci personaggi** apre la raccolta con anteprime, livello, PF e combattimento in corso.
+
+- **Nuovo personaggio** aggiunge un eroe senza sostituire quelli esistenti.
+- **Duplica** crea una copia indipendente dell'intera scheda e sessione, utile anche prima di fare esperimenti.
+- **Elimina** richiede conferma; l'ultimo personaggio resta protetto. L'eliminazione non è annullabile.
+- **Aggiungi da backup** legge le schede v1–v8 e le aggiunge come nuovi personaggi, anche se il nome è già presente.
+- **Esporta scheda** conserva il formato individuale v8; **Esporta raccolta** include tutti i personaggi e la selezione attiva. **Ripristina raccolta** sostituisce tutta la raccolta dopo validazione e conferma.
+
+Ogni personaggio conserva PF, avatar, competenze, inventario, magie/capacità, concentrazione, storico, partecipanti, turni e mappa del proprio combattimento locale. Un cambio personaggio azzera risultati temporanei, bersaglio selezionato, override DM e annullamento. Non permette di spostare un tiro in corso su un altro eroe e non costituisce un party condiviso.
+
+Il salvataggio v0.8 viene migrato automaticamente nella nuova raccolta senza cancellare la vecchia chiave. Dati corrotti non vengono sovrascritti: la sessione resta temporanea e permette di scaricare i dati originali. Anche con memoria piena o salvataggio negato si può esportare la raccolta in memoria. Una scheda del browser già non aggiornata non può sovrascrivere il salvataggio più recente di un'altra scheda: viene chiesto di esportare e ricaricare.
+
+Verifica 0.9: **54 test passati**, build riuscita, flussi Chromium desktop/mobile 390/320 px e regressione del combattimento v0.8 passati, senza errori JavaScript. Lo script ripetibile `python scripts/check-library.py` richiede Playwright Python, Chromium in `/usr/bin/chromium` e una build aggiornata; non richiede un server o asset esterni.

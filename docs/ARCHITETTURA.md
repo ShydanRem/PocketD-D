@@ -85,3 +85,5 @@ Incremento 0.5: `src/powers.js` contiene il modello delle risorse manuali separa
 
 
 Incremento 0.8: `src/grid.js` gestisce percorsi, finestre di visualizzazione e geometria delle linee, indipendentemente dal DOM. La vista controlla l'attacco usando gli stessi dati globali anche con zoom attivo. Nessuna acquisizione di dati dal sensore touch fisico o comunicazione ESP32 è ancora implementata.
+
+Incremento 0.9: `src/library.js` contiene il modello della raccolta, separato dalla scheda e dall'interfaccia. Il formato individuale v8 viene riutilizzato senza modificarlo. Ogni personaggio conserva una sessione locale completa; non c'è ancora stato condiviso tra giocatori. La persistenza migra la chiave precedente senza cancellarla e impedisce il fallback distruttivo da dati corrotti. Gli errori di scrittura mantengono esportabile la raccolta in memoria; le schede browser già non aggiornate sono rifiutate prima della scrittura. `src/library.test.js` verifica isolamento, migrazione, validazione e fallimenti; `scripts/check-library.py` verifica i flussi dell'interfaccia e del salvataggio nell'HTML autonomo.
