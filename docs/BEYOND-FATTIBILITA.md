@@ -4,6 +4,8 @@ Verifica del 16 ottobre 2026, sulla base di PocketD-D v0.12. Esito: **il codice 
 
 Requisito confermato dall'utente: importazione diretta dentro PocketD-D, senza Foundry, esportazioni intermedie o servizi MrPrimate obbligatori. MrPrimate è un riferimento tecnico per accesso e conversione. Il fatto che l'utente possieda Foundry non cambia questo requisito.
 
+L'esperienza preferita è avviare l'importazione direttamente dal dispositivo. Se accesso, autenticazione o conversione risultassero troppo complessi sul firmware, è accettata l'importazione dall'app PocketD-D su PC e il successivo trasferimento della scheda al dispositivo. Il PC è quindi un'alternativa accettata, non un requisito definitivo del prodotto.
+
 ## Risultati verificati
 
 Non è emersa una documentazione pubblica di API/OAuth Beyond per questo uso. Nel forum ufficiale una risposta dello staff del 2022, aggiornata nel 2023, escludeva una API pubblica e deroghe per progetti personali: è una posizione storica, non un annuncio del 2026. La documentazione di supporto attuale descrive l'esportazione della scheda in PDF, non un contratto di esportazione JSON per sviluppatori. [Risposta ufficiale](https://www.dndbeyond.com/forums/d-d-beyond-general/d-d-beyond-feedback/148262-can-i-use-the-api-for-free), [esportazione PDF](https://dndbeyond-support.wizards.com/hc/en-us/articles/7747193980820-Character-Header).
@@ -22,6 +24,18 @@ Entrambi dichiarano MIT: eventuali porzioni di codice riutilizzate devono conser
 I termini generali Wizards, richiamati da Beyond, contengono nella sezione 2.2 restrizioni su raccolta automatizzata e connessioni di terzi non autorizzate. La diffusione di MrPrimate non dimostra un'autorizzazione applicabile a PocketD-D. Questo resta un vincolo da chiarire prima di distribuire un connettore diretto. La fattibilità tecnica e l'autorizzazione del servizio sono questioni distinte; la licenza MIT del proxy non risolve la seconda. [Termini Beyond, aggiornati il 25 giugno 2026](https://www.dndbeyond.com/en/terms-conditions), [termini Wizards §2.2](https://company.wizards.com/en/legal/terms).
 
 ## Percorso diretto e codice di riferimento
+
+### Dispositivo e PC
+
+| Modalità | Obiettivo e verifica necessaria |
+| --- | --- |
+| Dispositivo → Beyond tramite Wi-Fi | Esperienza preferita per una scheda pubblica, se praticabile. Verificare HTTPS/TLS, dimensione e parsing delle risposte, conversione dei valori, input del codice/URL e salvataggio recuperabile. Non ancora implementata o provata sull'hardware. |
+| Dispositivo → backend PocketD-D → Beyond | Possibile importazione comandata dal dispositivo, con conversione svolta dal nostro servizio. Non equivale all'accesso autonomo: richiederebbe rete e backend disponibile. Da valutare se il firmware non può gestire tutto. |
+| App PocketD-D su PC → Beyond → trasferimento al dispositivo | Alternativa accettata. Consente di verificare accesso e calcoli prima della disponibilità dell'hardware; il metodo di trasferimento USB/Wi-Fi resta da definire e provare. |
+
+L'importazione autonoma dal dispositivo e quella comandata dal dispositivo attraverso un backend sono due possibilità distinte, entrambe ancora da verificare. Per le schede private rimane aperto il flusso di autenticazione. I vincoli CORS riguardano il browser; nel firmware occorre invece verificare trasporto HTTPS, risorse e gestione degli accessi.
+
+Il primo prototipo di accesso e conversione può essere verificato sul PC. Si manterranno separati lettura remota, normalizzazione e formato locale, per valutare in seguito quali parti eseguire sul dispositivo. Una volta caricata, la scheda deve restare utilizzabile offline per il gioco individuale.
 
 | Funzione in PocketD-D | Valutazione |
 | --- | --- |
@@ -57,7 +71,7 @@ Il proxy pubblico esaminato espone letture di personaggi e contenuti, non implem
 
 **Primo traguardo diretto proposto:** incollare l'URL di un proprio personaggio pubblico in PocketD-D, leggere i dati tramite il connettore interno, vedere anteprima e omissioni e aggiungerlo come nuova scheda. L'accesso a personaggi privati è un traguardo distinto: il codice di riferimento utilizza una sessione Beyond, ma non è stata trovata un'autenticazione OAuth pubblica da promettere come pulsante di accesso. L'app non può leggere automaticamente il cookie Beyond da un'altra origine.
 
-Il connettore HTTP farà parte dell'app di supporto, sul computer o su un backend PocketD-D; gestirà richieste e vincoli CORS senza imporre un servizio proxy di terzi. Il solo HTML statico attuale non copre questa architettura. Il trasporto risolve il collegamento, non l'autenticazione o i diritti di accesso. La conversione resta separata dal trasporto per poter essere verificata con fixture locali.
+Per il prototipo da PC il connettore HTTP farà parte dell'app di supporto, sul computer o su un backend PocketD-D; gestirà richieste e vincoli CORS senza imporre un servizio proxy di terzi. Il solo HTML statico attuale non copre questa architettura. Questo prototipo non decide ancora dove risiederà il connettore della modalità dispositivo. Il trasporto risolve il collegamento, non l'autenticazione o i diritti di accesso. La conversione resta separata dal trasporto per poter essere verificata con fixture locali.
 
 Criteri di verifica del prototipo: URL accettati soltanto per i formati Beyond previsti, destinazione remota fissa, errori espliciti per scheda privata/inesistente o servizio non disponibile, limiti di tempo e dimensione, nessuna scrittura della raccolta prima dell'anteprima e della conferma. Testare almeno un personaggio marziale, un incantatore e un caso con bonus/effetti o regole miste. Confrontare valori, inventario, slot e omissioni con la scheda Beyond. Conservare la provenienza per i futuri aggiornamenti; dopo l'importazione il personaggio deve restare utilizzabile localmente. Nessun cookie o token deve entrare nei backup, nel repository o nel dispositivo.
 

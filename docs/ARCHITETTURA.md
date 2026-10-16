@@ -41,6 +41,8 @@ Microfoni, RTC e IMU non servono al primo prototipo. Un gesto con l'IMU per tira
 
 **App web di supporto:** modifica comoda della scheda, editor avatar, backup e trasferimento. Nel primo prototipo può limitarsi alla simulazione del display. Trasporto verso l'hardware da scegliere dopo le prove USB/Wi-Fi; non assumere che un browser possa accedere direttamente a qualunque periferica.
 
+**Importazione Beyond:** esperienza preferita dal dispositivo; importazione dall'app PocketD-D su PC e trasferimento accettati come alternativa. Verificare inizialmente lettura e normalizzazione sul PC, mantenendo il formato locale indipendente dal trasporto. Valutare separatamente accesso autonomo dal firmware e importazione comandata dal dispositivo attraverso un backend nostro: la seconda dipende dalla disponibilità del servizio. Nessuna delle due modalità è ancora implementata o verificata sull'hardware. Dettagli in [BEYOND-FATTIBILITA.md](BEYOND-FATTIBILITA.md).
+
 **Formato dati condiviso:** versione dello schema, identità locale, versione del regolamento, valori base, risorse correnti, inventario e riferimenti agli asset. Separare definizione del personaggio e stato della sessione. Un importatore esterno converte in questo formato senza imporre dipendenze al firmware.
 
 **Party futuro:** eventi identificabili e versione dello stato, dispositivo coordinatore per iniziativa e griglia, riconnessione e riconciliazione esplicite. Non trasmettere continuamente framebuffer o interi cataloghi di asset.
