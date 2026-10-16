@@ -2,7 +2,7 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato:** prototipo web interattivo **v0.10**, con raccolta di personaggi, inventario e armi personalizzabili. Il firmware ESP32 non è ancora implementato.
+**Stato:** prototipo web interattivo **v0.11**, con interfaccia circolare rivista, avatar personalizzabile, raccolta di personaggi, inventario e armi. Il firmware ESP32 non è ancora implementato.
 
 Hardware previsto: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, display touch rotondo da 466 × 466 pixel. La descrizione del produttore fornita dall’utente indica 8 MB di PSRAM, 16 MB di flash e slot microSD integrato, con controller CO5300 e touch CST9217. Pin, driver e prestazioni restano da verificare sugli esempi ufficiali e sul dispositivo.
 
@@ -136,3 +136,21 @@ Il backup individuale passa al **formato v9**, letto dalla v0.10 e successive. L
 Questo incremento non automatizza armature/CA, peso, monete, munizioni, proprietà speciali delle armi o resistenze ai tipi di danno. Le definizioni sono manuali e non includono un catalogo esterno.
 
 Verifica 0.10: **66 test passati**, build e controlli Chromium dell'inventario e della raccolta su desktop/mobile 390/320 px riusciti, senza errori JavaScript. Verificati migrazione, CRUD, quantità, consumi/cure, critici deterministici, portata/muri, override DM, danni applicati una volta, annullamento, backup v9, isolamento tra personaggi e inventario vuoto. `python scripts/check-inventory.py` ripete il flusso; richiede gli stessi strumenti di `check-library.py`.
+
+## Incremento 0.11 — interfaccia circolare e avatar
+
+Il dispositivo ha icone SVG, contrasto e gerarchia visiva rivisti. La vista Eroe mostra direttamente livello, CA e PF. Il menu inferiore resta separato dai contenuti; liste lunghe scorrono nella propria area. Sotto il cerchio una navigazione rapida offre pulsanti alti almeno 44 px anche sui viewport mobili da 320 e 390 px. Su mobile il dispositivo appare subito, senza il grande titolo introduttivo.
+
+- **Eroe, Scheda, Dadi, Azioni, Zaino:** raggiungibili dal menu del cerchio o dai pulsanti sotto di esso.
+- **Frecce sinistra/destra:** cambiano sezione quando è selezionato il display o un suo comando di navigazione. **Home** torna all'Eroe e **Spazio** tira il d20 dalla vista Dadi. I controlli dei form e le finestre aperte mantengono i propri input.
+- **Scorrimento orizzontale sul display:** cambia sezione; gesti verticali, pulsanti e griglia tattica sono esclusi. I comandi visibili restano sempre disponibili.
+- **Solo dispositivo:** nasconde l'introduzione laterale e centra il dispositivo. È una preferenza temporanea della pagina.
+- Liste di abilità, storico, zaino, magie e turni conservano la posizione di scorrimento tra le viste, azzerandola al cambio personaggio.
+
+Gli strumenti sotto il dispositivo sono raggruppati in **Il personaggio**, **Al tavolo** e **I tuoi salvataggi**. Restano le stesse funzioni della v0.10.
+
+L'avatar originale è stato ridisegnato con dettagli di volto, mantello e armatura. **Personalizza eroe** offre un'anteprima e scelte visive per carnagione, capelli, mantello e taglio, più tre preset: **Custode**, **Viandante**, **Sentinella**. I preset cambiano soltanto l'aspetto; puoi combinarne le scelte o ripristinare quello iniziale. La modifica si applica quando salvi; Annulla/Escape conserva il personaggio precedente. L'indicatore grafico dell'arma scompare quando non ne è equipaggiata una: non rappresenta ancora il modello specifico di ogni arma. Le animazioni rispettano la preferenza di movimento ridotto.
+
+Lo schema della scheda resta **v9** e quello della raccolta **v1**: nessuna migrazione aggiuntiva. Le palette conservano gli stessi indici dei personaggi esistenti. Non è ancora un editor per disegnare singoli pixel.
+
+Verifica 0.11: **66 test del modello passati**, build riuscita e tre flussi Chromium passati (`check-interface.py`, `check-inventory.py`, `check-library.py`). Verificati hit target del menu entro il cerchio, separazione dei controlli, cinque sezioni e mappa, viewport desktop/mobile 390/320 px, scorrimento, tastiera/gesti, blocco durante i tiri, preset/anteprima/salvataggio/annullamento, equipaggiamento visivo, vista concentrata e movimento ridotto. Screenshot e geometria verificati; nessun errore JavaScript rilevato. `python scripts/check-interface.py` ripete le verifiche dell'interfaccia con gli stessi strumenti degli altri script.

@@ -89,11 +89,13 @@ L'hardware non è ancora disponibile. Lo sviluppo procede sulla simulazione e su
 
 1. **Completato nella 0.9:** raccolta di più personaggi con progressi separati e backup.
 2. **Completato nella 0.10:** inventario estensibile, armi e cure personalizzabili, mantenendo le regole dimostrative esplicite e la compatibilità dei backup.
-3. **Prossimo incremento:** migliorare grafica, personalizzazione e navigazione del display circolare con prove browser desktop/mobile.
-4. Preparare e verificare il protocollo di party tra più client simulati, inclusi riconnessione ed eventi duplicati.
+3. **Completato nella 0.11:** prima revisione di grafica, avatar e navigazione del display circolare con prove browser desktop/mobile. La verifica fisica resta aperta.
+4. **Prossimo incremento:** preparare e verificare il protocollo di party tra più client simulati, inclusi riconnessione ed eventi duplicati.
 5. Preparare la base firmware dagli esempi ufficiali e verificarne la compilazione; display, touch, SD e autonomia saranno provati quando arriverà la scheda.
 
 Codice e stato della roadmap vengono salvati su GitHub a ogni incremento verificato. Il recupero della v0.8 è documentato separatamente in [RECUPERO-v0.8.md](RECUPERO-v0.8.md).
 
 
 L'incremento 0.10 porta inventario e armi oltre le tre voci dimostrative: ogni personaggio possiede una lista manuale di oggetti, consumabili, cure e armi. Gli attacchi e la portata seguono l'arma equipaggiata. La CA resta manuale; non sono ancora automatizzati peso, monete, munizioni, proprietà speciali o un catalogo di regole.
+
+L'incremento 0.11 rivede la presentazione fantasy, le icone e i comandi del dispositivo, mette la simulazione in primo piano su mobile e aggiunge navigazione rapida, tastiera e gesti. La personalizzazione dell'avatar usa anteprima, scelte visive e preset compatibili con le schede esistenti. Questa è una revisione verificata nel browser; non completa la verifica hardware né l'editor per disegnare asset pixel per pixel.

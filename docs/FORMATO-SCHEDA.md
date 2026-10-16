@@ -162,3 +162,9 @@ L'attacco conserva una copia dei parametri dell'arma al momento del tiro: il suc
 Le cure consumano un'unità solo quando i PF sono inferiori ai massimi, tirano i dadi configurati e applicano la cura limitandola al massimo. Non vengono aggiunte allo storico degli attacchi. Gli oggetti consumabili riducono solo la quantità. Riposi e cambio personaggio non ricaricano gli oggetti.
 
 Le raccolte v1 della v0.9 rimangono leggibili: le singole schede v8 vengono migrate in memoria al caricamento e scritte come v9 al prossimo salvataggio. Il confronto con il contenuto persistente precedente continua a proteggere da una scheda browser già non aggiornata. Il limite del file individuale resta 250.000 byte, quello della raccolta 5.000.000 byte UTF-8. Una raccolta di 20 schede con note e inventari ai limiti è verificata dai test.
+
+## Presentazione e avatar (app 0.11)
+
+La revisione dell'interfaccia non modifica lo schema v9. `avatar.skin`, `hair`, `cloak` e `style` restano indici 0–2 con lo stesso significato. I preset sono combinazioni dei quattro valori esistenti; non aggiungono classi, bonus o proprietà al personaggio. Le scelte rimangono nella bozza dell'editor fino al salvataggio. Il disegno dell'arma è un indicatore generico derivato da `equippedWeaponId`, non un nuovo dato persistente.
+
+Sezione attiva, scorrimento delle liste e vista Solo dispositivo sono stato temporaneo dell'interfaccia. La navigazione non scrive la raccolta. Cambiare personaggio azzera controlli temporanei e memoria delle liste; PF, risorse, storico e combattimento continuano a essere letti dalla sua scheda.
