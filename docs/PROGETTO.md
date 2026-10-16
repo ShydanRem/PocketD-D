@@ -90,7 +90,7 @@ L'hardware non è ancora disponibile. Lo sviluppo procede sulla simulazione e su
 1. **Completato nella 0.9:** raccolta di più personaggi con progressi separati e backup.
 2. **Completato nella 0.10:** inventario estensibile, armi e cure personalizzabili, mantenendo le regole dimostrative esplicite e la compatibilità dei backup.
 3. **Completato nella 0.11:** prima revisione di grafica, avatar e navigazione del display circolare con prove browser desktop/mobile. La verifica fisica resta aperta.
-4. **Prossimo incremento:** preparare e verificare il protocollo di party tra più client simulati, inclusi riconnessione ed eventi duplicati.
+4. **Completato nella 0.12:** primo protocollo di party tra finestre dello stesso browser, con iniziativa, turni, PF e mappa condivisi, riconnessione e deduplicazione. Restano collegamento tra dispositivi, associazione, controlli del party nel cerchio e gestione completa della sessione.
 5. Preparare la base firmware dagli esempi ufficiali e verificarne la compilazione; display, touch, SD e autonomia saranno provati quando arriverà la scheda.
 
 Codice e stato della roadmap vengono salvati su GitHub a ogni incremento verificato. Il recupero della v0.8 è documentato separatamente in [RECUPERO-v0.8.md](RECUPERO-v0.8.md).
@@ -99,3 +99,6 @@ Codice e stato della roadmap vengono salvati su GitHub a ogni incremento verific
 L'incremento 0.10 porta inventario e armi oltre le tre voci dimostrative: ogni personaggio possiede una lista manuale di oggetti, consumabili, cure e armi. Gli attacchi e la portata seguono l'arma equipaggiata. La CA resta manuale; non sono ancora automatizzati peso, monete, munizioni, proprietà speciali o un catalogo di regole.
 
 L'incremento 0.11 rivede la presentazione fantasy, le icone e i comandi del dispositivo, mette la simulazione in primo piano su mobile e aggiunge navigazione rapida, tastiera e gesti. La personalizzazione dell'avatar usa anteprima, scelte visive e preset compatibili con le schede esistenti. Questa è una revisione verificata nel browser; non completa la verifica hardware né l'editor per disegnare asset pixel per pixel.
+
+
+L'incremento 0.12 anticipa le fasi 5 e 6 con un trasporto browser sostituibile. Il coordinatore conserva lo stato autorevole del party; ogni finestra mantiene la propria identità e riprende lo snapshot corrente dopo un'interruzione. I dati del party sono separati dalla raccolta personale. La prova con più finestre non completa le fasi hardware o la comunicazione tra dispositivi. Uso e limiti sono descritti in [PARTY.md](PARTY.md).

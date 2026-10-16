@@ -2,7 +2,7 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato:** prototipo web interattivo **v0.11**, con interfaccia circolare rivista, avatar personalizzabile, raccolta di personaggi, inventario e armi. Il firmware ESP32 non è ancora implementato.
+**Stato:** prototipo web interattivo **v0.12**, con party simulato tra più finestre, interfaccia circolare, avatar, raccolta di personaggi, inventario e armi. Il firmware ESP32 non è ancora implementato.
 
 Hardware previsto: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, display touch rotondo da 466 × 466 pixel. La descrizione del produttore fornita dall’utente indica 8 MB di PSRAM, 16 MB di flash e slot microSD integrato, con controller CO5300 e touch CST9217. Pin, driver e prestazioni restano da verificare sugli esempi ufficiali e sul dispositivo.
 
@@ -30,7 +30,7 @@ npm run build
 
 La demo include cinque sezioni (Eroe, Scheda, Dadi, Azioni, Zaino), avatar personalizzabile, abilità e salvezze, armi personalizzabili, inventario estensibile, risorse manuali e griglia tattica. La raccolta conserva fino a 20 personaggi indipendenti, con selezione, creazione, duplicazione e backup. “Ricomincia” ripristina soltanto il personaggio attivo. I dati rimangono nel browser: esporta la raccolta per conservarla o trasferirla. Nessun account richiesto. I font remoti sono opzionali e hanno alternative locali. La demo non è una PWA installabile e non garantisce il riavvio offline del browser.
 
-Il layout riproduce l'area circolare, ma non dimostra leggibilità o prestazioni sul display reale. Non include Beyond, regole complete o sincronizzazione. Avvelenato applica svantaggio ad attacchi, prove e abilità; le salvezze e il dado libero mantengono la modalità selezionata.
+Il layout riproduce l'area circolare, ma non dimostra leggibilità o prestazioni sul display reale. Non include Beyond o regole complete. Il party simulato sincronizza finestre dello stesso browser; il collegamento tra dispositivi fisici resta da sviluppare. Avvelenato applica svantaggio ad attacchi, prove e abilità; le salvezze e il dado libero mantengono la modalità selezionata.
 
 La scelta della toolchain firmware verrà confermata dopo la verifica degli esempi ufficiali della scheda.
 
@@ -154,3 +154,14 @@ L'avatar originale è stato ridisegnato con dettagli di volto, mantello e armatu
 Lo schema della scheda resta **v9** e quello della raccolta **v1**: nessuna migrazione aggiuntiva. Le palette conservano gli stessi indici dei personaggi esistenti. Non è ancora un editor per disegnare singoli pixel.
 
 Verifica 0.11: **66 test del modello passati**, build riuscita e tre flussi Chromium passati (`check-interface.py`, `check-inventory.py`, `check-library.py`). Verificati hit target del menu entro il cerchio, separazione dei controlli, cinque sezioni e mappa, viewport desktop/mobile 390/320 px, scorrimento, tastiera/gesti, blocco durante i tiri, preset/anteprima/salvataggio/annullamento, equipaggiamento visivo, vista concentrata e movimento ridotto. Screenshot e geometria verificati; nessun errore JavaScript rilevato. `python scripts/check-interface.py` ripete le verifiche dell'interfaccia con gli stessi strumenti degli altri script.
+
+
+## Incremento 0.12 — party locale simulato
+
+Da **Al tavolo → Party locale simulato**, crea un party e condividi il codice con altre finestre della demo nello stesso browser e indirizzo HTTP. Il coordinatore gestisce combattimento, PF, avversari e piazzamenti; ogni giocatore imposta l'iniziativa e muove la propria pedina durante il suo turno. Roster, round e mappa sono condivisi, con un massimo di 12 partecipanti.
+
+Il protocollo conferma le modifiche, rifiuta scelte basate su uno stato vecchio e deduplica i comandi ritrasmessi. Sospensione, riconnessione e ricarica nella stessa scheda recuperano lo stato quando la memoria di sessione è disponibile. Le schede personali e i loro combattimenti rimangono separati. La chiusura definitiva del coordinatore interrompe la sessione; lo stato è scaricabile come resoconto JSON. Non c'è ancora collegamento LAN/ESP32, rimozione membri, importazione del resoconto o subentro automatico del coordinatore.
+
+[Uso, protocollo, limiti e verifiche del party](docs/PARTY.md).
+
+Verifica 0.12: **78 test passati**, build riuscita e quattro flussi Chromium passati (`check-party.py`, `check-interface.py`, `check-inventory.py`, `check-library.py`). Il nuovo flusso usa tre client reali, prova sospensione e riconnessione, ricarica di giocatore e coordinatore, permessi di movimento, sincronizzazione dello stato, isolamento della raccolta, resoconto JSON e mappa con celle da almeno 44 px su desktop/mobile 390/320 px. Nessun errore JavaScript rilevato. Il firmware e le prove fisiche rimangono da eseguire.
