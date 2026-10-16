@@ -58,7 +58,7 @@ L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco no
 
 ## D&D Beyond e contenuti
 
-La verifica del 16 ottobre 2026 ha esaminato DDB Importer e ddb-proxy di MrPrimate. L'importazione in sola lettura è tecnicamente fattibile; il percorso consigliato usa l'installazione Foundry già posseduta dall'utente su un altro PC, esporta uno snapshot con valori risolti e lo converte nel formato locale. Non è emersa una API pubblica documentata per questo uso. L'importatore PocketD-D e la prova completa su un personaggio reale restano da realizzare; accesso diretto e scrittura verso Beyond non sono parte del primo traguardo. Dettagli, fonti e limiti sono in [BEYOND-FATTIBILITA.md](BEYOND-FATTIBILITA.md).
+La verifica del 16 ottobre 2026 ha esaminato DDB Importer e ddb-proxy di MrPrimate come riferimenti tecnici. Il requisito è un'importazione diretta in PocketD-D tramite URL, con un connettore interno all'app di supporto, senza passaggi obbligatori da Foundry, file intermedi o servizi MrPrimate. Il primo prototipo proposto legge un personaggio pubblico e presenta anteprima e omissioni prima di creare la scheda locale. Non è emersa una API pubblica documentata per questo uso: accesso dal vivo, conversione esatta e condizioni d'uso restano da verificare. Autenticazione per schede private e scrittura verso Beyond sono traguardi separati; l'integrazione non è ancora implementata. Dettagli, fonti e limiti sono in [BEYOND-FATTIBILITA.md](BEYOND-FATTIBILITA.md).
 
 L'acquisto di contenuti su Beyond non stabilisce da solo i diritti di utilizzo da parte di PocketD-D. Verificare termini, licenze e modalità di distribuzione. Non includere cataloghi proprietari, immagini, descrizioni o credenziali Beyond nel repository.
 
