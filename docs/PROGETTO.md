@@ -88,9 +88,12 @@ L'incremento 0.8 aggiunge zoom 5 × 5, panoramica e assistenza geometrica agli a
 L'hardware non è ancora disponibile. Lo sviluppo procede sulla simulazione e sull'app di supporto, mantenendo aperta la verifica fisica delle fasi 0 e 2:
 
 1. **Completato nella 0.9:** raccolta di più personaggi con progressi separati e backup.
-2. **Prossimo incremento:** inventario estensibile e armi personalizzabili, mantenendo le regole dimostrative esplicite e la compatibilità dei backup.
-3. Migliorare grafica, personalizzazione e navigazione del display circolare con prove browser desktop/mobile.
+2. **Completato nella 0.10:** inventario estensibile, armi e cure personalizzabili, mantenendo le regole dimostrative esplicite e la compatibilità dei backup.
+3. **Prossimo incremento:** migliorare grafica, personalizzazione e navigazione del display circolare con prove browser desktop/mobile.
 4. Preparare e verificare il protocollo di party tra più client simulati, inclusi riconnessione ed eventi duplicati.
 5. Preparare la base firmware dagli esempi ufficiali e verificarne la compilazione; display, touch, SD e autonomia saranno provati quando arriverà la scheda.
 
 Codice e stato della roadmap vengono salvati su GitHub a ogni incremento verificato. Il recupero della v0.8 è documentato separatamente in [RECUPERO-v0.8.md](RECUPERO-v0.8.md).
+
+
+L'incremento 0.10 porta inventario e armi oltre le tre voci dimostrative: ogni personaggio possiede una lista manuale di oggetti, consumabili, cure e armi. Gli attacchi e la portata seguono l'arma equipaggiata. La CA resta manuale; non sono ancora automatizzati peso, monete, munizioni, proprietà speciali o un catalogo di regole.

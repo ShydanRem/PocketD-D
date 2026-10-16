@@ -1,21 +1,20 @@
-# Formato scheda locale — v8
+# Formato scheda locale — v9
 
-Il backup individuale è un singolo JSON UTF-8. Non è un formato D&D Beyond. Dalla versione 0.9 l'app conserva una raccolta di fino a 20 personaggi, uno attivo alla volta. Lo schema individuale rimane v8; il formato della raccolta è descritto in fondo al documento.
+Il backup individuale è un singolo JSON UTF-8. Non è un formato D&D Beyond. Dalla versione 0.9 l'app conserva una raccolta di fino a 20 personaggi, uno attivo alla volta. Dalla versione 0.10 lo schema individuale è v9; il formato della raccolta è descritto in fondo al documento.
 
 | Campo | Significato e limiti |
 | --- | --- |
-| `version` | `8`; lettura compatibile con v1–v7 |
+| `version` | `9`; lettura compatibile con v1–v8 |
 | `name`, `title` | Nome non vuoto fino a 24 caratteri, titolo fino a 40 |
 | `level` | Intero da 1 a 20 |
 | `maxHp`, `hp` | Massimi da 1 a 999, attuali da 0 ai massimi |
 | `armorClass` | Intero da 1 a 30, inserito manualmente |
-| `weaponReach` | Portata manuale dell’arma, intero da 1 a 9 caselle |
+| `inventory` | Fino a 60 oggetti, armi, consumabili e cure personalizzati |
+| `equippedWeaponId` | ID di un’arma disponibile, oppure `null` |
 | `abilities` | FOR, DES, COS, INT, SAG, CAR: interi da 1 a 30 |
 | `avatar` | `skin`, `hair`, `cloak`, `style`: indici da 0 a 2 nelle palette locali |
 | `condition` | Booleano: avvelenato |
 | `bonus`, `mode` | Modificatore del dado libero (-5…15) e normal/advantage/disadvantage |
-| `swordEquipped` | Booleano |
-| `potions`, `torches` | Quantità intere da 0 a 99 |
 | `resolve` | Risorsa narrativa Slancio, intero 0 o 1 |
 | `skillRanks` | Mappa dei 18 identificatori in `src/model.js`: 0 senza competenza, 1 competente, 2 maestria |
 | `saveProficiencies` | FOR, DES, COS, INT, SAG, CAR: booleani |
@@ -34,7 +33,8 @@ I backup v1/v2 ricevono il profilo originale di Elian e conservano PF, condizion
 
 - Modificatore caratteristica: `floor((punteggio - 10) / 2)`.
 - Competenza: `2 + floor((livello - 1) / 4)`.
-- Spada dimostrativa: Forza + competenza al tiro per colpire; 1d8 + Forza ai danni, 2d8 + Forza al critico, minimo zero danni.
+- Attacco con arma: modificatore della caratteristica selezionata + competenza (se abilitata) + bonus extra attacco.
+- Danni con arma: dadi configurati + modificatore della caratteristica (se abilitato) + bonus extra danni, minimo zero. Il critico raddoppia soltanto il numero dei dadi.
 - Cambiare livello o Costituzione non ricalcola i PF massimi; la CA resta manuale.
 - Prove semplici: modificatore della caratteristica. Abilità: modificatore + competenza × rango (0, 1 o 2). Salvezze: modificatore + competenza se selezionata.
 - Avvelenato impone svantaggio ad attacchi, prove semplici e abilità; non alle salvezze. Se è selezionato vantaggio, i due si annullano. Il dado libero mantiene la modalità manuale.
@@ -47,7 +47,7 @@ Questo schema è sperimentale. In futuro serviranno definizioni del personaggio 
 
 ## Storico
 
-`kind` è `d20` o `damage`; `mode` è `normal`, `advantage` o `disadvantage`. `timestamp` è un timestamp JavaScript in millisecondi. Ogni voce conserva i dadi effettivamente estratti, il bonus e il totale; il parser verifica coerenza del totale, numero e intervallo dei dadi. Le etichette sono testo fino a 80 caratteri. I danni hanno uno o due d8, con totale minimo zero.
+`kind` è `d20` o `damage`; `mode` è `normal`, `advantage` o `disadvantage`. `timestamp` è un timestamp JavaScript in millisecondi. Ogni voce conserva i dadi effettivamente estratti, il bonus e il totale; il parser verifica coerenza del totale, numero e intervallo dei dadi. Le etichette sono testo fino a 80 caratteri. I bonus validati sono tra -15 e 30. I danni hanno da 1 a 12 dadi; `sides` indica 4, 6, 8, 10 o 12 facce. Le vecchie voci senza `sides` ricevono 8. Il totale dei danni ha minimo zero.
 
 Si registrano prove, salvezze, abilità, dado libero, attacchi e danni. Le pozioni non entrano nello storico dei tiri. Il lancio non riceve un esito automatico di successo/fallimento fuori dall'attacco: per prove e salvezze decide il DM. Un 1 o 20 naturale su una prova non implica un effetto automatico.
 
@@ -109,7 +109,7 @@ L’incremento v8 aggiunge zoom e controlli geometrici descritti sotto. Restano 
 
 ## Vista e controllo geometrico dell'arma (v8)
 
-`weaponReach` viene aggiunto con valore 1 ai backup precedenti. Modificarlo dall'editor è una scelta manuale da concordare con il DM; non dipende automaticamente dall'equipaggiamento.
+`weaponReach` era il campo globale dei backup v8, aggiunto con valore 1 alle versioni precedenti. Nella scheda v9 viene migrato in `reach` della spada iniziale; la portata corrente viene letta dall’arma equipaggiata e si configura nella gestione inventario.
 
 La mappa può mostrare tutte le 9 × 9 caselle o una finestra 5 × 5 con caselle più grandi. I comandi laterali cambiano zoom, centrano sul partecipante attivo e spostano la finestra entro i bordi. Dopo un movimento o un cambio turno la vista segue la pedina attiva. In preparazione, o quando la pedina attiva non è piazzata, si usa l'eroe oppure il centro della mappa. Zoom e finestra non cambiano le coordinate del gioco e sono preferenze temporanee, non salvate nel backup.
 
@@ -119,7 +119,7 @@ La linea di vista è il segmento tra i centri delle due celle. Tutte le celle to
 
 Se entrambe le pedine sono piazzate, l'attacco con l'arma è disabilitato quando fuori portata o bloccato da muri. **Il DM consente questo attacco** abilita una singola eccezione: il tiro viene marcato `DM` nello storico e l'override viene consumato. La scelta non è salvata e viene azzerata quando cambiano bersaglio o contesto del combattimento. I calcoli dei danni restano invariati.
 
-Se manca una posizione o si usa la CA manuale, distanza e vista sono dichiarate non verificate e si lasciano al DM. Questi controlli riguardano la singola arma dimostrativa, non costituiscono un validatore completo delle regole e non limitano attacchi fuori turno.
+Se manca una posizione o si usa la CA manuale, distanza e vista sono dichiarate non verificate e si lasciano al DM. Dalla v9 questi controlli riguardano l’arma equipaggiata, non costituiscono un validatore completo delle regole e non limitano attacchi fuori turno.
 
 ## Raccolta personaggi (app 0.9, formato raccolta v1)
 
@@ -129,15 +129,36 @@ Se manca una posizione o si usa la CA manuale, distanza e vista sono dichiarate 
   "version": 1,
   "activeId": "identita-locale",
   "characters": [
-    {"id": "identita-locale", "state": {"version": 8, "...": "campi della scheda"}}
+    {"id": "identita-locale", "state": {"version": 9, "...": "campi della scheda"}}
   ]
 }
 ```
 
-L'esempio è schematico: `state` deve contenere una scheda completa valida. La raccolta ha da 1 a 20 personaggi, con ID univoci di 1–64 caratteri alfanumerici, trattino o underscore. I nomi possono coincidere. `activeId` deve riferirsi a un elemento esistente. I nuovi ID sono generati con il generatore crittografico del browser. L'importazione della raccolta è limitata a 5.000.000 byte UTF-8 e valida tutte le schede prima di sostituire alcun dato. Le esportazioni contengono schede v8; in lettura sono accettate anche le versioni individuali precedenti.
+L'esempio è schematico: `state` deve contenere una scheda completa valida. La raccolta ha da 1 a 20 personaggi, con ID univoci di 1–64 caratteri alfanumerici, trattino o underscore. I nomi possono coincidere. `activeId` deve riferirsi a un elemento esistente. I nuovi ID sono generati con il generatore crittografico del browser. L'importazione della raccolta è limitata a 5.000.000 byte UTF-8 e valida tutte le schede prima di sostituire alcun dato. Le esportazioni dalla v0.10 contengono schede v9; in lettura sono accettate anche le versioni individuali precedenti.
 
 `src/library.js` gestisce raccolta, validazione e persistenza. La chiave nuova è `pocketdd-library-v1`. Se è assente, viene letta `pocketdd-demo-v1` e il suo personaggio viene inserito nella raccolta con ID `first-hero`. La raccolta viene salvata all'avvio, preservando la chiave storica. Una raccolta esistente ha priorità; se è corrotta non si ripiega sul vecchio salvataggio e non la si sovrascrive con la demo. La UI offre una sessione temporanea, il download del contenuto originale e il ripristino esplicito da una raccolta valida.
 
 Una scrittura confronta il contenuto persistente con quello letto in precedenza per rifiutare i salvataggi di una scheda browser già non aggiornata. Non è sincronizzazione multiplayer né un protocollo di fusione: per recuperare il lavoro temporaneo si esporta la raccolta e si ricarica. In caso di quota esaurita il contenuto persistente precedente resta valido e l'archivio in memoria resta esportabile.
 
 Ogni elemento include l'intero combattimento locale; non collega i personaggi della raccolta come partecipanti dello stesso party. Cambiare personaggio ripristina la sua sessione e azzera solo i controlli temporanei dell'interfaccia. Duplicare conserva anche lo stato corrente del combattimento nella copia indipendente. Eliminare l'attivo seleziona il primo elemento rimanente; eliminare un altro personaggio mantiene la selezione.
+
+
+## Inventario estensibile (v9)
+
+I campi globali precedenti `swordEquipped`, `potions`, `torches` e `weaponReach` sono sostituiti da `inventory` ed `equippedWeaponId`. Il parser li legge solo nei vecchi backup. La migrazione crea la spada iniziale (1d8, Forza, competente), una cura 2d4+2 e una torcia consumabile, con quantità e stato di equipaggiamento precedenti. La portata v8 viene riportata sulla spada; v1–v7 usano una casella. La migrazione non cambia storico, magie o combattimento.
+
+Ogni voce ha `id` (1–64 caratteri alfanumerici/trattino/underscore, univoco nell'inventario), `type` (`gear`, `consumable`, `healing`, `weapon`), `name` (non vuoto, massimo 40 caratteri), `notes` (massimo 400 caratteri) e `quantity` (intero 0–999). L'inventario può essere vuoto. I nomi possono coincidere. I campi sconosciuti vengono scartati.
+
+| Tipo | Campi aggiuntivi |
+| --- | --- |
+| `gear`, `consumable` | Nessuno; gli effetti sono annotazioni manuali |
+| `healing` | `diceCount` (1–6), `dieSides` (4/6/8/10/12), `healingModifier` (0–30) |
+| `weapon` | `diceCount`, `dieSides`, `ability` (una delle sei caratteristiche), `proficient` e `addAbilityToDamage` (booleani), `attackModifier` e `damageModifier` (-10…10), `reach` (1–9), `damageType` (testo, massimo 24 caratteri) |
+
+`equippedWeaponId` è `null` oppure fa riferimento a un'arma con quantità positiva. I backup con un riferimento invalido vengono rifiutati. Le operazioni dell'interfaccia che eliminano l'arma, cambiano il suo tipo o portano la quantità a zero la ripongono automaticamente. Una sola arma è attiva; gli oggetti generici non ricalcolano CA o altre statistiche.
+
+L'attacco conserva una copia dei parametri dell'arma al momento del tiro: il successivo risultato di danno usa quella configurazione. Nell'interfaccia, modifiche a inventario o profilo invalidano l'attacco temporaneo e i danni in attesa; la modifica può essere annullata. La coda dei danni e il controllo di applicazione singola restano nel combattimento locale.
+
+Le cure consumano un'unità solo quando i PF sono inferiori ai massimi, tirano i dadi configurati e applicano la cura limitandola al massimo. Non vengono aggiunte allo storico degli attacchi. Gli oggetti consumabili riducono solo la quantità. Riposi e cambio personaggio non ricaricano gli oggetti.
+
+Le raccolte v1 della v0.9 rimangono leggibili: le singole schede v8 vengono migrate in memoria al caricamento e scritte come v9 al prossimo salvataggio. Il confronto con il contenuto persistente precedente continua a proteggere da una scheda browser già non aggiornata. Il limite del file individuale resta 250.000 byte, quello della raccolta 5.000.000 byte UTF-8. Una raccolta di 20 schede con note e inventari ai limiti è verificata dai test.

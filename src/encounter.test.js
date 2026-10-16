@@ -1,3 +1,4 @@
+import {legacyBackup} from './test-fixtures.js';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {initialState,parseBackup,serialize} from './model.js';
@@ -32,7 +33,7 @@ test('danni in attesa annullati da cambio turno e rimozione, bersagli invalidi r
 test('backup v6 ripristina turno e danni già applicati; v5 migra senza combattimento',()=>{
  const s=applyPendingDamage(queueDamage(startEncounter(roster()),'enemy',4,'hit'));
  const restored=parseBackup(serialize(s));assert.deepEqual(restored,s);assert.throws(()=>applyPendingDamage(restored));
- const legacy={...s,version:5};delete legacy.encounter;assert.deepEqual(parseBackup(JSON.stringify(legacy)).encounter.participants,[]);
+ const legacy=legacyBackup(s,5);delete legacy.encounter;assert.deepEqual(parseBackup(JSON.stringify(legacy)).encounter.participants,[]);
 });
 test('validazione respinge turni incoerenti, duplicati e PF fuori limite',()=>{
  const e=roster().encounter;

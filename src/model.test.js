@@ -1,15 +1,16 @@
+import {legacyBackup} from './test-fixtures.js';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {initialState,changeHp,rollD20,restore,attack,damage,drinkPotion,serialize,parseBackup,modifier,proficiency,attackBonus,describeRoll,recordRoll} from './model.js';
+import {initialState,changeHp,rollD20,restore,attack,damage,useItem,serialize,parseBackup,modifier,proficiency,attackBonus,describeRoll,recordRoll} from './model.js';
 const sequence=(...values)=>()=>{assert.ok(values.length,'Sorgente casuale esaurita');return values.shift()};
 test('PF entro i limiti',()=>{assert.equal(changeHp(initialState(),-99).hp,0);assert.equal(changeHp(initialState(),99).hp,32)});
 test('vantaggio e svantaggio selezionano il dado e applicano bonus',()=>{assert.deepEqual(rollD20(3,'advantage',sequence(1,18)),{dice:[2,19],natural:19,bonus:3,total:22});assert.equal(rollD20(-1,'disadvantage',sequence(1,18)).total,1)});
 test('rifiuta valori che renderebbero il d20 sbilanciato',()=>{assert.equal(rollD20(0,'normal',sequence(4294967295,19)).natural,20)});
-test('backup completo, migrazione v1 e recupero da corruzione',()=>{const state={...initialState(),hp:7,potions:0,resolve:0};assert.deepEqual(parseBackup(serialize(state)),state);assert.equal(restore('{').hp,24);assert.equal(parseBackup(JSON.stringify({version:1,hp:9,condition:true,bonus:2,mode:'normal'})).potions,2);assert.throws(()=>parseBackup(JSON.stringify({...state,version:2,potions:-1})));assert.throws(()=>parseBackup(JSON.stringify({...state,version:99})));assert.throws(()=>parseBackup(JSON.stringify({...state,version:2,hp:100})));});
-test('attacco: soglia CA, 1 manca sempre, 20 colpisce sempre',()=>{const s=initialState();assert.equal(attack(s,14,sequence(9)).hits,true);assert.equal(attack(s,14,sequence(8)).hits,false);assert.equal(attack(s,1,sequence(0)).hits,false);assert.equal(attack(s,30,sequence(19)).critical,true);assert.throws(()=>attack({...s,swordEquipped:false},14));});
+test('backup completo, migrazione v1 e recupero da corruzione',()=>{const state={...initialState(),hp:7,resolve:0};state.inventory[1].quantity=0;assert.deepEqual(parseBackup(serialize(state)),state);assert.equal(restore('{').hp,24);assert.equal(parseBackup(JSON.stringify({version:1,hp:9,condition:true,bonus:2,mode:'normal'})).inventory[1].quantity,2);assert.throws(()=>parseBackup(JSON.stringify({...legacyBackup(state,2),potions:-1})));assert.throws(()=>parseBackup(JSON.stringify({...state,version:99})));assert.throws(()=>parseBackup(JSON.stringify({...legacyBackup(state,2),hp:100})));});
+test('attacco: soglia CA, 1 manca sempre, 20 colpisce sempre',()=>{const s=initialState();assert.equal(attack(s,14,sequence(9)).hits,true);assert.equal(attack(s,14,sequence(8)).hits,false);assert.equal(attack(s,1,sequence(0)).hits,false);assert.equal(attack(s,30,sequence(19)).critical,true);assert.throws(()=>attack({...s,equippedWeaponId:null},14));});
 test('avvelenato impone svantaggio e annulla il vantaggio',()=>{const s={...initialState(),condition:true};assert.equal(attack(s,14,sequence(18,1)).natural,2);assert.equal(attack({...s,mode:'advantage'},14,sequence(10)).mode,'normal');});
-test('critico raddoppia i dadi, non il modificatore',()=>{assert.deepEqual(damage(true,sequence(7,0)),{dice:[8,1],bonus:2,total:11});assert.equal(damage(false,sequence(7)).total,10)});
-test('pozione: cura limitata, consumo singolo e nessun consumo a PF pieni',()=>{const s={...initialState(),hp:31};const next=drinkPotion(s,sequence(3,3));assert.equal(next.healing,10);assert.equal(next.state.hp,32);assert.equal(next.state.potions,1);assert.equal(s.potions,2);assert.equal(drinkPotion(next.state).healing,null);assert.equal(drinkPotion({...s,potions:0}).healing,null)});
+test('critico raddoppia i dadi, non il modificatore',()=>{assert.deepEqual(damage(true,sequence(7,0)),{dice:[8,1],bonus:2,sides:8,total:11});assert.equal(damage(false,sequence(7)).total,10)});
+test('pozione: cura limitata, consumo singolo e nessun consumo a PF pieni',()=>{const s={...initialState(),hp:31};const next=useItem(s,'starter-potion',sequence(3,3));assert.equal(next.healing,10);assert.equal(next.state.hp,32);assert.equal(next.state.inventory[1].quantity,1);assert.equal(s.inventory[1].quantity,2);assert.equal(useItem(next.state,'starter-potion').healing,null);assert.throws(()=>useItem({...s,inventory:s.inventory.map(item=>({...item,quantity:0}))},'starter-potion'))});
 
 test('profilo v3 conserva aspetto e PF massimi personalizzati',()=>{
   const state={...initialState(),name:'Mira <&>',title:'Viandante',level:9,maxHp:75,hp:60,armorClass:19,avatar:{skin:2,hair:1,cloak:2,style:1},abilities:{FOR:18,DES:12,COS:16,INT:10,SAG:14,CAR:8}};
@@ -20,10 +21,10 @@ test('profilo v3 conserva aspetto e PF massimi personalizzati',()=>{
   for(const patch of [{avatar:{skin:3,hair:0,cloak:0,style:0}},{name:'   '},{abilities:{...state.abilities,FOR:31}},{maxHp:50},{level:21}])assert.throws(()=>parseBackup(serialize({...state,...patch})));
 });
 test('migrazione v2 assegna un profilo senza perdere consumi',()=>{
-  const state={...initialState(),potions:0,torches:1,resolve:0};
+  const state={...legacyBackup(initialState(),2),potions:0,torches:1,resolve:0};
   delete state.name;delete state.avatar;delete state.abilities;
   const restored=parseBackup(JSON.stringify({...state,version:2}));
-  assert.equal(restored.name,'Elian');assert.equal(restored.potions,0);assert.equal(restored.torches,1);
+  assert.equal(restored.name,'Elian');assert.equal(restored.inventory[1].quantity,0);assert.equal(restored.inventory[2].quantity,1);
 });
 test('danni con Forza negativa non scendono sotto zero',()=>assert.equal(damage(false,sequence(0),-5).total,0));
 
@@ -60,7 +61,7 @@ test('v4 rifiuta competenze e storico incoerenti',()=>{
   assert.throws(()=>recordRoll(state,'Prova',{dice:[20,20],bonus:0,total:20}));
 });
 test('migrazione v3 conserva il profilo e inizializza competenze e storico',()=>{
-  const state={...initialState(),name:'Nora'};
+  const state={...legacyBackup(initialState(),3),name:'Nora'};
   delete state.skillRanks;delete state.saveProficiencies;delete state.history;
   const migrated=parseBackup(JSON.stringify({...state,version:3}));
   assert.equal(migrated.name,'Nora');assert.equal(migrated.skillRanks.stealth,0);assert.equal(migrated.saveProficiencies.COS,false);assert.deepEqual(migrated.history,[]);

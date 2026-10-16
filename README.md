@@ -2,7 +2,7 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato:** prototipo web interattivo **v0.9**, con raccolta di più personaggi. Il firmware ESP32 non è ancora implementato.
+**Stato:** prototipo web interattivo **v0.10**, con raccolta di personaggi, inventario e armi personalizzabili. Il firmware ESP32 non è ancora implementato.
 
 Hardware previsto: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, display touch rotondo da 466 × 466 pixel. La descrizione del produttore fornita dall’utente indica 8 MB di PSRAM, 16 MB di flash e slot microSD integrato, con controller CO5300 e touch CST9217. Pin, driver e prestazioni restano da verificare sugli esempi ufficiali e sul dispositivo.
 
@@ -28,7 +28,7 @@ npm test
 npm run build
 ```
 
-La demo include cinque sezioni (Eroe, Scheda, Dadi, Azioni, Zaino), avatar personalizzabile, abilità e salvezze, attacchi, risorse manuali e griglia tattica. La raccolta conserva fino a 20 personaggi indipendenti, con selezione, creazione, duplicazione e backup. “Ricomincia” ripristina soltanto il personaggio attivo. I dati rimangono nel browser: esporta la raccolta per conservarla o trasferirla. Nessun account richiesto. I font remoti sono opzionali e hanno alternative locali. La demo non è una PWA installabile e non garantisce il riavvio offline del browser.
+La demo include cinque sezioni (Eroe, Scheda, Dadi, Azioni, Zaino), avatar personalizzabile, abilità e salvezze, armi personalizzabili, inventario estensibile, risorse manuali e griglia tattica. La raccolta conserva fino a 20 personaggi indipendenti, con selezione, creazione, duplicazione e backup. “Ricomincia” ripristina soltanto il personaggio attivo. I dati rimangono nel browser: esporta la raccolta per conservarla o trasferirla. Nessun account richiesto. I font remoti sono opzionali e hanno alternative locali. La demo non è una PWA installabile e non garantisce il riavvio offline del browser.
 
 Il layout riproduce l'area circolare, ma non dimostra leggibilità o prestazioni sul display reale. Non include Beyond, regole complete o sincronizzazione. Avvelenato applica svantaggio ad attacchi, prove e abilità; le salvezze e il dado libero mantengono la modalità selezionata.
 
@@ -118,3 +118,21 @@ Ogni personaggio conserva PF, avatar, competenze, inventario, magie/capacità, c
 Il salvataggio v0.8 viene migrato automaticamente nella nuova raccolta senza cancellare la vecchia chiave. Dati corrotti non vengono sovrascritti: la sessione resta temporanea e permette di scaricare i dati originali. Anche con memoria piena o salvataggio negato si può esportare la raccolta in memoria. Una scheda del browser già non aggiornata non può sovrascrivere il salvataggio più recente di un'altra scheda: viene chiesto di esportare e ricaricare.
 
 Verifica 0.9: **54 test passati**, build riuscita, flussi Chromium desktop/mobile 390/320 px e regressione del combattimento v0.8 passati, senza errori JavaScript. Lo script ripetibile `python scripts/check-library.py` richiede Playwright Python, Chromium in `/usr/bin/chromium` e una build aggiornata; non richiede un server o asset esterni.
+
+
+## Incremento 0.10 — inventario e armi personalizzabili
+
+Da **Gestisci inventario e armi**, nel footer o nello **Zaino**, puoi creare, modificare ed eliminare fino a 60 oggetti per personaggio. Ogni voce ha nome, note e quantità (0–999). Sono disponibili quattro tipi:
+
+- **Oggetto:** quantità e note per l'equipaggiamento generico.
+- **Consumabile:** il comando Usa consuma una unità; gli effetti restano al DM.
+- **Cura:** configura 1–6 dadi d4/d6/d8/d10/d12 e un bonus 0–30. L'uso consuma una unità e recupera PF entro il massimo; a PF pieni non consuma nulla.
+- **Arma:** scegli caratteristica, competenza al tiro per colpire, dadi di danno, bonus extra separati, contributo della caratteristica ai danni, portata e tipo di danno come nota. Si equipaggia una sola arma disponibile alla volta.
+
+**Azioni → Arma** usa l'arma equipaggiata e mostra la provenienza dei bonus. Il critico raddoppia tutti i dadi dell'arma, lasciando singoli i bonus. I danni non scendono sotto zero e restano applicabili al bersaglio solo con conferma. Distanza, muri e override DM usano la portata dell'arma. Modificare inventario/equipaggiamento invalida i risultati e i danni in attesa; quantità zero, eliminazione o cambio tipo ripongono automaticamente l'arma. L'annullamento ripristina l'ultima modifica.
+
+Il backup individuale passa al **formato v9**, letto dalla v0.10 e successive. Le schede v1–v8, comprese quelle nelle raccolte della v0.9, vengono migrate: spada, quantità delle pozioni e torce e portata precedente sono conservate. Il formato della raccolta rimane v1 e contiene ora schede v9. Il vecchio salvataggio individuale resta intatto. I riposi conservano inventario e consumi.
+
+Questo incremento non automatizza armature/CA, peso, monete, munizioni, proprietà speciali delle armi o resistenze ai tipi di danno. Le definizioni sono manuali e non includono un catalogo esterno.
+
+Verifica 0.10: **66 test passati**, build e controlli Chromium dell'inventario e della raccolta su desktop/mobile 390/320 px riusciti, senza errori JavaScript. Verificati migrazione, CRUD, quantità, consumi/cure, critici deterministici, portata/muri, override DM, danni applicati una volta, annullamento, backup v9, isolamento tra personaggi e inventario vuoto. `python scripts/check-inventory.py` ripete il flusso; richiede gli stessi strumenti di `check-library.py`.

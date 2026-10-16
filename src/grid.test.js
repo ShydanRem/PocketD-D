@@ -1,3 +1,4 @@
+import {legacyBackup} from './test-fixtures.js';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {initialState,parseBackup,serialize} from './model.js';
@@ -33,9 +34,9 @@ test('editing vietato durante il combattimento, rimozione partecipante pulisce l
 });
 test('backup v7 mantiene mappa e movimento; v6 migra senza griglia',()=>{
  const s=moveActive(startEncounter(toggleWall(setup(),0)),41);assert.deepEqual(parseBackup(serialize(s)),s);
- const legacy={...s,version:6,encounter:{...s.encounter}};delete legacy.encounter.grid;
+ const legacy={...legacyBackup(s,6),encounter:{...s.encounter}};delete legacy.encounter.grid;
  const restored=parseBackup(JSON.stringify(legacy));assert.deepEqual(restored.encounter.grid,{walls:[],positions:{},spent:0});assert.equal(restored.encounter.round,1);
- const invalid={...s,version:7,encounter:{...s.encounter}};delete invalid.encounter.grid;assert.throws(()=>parseBackup(JSON.stringify(invalid)));
+ const invalid={...legacyBackup(s,7),encounter:{...s.encounter}};delete invalid.encounter.grid;assert.throws(()=>parseBackup(JSON.stringify(invalid)));
 });
 test('validazione rifiuta celle fuori mappa, sovrapposizioni e movimento incoerente',()=>{
  const s=startEncounter(setup());const grid=s.encounter.grid;
@@ -68,7 +69,7 @@ test('altre pedine non bloccano la vista geometrica; nessuna modifica alle dista
  const before=targetGeometry(s,'enemy',2);assert.equal(before.visible,true);viewportCells(5,centerViewport(40,5));assert.deepEqual(targetGeometry(s,'enemy',2),before);
 });
 test('backup v8 conserva portata; v7 migra a una casella senza perdere la mappa',()=>{
- const s={...setup(),weaponReach:3};assert.deepEqual(parseBackup(serialize(s)),s);
- const old={...s,version:7};delete old.weaponReach;const migrated=parseBackup(JSON.stringify(old));assert.equal(migrated.weaponReach,1);assert.deepEqual(migrated.encounter,s.encounter);
- for(const reach of [0,10,1.5,'2'])assert.throws(()=>parseBackup(serialize({...s,weaponReach:reach})));
+ const s=setup();s.inventory[0].reach=3;assert.deepEqual(parseBackup(serialize(s)),s);
+ const old=legacyBackup(s,7);const migrated=parseBackup(JSON.stringify(old));assert.equal(migrated.inventory[0].reach,1);assert.deepEqual(migrated.encounter,s.encounter);
+ for(const reach of [0,10,1.5,'2'])assert.throws(()=>parseBackup(JSON.stringify({...legacyBackup(s,8),weaponReach:reach})));
 });

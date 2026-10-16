@@ -1,3 +1,4 @@
+import {legacyBackup} from './test-fixtures.js';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {initialState, serialize, recordRoll} from './model.js';
@@ -7,7 +8,7 @@ import {placeToken,moveActive} from './grid.js';
 import {LIBRARY_KEY,LEGACY_KEY,MAX_CHARACTERS,MAX_LIBRARY_BYTES,createLibrary,activeCharacter,updateCharacter,addCharacter,selectCharacter,removeCharacter,parseLibrary,serializeLibrary,loadLibrary,storeLibrary} from './library.js';
 
 function session(){
-  let s={...initialState(),name:'Mira <&>',potions:0,condition:true};
+  let s={...initialState(),name:'Mira <&>',condition:true};s.inventory[1].quantity=0;
   s=upsertPower(s,{id:'light',type:'spell',name:'Luce',description:'Nota',level:0,concentration:true});
   s=usePower(s,'light');
   s=upsertParticipant(s,{id:'hero',initiative:12});
@@ -25,7 +26,7 @@ function memory(entries=[]){
 test('passaggio tra personaggi conserva l’intera sessione senza contaminare gli altri',()=>{
   const original=session();let library=createLibrary(original,'mira');
   library=addCharacter(library,{...initialState(),name:'Nora'},'nora');
-  const nora=activeCharacter(library);nora.hp=2;nora.potions=1;
+  const nora=activeCharacter(library);nora.hp=2;nora.inventory[1].quantity=1;
   library=updateCharacter(library,nora);
   assert.deepEqual(activeCharacter(selectCharacter(library,'mira')),original);
   assert.equal(activeCharacter(selectCharacter(library,'nora')).hp,2);
@@ -46,17 +47,17 @@ test('copie e selezioni sono indipendenti anche per risorse e mappe annidate',()
   assert.deepEqual(activeCharacter(selectCharacter(updated,'mira')),activeCharacter(library));
 });
 
-test('backup della raccolta ripristina tutti i personaggi e quello attivo con schede v8',()=>{
+test('backup della raccolta ripristina tutti i personaggi e quello attivo con schede v9 e legge quelle precedenti',()=>{
   const library=addCharacter(createLibrary(session(),'mira'),initialState(),'elian');
   const raw=serializeLibrary(library);
   assert.deepEqual(parseLibrary(raw),library);
-  assert.equal(JSON.parse(raw).characters[0].state.version,8);
-  const legacy=JSON.parse(raw);legacy.characters[1].state.version=7;delete legacy.characters[1].state.weaponReach;
-  assert.equal(activeCharacter(parseLibrary(JSON.stringify(legacy))).weaponReach,1);
+  assert.equal(JSON.parse(raw).characters[0].state.version,9);
+  const legacy=JSON.parse(raw);legacy.characters[1].state=legacyBackup(legacy.characters[1].state,7);
+  assert.equal(activeCharacter(parseLibrary(JSON.stringify(legacy))).inventory[0].reach,1);
 });
 
 test('migrazione legge la vecchia chiave senza modificarla e dà priorità alla raccolta nuova',()=>{
-  const old=serialize(session());const storage=memory([[LEGACY_KEY,old]]);
+  const old=JSON.stringify(legacyBackup(session(),8));const storage=memory([[LEGACY_KEY,old]]);
   const loaded=loadLibrary(storage);assert.equal(storage.writes,0);assert.equal(loaded.raw,null);
   assert.deepEqual(activeCharacter(loaded.library),session());
   const raw=storeLibrary(storage,loaded.library,loaded.raw);
@@ -93,6 +94,7 @@ test('una raccolta piena con note e nomi Unicode resta esportabile e ripristinab
   hero.powers=Array.from({length:40},(_,i)=>({id:`power-${i}`.padEnd(64,'x'),type:'spell',name:'界'.repeat(40),description:'界'.repeat(600),level:1,concentration:false}));
   for(let i=0;i<20;i++)hero.history.push({label:'界'.repeat(80),dice:[20],bonus:30,total:50,kind:'d20',mode:'normal',timestamp:i});
   for(let i=0;i<12;i++)hero.encounter.participants.push({id:`enemy-${i}`.padEnd(64,'x'),name:'界'.repeat(40),hp:9999,maxHp:9999,armorClass:30,initiative:50,side:'enemy',speed:18});
+  hero.inventory=Array.from({length:60},(_,i)=>({id:`item-${i}`.padEnd(64,'x'),type:'gear',name:'界'.repeat(40),notes:'界'.repeat(400),quantity:999}));hero.equippedWeaponId=null;
   let library=createLibrary(hero);for(let i=1;i<MAX_CHARACTERS;i++)library=addCharacter(library,hero,`hero-${i}`);
   const raw=serializeLibrary(library);
   assert.ok(new TextEncoder().encode(raw).length<MAX_LIBRARY_BYTES);

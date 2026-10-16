@@ -9,18 +9,20 @@ OUTPUT = Path('/tmp/pocketdd-v09-qa')
 OUTPUT.mkdir(exist_ok=True)
 LIBRARY = 'pocketdd-library-v1'
 LEGACY = 'pocketdd-demo-v1'
-fixture = json.loads(subprocess.check_output(['node','--input-type=module','-e', """
+fixtures = json.loads(subprocess.check_output(['node','--input-type=module','-e', """
 import {initialState,serialize,recordRoll} from './src/model.js';
 import {upsertPower,usePower} from './src/powers.js';
 import {upsertParticipant,startEncounter,queueDamage,applyPendingDamage} from './src/encounter.js';
 import {placeToken,moveActive} from './src/grid.js';
-let s={...initialState(),name:'Mira',hp:7,potions:0,condition:true};
+import {legacyBackup} from './src/test-fixtures.js';
+let s={...initialState(),name:'Mira',hp:7,condition:true};s.inventory[1].quantity=0;
 s=upsertPower(s,{id:'light',type:'spell',name:'Luce',description:'Nota',level:0,concentration:true});s=usePower(s,'light');
 s=upsertParticipant(s,{id:'hero',initiative:12});s=upsertParticipant(s,{id:'enemy',name:'Guardiano',initiative:1,hp:20,maxHp:20,armorClass:12,side:'enemy'});
 s=moveActive(startEncounter(placeToken(placeToken(s,'hero',40),'enemy',80)),41);
 s=applyPendingDamage(queueDamage(s,'enemy',4,'hit'));s=recordRoll(s,'Prova',{dice:[10],bonus:2,total:12},'d20','normal',1000);
-console.log(serialize(s));
+console.log(JSON.stringify({current:JSON.parse(serialize(s)),legacy:legacyBackup(s,8)}));
 """],cwd=ROOT,text=True))
+fixture=fixtures['current']
 errors=[]
 accept=[True]
 
@@ -50,7 +52,7 @@ with sync_playwright() as p:
         target=OUTPUT/result.value.suggested_filename;result.value.save_as(target)
         return target.read_text()
 
-    page=open_page();old=json.dumps(fixture);seed(page,[[LEGACY,old]])
+    page=open_page();old=json.dumps(fixtures['legacy']);seed(page,[[LEGACY,old]])
     assert data(page)['characters'][0]['state']==fixture
     assert page.evaluate('(key)=>localStorage.getItem(key)',LEGACY)==old
     assert hp(page)=='7 / 32'
@@ -81,7 +83,7 @@ with sync_playwright() as p:
     assert len(data(page)['characters'])==2 and data(page)['activeId']==first
     collection=json.loads(exported(page,'[data-action="export-library"]'));close_manager(page)
     # Importing a single v8 backup creates a new independent entry, even if the name already exists.
-    upload(page,'backup-file',fixture);assert len(data(page)['characters'])==3
+    upload(page,'backup-file',fixtures['legacy']);assert len(data(page)['characters'])==3
     imported=data(page)['activeId'];assert imported not in [first,second] and hp(page)=='7 / 32'
     before=raw(page);upload(page,'backup-file',{'version':8,'hp':-1});assert raw(page)==before
     invalid=json.loads(json.dumps(collection));invalid['characters'][0]['state']['hp']=-1
