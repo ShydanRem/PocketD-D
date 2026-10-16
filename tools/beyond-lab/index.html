@@ -1,0 +1,10 @@
+<!doctype html>
+<html lang="it"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>PocketD-D · Prova Beyond</title><link rel="stylesheet" href="/lab.css"><script type="module" src="/lab.js"></script></head>
+<body><main>
+<p class="eyebrow">POCKETD-D · LABORATORIO</p><h1>Proviamo il collegamento a Beyond.</h1>
+<p>Inserisci il link di un tuo personaggio pubblico. La prova legge i dati e ne mostra un riepilogo. Le schede PocketD-D restano conservate: questa pagina non importa personaggi.</p>
+<form id="probe"><label for="character">Link del personaggio o ID</label><div class="entry"><input id="character" name="character" type="text" maxlength="500" autocomplete="off" spellcheck="false" required placeholder="https://www.dndbeyond.com/characters/…"><button>Prova lettura</button></div></form>
+<p id="status" role="status">Pronto. Nessun accesso all’account richiesto per questa prova pubblica.</p>
+<section id="result" hidden><h2 id="name"></h2><p id="metadata"></p><p id="evidence"></p><h3>Caratteristiche · anteprima parziale</h3><dl id="abilities"></dl><h3>Punti ferita · anteprima parziale</h3><p id="hp"></p><h3>Inventario · riepilogo sorgente</h3><ul id="inventory"></ul><h3>Da verificare</h3><ul id="warnings"></ul><button id="download" type="button">Scarica resoconto JSON</button></section>
+<p class="footnote">I valori derivati richiedono ancora un confronto con la scheda Beyond. Non sono convertiti CA, tiri, magie o risorse. Il resoconto non è un backup importabile e non contiene cookie o credenziali.</p>
+</main></body></html>

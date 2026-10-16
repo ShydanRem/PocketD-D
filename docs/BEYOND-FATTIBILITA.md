@@ -1,6 +1,8 @@
 # D&D Beyond: fattibilità per PocketD-D
 
-Verifica del 16 ottobre 2026, sulla base di PocketD-D v0.12. Esito: **il codice di MrPrimate supporta la fattibilità tecnica di una lettura diretta. Il percorso richiesto è PocketD-D → Beyond, con un connettore nostro integrato nell’app di supporto. Autenticazione privata e scrittura su Beyond richiedono verifiche separate.** Nessuna integrazione è stata implementata o provata su un account in questa ricerca.
+Verifica del 16 ottobre 2026, sulla base di PocketD-D v0.12. Esito: **il codice di MrPrimate supporta la fattibilità tecnica di una lettura diretta. Il percorso richiesto è PocketD-D → Beyond, con un connettore nostro integrato nell’app di supporto. Autenticazione privata e scrittura su Beyond richiedono verifiche separate.** La verifica iniziale riguarda le fonti e il codice; l’aggiornamento delle prove è riportato qui sotto.
+
+Aggiornamento delle prove: è ora disponibile un laboratorio PC in sola lettura con anteprima parziale, verificato con risposte sintetiche. Il tentativo reale sul link dell'utente è stato bloccato dal proxy cloud prima di raggiungere Beyond; la corrispondenza dei dati reali rimane non verificata. Comandi, risultati e limiti sono in [BEYOND-PROVE.md](BEYOND-PROVE.md). L'importazione nella raccolta non è ancora implementata.
 
 Requisito confermato dall'utente: importazione diretta dentro PocketD-D, senza Foundry, esportazioni intermedie o servizi MrPrimate obbligatori. MrPrimate è un riferimento tecnico per accesso e conversione. Il fatto che l'utente possieda Foundry non cambia questo requisito.
 
@@ -75,4 +77,4 @@ Per il prototipo da PC il connettore HTTP farà parte dell'app di supporto, sul 
 
 Criteri di verifica del prototipo: URL accettati soltanto per i formati Beyond previsti, destinazione remota fissa, errori espliciti per scheda privata/inesistente o servizio non disponibile, limiti di tempo e dimensione, nessuna scrittura della raccolta prima dell'anteprima e della conferma. Testare almeno un personaggio marziale, un incantatore e un caso con bonus/effetti o regole miste. Confrontare valori, inventario, slot e omissioni con la scheda Beyond. Conservare la provenienza per i futuri aggiornamenti; dopo l'importazione il personaggio deve restare utilizzabile localmente. Nessun cookie o token deve entrare nei backup, nel repository o nel dispositivo.
 
-Questa verifica ha esaminato fonti e codice. Non ha effettuato accessi a Beyond, importazioni reali, chiamate al proxy o prove con Foundry installato. Il funzionamento completo del connettore diretto resta da dimostrare su una scheda dell'utente; lo stato dell'app rimane v0.12.
+La ricerca iniziale ha esaminato fonti e codice. Il successivo laboratorio ha superato le prove sintetiche; il tentativo di lettura reale è stato fermato dal proxy cloud prima di Beyond. Non sono stati effettuati accessi ad account, importazioni reali o prove hardware. Il funzionamento completo del connettore diretto resta da dimostrare; lo stato dell’app rimane v0.12.

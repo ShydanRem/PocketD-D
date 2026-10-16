@@ -9,6 +9,7 @@ Hardware previsto: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, display touch roton
 - [Proposta di prodotto e roadmap](docs/PROGETTO.md)
 - [Architettura e verifiche tecniche](docs/ARCHITETTURA.md)
 - [Fattibilità dell’importazione diretta D&D Beyond](docs/BEYOND-FATTIBILITA.md)
+- [Banco di prova Beyond: avvio da PC ed esito delle prove](docs/BEYOND-PROVE.md)
 
 ## Primo traguardo
 

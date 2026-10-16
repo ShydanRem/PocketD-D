@@ -7,7 +7,9 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build && node scripts/standalone.js",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "node --test --test-isolation=none src/*.test.js"
+    "test": "node --test --test-isolation=none src/*.test.js",
+    "beyond:probe": "node --use-env-proxy scripts/beyond-probe.js",
+    "beyond:lab": "node --use-env-proxy scripts/beyond-lab.js"
   },
   "devDependencies": {
     "vite": "^7.1.0"
