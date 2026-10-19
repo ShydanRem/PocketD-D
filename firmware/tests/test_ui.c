@@ -33,6 +33,19 @@ static void screenshot(const char *name) {
 }
 static void bounds(void) {
     lv_obj_t *root=lv_screen_active();lv_obj_update_layout(root);
+    /* Text must not grow into another field/control for long imported names. */
+    for(unsigned i=0;i<lv_obj_get_child_count(root);i++) {
+        lv_obj_t *l=lv_obj_get_child(root,i);if(!lv_obj_check_type(l,&lv_label_class))continue;
+        lv_area_t a;lv_obj_get_coords(l,&a);
+        for(unsigned j=0;j<lv_obj_get_child_count(root);j++) {
+            lv_obj_t *other=lv_obj_get_child(root,j);
+            if(other==l||(!lv_obj_check_type(other,&lv_label_class)&&!lv_obj_check_type(other,&lv_button_class)))continue;
+            lv_area_t b;lv_obj_get_coords(other,&b);
+            if(!(a.x2<b.x1||a.x1>b.x2||a.y2<b.y1||a.y1>b.y2)) {
+                fprintf(stderr,"Text overlaps a field/control: %s\n",lv_label_get_text(l));abort();
+            }
+        }
+    }
     for(unsigned i=0;i<lv_obj_get_child_count(root);i++) {
         lv_obj_t *o=lv_obj_get_child(root,i);if(!lv_obj_check_type(o,&lv_button_class))continue;
         lv_area_t a;lv_obj_get_coords(o,&a);
@@ -68,7 +81,15 @@ int main(void) {
     lv_init();lv_display_t *d=lv_display_create(466,466);static uint16_t buffer[466*40];
     lv_display_set_buffers(d,buffer,NULL,sizeof buffer,LV_DISPLAY_RENDER_MODE_PARTIAL);lv_display_set_flush_cb(d,paint);
     pd_demo(&state);render();bounds();screenshot("hero.ppm");
-    click("-1 PF");assert(state.hp==23&&undo_available);click("Annulla modifica");assert(state.hp==24&&!undo_available);
+    /* Long names and maximum supported values must remain usable in the new layout. */
+    pd_state demo=state;
+    memset(state.name,'W',PD_NAME_BYTES-1);state.name[PD_NAME_BYTES-1]=0;
+    state.hp=state.max_hp=999;state.temp_hp=999;state.level=20;state.armor=40;
+    render();bounds();screenshot("hero-maximum.ppm");
+    state.hp=0;state.temp_hp=0;render();bounds();screenshot("hero-zero.ppm");
+    state=demo;fail_save=true;render();bounds();screenshot("hero-storage-error.ppm");
+    fail_save=false;render();
+    click("-1 PF");assert(state.hp==23&&undo_available);click("Annulla");assert(state.hp==24&&!undo_available);
     fail_save=true;click("-1 PF");assert(state.hp==24);fail_save=false;
     click("Scheda");screenshot("sheet.ppm");click("DES 16\n+3");
     unsigned saved_before=save_calls;

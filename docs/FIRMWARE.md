@@ -1,4 +1,4 @@
-# Firmware PocketD-D 0.17 — percorso offline e dadi poliedrici
+# Firmware PocketD-D 0.18 — pixel art moderna e percorso offline
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
@@ -17,13 +17,18 @@ La v0.17 aggiunge d4/d6/d8/d10/d12, quantità fino a sei, bonus e modalità
 Somma/Danni. Da Dadi → Altri si prepara il tiro. Nessun danno è applicato
 automaticamente ai PF; nessun bonus di arma viene dedotto.
 
+La v0.18 introduce la prima [revisione visiva del dispositivo](DIREZIONE-VISIVA.md):
+scena con avatar base originale, icone pixel art, tema notturno, gerarchia dei
+valori e barre PF/risorse. L'avatar è statico e decorativo; l'aspetto scelto sul
+PC non viene ancora trasferito. Dati e formati USB/NVS restano invariati.
+
 Primo percorso: avvio con Elian originale o copia precedentemente salvata →
 Scheda → caratteristica → d20 → risultato → Eroe → PF ±1 → annulla →
 salvataggio locale. Anche PF temporanei e fino a otto contatori manuali.
 Vantaggio e svantaggio selezionabili dal pulsante Base/Vant/Svant. Durante il volo
 si può accelerare; modalità e navigazione attendono l'arresto del tiro.
 
-Non è ancora una scheda completa: mancano avatar, inventario, attacchi, magie,
+Non è ancora una scheda completa: mancano avatar personalizzabile, inventario, attacchi, magie,
 abilità e salvezze con competenze, effetti/condizioni, morte, dadi vita,
 monete, storico persistente, mappa e party. Le prove sono **solo di
 caratteristica base**, senza competenza, bonus extra o effetti. Il dado libero
@@ -235,3 +240,20 @@ il protocollo USB e i record NVS non sono modificati. Collaudo fisico aperto.
 Build ESP32-S3 v0.17: **713.808 byte** (circa 697 KiB), partizione
 app da 4 MiB **83% libera**, DIRAM statica **78.335 byte**. Il canvas rimane
 da 81.920 byte dinamici; heap, prestazioni e consumo vanno misurati sulla scheda.
+
+## Verifiche v0.18 — prima base visiva del dispositivo
+
+Tema applicato a tutte le viste firmware, scena e icone originali, font da 16 e
+32 px aggiunti ai 20/26 px. Nomi lunghi con ellissi e altezza esplicita, PF zero
+e massimi, stato errore memoria, separazione di testi/controlli verificati sul
+renderer LVGL host. Controlli C/NVS/dadi/pool/uploader e 125 test JavaScript
+passati, build PC ed ESP32-S3 riuscite. UI nativa ripetuta con ASan/UBSan senza
+errori nei percorsi verificati; leak detector disabilitato per l'istanza globale
+LVGL mantenuta fino alla fine del processo.
+
+Build ESP32-S3 v0.18: **789.584 byte**, partizione app da 4 MiB **81% libera**.
+La scena non introduce un canvas applicativo aggiuntivo; i dati immagine statici
+occupano 12.272 byte in flash. Il canvas Dadi rimane da 81.920 byte dinamici.
+Le nuove dimensioni non stabiliscono heap disponibile o prestazioni reali.
+Nessun flash o lettura Beyond eseguiti per questa revisione. Anteprime e limiti
+in [DIREZIONE-VISIVA.md](DIREZIONE-VISIVA.md).

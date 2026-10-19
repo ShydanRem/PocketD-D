@@ -2,10 +2,11 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.17:** firmware offline con dadi d4/d6/d8/d10/d12/d20 animati in pixel art, prove con vantaggio/svantaggio e lanci manuali fino a sei dadi con bonus. Include scheda essenziale, PF/annulla, contatori e salvataggio locale. Supporto PC per importazione Beyond, configurazione, backup ed esportazione USB con conferma sul display. Il firmware non è ancora collaudato sulla scheda fisica.
+**Stato v0.18:** prima revisione grafica del firmware con scena e avatar base originali in pixel art, icone dedicate, tema notturno e PF in evidenza. Dadi d4/d6/d8/d10/d12/d20 animati, prove con vantaggio/svantaggio e lanci manuali fino a sei dadi con bonus. Include scheda essenziale, PF/annulla, contatori e salvataggio locale. Supporto PC per importazione Beyond, configurazione, backup ed esportazione USB con conferma sul display. Il firmware non è ancora collaudato sulla scheda fisica.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
+- [Direzione visiva: pixel art moderna e anteprime del firmware](docs/DIREZIONE-VISIVA.md)
 - [Dadi animati: uso, rendering e verifiche](docs/DADI-ANIMATI.md)
 - [Firmware: compilazione, trasferimento USB, limiti e prove hardware](docs/FIRMWARE.md)
 - [Proposta di prodotto e roadmap](docs/PROGETTO.md)
@@ -15,7 +16,7 @@ Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazi
 
 ## Primo traguardo
 
-Scheda → caratteristica → d20 → risultato → PF → salvataggio offline sul dispositivo. Il firmware iniziale include Elian originale e una copia limitata della scheda preparata da PC. Avatar, inventario, attacchi e magie restano nel simulatore finché non vengono portati e verificati nel firmware. Non considerare una build riuscita equivalente a una prova fisica.
+Scheda → caratteristica → d20 → risultato → PF → salvataggio offline sul dispositivo. Il firmware include Elian originale e una copia limitata della scheda preparata da PC, con un avatar base decorativo. Avatar personalizzabile, inventario, attacchi e magie restano nel simulatore finché non vengono portati e verificati nel firmware. Non considerare una build riuscita equivalente a una prova fisica.
 
 ## Avvio del prototipo
 

@@ -1,4 +1,5 @@
 #include "dice_animation.h"
+#include "visual.h"
 #include "../assets/d20_atlas.h"
 #include "../assets/poly_atlas.h"
 #include <assert.h>
@@ -91,10 +92,10 @@ static void star(uint16_t *p,int x,int y,int r,uint16_t c) {
     block(p,x-4,y-4,8,8,c);
 }
 void pd_dice_paint(const pd_dice_animation *a,uint16_t p[PD_DICE_PIXELS]) {
-    uint16_t bg=color(0x0d1916);
+    uint16_t bg=color(PD_INK);
     for(int i=0;i<PD_DICE_PIXELS;i++)p[i]=bg;
     /* A restrained pixel tray; all positions are local to the circular safe area. */
-    for(int x=24;x<PD_DICE_WIDTH-24;x+=8)block(p,x,117,4,2,color(0x20382e));
+    for(int x=24;x<PD_DICE_WIDTH-24;x+=8)block(p,x,117,4,2,color(PD_EDGE));
     unsigned selected=a->roll.dice[0]==a->roll.natural?0:1;
     unsigned count=pd_dice_count(a),sides=pd_dice_sides(a);
     for(unsigned d=0;d<count;d++) {

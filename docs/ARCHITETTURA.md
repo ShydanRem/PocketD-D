@@ -12,7 +12,13 @@ implicita. Dettagli, pin, memoria, compilazione e gate hardware in
 dinamico da 81.920 byte; calcolo del tiro e salvataggi restano separati dalla
 presentazione ([dettagli](DADI-ANIMATI.md)). La v0.17 estende lo stesso canvas a sei tipi di
 dado e gruppi fino a sei; aggiunge 138.240 byte di atlas in flash, senza
-modificare i formati USB/NVS. Il resto di questo documento conserva le scelte
+modificare i formati USB/NVS. La v0.18 aggiunge la palette comune in
+`firmware/core/visual.h`, scena e quattro icone I4 originali in flash
+(12.272 byte di dati), generate da `scripts/generate-device-art.py`.
+Il tema è applicato alle viste LVGL reali e non modifica il modello di gioco.
+Testi di una riga con altezza esplicita impediscono ai nomi lunghi di invadere
+i valori. Dettagli e anteprime in [DIREZIONE-VISIVA.md](DIREZIONE-VISIVA.md).
+Il resto di questo documento conserva le scelte
 progettuali e le verifiche ancora necessarie.
 
 ## Hardware

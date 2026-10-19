@@ -2,6 +2,8 @@
 #include "board.h"
 #include "storage.h"
 #include "dice_animation.h"
+#include "visual.h"
+#include "../assets/device_art.h"
 #ifndef PD_UI_TEST
 #include "driver/usb_serial_jtag.h"
 #include "freertos/FreeRTOS.h"
@@ -42,14 +44,55 @@ static void reply(const char *text) { (void)text; }
 static void apply(pd_state *next) {
     if (pd_storage_save(next)) { previous=state; undo_available=true; state=*next; }
 }
+static void label_font(lv_obj_t *l,const lv_font_t *font) {
+    lv_obj_set_style_text_font(l,font,0);
+    /* DOT needs a fixed height: a long imported name must not wrap over the stats. */
+    lv_obj_set_height(l,lv_font_get_line_height(font));
+}
 static lv_obj_t *label(const char *text,int x,int y,int width,bool large) {
     lv_obj_t *l=lv_label_create(lv_screen_active());
     lv_obj_set_pos(l,x,y); lv_obj_set_width(l,width);
     lv_label_set_long_mode(l,LV_LABEL_LONG_DOT); lv_label_set_text(l,text);
     lv_obj_set_style_text_align(l,LV_TEXT_ALIGN_CENTER,0);
-    lv_obj_set_style_text_color(l,lv_color_hex(0xebe7d4),0);
-    if (large) lv_obj_set_style_text_font(l,&lv_font_montserrat_26,0);
+    lv_obj_set_style_text_color(l,lv_color_hex(PD_TEXT),0);
+    label_font(l,large?&lv_font_montserrat_26:&lv_font_montserrat_20);
     return l;
+}
+static lv_obj_t *small_label(const char *text,int x,int y,int w,unsigned color) {
+    lv_obj_t *l=label(text,x,y,w,false);
+    label_font(l,&lv_font_montserrat_16);
+    lv_obj_set_style_text_color(l,lv_color_hex(color),0);return l;
+}
+/* Decoration never participates in hit testing; only explicit buttons/canvas do. */
+static lv_obj_t *decoration(int x,int y,int w,int h,unsigned color,int radius) {
+    lv_obj_t *o=lv_obj_create(lv_screen_active());lv_obj_remove_style_all(o);
+    lv_obj_set_pos(o,x,y);lv_obj_set_size(o,w,h);
+    lv_obj_set_style_bg_color(o,lv_color_hex(color),0);lv_obj_set_style_bg_opa(o,LV_OPA_COVER,0);
+    lv_obj_set_style_radius(o,radius,0);lv_obj_remove_flag(o,LV_OBJ_FLAG_CLICKABLE|LV_OBJ_FLAG_SCROLLABLE);
+    return o;
+}
+static void art(const lv_image_dsc_t *source,int x,int y,lv_obj_t *parent) {
+    lv_obj_t *o=lv_image_create(parent);lv_image_set_src(o,source);lv_obj_set_pos(o,x,y);
+    lv_obj_remove_flag(o,LV_OBJ_FLAG_CLICKABLE|LV_OBJ_FLAG_SCROLLABLE);
+}
+static void meter(unsigned current,unsigned maximum,int y,unsigned color) {
+    decoration(89,y,288,4,PD_EDGE,0);
+    if(current&&maximum)decoration(89,y,(288*current+maximum-1)/maximum,4,color,0);
+}
+static void frame(void) {
+    lv_obj_t *rim=decoration(5,5,456,456,PD_INK,LV_RADIUS_CIRCLE);
+    lv_obj_set_style_bg_opa(rim,LV_OPA_TRANSP,0);lv_obj_set_style_border_width(rim,2,0);
+    lv_obj_set_style_border_color(rim,lv_color_hex(0x1b2b40),0);
+    /* Small pixel marks give the circular housing an identity without a busy HUD. */
+    decoration(229,17,8,4,PD_GOLD,0);decoration(231,15,4,8,PD_GOLD,0);
+    decoration(27,226,3,14,PD_EDGE,0);decoration(436,226,3,14,PD_EDGE,0);
+    lv_obj_t *brand=small_label("POCKET D-D",113,37,240,PD_MINT);
+    lv_obj_set_style_text_letter_space(brand,3,0);
+    const char *status=pd_storage_status();
+    unsigned c=strstr(status,"Errore")?PD_DANGER:strstr(status,"Recuperata")?PD_GOLD:PD_MUTED;
+    small_label(status,78,72,310,c);
+    decoration(203,422,60,2,PD_EDGE,0);
+    decoration(227,422,12,2,PD_GOLD,0);
 }
 static void event(lv_event_t *e) {
     intptr_t action=(intptr_t)lv_event_get_user_data(e);
@@ -116,9 +159,16 @@ static void event(lv_event_t *e) {
 }
 static lv_obj_t *button(const char *text,int x,int y,int w,int h,intptr_t action,bool enabled) {
     lv_obj_t *b=lv_button_create(lv_screen_active());lv_obj_set_pos(b,x,y);lv_obj_set_size(b,w,h);
-    lv_obj_set_style_bg_color(b,lv_color_hex(0x29463d),0);lv_obj_set_style_radius(b,12,0);
-    lv_obj_set_style_bg_color(b,lv_color_hex(0x1b2b25),LV_STATE_DISABLED);
-    lv_obj_set_style_text_color(b,lv_color_hex(0x6e8179),LV_STATE_DISABLED);
+    bool primary=action==13||action==46||action==30;
+    lv_obj_set_style_bg_color(b,lv_color_hex(primary?PD_MINT:PD_PANEL),0);lv_obj_set_style_radius(b,6,0);
+    lv_obj_set_style_border_width(b,1,0);lv_obj_set_style_border_color(b,lv_color_hex(primary?PD_MINT:PD_EDGE),0);
+    lv_obj_set_style_text_color(b,lv_color_hex(primary?PD_INK:PD_TEXT),0);
+    lv_obj_set_style_text_align(b,LV_TEXT_ALIGN_CENTER,0);
+    lv_obj_set_style_bg_color(b,lv_color_hex(0x273d4f),LV_STATE_PRESSED);
+    lv_obj_set_style_text_color(b,lv_color_hex(PD_TEXT),LV_STATE_PRESSED);
+    lv_obj_set_style_bg_color(b,lv_color_hex(0x101a28),LV_STATE_DISABLED);
+    lv_obj_set_style_border_color(b,lv_color_hex(0x243448),LV_STATE_DISABLED);
+    lv_obj_set_style_text_color(b,lv_color_hex(0x7b8a9c),LV_STATE_DISABLED);
     lv_obj_set_style_shadow_width(b,0,0);lv_obj_set_style_pad_all(b,4,0);
     lv_obj_t *l=lv_label_create(b);lv_label_set_text(l,text);lv_obj_center(l);
     if (!enabled) lv_obj_add_state(b,LV_STATE_DISABLED);
@@ -132,7 +182,10 @@ static void render_dice_setup(void) {
         for(int i=0;i<6;i++) {
             snprintf(text,sizeof text,"d%u",sides[i]);
             lv_obj_t *b=button(text,83+(i%3)*104,158+(i/3)*72,92,56,400+sides[i],true);
-            if(pool_sides==sides[i])lv_obj_set_style_bg_color(b,lv_color_hex(0x75562b),0);
+            if(pool_sides==sides[i]) {
+                lv_obj_set_style_border_color(b,lv_color_hex(PD_GOLD),0);
+                lv_obj_set_style_text_color(b,lv_color_hex(PD_GOLD),0);
+            }
         }
         button("Indietro",83,308,300,48,41,true);return;
     }
@@ -153,10 +206,10 @@ static void render(void) {
     if(dice_timer) { lv_timer_delete(dice_timer);dice_timer=NULL; }
     lv_obj_t *root=lv_screen_active();lv_obj_clean(root);
     lv_free(dice_pixels);dice_pixels=NULL;dice_canvas=NULL;
-    lv_obj_set_style_bg_color(root,lv_color_hex(0x0d1916),0);
+    lv_obj_set_style_bg_color(root,lv_color_hex(PD_INK),0);
     lv_obj_remove_flag(root,LV_OBJ_FLAG_SCROLLABLE);
     char text[160];
-    label(pd_storage_status(),78,73,310,false);
+    frame();
     if (import_pending) {
         label("COPIA DA USB",83,112,300,true);
         label(pending.name,83,151,300,true);
@@ -169,18 +222,29 @@ static void render(void) {
     }
     if(page==DICE && dice_setup) { render_dice_setup();return; }
     if (page==HERO) {
-        label(state.name,83,111,300,true);
-        snprintf(text,sizeof text,"Livello %u     CA %u",state.level,state.armor);label(text,83,151,300,false);
-        snprintf(text,sizeof text,"PF %u / %u   +%u temp",state.hp,state.max_hp,state.temp_hp);label(text,83,190,300,true);
-        button("-1 PF",83,230,144,50,1,state.hp||state.temp_hp);button("+1 PF",239,230,144,50,2,state.hp<state.max_hp);
-        button("Annulla modifica",83,290,300,48,3,undo_available);
+        label(state.name,83,101,300,true);
+        snprintf(text,sizeof text,"LIVELLO %02u   /   CA %02u",state.level,state.armor);
+        lv_obj_t *meta=small_label(text,83,133,300,PD_GOLD);lv_obj_set_style_text_letter_space(meta,1,0);
+        art(&pd_art_scene,83,153,root);
+        snprintf(text,sizeof text,"%u / %u",state.hp,state.max_hp);
+        lv_obj_t *hp=label(text,133,225,200,true);label_font(hp,&lv_font_montserrat_32);
+        lv_obj_set_style_text_color(hp,lv_color_hex(state.hp?PD_MINT:PD_DANGER),0);
+        small_label("PF",83,236,46,PD_MUTED);
+        snprintf(text,sizeof text,"+%u PF temporanei",state.temp_hp);small_label(text,83,263,300,PD_MUTED);
+        meter(state.hp,state.max_hp,283,state.hp?PD_MINT:PD_DANGER);
+        button("-1 PF",83,292,92,48,1,state.hp||state.temp_hp);
+        lv_obj_t *undo=button("Annulla",187,292,92,48,3,undo_available);
+        lv_obj_set_style_text_font(undo,&lv_font_montserrat_16,0);
+        button("+1 PF",291,292,92,48,2,state.hp<state.max_hp);
     } else if (page==SHEET) {
         label("Caratteristiche",83,111,300,true);
+        small_label("Tocca per tirare un d20",83,143,300,PD_MUTED);
         for(int i=0;i<6;i++) {
             snprintf(text,sizeof text,"%s %u\n%+d",abilities[i],state.abilities[i],pd_modifier(state.abilities[i]));
-            button(text,83+(i%3)*104,154+(i/3)*73,92,64,200+i,true);
+            lv_obj_t *b=button(text,83+(i%3)*104,172+(i/3)*73,92,64,200+i,true);
+            lv_obj_set_style_text_line_space(b,5,0);lv_obj_set_style_text_color(b,lv_color_hex(PD_MINT),0);
         }
-        label("Prove base: nessun effetto",83,306,300,false);
+        small_label("Prove base: nessun effetto",83,320,300,PD_MUTED);
     } else if (page==DICE) {
         if(pool_view)snprintf(text,sizeof text,"%s %ud%u %+d",dice_animation.pool.damage?"Danni":"Somma",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
         else snprintf(text,sizeof text,"d20 %s %+d",ability<0?"libero":abilities[ability],ability<0?0:pd_modifier(state.abilities[ability]));
@@ -216,17 +280,27 @@ static void render(void) {
         label("Contatori manuali",83,111,300,true);
         if(state.resource_count) {
             pd_resource *r=&state.resources[resource_index];label(r->name,83,158,300,false);
-            snprintf(text,sizeof text,"%u / %u",r->current,r->maximum);label(text,83,194,300,true);
-            button("-1",83,235,144,50,20,r->current>0);button("+1",239,235,144,50,21,r->current<r->maximum);
+            snprintf(text,sizeof text,"%u / %u",r->current,r->maximum);
+            lv_obj_t *value=label(text,83,194,300,true);label_font(value,&lv_font_montserrat_32);
+            lv_obj_set_style_text_color(value,lv_color_hex(PD_VIOLET),0);meter(r->current,r->maximum,235,PD_VIOLET);
+            button("-1",83,247,144,44,20,r->current>0);button("+1",239,247,144,44,21,r->current<r->maximum);
             snprintf(text,sizeof text,"Prossima  %d/%u",resource_index+1,state.resource_count);
-            button(text,83,294,300,44,22,state.resource_count>1);
+            button(text,83,299,300,44,22,state.resource_count>1);
         } else label("Nessun contatore importato",83,194,300,false);
     }
     const char *nav[]={"Eroe","Scheda","Dadi","Usi"};
+    const lv_image_dsc_t *icons[]={&pd_art_hero,&pd_art_sheet,&pd_art_dice,&pd_art_uses};
     const int nav_x[]={79,153,251,325},nav_w[]={68,92,68,64};
     for (int i=0;i<4;i++) {
-        lv_obj_t *b=button(nav[i],nav_x[i],350,nav_w[i],48,100+i,!dice_animation.active);
-        if (page==i)lv_obj_set_style_bg_color(b,lv_color_hex(0x75562b),0);
+        lv_obj_t *b=button(nav[i],nav_x[i],350,nav_w[i],56,100+i,!dice_animation.active);
+        lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);lv_obj_set_style_pad_all(b,2,0);
+        lv_obj_align(lv_obj_get_child(b,0),LV_ALIGN_BOTTOM_MID,0,-2);
+        art(icons[i],(nav_w[i]-4-24)/2,2,b);
+        if (page==i) {
+            lv_obj_set_style_bg_color(b,lv_color_hex(0x302d29),0);
+            lv_obj_set_style_border_color(b,lv_color_hex(PD_GOLD),0);
+            lv_obj_set_style_text_color(b,lv_color_hex(PD_GOLD),0);
+        }
     }
 }
 static void dice_frame(lv_timer_t *timer) {

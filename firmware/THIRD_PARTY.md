@@ -22,3 +22,7 @@ are retained in `licenses/` and accompany source/binary bundles.
 The polyhedral dice atlases and pixel numeral glyphs are original PocketD-D assets, generated
 by `scripts/generate-dice.py` and rendered by `core/dice_animation.c`; they do
 not depend on third-party images, fonts or online asset services.
+
+The device scene, base adventurer and navigation icons in `assets/device_art.h`
+are original PocketD-D pixel art authored by `scripts/generate-device-art.py`.
+No third-party artwork or imported character appearance is used.

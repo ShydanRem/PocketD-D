@@ -68,8 +68,11 @@ raccolta PC. La v0.16 aggiunge dadi d20 animati nel firmware con sprite original
 lancio doppio e risultato naturale separato dal totale. La v0.17 aggiunge
 d4/d6/d8/d10/d12 e lanci manuali Somma/Danni fino a sei dadi con bonus,
 senza applicare danni automaticamente o migrare salvataggi.
-Collaudo hardware, alimentazione e autonomia restano il prossimo
-passo, prima di ampliare le regole. Vedere [FIRMWARE.md](FIRMWARE.md).
+La v0.18 stabilisce la prima base grafica moderna in pixel art direttamente
+nel firmware: scena originale, avatar base, icone e tema condiviso.
+Il porting della scheda estesa procede con questa direzione visiva; collaudo
+hardware, alimentazione e autonomia restano attività necessarie in parallelo.
+Vedere [FIRMWARE.md](FIRMWARE.md) e [DIREZIONE-VISIVA.md](DIREZIONE-VISIVA.md).
 
 ## D&D Beyond e contenuti
 
@@ -86,7 +89,9 @@ Per iniziare: personaggi e grafica originali, inserimento manuale e formato loca
 ## Decisioni da discutere
 
 - Confermare il tavolo con DM come esperienza iniziale.
-- Scegliere direzione artistica: fantasy caldo da taverna, dungeon scuro o altra palette.
+- Affinare avatar e ambienti nella direzione richiesta: pixel art moderna e
+  curata sul dispositivo. La prima base propone fondi scuri e accenti menta/oro,
+  con testi leggibili.
 - Scegliere il primo regolamento e quali automatismi offrire.
 - Definire alimentazione, autonomia desiderata e modalità d'uso durante la sessione.
 
