@@ -1,6 +1,7 @@
 #include "pocketdd.h"
 #include "board.h"
 #include "storage.h"
+#include "dice_animation.h"
 #ifndef PD_UI_TEST
 #include "driver/usb_serial_jtag.h"
 #include "freertos/FreeRTOS.h"
@@ -16,6 +17,11 @@ typedef enum { HERO, SHEET, DICE, RESOURCES } page_t;
 static pd_state state,previous,pending;
 static bool undo_available,import_pending,has_roll;
 static pd_roll result;
+static pd_dice_animation dice_animation;
+static lv_obj_t *dice_canvas;
+static uint16_t *dice_pixels;
+static lv_timer_t *dice_timer;
+static void dice_frame(lv_timer_t *timer);
 static page_t page;
 static int ability=-1,mode,resource_index;
 static const char *const abilities[]={"FOR","DES","COS","INT","SAG","CAR"};
@@ -44,22 +50,35 @@ static lv_obj_t *label(const char *text,int x,int y,int width,bool large) {
 }
 static void event(lv_event_t *e) {
     intptr_t action=(intptr_t)lv_event_get_user_data(e);
+    /* Disabled controls also reject queued/synthetic events while dice are in flight. */
+    if (dice_animation.active && action!=13 && action!=16) return;
     pd_state next=state;
     if (action>=100 && action<104) { page=action-100; }
-    else if (action>=200 && action<206) { ability=action-200;page=DICE;has_roll=false;mode=0; }
+    else if (action>=200 && action<206) { ability=action-200;page=DICE;has_roll=false;mode=0;pd_dice_idle(&dice_animation,1); }
     else if (action==1) { pd_hp(&next,-1);apply(&next); }
     else if (action==2) { pd_hp(&next,1);apply(&next); }
     else if (action==3 && undo_available) {
         if (pd_storage_save(&previous)) { state=previous; undo_available=false; }
     }
-    else if (action>=10 && action<=12) { mode=action-11;has_roll=false; }
-    else if (action==13) { result=pd_d20(ability<0?0:pd_modifier(state.abilities[ability]),mode,pd_board_random,NULL);has_roll=true; }
-    else if (action==14) { ability=-1; has_roll=false; }
+    else if (action>=10 && action<=12) { mode=action-11;has_roll=false;pd_dice_idle(&dice_animation,mode?2:1); }
+    else if (action==15) { mode=mode==0?1:mode==1?-1:0;has_roll=false;pd_dice_idle(&dice_animation,mode?2:1); }
+    else if (action==13) {
+        if (dice_animation.active) { pd_dice_finish(&dice_animation);has_roll=true; }
+        else {
+            result=pd_d20(ability<0?0:pd_modifier(state.abilities[ability]),mode,pd_board_random,NULL);
+            has_roll=false;pd_dice_start(&dice_animation,&result,lv_tick_get());
+        }
+    }
+    else if (action==16) {
+        if(!dice_animation.active)return;
+        pd_dice_finish(&dice_animation);has_roll=true;
+    }
+    else if (action==14) { ability=-1; has_roll=false;pd_dice_idle(&dice_animation,mode?2:1); }
     else if (action==20 || action==21) { if(pd_resource_change(&next,resource_index,action==20?-1:1))apply(&next); }
     else if (action==22 && state.resource_count) resource_index=(resource_index+1)%state.resource_count;
     else if (action==30) {
         if (pd_storage_save(&pending)) {
-            state=pending;undo_available=false;resource_index=0;has_roll=false;ability=-1;page=HERO;
+            state=pending;undo_available=false;resource_index=0;has_roll=false;ability=-1;mode=0;page=HERO;pd_dice_idle(&dice_animation,1);
             reply("PDD IMPORTED\n"); import_pending=false;
         } else { reply("PDD ERROR storage\n");import_pending=false; }
     }
@@ -69,13 +88,19 @@ static void event(lv_event_t *e) {
 static lv_obj_t *button(const char *text,int x,int y,int w,int h,intptr_t action,bool enabled) {
     lv_obj_t *b=lv_button_create(lv_screen_active());lv_obj_set_pos(b,x,y);lv_obj_set_size(b,w,h);
     lv_obj_set_style_bg_color(b,lv_color_hex(0x29463d),0);lv_obj_set_style_radius(b,12,0);
+    lv_obj_set_style_bg_color(b,lv_color_hex(0x1b2b25),LV_STATE_DISABLED);
+    lv_obj_set_style_text_color(b,lv_color_hex(0x6e8179),LV_STATE_DISABLED);
     lv_obj_set_style_shadow_width(b,0,0);lv_obj_set_style_pad_all(b,4,0);
     lv_obj_t *l=lv_label_create(b);lv_label_set_text(l,text);lv_obj_center(l);
     if (!enabled) lv_obj_add_state(b,LV_STATE_DISABLED);
     lv_obj_add_event_cb(b,event,LV_EVENT_CLICKED,(void*)action);return b;
 }
 static void render(void) {
+    /* Destroy the LVGL image/cache before freeing its pixel buffer. A root redraw
+       cancels the old timer; the roll itself remains in the pure presentation state. */
+    if(dice_timer) { lv_timer_delete(dice_timer);dice_timer=NULL; }
     lv_obj_t *root=lv_screen_active();lv_obj_clean(root);
+    lv_free(dice_pixels);dice_pixels=NULL;dice_canvas=NULL;
     lv_obj_set_style_bg_color(root,lv_color_hex(0x0d1916),0);
     lv_obj_remove_flag(root,LV_OBJ_FLAG_SCROLLABLE);
     char text[160];
@@ -105,16 +130,29 @@ static void render(void) {
         label("Prove base: nessun effetto",83,306,300,false);
     } else if (page==DICE) {
         snprintf(text,sizeof text,"d20 %s %+d",ability<0?"libero":abilities[ability],ability<0?0:pd_modifier(state.abilities[ability]));
-        label(text,83,111,300,true);
+        label(text,83,105,300,true);
+        if(!dice_animation.roll.count)pd_dice_idle(&dice_animation,mode?2:1);
+        dice_pixels=lv_malloc(PD_DICE_PIXELS*sizeof *dice_pixels);
+        if(dice_pixels) {
+            dice_canvas=lv_canvas_create(root);lv_obj_set_pos(dice_canvas,73,134);
+            lv_canvas_set_buffer(dice_canvas,dice_pixels,PD_DICE_WIDTH,PD_DICE_HEIGHT,LV_COLOR_FORMAT_RGB565);
+            lv_obj_add_flag(dice_canvas,LV_OBJ_FLAG_CLICKABLE);
+            lv_obj_add_event_cb(dice_canvas,event,LV_EVENT_CLICKED,(void*)(intptr_t)16);
+            pd_dice_paint(&dice_animation,dice_pixels);
+            if(dice_animation.active)dice_timer=lv_timer_create(dice_frame,33,NULL);
+        } else if(dice_animation.active) {
+            /* Low memory must never hide or re-roll an outcome that already exists. */
+            pd_dice_finish(&dice_animation);has_roll=true;
+        }
         if(has_roll) {
             if(result.count==2)snprintf(text,sizeof text,"%u / %u %+d = %d",result.dice[0],result.dice[1],result.bonus,result.total);
-            else snprintf(text,sizeof text,"%u %+d = %d",result.dice[0],result.bonus,result.total);
-        } else snprintf(text,sizeof text,"Scegli e lancia");
-        label(text,83,160,300,true);
-        button(mode==-1?"[Svant]":"Svant",83,203,92,48,10,true);
-        button(mode==0?"[Base]":"Base",187,203,92,48,11,true);
-        button(mode==1?"[Vant]":"Vant",291,203,92,48,12,true);
-        button("Lancia d20",83,264,188,58,13,true);button("Libero",283,264,100,58,14,true);
+            else snprintf(text,sizeof text,"%u %+d = %d%s",result.dice[0],result.bonus,result.total,result.natural==20?"  -  20 naturale":"");
+        } else snprintf(text,sizeof text,"%s",dice_animation.active?"In volo...":"Pronto al lancio");
+        label(text,73,265,320,false);
+        if(!dice_pixels)label("Animazione non disponibile",73,183,320,false);
+        button(mode==-1?"Svant":mode==1?"Vant":"Base",83,296,76,44,15,!dice_animation.active);
+        button(dice_animation.active?"Accelera":has_roll?"Rilancia":"Lancia",167,296,132,44,13,true);
+        button("Libero",307,296,76,44,14,!dice_animation.active);
     } else {
         label("Contatori manuali",83,111,300,true);
         if(state.resource_count) {
@@ -128,9 +166,17 @@ static void render(void) {
     const char *nav[]={"Eroe","Scheda","Dadi","Usi"};
     const int nav_x[]={79,153,251,325},nav_w[]={68,92,68,64};
     for (int i=0;i<4;i++) {
-        lv_obj_t *b=button(nav[i],nav_x[i],350,nav_w[i],48,100+i,true);
+        lv_obj_t *b=button(nav[i],nav_x[i],350,nav_w[i],48,100+i,!dice_animation.active);
         if (page==i)lv_obj_set_style_bg_color(b,lv_color_hex(0x75562b),0);
     }
+}
+static void dice_frame(lv_timer_t *timer) {
+    (void)timer;
+    if(pd_dice_tick(&dice_animation,lv_tick_get())) {
+        has_roll=true;render();return;
+    }
+    pd_dice_paint(&dice_animation,dice_pixels);
+    lv_obj_invalidate(dice_canvas);
 }
 #ifndef PD_UI_TEST
 static void usb_task(void *unused) {
@@ -170,7 +216,7 @@ void app_main(void) {
         pd_state candidate;
         if(xQueueReceive(packets,&candidate,0)==pdPASS) {
             if(import_pending)reply("PDD ERROR busy\n");
-            else { pending=candidate;import_pending=true;import_started=xTaskGetTickCount();reply("PDD WAIT_CONFIRM\n");render(); }
+            else { if(dice_animation.active) { pd_dice_finish(&dice_animation);has_roll=true; } pending=candidate;import_pending=true;import_started=xTaskGetTickCount();reply("PDD WAIT_CONFIRM\n");render(); }
         }
         if(import_pending && (xTaskGetTickCount()-import_started)>pdMS_TO_TICKS(120000)) {
             import_pending=false;reply("PDD CANCELLED timeout\n");render();

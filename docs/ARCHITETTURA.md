@@ -8,7 +8,9 @@ ricavati dai sorgenti della scheda esatta. Core C, salvataggio NVS su due copie,
 import USB con conferma e proiezione PC sono separati. Il modello firmware v1
 è un sottoinsieme esplicito del backup PC v9/v10: nessuna equivalenza di regole
 implicita. Dettagli, pin, memoria, compilazione e gate hardware in
-[FIRMWARE.md](FIRMWARE.md). Il resto di questo documento conserva le scelte
+[FIRMWARE.md](FIRMWARE.md). La v0.16 aggiunge il renderer d20 pixel art, con atlas in flash e canvas
+dinamico da 81.920 byte; calcolo del tiro e salvataggi restano separati dalla
+presentazione ([dettagli](DADI-ANIMATI.md)). Il resto di questo documento conserva le scelte
 progettuali e le verifiche ancora necessarie.
 
 ## Hardware

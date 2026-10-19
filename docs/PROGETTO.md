@@ -64,7 +64,9 @@ funzioni di gioco procede nel firmware, senza attendere importazione autonoma
 Beyond, Foundry, party o servizi remoti. La v0.15 porta il primo percorso offline
 in ESP-IDF/LVGL: scheda essenziale, d20, PF/annulla, contatori e salvataggio.
 L'USB trasferisce una copia limitata con conferma sul display, senza cambiare la
-raccolta PC. Collaudo hardware, alimentazione e autonomia restano il prossimo
+raccolta PC. La v0.16 aggiunge dadi d20 animati nel firmware con sprite originali, rimbalzi,
+lancio doppio e risultato naturale separato dal totale.
+Collaudo hardware, alimentazione e autonomia restano il prossimo
 passo, prima di ampliare le regole. Vedere [FIRMWARE.md](FIRMWARE.md).
 
 ## D&D Beyond e contenuti

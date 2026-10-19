@@ -56,9 +56,11 @@ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as out:
           'notes':'Compiled and host-tested. Physical display/touch/USB/power tests pending. See docs/FIRMWARE.md.'}
     out.writestr(folder+'firmware-binaries/release-info.json',json.dumps(info,indent=2)+'\n')
     preview=root/'firmware/tests/out/ui-build'
-    for name in ['hero','sheet','dice','resources','confirm']:
+    for name in ['hero','sheet','dice','dice-advantage','dice-disadvantage','dice-twenty','resources','confirm']:
         image=preview/(name+'.ppm')
         if image.is_file():out.write(image,folder+'firmware-host-preview/'+image.name)
+    animation=preview/'dice-preview.gif'
+    if animation.is_file():out.write(animation,folder+'firmware-host-preview/dice-preview.gif')
 digest=hashlib.sha256(args.output.read_bytes()).hexdigest()
 args.output.with_suffix(args.output.suffix+'.sha256').write_text(f'{digest}  {args.output.name}\n')
 print(f'{args.output}: {args.output.stat().st_size} bytes\nSHA256 {digest}')

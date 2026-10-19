@@ -1,4 +1,4 @@
-# Firmware PocketD-D 0.15 — primo percorso offline
+# Firmware PocketD-D 0.16 — percorso offline e dadi animati
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
@@ -10,10 +10,14 @@ Firmware per **Waveshare ESP32-S3-Touch-AMOLED-1.75**, versione standard senza
 suffisso C. Toolchain ESP-IDF **v5.5.5**, LVGL **9.4.0**. Nessuna dipendenza da
 Foundry, server PC, Beyond, Wi-Fi o Bluetooth durante l'uso al tavolo.
 
+La v0.16 aggiunge [d20 animato in pixel art](DADI-ANIMATI.md), lancio doppio,
+risultato naturale sul dado, totale separato e accelerazione senza rilanci.
+
 Primo percorso: avvio con Elian originale o copia precedentemente salvata →
 Scheda → caratteristica → d20 → risultato → Eroe → PF ±1 → annulla →
 salvataggio locale. Anche PF temporanei e fino a otto contatori manuali.
-Vantaggio e svantaggio selezionabili; nessuna animazione blocca l'input.
+Vantaggio e svantaggio selezionabili dal pulsante Base/Vant/Svant. Durante il volo
+si può accelerare; modalità e navigazione attendono l'arresto del tiro.
 
 Non è ancora una scheda completa: mancano avatar, inventario, attacchi, magie,
 abilità e salvezze con competenze, effetti/condizioni, morte, dadi vita,
@@ -166,7 +170,7 @@ per `esp_random()`. Non attivare in futuro ADC/radio senza coordinare questa
 sorgente. Test deterministici verificano il calcolo, non certificano l'entropia
 fisica del dispositivo.
 
-## Esito verifiche 19 ottobre 2026
+## Esito verifiche della base v0.15, 19 ottobre 2026
 
 - Test JavaScript: 125 passati; esportazione include valori corretti e non muta
   la sorgente. Regressione browser desktop/mobile e anteprima/download USB passati
@@ -204,3 +208,14 @@ licenze, metadati con commit e SHA256, e anteprime LVGL ottenute su host.
 Richiede albero Git pulito e build della stessa versione. Esclude dipendenze
 scaricate, toolchain, node_modules, impostazioni browser, credenziali e dati del
 personaggio. Il pacchetto non esegue flash o importazioni automaticamente.
+
+## Verifiche v0.16 — dadi animati
+
+La build ESP32-S3, i test del core C/NVS e i 125 test JavaScript sono ripetuti
+per questa versione. Le nuove verifiche del renderer, dei timer LVGL e dei
+controlli sono descritte in [DADI-ANIMATI.md](DADI-ANIMATI.md). Formati USB,
+salvataggio NVS e raccolta PC conservano le versioni precedenti. Nessuna scheda
+personale viene letta o modificata per questi test: si usano dati sintetici.
+Build v0.16: binario **573.104 byte**, partizione app **86% libera**, DIRAM statica
+78.287 byte, canvas Dadi dinamico aggiuntivo da 81.920 byte. Il collaudo hardware
+resta aperto.

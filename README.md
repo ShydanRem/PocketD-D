@@ -2,10 +2,11 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.15:** primo firmware offline per il dispositivo, con scheda essenziale, d20, PF/annulla, contatori e salvataggio locale. Supporto PC per importazione Beyond, configurazione, backup ed esportazione USB con conferma sul display. Il firmware non è ancora collaudato sulla scheda fisica.
+**Stato v0.16:** firmware offline con d20 animato in pixel art, lancio doppio e risultato leggibile sul dispositivo. Include scheda essenziale, PF/annulla, contatori e salvataggio locale. Supporto PC per importazione Beyond, configurazione, backup ed esportazione USB con conferma sul display. Il firmware non è ancora collaudato sulla scheda fisica.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
+- [Dadi animati: uso, rendering e verifiche](docs/DADI-ANIMATI.md)
 - [Firmware: compilazione, trasferimento USB, limiti e prove hardware](docs/FIRMWARE.md)
 - [Proposta di prodotto e roadmap](docs/PROGETTO.md)
 - [Architettura e verifiche tecniche](docs/ARCHITETTURA.md)
@@ -197,3 +198,11 @@ backup completo, protocollo USB limitato e conferma sul dispositivo. Raccolta PC
 conservata. Il firmware non applica ancora le regole estese della scheda v10 e
 non contiene cataloghi, credenziali o dati personali Beyond. Vedere
 [FIRMWARE.md](docs/FIRMWARE.md) per esiti e ciò che manca sulla scheda fisica.
+
+## Incremento 0.16 — d20 in pixel art
+
+Lancio animato nel firmware con ingresso laterale, rotazione, rimbalzi e ombra;
+due dadi per vantaggio/svantaggio, dado scelto evidenziato, scintille per il 20
+naturale. Il dado mostra il valore naturale e il totale è separato. “Accelera”
+conclude lo stesso tiro, senza altre estrazioni. Test e anteprima LVGL su host;
+compilazione ESP32-S3 verificata, collaudo fisico ancora da fare.
