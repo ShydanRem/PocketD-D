@@ -2,10 +2,11 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato:** prototipo web interattivo **v0.14**, con party simulato tra più finestre, interfaccia circolare, avatar, raccolta di personaggi, inventario, armi e importazione estesa da Beyond su PC. Il firmware ESP32 non è ancora implementato.
+**Stato v0.15:** primo firmware offline per il dispositivo, con scheda essenziale, d20, PF/annulla, contatori e salvataggio locale. Supporto PC per importazione Beyond, configurazione, backup ed esportazione USB con conferma sul display. Il firmware non è ancora collaudato sulla scheda fisica.
 
-Hardware previsto: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, display touch rotondo da 466 × 466 pixel. La descrizione del produttore fornita dall’utente indica 8 MB di PSRAM, 16 MB di flash e slot microSD integrato, con controller CO5300 e touch CST9217. Pin, driver e prestazioni restano da verificare sugli esempi ufficiali e sul dispositivo.
+Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
+- [Firmware: compilazione, trasferimento USB, limiti e prove hardware](docs/FIRMWARE.md)
 - [Proposta di prodotto e roadmap](docs/PROGETTO.md)
 - [Architettura e verifiche tecniche](docs/ARCHITETTURA.md)
 - [Fattibilità dell’importazione diretta D&D Beyond](docs/BEYOND-FATTIBILITA.md)
@@ -13,7 +14,7 @@ Hardware previsto: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, display touch roton
 
 ## Primo traguardo
 
-Un personaggio dimostrativo interamente originale, un avatar animato, punti ferita modificabili e un tiro di d20 con modificatore. Prima validare l'interazione su una simulazione del display, poi sul dispositivo reale.
+Scheda → caratteristica → d20 → risultato → PF → salvataggio offline sul dispositivo. Il firmware iniziale include Elian originale e una copia limitata della scheda preparata da PC. Avatar, inventario, attacchi e magie restano nel simulatore finché non vengono portati e verificati nel firmware. Non considerare una build riuscita equivalente a una prova fisica.
 
 ## Avvio del prototipo
 
@@ -34,7 +35,7 @@ La demo include cinque sezioni (Eroe, Scheda, Dadi, Azioni, Zaino), avatar perso
 
 Il layout riproduce l'area circolare, ma non dimostra leggibilità o prestazioni sul display reale. Il connettore Beyond richiede il server PC descritto sotto; le regole complete non sono implementate. Il party simulato sincronizza finestre dello stesso browser; il collegamento tra dispositivi fisici resta da sviluppare. Avvelenato applica svantaggio ad attacchi, prove e abilità; le salvezze e il dado libero mantengono la modalità selezionata.
 
-La scelta della toolchain firmware verrà confermata dopo la verifica degli esempi ufficiali della scheda.
+Toolchain firmware: ESP-IDF v5.5.5 e LVGL 9.4.0; dipendenze fissate in `firmware/dependencies.json`. `npm run firmware:deps` prepara i sorgenti e `idf.py -C firmware build` produce il binario dopo l’attivazione di ESP-IDF. Percorso completo e prove in [FIRMWARE.md](docs/FIRMWARE.md).
 
 
 ## Incremento 0.2 — azioni e zaino
@@ -187,3 +188,12 @@ Nuove importazioni in **formato v10**, vecchie schede conservate in v9 e backup 
 Verificati sul personaggio reale tre abilità competenti, due salvezze, quattro armi, 23 capacità/note e i contatori riconosciuti. Le magie sono provate con fixture sintetiche: il personaggio reale non è un incantatore. **121 test locali passati**, build e controlli browser di importazione/gioco/persistenza e regressioni riusciti. [Prove, copertura e limiti aggiornati](docs/BEYOND-PROVE.md).
 
 Avvio dall'archivio con Node 24.19+: `npm start`, poi **http://127.0.0.1:5173**. Per rigenerare la build: `npm ci` e `npm run build`. Le vecchie schede Beyond non vengono sostituite: un nuovo import crea una scheda distinta, preservando i progressi locali. Firmware e scrittura verso Beyond restano successivi.
+
+## Incremento 0.15 — dispositivo come obiettivo
+
+Primo runtime ESP32-S3/LVGL con interfaccia circolare, dadi hardware senza radio,
+PF temporanei, contatori e NVS su due copie con CRC. Esportazione PC separata dal
+backup completo, protocollo USB limitato e conferma sul dispositivo. Raccolta PC
+conservata. Il firmware non applica ancora le regole estese della scheda v10 e
+non contiene cataloghi, credenziali o dati personali Beyond. Vedere
+[FIRMWARE.md](docs/FIRMWARE.md) per esiti e ciò che manca sulla scheda fisica.

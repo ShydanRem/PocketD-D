@@ -1,5 +1,16 @@
 # Architettura proposta e verifiche
 
+## Stato implementazione al 19 ottobre 2026
+
+Il dispositivo è il runtime principale; il PC prepara schede e backup.
+La v0.15 introduce `firmware/` con ESP-IDF 5.5.5 e LVGL 9.4.0, display/touch
+ricavati dai sorgenti della scheda esatta. Core C, salvataggio NVS su due copie,
+import USB con conferma e proiezione PC sono separati. Il modello firmware v1
+è un sottoinsieme esplicito del backup PC v9/v10: nessuna equivalenza di regole
+implicita. Dettagli, pin, memoria, compilazione e gate hardware in
+[FIRMWARE.md](FIRMWARE.md). Il resto di questo documento conserva le scelte
+progettuali e le verifiche ancora necessarie.
+
 ## Hardware
 
 Prodotto indicato dall'utente: [Waveshare ESP32-S3-Touch-AMOLED-1.75](https://www.waveshare.com/esp32-s3-touch-amoled-1.75.htm), variante senza case e GPS.
@@ -17,14 +28,14 @@ Specifiche dalla descrizione del produttore condivisa dall'utente:
 | Movimento | QMI8658, accelerometro e giroscopio |
 | Ora | RTC PCF85063 |
 | Alimentazione | AXP2101, connettore batteria al litio 3,7 V MX1.25 |
-| Input e USB | Pulsanti PWR/BOOT programmabili e connettore Type-C |
+| Input e USB | PWR sul PMIC, BOOT GPIO0 e connettore Type-C |
 | Audio | Doppio microfono, codec a basso consumo e circuito di cancellazione eco |
 
-Il 15 ottobre 2026 la pagina prodotto e la pagina wiki hanno risposto HTTP 403 dall'ambiente cloud. Le specifiche sopra provengono dal testo fornito dall'utente; non sono ancora state confrontate con schemi o provate sull'hardware.
+Il 15 ottobre 2026 la pagina prodotto e la pagina wiki hanno risposto HTTP 403 dall'ambiente cloud. Il 19 ottobre il repository ufficiale esatto è stato letto al commit e4344e70: hardware reference, schema e BSP sono ora confrontati con il firmware. Le prove fisiche restano aperte; PWR passa dal PMIC/expander e non è un GPIO libero.
 
-Gli 8 MB di PSRAM rendono plausibile mantenere buffer grafici e una cache di sprite, ma non garantiscono frame rate o compatibilità DMA. I 16 MB di flash possono ospitare firmware e risorse essenziali; la SD ospiterà cataloghi più ampi e backup. Partizionamento e dimensioni effettive saranno decisi dopo la prima build.
+Gli 8 MB di PSRAM rendono plausibile mantenere buffer grafici e una cache di sprite, ma non garantiscono frame rate o compatibilità DMA. I 16 MB di flash possono ospitare firmware e risorse essenziali; la SD ospiterà cataloghi più ampi e backup. Il primo partizionamento usa app da 4 MB e NVS da 24 KB; non usa ancora la SD. La dimensione misurata della build è riportata in FIRMWARE.md.
 
-Prima di scrivere firmware verificare:
+Controlli iniziali: pin, driver e configurazione sono confrontati con il sorgente ufficiale; sulla scheda fisica completare:
 
 - Revisione della scheda, pin e configurazione PSRAM/flash negli esempi ufficiali.
 - Alimentazioni e sequenza di inizializzazione CO5300/CST9217.

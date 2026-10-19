@@ -1,6 +1,6 @@
 {
   "name": "pocket-d-d",
-  "version": "0.14.0",
+  "version": "0.15.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -10,7 +10,9 @@
     "preview": "vite preview --host 0.0.0.0",
     "test": "node --test --test-isolation=none src/*.test.js",
     "beyond:probe": "node --use-env-proxy scripts/beyond-probe.js",
-    "beyond:lab": "node --use-env-proxy scripts/beyond-lab.js"
+    "beyond:lab": "node --use-env-proxy scripts/beyond-lab.js",
+    "firmware:deps": "python3 scripts/firmware-deps.py",
+    "firmware:test": "bash scripts/check-firmware.sh"
   },
   "devDependencies": {
     "vite": "^7.1.0"

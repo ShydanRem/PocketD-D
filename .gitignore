@@ -1,3 +1,10 @@
 node_modules/
 dist/
 *.log
+firmware/.deps/
+firmware/build/
+firmware/sdkconfig
+firmware/sdkconfig.old
+firmware/managed_components/
+firmware/tests/out/
+__pycache__/

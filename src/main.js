@@ -1,3 +1,4 @@
+import {projectDevice,serializeDevice} from './device-export.js';
 import {importedSummary,openExtendedState} from './extended-ui.js';
 import {setCombatOption} from './extended.js';
 import {openBeyondImport,showBeyondLimitations} from './beyond-ui.js';
@@ -39,7 +40,7 @@ function navigatePage(next,source='screen'){
   document.querySelector(selector)?.focus({preventScroll:true});
 }
 function quickNavigation(){return `<div class="quick-navigation" role="group" aria-label="Navigazione rapida">${sections.map(([id,label])=>`<button data-go-page="${id}" aria-current="${page===id?'page':'false'}" ${rolling?'disabled':''}>${navIcon(id)}<span>${label}</span></button>`).join('')}</div>`}
-function supportTools(){return `<section class="support-tools" aria-label="Strumenti del tavolo"><div class="tools-heading"><span class="eyebrow">IL TUO TAVOLO</span><h2>Prepara la prossima avventura.</h2><p>La gestione della scheda, a portata di mano.</p></div><div class="tool-group"><h3>Il personaggio</h3><button data-action="edit">Personalizza eroe</button><button data-action="new">Nuovo eroe +</button><button data-action="beyond-import">Importa da D&D Beyond</button></div><div class="tool-group"><h3>Al tavolo</h3><button data-action="party">Party locale simulato</button><button data-action="manage-inventory">Gestisci inventario e armi</button><button data-action="manage-powers">Gestisci magie e capacità</button><button data-action="manage-encounter">Prepara combattimento</button><button data-action="manage-map">Prepara mappa</button></div><div class="tool-group"><h3>I tuoi salvataggi</h3><button data-action="export">Esporta scheda</button><button data-action="import">Aggiungi da backup</button><button data-action="reset">Ripristina eroe dimostrativo</button></div></section><footer><span>FATTO DI PIXEL. MOSSO DALL’IMMAGINAZIONE.</span><span>PROTOTIPO 0.14 <b>✦</b> I TUOI PERSONAGGI, NEL TUO BROWSER</span><input type="file" id="backup-file" accept=".json,application/json" hidden><input type="file" id="library-file" accept=".json,application/json" hidden></footer>`}
+function supportTools(){return `<section class="support-tools" aria-label="Strumenti del tavolo"><div class="tools-heading"><span class="eyebrow">IL TUO TAVOLO</span><h2>Prepara la prossima avventura.</h2><p>La gestione della scheda, a portata di mano.</p></div><div class="tool-group"><h3>Il personaggio</h3><button data-action="edit">Personalizza eroe</button><button data-action="new">Nuovo eroe +</button><button data-action="beyond-import">Importa da D&D Beyond</button></div><div class="tool-group"><h3>Al tavolo</h3><button data-action="party">Party locale simulato</button><button data-action="manage-inventory">Gestisci inventario e armi</button><button data-action="manage-powers">Gestisci magie e capacità</button><button data-action="manage-encounter">Prepara combattimento</button><button data-action="manage-map">Prepara mappa</button></div><div class="tool-group"><h3>I tuoi salvataggi</h3><button data-action="device-export">Prepara per dispositivo (USB)</button><button data-action="export">Esporta scheda</button><button data-action="import">Aggiungi da backup</button><button data-action="reset">Ripristina eroe dimostrativo</button></div></section><footer><span>FATTO DI PIXEL. MOSSO DALL’IMMAGINAZIONE.</span><span>SUPPORTO PC 0.15 <b>✦</b> IMPORTAZIONE E CONFIGURAZIONE</span><input type="file" id="backup-file" accept=".json,application/json" hidden><input type="file" id="library-file" accept=".json,application/json" hidden></footer>`}
 
 function rememberUndo(restoreHistory=false){undo=structuredClone(state);undoRestoresHistory=restoreHistory}
 function persistLibrary(){
@@ -178,6 +179,7 @@ if(b.dataset.action==='aim-map'){actionTab='weapon'}
 if(b.dataset.gridCell!==undefined){
   try{const next=moveActive(state,Number(b.dataset.gridCell));rememberUndo();state=next;combat=null;damageResult=null;dmOverride=false;gridMessage='Movimento completato.';focusGrid();save()}catch(error){gridMessage=error.message}
 }
+if(b.dataset.action==='device-export')openDeviceExport();
 if(b.dataset.action==='export'){downloadJson(serialize(state),'pocketdd-eroe.json');notice='Scheda attiva esportata'}
 if(b.dataset.action==='export-library'){downloadJson(serializeLibrary(library),'pocketdd-raccolta.json');notice='Raccolta esportata'}
 if(b.dataset.action==='recover-storage'&&recoveryRaw!==null)downloadJson(recoveryRaw,'pocketdd-dati-da-recuperare.json');
@@ -449,4 +451,15 @@ function openCharacterManager(){
     }catch(error){dialog.querySelector('.editor-error').textContent=error.message}
   });
   dialog.addEventListener('close',()=>dialog.remove());draw();document.body.append(dialog);dialog.showModal();
+}
+
+function openDeviceExport(){
+  const dialog=document.createElement('dialog');dialog.className='editor';
+  try{
+    const {packet,warnings}=projectDevice(state);
+    dialog.innerHTML=`<div class="editor-heading"><h2>Prepara la copia per PocketD-D</h2><button data-device-close aria-label="Chiudi">×</button></div><p>Collega via USB il dispositivo con firmware 0.15. Scarica questa copia e inviala con lo strumento descritto in docs/FIRMWARE.md. Il dispositivo richiede conferma sul display.</p><p><strong>${escapeHtml(packet.name)}</strong> · livello ${packet.level} · PF ${packet.hp}/${packet.maxHp} (+${packet.tempHp} temporanei) · CA ${packet.armorClass}</p><p>${abilityKeys.map(k=>`${k} ${packet.abilities[k]}`).join(' · ')}</p><p>Contatori: ${packet.resources.map(r=>`${escapeHtml(r.name)} ${r.current}/${r.maximum}`).join(' · ')||'nessuno'}</p><ul>${warnings.map(w=>`<li>${escapeHtml(w)}</li>`).join('')}</ul><button data-device-download>Scarica copia limitata per dispositivo</button>`;
+    dialog.querySelector('[data-device-download]').onclick=()=>{downloadJson(serializeDevice(packet),'pocketdd-device.json');notice='Copia per dispositivo esportata. Raccolta PC conservata.';dialog.close();render()};
+  }catch(error){dialog.innerHTML=`<h2>Esportazione non disponibile</h2><p>${escapeHtml(error.message)}</p><button data-device-close>Chiudi</button>`}
+  dialog.querySelector('[data-device-close]').onclick=()=>dialog.close();
+  dialog.addEventListener('close',()=>dialog.remove(),{once:true});document.body.append(dialog);dialog.showModal();
 }

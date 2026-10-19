@@ -56,13 +56,24 @@ Non fanno parte di questo traguardo: importazione Beyond, editor completo, incan
 
 L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco non impedisce le altre fasi. L'ordine delle fasi 0 e 1 può sovrapporsi se l'hardware non è immediatamente disponibile.
 
+## Priorità confermata: dispositivo prima del PC
+
+Il dispositivo è il prodotto. Il PC è per importazione, configurazione,
+trasferimento e backup; il simulatore rimane un banco di prova. Il lavoro sulle
+funzioni di gioco procede nel firmware, senza attendere importazione autonoma
+Beyond, Foundry, party o servizi remoti. La v0.15 porta il primo percorso offline
+in ESP-IDF/LVGL: scheda essenziale, d20, PF/annulla, contatori e salvataggio.
+L'USB trasferisce una copia limitata con conferma sul display, senza cambiare la
+raccolta PC. Collaudo hardware, alimentazione e autonomia restano il prossimo
+passo, prima di ampliare le regole. Vedere [FIRMWARE.md](FIRMWARE.md).
+
 ## D&D Beyond e contenuti
 
 La verifica del 16 ottobre 2026 ha esaminato DDB Importer e ddb-proxy di MrPrimate come riferimenti tecnici. Il requisito è un'importazione diretta in PocketD-D tramite URL, con un connettore interno all'app di supporto, senza passaggi obbligatori da Foundry, file intermedi o servizi MrPrimate. Il primo prototipo proposto legge un personaggio pubblico e presenta anteprima e omissioni prima di creare la scheda locale. Non è emersa una API pubblica documentata per questo uso: accesso dal vivo e conversione dei dati principali sono ora verificati su un caso, mentre conversione completa e condizioni di distribuzione richiedono ulteriori verifiche. Autenticazione per schede private e scrittura verso Beyond sono traguardi separati; la v0.14 implementa l'importazione estesa da PC con limiti espliciti con anteprima e conferma, conservando le schede esistenti. Dettagli, fonti e limiti sono in [BEYOND-FATTIBILITA.md](BEYOND-FATTIBILITA.md).
 
-L'utente preferisce poter importare direttamente dal dispositivo. Se troppo complesso, accetta l'importazione nell'app PocketD-D su PC e il trasferimento della scheda. Prima verificare accesso e conversione nel prototipo PC; poi valutare l'accesso autonomo via Wi-Fi o un comando dal dispositivo verso un backend PocketD-D, dichiarandone la dipendenza dal servizio. Il trasferimento e l'uso sul dispositivo richiedono ancora firmware e prove hardware. Il personaggio caricato deve restare utilizzabile offline per il gioco individuale.
+L'utente preferisce poter importare direttamente dal dispositivo. Se troppo complesso, accetta l'importazione nell'app PocketD-D su PC e il trasferimento della scheda. Prima verificare accesso e conversione nel prototipo PC; poi valutare l'accesso autonomo via Wi-Fi o un comando dal dispositivo verso un backend PocketD-D, dichiarandone la dipendenza dal servizio. La v0.15 implementa il primo firmware e un trasferimento USB limitato; l'uso e il trasferimento reali richiedono ancora il collaudo hardware. Il personaggio caricato deve restare utilizzabile offline per il gioco individuale.
 
-È disponibile un [banco di prova PC](BEYOND-PROVE.md) in sola lettura, con test del connettore e anteprima su dati sintetici. Il primo tentativo reale è bloccato dal proxy del cloud: manca ancora la verifica di accesso e corrispondenza su una scheda reale. Non equivale a un importatore completo.
+È disponibile un [banco di prova PC](BEYOND-PROVE.md) in sola lettura. Il blocco del primo tentativo cloud è superato: accesso HTTP, struttura della risposta e valori convertiti sono documentati separatamente su una scheda reale; i test sintetici coprono altri casi. La proiezione firmware ha un perimetro più ristretto e non eredita automaticamente la completezza dell'importatore PC.
 
 L'acquisto di contenuti su Beyond non stabilisce da solo i diritti di utilizzo da parte di PocketD-D. Verificare termini, licenze e modalità di distribuzione. Non includere cataloghi proprietari, immagini, descrizioni o credenziali Beyond nel repository.
 
@@ -95,7 +106,7 @@ L'hardware non è ancora disponibile. Lo sviluppo procede sulla simulazione e su
 2. **Completato nella 0.10:** inventario estensibile, armi e cure personalizzabili, mantenendo le regole dimostrative esplicite e la compatibilità dei backup.
 3. **Completato nella 0.11:** prima revisione di grafica, avatar e navigazione del display circolare con prove browser desktop/mobile. La verifica fisica resta aperta.
 4. **Completato nella 0.12:** primo protocollo di party tra finestre dello stesso browser, con iniziativa, turni, PF e mappa condivisi, riconnessione e deduplicazione. Restano collegamento tra dispositivi, associazione, controlli del party nel cerchio e gestione completa della sessione.
-5. Preparare la base firmware dagli esempi ufficiali e verificarne la compilazione; display, touch, SD e autonomia saranno provati quando arriverà la scheda.
+5. Base firmware v0.15 preparata dagli esempi ufficiali. Completare collaudo della scheda: display/touch, USB, riavvio e perdita di alimentazione, PMIC e autonomia. Poi portare inventario, attacchi e magie, con le stesse verifiche del modello PC; SD e party successivi.
 
 Codice e stato della roadmap vengono salvati su GitHub a ogni incremento verificato. Il recupero della v0.8 è documentato separatamente in [RECUPERO-v0.8.md](RECUPERO-v0.8.md).
 
