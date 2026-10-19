@@ -149,6 +149,11 @@ export function parseBackup(raw) {
     if(typeof s.swordEquipped!=='boolean'||!validInteger(s.potions,0,99)||!validInteger(s.torches,0,99))throw new Error('Inventario precedente non valido');
     Object.assign(base,startingInventory({...s,weaponReach:s.version===8?s.weaponReach:1}));
   }
+  if(s.importInfo!==undefined){
+    const info=s.importInfo;
+    if(!info || info.provider!=='dndbeyond' || typeof info.characterId!=='string' || !/^[1-9]\d{0,14}$/.test(info.characterId) || info.scope!=='core-v1' || !Array.isArray(info.limitations) || info.limitations.length>30 || info.limitations.some(text=>typeof text!=='string'||text.length>500))throw new Error('Provenienza importazione non valida');
+    base.importInfo={provider:info.provider,characterId:info.characterId,scope:info.scope,limitations:[...info.limitations]};
+  }
   return {...base,...core,resolve:s.resolve};
 }
 export function serialize(state) { return JSON.stringify({...state, version: 9}, null, 2); }

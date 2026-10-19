@@ -6,16 +6,22 @@ import {beyondCharacterId} from '../src/beyond.js';
 
 const assets=new Map([['/',['index.html','text/html']],['/lab.js',['lab.js','text/javascript']],['/lab.css',['lab.css','text/css']]]);
 const reply=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8'});res.end(JSON.stringify(data))};
-export function createBeyondLabServer({probe=probeBeyond}={}){
+export function createBeyondLabServer({probe=probeBeyond, appRoot=null}={}){
   let busy=false;
   const server=createServer(async(req,res)=>{
     res.setHeader('Cache-Control','no-store');res.setHeader('X-Content-Type-Options','nosniff');res.setHeader('Referrer-Policy','no-referrer');
-    res.setHeader('Content-Security-Policy',"default-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
+    res.setHeader('Content-Security-Policy',"default-src 'self'; connect-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'none'");
     const port=server.address()?.port,hosts=[`127.0.0.1:${port}`,`localhost:${port}`];
     if(!hosts.includes(req.headers.host)){reply(res,403,{error:{code:'HOST_DENIED',message:'Usa l’indirizzo locale indicato all’avvio'}});return}
     const origin=req.headers.origin;
     if(origin&&!hosts.some(host=>origin===`http://${host}`)){reply(res,403,{error:{code:'ORIGIN_DENIED',message:'Richiesta da un’altra origine rifiutata'}});return}
-    if(req.method==='GET'&&assets.has(req.url)){
+    if(appRoot && req.method==='GET' && (req.url==='/' || /^\/assets\/[a-zA-Z0-9_.-]+$/.test(req.url))){
+      const path=req.url==='/'?'index.html':req.url.slice(1);
+      const mime=path.endsWith('.html')?'text/html':path.endsWith('.js')?'text/javascript':path.endsWith('.css')?'text/css':'application/octet-stream';
+      try{const data=await readFile(new URL(path,appRoot));res.writeHead(200,{'Content-Type':`${mime}; charset=utf-8`});res.end(data)}
+      catch{reply(res,404,{error:{code:'ASSET_ERROR',message:'Build assente: esegui npm run build'}})}return;
+    }
+    if(!appRoot&&req.method==='GET'&&assets.has(req.url)){
       try{const [name,mime]=assets.get(req.url);const data=await readFile(new URL(`../tools/beyond-lab/${name}`,import.meta.url));res.writeHead(200,{'Content-Type':`${mime}; charset=utf-8`});res.end(data)}catch{reply(res,500,{error:{code:'ASSET_ERROR',message:'Pagina di prova non disponibile'}})}return;
     }
     if(req.url!=='/api/probe'||req.method!=='POST'){reply(res,404,{error:{code:'NOT_FOUND',message:'Percorso non disponibile'}});return}

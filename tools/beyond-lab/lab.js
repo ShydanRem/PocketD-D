@@ -11,10 +11,12 @@ $('#probe').addEventListener('submit',async event=>{
     report=result.report;
     $('#name').textContent=report.character.name;
     $('#metadata').textContent=`Livello ${report.character.level} · ID ${report.character.id} · HTTP ${report.transport.status} · ${report.transport.bytes} byte · ${report.transport.elapsedMs} ms`;
-    $('#evidence').textContent=report.testFixture?'RISPOSTA SIMULATA DI TEST: non dimostra accesso a Beyond.':'Risposta ricevuta dal connettore HTTP. La corrispondenza con la scheda va verificata.';
+    $('#evidence').textContent=report.testFixture?'RISPOSTA SIMULATA DI TEST: non dimostra accesso a Beyond.':'Risposta ricevuta dal connettore HTTP. Formato e regole supportate sono verificati separatamente; consultare calcoli e omissioni.';
     $('#abilities').replaceChildren();
     for(const [key,value] of Object.entries(report.abilities)){const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=key;dd.textContent=String(value.preview);$('#abilities').append(dt,dd)}
     $('#hp').textContent=report.hp?`${report.hp.previewCurrent}/${report.hp.previewMax} PF · temporanei sorgente: ${report.hp.temporary}`:'PF non determinabili con questa prova.';
+    $('#ac').textContent=report.armorClass??'CA non risolta';
+    list('#calculations',report.conversion?.evidence??[]);
     list('#inventory',report.inventory.items.map(item=>`${item.name} ×${item.quantity??'?'}${item.equipped?' · equipaggiato':''}`));
     list('#warnings',report.warnings);$('#result').hidden=false;
     $('#status').textContent='Lettura completata. Anteprima da verificare; nessuna scheda modificata.';

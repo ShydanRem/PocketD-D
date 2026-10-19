@@ -1,9 +1,10 @@
 {
   "name": "pocket-d-d",
-  "version": "0.12.0",
+  "version": "0.13.0",
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "node --use-env-proxy scripts/app-server.js",
     "dev": "vite --host 0.0.0.0",
     "build": "vite build && node scripts/standalone.js",
     "preview": "vite preview --host 0.0.0.0",

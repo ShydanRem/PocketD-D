@@ -2,7 +2,7 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato:** prototipo web interattivo **v0.12**, con party simulato tra più finestre, interfaccia circolare, avatar, raccolta di personaggi, inventario e armi. Il firmware ESP32 non è ancora implementato.
+**Stato:** prototipo web interattivo **v0.13**, con party simulato tra più finestre, interfaccia circolare, avatar, raccolta di personaggi, inventario, armi e importazione parziale da Beyond su PC. Il firmware ESP32 non è ancora implementato.
 
 Hardware previsto: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, display touch rotondo da 466 × 466 pixel. La descrizione del produttore fornita dall’utente indica 8 MB di PSRAM, 16 MB di flash e slot microSD integrato, con controller CO5300 e touch CST9217. Pin, driver e prestazioni restano da verificare sugli esempi ufficiali e sul dispositivo.
 
@@ -32,7 +32,7 @@ npm run build
 
 La demo include cinque sezioni (Eroe, Scheda, Dadi, Azioni, Zaino), avatar personalizzabile, abilità e salvezze, armi personalizzabili, inventario estensibile, risorse manuali e griglia tattica. La raccolta conserva fino a 20 personaggi indipendenti, con selezione, creazione, duplicazione e backup. “Ricomincia” ripristina soltanto il personaggio attivo. I dati rimangono nel browser: esporta la raccolta per conservarla o trasferirla. Nessun account richiesto. I font remoti sono opzionali e hanno alternative locali. La demo non è una PWA installabile e non garantisce il riavvio offline del browser.
 
-Il layout riproduce l'area circolare, ma non dimostra leggibilità o prestazioni sul display reale. Non include Beyond o regole complete. Il party simulato sincronizza finestre dello stesso browser; il collegamento tra dispositivi fisici resta da sviluppare. Avvelenato applica svantaggio ad attacchi, prove e abilità; le salvezze e il dado libero mantengono la modalità selezionata.
+Il layout riproduce l'area circolare, ma non dimostra leggibilità o prestazioni sul display reale. Il connettore Beyond richiede il server PC descritto sotto; le regole complete non sono implementate. Il party simulato sincronizza finestre dello stesso browser; il collegamento tra dispositivi fisici resta da sviluppare. Avvelenato applica svantaggio ad attacchi, prove e abilità; le salvezze e il dado libero mantengono la modalità selezionata.
 
 La scelta della toolchain firmware verrà confermata dopo la verifica degli esempi ufficiali della scheda.
 
@@ -167,3 +167,13 @@ Il protocollo conferma le modifiche, rifiuta scelte basate su uno stato vecchio 
 [Uso, protocollo, limiti e verifiche del party](docs/PARTY.md).
 
 Verifica 0.12: **78 test passati**, build riuscita e quattro flussi Chromium passati (`check-party.py`, `check-interface.py`, `check-inventory.py`, `check-library.py`). Il nuovo flusso usa tre client reali, prova sospensione e riconnessione, ricarica di giocatore e coordinatore, permessi di movimento, sincronizzazione dello stato, isolamento della raccolta, resoconto JSON e mappa con celle da almeno 44 px su desktop/mobile 390/320 px. Nessun errore JavaScript rilevato. Il firmware e le prove fisiche rimangono da eseguire.
+
+## Incremento 0.13 — importazione parziale da D&D Beyond su PC
+
+Con **Node.js 24.19+**, eseguire `npm ci`, `npm run build`, poi `npm start`. Aprire **http://127.0.0.1:5173** e scegliere **Importa da D&D Beyond**. L'archivio distribuito include `dist/`: si può avviare direttamente con `npm start`. Per usare il connettore non bastano il file HTML autonomo o il server Vite.
+
+Il connettore PocketD-D legge un personaggio pubblico senza Foundry o credenziali, verifica formato e regole supportate, mostra valori/omissioni e richiede conferma prima di aggiungere una **nuova scheda parziale**. Le schede precedenti restano conservate. Usare lo stesso browser, hostname e porta; origini diverse hanno raccolte separate. Esportare la raccolta per trasferirla.
+
+Verificati sui dati reali: caratteristiche con bonus razziali, PF, CA e tutte le righe dell'inventario. Corretta l'anteprima precedente che ignorava i bonus razziali e non determinava la CA. **Non è una conversione completa:** competenze e salvezze, armi operative, magie, slot, capacità, talenti, effetti e parte dello stato di sessione sono da completare. Le omissioni restano sulla scheda e nei backup; effetti non risolti sui valori principali bloccano la creazione. Nessun personaggio personale o JSON sorgente completo è incluso nel progetto.
+
+103 test locali passati, build riuscita, controlli browser di anteprima/conferma, conservazione delle schede, backup/reload, conflitti/quota/limiti e viewport desktop/mobile 390/320 px. Prova reale e test sintetici sono distinti nel [resoconto delle prove](docs/BEYOND-PROVE.md). Firmware, autenticazione privata e scrittura su Beyond rimangono successivi.

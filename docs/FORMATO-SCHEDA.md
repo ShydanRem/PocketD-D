@@ -23,6 +23,7 @@ Il backup individuale è un singolo JSON UTF-8. Non è un formato D&D Beyond. Da
 | `slots` | Nove oggetti `{max,current}`, livelli 1–9; quantità 0–9 |
 | `spellcastingAbility` | Una delle sei caratteristiche |
 | `concentration` | `null` oppure ID di una magia della lista che richiede concentrazione |
+| `importInfo` | Opzionale dalla v0.13: provenienza minima e omissioni di importazione Beyond |
 | `encounter` | Partecipanti, turno, round e danni in attesa del combattimento locale |
 
 L'importazione rifiuta versioni sconosciute, campi necessari mancanti e valori fuori limite prima di sostituire lo stato. I campi sconosciuti non sono conservati. Il file è limitato a 250 KB dall'interfaccia. Nome e titolo vengono trattati come testo.
@@ -168,3 +169,9 @@ Le raccolte v1 della v0.9 rimangono leggibili: le singole schede v8 vengono migr
 La revisione dell'interfaccia non modifica lo schema v9. `avatar.skin`, `hair`, `cloak` e `style` restano indici 0–2 con lo stesso significato. I preset sono combinazioni dei quattro valori esistenti; non aggiungono classi, bonus o proprietà al personaggio. Le scelte rimangono nella bozza dell'editor fino al salvataggio. Il disegno dell'arma è un indicatore generico derivato da `equippedWeaponId`, non un nuovo dato persistente.
 
 Sezione attiva, scorrimento delle liste e vista Solo dispositivo sono stato temporaneo dell'interfaccia. La navigazione non scrive la raccolta. Cambiare personaggio azzera controlli temporanei e memoria delle liste; PF, risorse, storico e combattimento continuano a essere letti dalla sua scheda.
+
+## Provenienza opzionale Beyond (app v0.13, schema v9)
+
+`importInfo` è facoltativo per non alterare le schede esistenti: `{provider: "dndbeyond", characterId: "ID", scope: "core-v1", limitations: ["testo", ...]}`. ID numerico positivo come stringa, fino a 15 cifre; massimo 30 omissioni, 500 caratteri ciascuna. Il parser convalida e conserva solo questi campi. Non contiene cookie, token o JSON sorgente completo. Le vecchie app che ignorano i campi sconosciuti possono perdere questa informazione: usare la v0.13 per mantenere gli avvisi. Il formato della raccolta resta v1.
+
+La nuova importazione crea una scheda con profilo/PF/CA verificati nel sottoinsieme supportato, inventario di oggetti generici e note di equipaggiamento sorgente. Nessuna arma attiva, oggetto o risorsa dimostrativa, competenza, slot o capacità viene aggiunta. Gli avvisi rimangono visibili e nei backup; la provenienza non abilita aggiornamenti o scritture su Beyond. La conferma salva prima la nuova raccolta con controllo del valore atteso nello storage e soltanto dopo seleziona il nuovo personaggio. Errori di quota, conflitti, raccolta piena e recupero da corruzione non modificano la raccolta persistente. Dettagli in [BEYOND-PROVE.md](BEYOND-PROVE.md).
