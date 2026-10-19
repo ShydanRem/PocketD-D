@@ -10,7 +10,9 @@ import USB con conferma e proiezione PC sono separati. Il modello firmware v1
 implicita. Dettagli, pin, memoria, compilazione e gate hardware in
 [FIRMWARE.md](FIRMWARE.md). La v0.16 aggiunge il renderer d20 pixel art, con atlas in flash e canvas
 dinamico da 81.920 byte; calcolo del tiro e salvataggi restano separati dalla
-presentazione ([dettagli](DADI-ANIMATI.md)). Il resto di questo documento conserva le scelte
+presentazione ([dettagli](DADI-ANIMATI.md)). La v0.17 estende lo stesso canvas a sei tipi di
+dado e gruppi fino a sei; aggiunge 138.240 byte di atlas in flash, senza
+modificare i formati USB/NVS. Il resto di questo documento conserva le scelte
 progettuali e le verifiche ancora necessarie.
 
 ## Hardware

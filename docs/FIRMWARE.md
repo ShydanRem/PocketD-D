@@ -1,4 +1,4 @@
-# Firmware PocketD-D 0.16 — percorso offline e dadi animati
+# Firmware PocketD-D 0.17 — percorso offline e dadi poliedrici
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
@@ -12,6 +12,10 @@ Foundry, server PC, Beyond, Wi-Fi o Bluetooth durante l'uso al tavolo.
 
 La v0.16 aggiunge [d20 animato in pixel art](DADI-ANIMATI.md), lancio doppio,
 risultato naturale sul dado, totale separato e accelerazione senza rilanci.
+
+La v0.17 aggiunge d4/d6/d8/d10/d12, quantità fino a sei, bonus e modalità
+Somma/Danni. Da Dadi → Altri si prepara il tiro. Nessun danno è applicato
+automaticamente ai PF; nessun bonus di arma viene dedotto.
 
 Primo percorso: avvio con Elian originale o copia precedentemente salvata →
 Scheda → caratteristica → d20 → risultato → Eroe → PF ±1 → annulla →
@@ -219,3 +223,15 @@ personale viene letta o modificata per questi test: si usano dati sintetici.
 Build v0.16: binario **573.104 byte**, partizione app **86% libera**, DIRAM statica
 78.287 byte, canvas Dadi dinamico aggiuntivo da 81.920 byte. Il collaudo hardware
 resta aperto.
+
+## Verifiche v0.17 — lanci multipli
+
+Il calcolo `dice_pool.c` valida i parametri prima di usare il RNG, somma tutte
+le facce e aggiunge il bonus una sola volta; minimo zero solo in Danni. I test
+C, LVGL su host, ASan/UBSan e build ESP32-S3 coprono forme, limiti e nuovi
+controlli. Dettaglio in [DADI-ANIMATI.md](DADI-ANIMATI.md). La raccolta personale,
+il protocollo USB e i record NVS non sono modificati. Collaudo fisico aperto.
+
+Build ESP32-S3 v0.17: **713.808 byte** (circa 697 KiB), partizione
+app da 4 MiB **83% libera**, DIRAM statica **78.335 byte**. Il canvas rimane
+da 81.920 byte dinamici; heap, prestazioni e consumo vanno misurati sulla scheda.

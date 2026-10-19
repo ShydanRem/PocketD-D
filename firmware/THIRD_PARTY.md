@@ -19,6 +19,6 @@ SIL Open Font License 1.1. Font Awesome 5 Free: Copyright Fonticons, Inc., font
 portion SIL OFL 1.1 (additional icon/code terms in its notice). Upstream notices
 are retained in `licenses/` and accompany source/binary bundles.
 
-The d20 atlas and pixel numeral glyphs are original PocketD-D assets, generated
+The polyhedral dice atlases and pixel numeral glyphs are original PocketD-D assets, generated
 by `scripts/generate-dice.py` and rendered by `core/dice_animation.c`; they do
 not depend on third-party images, fonts or online asset services.

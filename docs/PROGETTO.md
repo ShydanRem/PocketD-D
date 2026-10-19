@@ -65,7 +65,9 @@ Beyond, Foundry, party o servizi remoti. La v0.15 porta il primo percorso offlin
 in ESP-IDF/LVGL: scheda essenziale, d20, PF/annulla, contatori e salvataggio.
 L'USB trasferisce una copia limitata con conferma sul display, senza cambiare la
 raccolta PC. La v0.16 aggiunge dadi d20 animati nel firmware con sprite originali, rimbalzi,
-lancio doppio e risultato naturale separato dal totale.
+lancio doppio e risultato naturale separato dal totale. La v0.17 aggiunge
+d4/d6/d8/d10/d12 e lanci manuali Somma/Danni fino a sei dadi con bonus,
+senza applicare danni automaticamente o migrare salvataggi.
 Collaudo hardware, alimentazione e autonomia restano il prossimo
 passo, prima di ampliare le regole. Vedere [FIRMWARE.md](FIRMWARE.md).
 

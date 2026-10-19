@@ -24,6 +24,9 @@ static lv_timer_t *dice_timer;
 static void dice_frame(lv_timer_t *timer);
 static page_t page;
 static int ability=-1,mode,resource_index;
+static bool pool_view,dice_setup,die_picker,pool_damage;
+static unsigned pool_sides=6,pool_count=1;
+static int pool_bonus;
 static const char *const abilities[]={"FOR","DES","COS","INT","SAG","CAR"};
 #ifndef PD_UI_TEST
 static QueueHandle_t packets;
@@ -53,8 +56,8 @@ static void event(lv_event_t *e) {
     /* Disabled controls also reject queued/synthetic events while dice are in flight. */
     if (dice_animation.active && action!=13 && action!=16) return;
     pd_state next=state;
-    if (action>=100 && action<104) { page=action-100; }
-    else if (action>=200 && action<206) { ability=action-200;page=DICE;has_roll=false;mode=0;pd_dice_idle(&dice_animation,1); }
+    if (action>=100 && action<104) { page=action-100;dice_setup=false;die_picker=false; }
+    else if (action>=200 && action<206) { ability=action-200;page=DICE;has_roll=false;mode=0;pool_view=false;dice_setup=false;die_picker=false;pd_dice_idle(&dice_animation,1); }
     else if (action==1) { pd_hp(&next,-1);apply(&next); }
     else if (action==2) { pd_hp(&next,1);apply(&next); }
     else if (action==3 && undo_available) {
@@ -65,20 +68,46 @@ static void event(lv_event_t *e) {
     else if (action==13) {
         if (dice_animation.active) { pd_dice_finish(&dice_animation);has_roll=true; }
         else {
-            result=pd_d20(ability<0?0:pd_modifier(state.abilities[ability]),mode,pd_board_random,NULL);
-            has_roll=false;pd_dice_start(&dice_animation,&result,lv_tick_get());
+            if(pool_view) {
+                pd_pool next_roll;
+                pd_pool *last=&dice_animation.pool;
+                if(!pd_roll_pool(last->sides,last->count,last->bonus,last->damage,pd_board_random,NULL,&next_roll))return;
+                pd_dice_pool_start(&dice_animation,&next_roll,lv_tick_get());
+            } else {
+                result=pd_d20(ability<0?0:pd_modifier(state.abilities[ability]),mode,pd_board_random,NULL);
+                pd_dice_start(&dice_animation,&result,lv_tick_get());
+            }
+            has_roll=false;
         }
     }
     else if (action==16) {
         if(!dice_animation.active)return;
         pd_dice_finish(&dice_animation);has_roll=true;
     }
-    else if (action==14) { ability=-1; has_roll=false;pd_dice_idle(&dice_animation,mode?2:1); }
+    else if (action==14) { ability=-1;has_roll=false;mode=0;pool_view=false;dice_setup=false;die_picker=false;pd_dice_idle(&dice_animation,1); }
+    else if (action==40) {
+        dice_setup=true;die_picker=false;
+        if(pool_view) { pool_sides=dice_animation.pool.sides;pool_count=dice_animation.pool.count;pool_bonus=dice_animation.pool.bonus;pool_damage=dice_animation.pool.damage; }
+    }
+    else if (action==41) { if(die_picker)die_picker=false;else dice_setup=false; }
+    else if (action==42)die_picker=true;
+    else if (action==43)pool_damage=!pool_damage;
+    else if (action==44 && pool_count>1)pool_count--;
+    else if (action==45 && pool_count<PD_POOL_MAX)pool_count++;
+    else if (action==47 && pool_bonus>PD_POOL_MIN_BONUS)pool_bonus--;
+    else if (action==48 && pool_bonus<PD_POOL_MAX_BONUS)pool_bonus++;
+    else if (action==46) {
+        pd_pool next_roll;
+        if(!pd_roll_pool(pool_sides,pool_count,pool_bonus,pool_damage,pd_board_random,NULL,&next_roll))return;
+        pool_view=true;dice_setup=false;die_picker=false;has_roll=false;
+        pd_dice_pool_start(&dice_animation,&next_roll,lv_tick_get());
+    }
+    else if(action>=404 && action<=420 && pd_pool_sides(action-400) && die_picker) { pool_sides=action-400;die_picker=false; }
     else if (action==20 || action==21) { if(pd_resource_change(&next,resource_index,action==20?-1:1))apply(&next); }
     else if (action==22 && state.resource_count) resource_index=(resource_index+1)%state.resource_count;
     else if (action==30) {
         if (pd_storage_save(&pending)) {
-            state=pending;undo_available=false;resource_index=0;has_roll=false;ability=-1;mode=0;page=HERO;pd_dice_idle(&dice_animation,1);
+            state=pending;undo_available=false;resource_index=0;has_roll=false;ability=-1;mode=0;page=HERO;pool_view=false;dice_setup=false;die_picker=false;pd_dice_idle(&dice_animation,1);
             reply("PDD IMPORTED\n"); import_pending=false;
         } else { reply("PDD ERROR storage\n");import_pending=false; }
     }
@@ -94,6 +123,29 @@ static lv_obj_t *button(const char *text,int x,int y,int w,int h,intptr_t action
     lv_obj_t *l=lv_label_create(b);lv_label_set_text(l,text);lv_obj_center(l);
     if (!enabled) lv_obj_add_state(b,LV_STATE_DISABLED);
     lv_obj_add_event_cb(b,event,LV_EVENT_CLICKED,(void*)action);return b;
+}
+static void render_dice_setup(void) {
+    char text[80];
+    if(die_picker) {
+        label("Scegli il dado",83,105,300,true);
+        const unsigned sides[]={4,6,8,10,12,20};
+        for(int i=0;i<6;i++) {
+            snprintf(text,sizeof text,"d%u",sides[i]);
+            lv_obj_t *b=button(text,83+(i%3)*104,158+(i/3)*72,92,56,400+sides[i],true);
+            if(pool_sides==sides[i])lv_obj_set_style_bg_color(b,lv_color_hex(0x75562b),0);
+        }
+        button("Indietro",83,308,300,48,41,true);return;
+    }
+    label("Prepara il tiro",83,105,300,true);
+    snprintf(text,sizeof text,"Tipo: d%u",pool_sides);button(text,83,148,144,48,42,true);
+    button(pool_damage?"Danni":"Somma",239,148,144,48,43,true);
+    button("-",83,210,48,48,44,pool_count>1);
+    snprintf(text,sizeof text,"Quantita %u",pool_count);label(text,139,223,188,false);
+    button("+",335,210,48,48,45,pool_count<PD_POOL_MAX);
+    button("-",83,272,48,48,47,pool_bonus>PD_POOL_MIN_BONUS);
+    snprintf(text,sizeof text,"Bonus %+d",pool_bonus);label(text,139,285,188,false);
+    button("+",335,272,48,48,48,pool_bonus<PD_POOL_MAX_BONUS);
+    button("Esci",83,332,76,48,41,true);button("Lancia",167,332,132,48,46,true);button("Prova",307,332,76,48,14,true);
 }
 static void render(void) {
     /* Destroy the LVGL image/cache before freeing its pixel buffer. A root redraw
@@ -115,6 +167,7 @@ static void render(void) {
         button("Annulla",83,303,144,54,31,true); button("Conferma",239,303,144,54,30,true);
         return;
     }
+    if(page==DICE && dice_setup) { render_dice_setup();return; }
     if (page==HERO) {
         label(state.name,83,111,300,true);
         snprintf(text,sizeof text,"Livello %u     CA %u",state.level,state.armor);label(text,83,151,300,false);
@@ -129,9 +182,10 @@ static void render(void) {
         }
         label("Prove base: nessun effetto",83,306,300,false);
     } else if (page==DICE) {
-        snprintf(text,sizeof text,"d20 %s %+d",ability<0?"libero":abilities[ability],ability<0?0:pd_modifier(state.abilities[ability]));
+        if(pool_view)snprintf(text,sizeof text,"%s %ud%u %+d",dice_animation.pool.damage?"Danni":"Somma",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
+        else snprintf(text,sizeof text,"d20 %s %+d",ability<0?"libero":abilities[ability],ability<0?0:pd_modifier(state.abilities[ability]));
         label(text,83,105,300,true);
-        if(!dice_animation.roll.count)pd_dice_idle(&dice_animation,mode?2:1);
+        if(!pd_dice_count(&dice_animation))pd_dice_idle(&dice_animation,mode?2:1);
         dice_pixels=lv_malloc(PD_DICE_PIXELS*sizeof *dice_pixels);
         if(dice_pixels) {
             dice_canvas=lv_canvas_create(root);lv_obj_set_pos(dice_canvas,73,134);
@@ -145,14 +199,19 @@ static void render(void) {
             pd_dice_finish(&dice_animation);has_roll=true;
         }
         if(has_roll) {
-            if(result.count==2)snprintf(text,sizeof text,"%u / %u %+d = %d",result.dice[0],result.dice[1],result.bonus,result.total);
+            if(pool_view) {
+                pd_pool *r=&dice_animation.pool;
+                if(r->damage && r->sum+r->bonus<0)snprintf(text,sizeof text,"Somma %d -> Danni 0",r->sum+r->bonus);
+                else snprintf(text,sizeof text,"%d %+d = %d",r->sum,r->bonus,r->total);
+            }
+            else if(result.count==2)snprintf(text,sizeof text,"%u / %u %+d = %d",result.dice[0],result.dice[1],result.bonus,result.total);
             else snprintf(text,sizeof text,"%u %+d = %d%s",result.dice[0],result.bonus,result.total,result.natural==20?"  -  20 naturale":"");
         } else snprintf(text,sizeof text,"%s",dice_animation.active?"In volo...":"Pronto al lancio");
         label(text,73,265,320,false);
         if(!dice_pixels)label("Animazione non disponibile",73,183,320,false);
-        button(mode==-1?"Svant":mode==1?"Vant":"Base",83,296,76,44,15,!dice_animation.active);
+        button(pool_view?"Prova":mode==-1?"Svant":mode==1?"Vant":"Base",83,296,76,44,pool_view?14:15,!dice_animation.active);
         button(dice_animation.active?"Accelera":has_roll?"Rilancia":"Lancia",167,296,132,44,13,true);
-        button("Libero",307,296,76,44,14,!dice_animation.active);
+        button("Altri",307,296,76,44,40,!dice_animation.active);
     } else {
         label("Contatori manuali",83,111,300,true);
         if(state.resource_count) {

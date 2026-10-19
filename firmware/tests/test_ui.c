@@ -53,6 +53,17 @@ static void click(const char *name) {
     }
     fprintf(stderr,"Button not found: %s\n",name);assert(!"button not found");
 }
+/* Exercise hit coordinates when the form has multiple + and - buttons. */
+static void tap(int x,int y) {
+    lv_obj_t *root=lv_screen_active();lv_obj_update_layout(root);
+    for(unsigned i=0;i<lv_obj_get_child_count(root);i++) {
+        lv_obj_t *b=lv_obj_get_child(root,i);lv_area_t box;lv_obj_get_coords(b,&box);
+        if(lv_obj_check_type(b,&lv_button_class) && x>=box.x1&&x<=box.x2&&y>=box.y1&&y<=box.y2) {
+            assert(!lv_obj_has_state(b,LV_STATE_DISABLED));lv_obj_send_event(b,LV_EVENT_CLICKED,NULL);bounds();return;
+        }
+    }
+    assert(!"touch target not found");
+}
 int main(void) {
     lv_init();lv_display_t *d=lv_display_create(466,466);static uint16_t buffer[466*40];
     lv_display_set_buffers(d,buffer,NULL,sizeof buffer,LV_DISPLAY_RENDER_MODE_PARTIAL);lv_display_set_flush_cb(d,paint);
@@ -95,7 +106,7 @@ int main(void) {
     assert(save_calls==saved_before);
     /* No orphan timer or pixel buffer after leaving/re-entering the dice page. */
     for(int i=0;i<8;i++) { click("Eroe");assert(!dice_timer&&!dice_pixels&&!dice_canvas);click("Dadi"); }
-    click("Libero");assert(ability==-1&&!has_roll);
+    ability=-1;has_roll=false;pd_dice_idle(&dice_animation,2);render();
     assert(dice_animation.preview&&dice_animation.roll.count==2);
     rng_before=random_calls;fail_canvas=true;click("Lancia");
     assert(has_roll&&!dice_animation.active&&!dice_timer&&!dice_pixels);
@@ -109,6 +120,48 @@ int main(void) {
     pd_dice_finish(&dice_animation);has_roll=true;
     pending=state;import_pending=true;render();click("Annulla");
     assert(has_roll&&!memcmp(&result,&before_import,sizeof result)&&!dice_timer);
+    click("Altri");click("Prova");assert(!pool_view&&ability==-1&&mode==0&&!has_roll);
+    /* Prepare a manual 6d6 +3 damage roll through the actual touch UI. */
+    unsigned saves=save_calls;pd_state untouched=state;
+    click("Altri");assert(dice_setup);screenshot("pool-setup.ppm");
+    click("Tipo: d6");assert(die_picker);screenshot("pool-picker.ppm");click("d6");
+    for(int i=1;i<6;i++)tap(359,234);
+    assert(pool_count==6);for(int i=0;i<3;i++)tap(359,296);
+    click("Somma");assert(pool_damage&&pool_bonus==3);screenshot("pool-configured.ppm");
+    random_values[0]=0;random_values[1]=5;random_calls=0;click("Lancia");
+    assert(pool_view&&dice_animation.active&&dice_animation.pool.count==6&&dice_animation.pool.total==24);
+    unsigned calls=random_calls;assert(calls==6);
+    for(int frame=0;frame<=29;frame++) {
+        char name[48];snprintf(name,sizeof name,"pool-frame-%02d.ppm",frame);
+        screenshot(name);lv_tick_inc(66);lv_timer_handler();
+    }
+    assert(has_roll&&!dice_animation.active&&random_calls==calls);screenshot("pool-six.ppm");
+    pd_pool kept=dice_animation.pool;
+    click("Altri");tap(107,234);tap(107,296);click("Danni");
+    click("Esci");assert(!dice_setup&&!memcmp(&kept,&dice_animation.pool,sizeof kept));
+    click("Rilancia");calls=random_calls;click("Accelera");assert(random_calls==calls&&has_roll);
+    /* Small and large pools, all sprite shapes, with a legible natural value on each die. */
+    const unsigned face_types[]={4,6,8,10,12,20};
+    for(unsigned i=0;i<6;i++) {
+        click("Altri");char old[32],choice[16],shot[40];snprintf(old,sizeof old,"Tipo: d%u",pool_sides);
+        click(old);snprintf(choice,sizeof choice,"d%u",face_types[i]);click(choice);
+        while(pool_count>1)tap(107,234);
+        pool_bonus=0;pool_damage=false;render();random_values[0]=face_types[i]-1;random_values[1]=face_types[i]-1;random_calls=0;
+        click("Lancia");click("Accelera");
+        assert(dice_animation.pool.total==(int)face_types[i]);
+        snprintf(shot,sizeof shot,"pool-d%u.ppm",face_types[i]);screenshot(shot);
+    }
+    /* Sum may be negative; damage is explicitly clamped, never applied to hero HP. */
+    click("Altri");click("Tipo: d20");click("d4");pool_bonus=-15;pool_damage=false;render();
+    random_values[0]=random_values[1]=0;click("Lancia");click("Accelera");assert(dice_animation.pool.total==-14);screenshot("pool-negative.ppm");
+    click("Altri");click("Somma");click("Lancia");click("Accelera");assert(dice_animation.pool.total==0);screenshot("pool-zero.ppm");
+    click("Altri");pool_sides=20;pool_count=6;pool_bonus=30;pool_damage=true;render();
+    random_values[0]=random_values[1]=19;click("Lancia");click("Accelera");assert(dice_animation.pool.total==150);screenshot("pool-maximum.ppm");
+    assert(!memcmp(&state,&untouched,sizeof state)&&save_calls==saves);
+    click("Prova");assert(!pool_view&&ability==-1&&mode==0);click("Base");click("Lancia");click("Accelera");assert(result.count==2);
+    click("Altri");pool_count=2;pool_sides=8;render();fail_canvas=true;calls=random_calls;click("Lancia");
+    assert(pool_view&&has_roll&&!dice_animation.active&&random_calls==calls+2&&!dice_timer);fail_canvas=false;
+    click("Eroe");assert(!dice_pixels&&!dice_timer);click("Dadi");assert(dice_pixels);
     click("Usi");click("-1");assert(state.resources[0].current==0);click("+1");assert(state.resources[0].current==1);screenshot("resources.ppm");
     pending=state;strcpy(pending.name,"Nuovo eroe");pending.hp=6;import_pending=true;render();bounds();screenshot("confirm.ppm");
     click("Annulla");assert(state.hp==24&&!import_pending);

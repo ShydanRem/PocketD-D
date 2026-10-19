@@ -2,7 +2,7 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.16:** firmware offline con d20 animato in pixel art, lancio doppio e risultato leggibile sul dispositivo. Include scheda essenziale, PF/annulla, contatori e salvataggio locale. Supporto PC per importazione Beyond, configurazione, backup ed esportazione USB con conferma sul display. Il firmware non è ancora collaudato sulla scheda fisica.
+**Stato v0.17:** firmware offline con dadi d4/d6/d8/d10/d12/d20 animati in pixel art, prove con vantaggio/svantaggio e lanci manuali fino a sei dadi con bonus. Include scheda essenziale, PF/annulla, contatori e salvataggio locale. Supporto PC per importazione Beyond, configurazione, backup ed esportazione USB con conferma sul display. Il firmware non è ancora collaudato sulla scheda fisica.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
@@ -206,3 +206,12 @@ due dadi per vantaggio/svantaggio, dado scelto evidenziato, scintille per il 20
 naturale. Il dado mostra il valore naturale e il totale è separato. “Accelera”
 conclude lo stesso tiro, senza altre estrazioni. Test e anteprima LVGL su host;
 compilazione ESP32-S3 verificata, collaudo fisico ancora da fare.
+
+## Incremento 0.17 — dadi poliedrici e danni multipli
+
+“Altri” prepara tipo, quantità (1–6), bonus (−15…+30) e modalità Somma/Danni.
+Tutti i valori compaiono sui dadi e si sommano, con minimo zero solo in Danni.
+Nessun effetto automatico su PF o risorse; prove d20 e vantaggio/svantaggio
+rimangono separati. Sprite originali per i sei solidi, due righe per i gruppi
+più numerosi, uscita dalla preparazione senza perdere il risultato precedente.
+I parametri manuali sono di sessione; i formati di salvataggio non cambiano.

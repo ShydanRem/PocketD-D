@@ -1,6 +1,7 @@
 #ifndef PD_DICE_ANIMATION_H
 #define PD_DICE_ANIMATION_H
 #include "pocketdd.h"
+#include "dice_pool.h"
 #define PD_DICE_WIDTH 320
 #define PD_DICE_HEIGHT 128
 #define PD_DICE_PIXELS (PD_DICE_WIDTH*PD_DICE_HEIGHT)
@@ -10,12 +11,18 @@
 /* Pure presentation. Never calls an RNG, persists state or recomputes a roll. */
 typedef struct {
     pd_roll roll;
+    pd_pool pool;
+    bool pool_roll;
     uint32_t started,elapsed;
     bool active,preview;
 } pd_dice_animation;
-typedef struct { int x,y,frame,height; bool settled; } pd_dice_pose;
+typedef struct { int x,y,frame,height,size; bool settled; } pd_dice_pose;
 void pd_dice_idle(pd_dice_animation *a,unsigned count);
 void pd_dice_start(pd_dice_animation *a,const pd_roll *roll,uint32_t now);
+void pd_dice_pool_idle(pd_dice_animation *a,unsigned sides,unsigned count);
+void pd_dice_pool_start(pd_dice_animation *a,const pd_pool *roll,uint32_t now);
+unsigned pd_dice_count(const pd_dice_animation *a);
+unsigned pd_dice_sides(const pd_dice_animation *a);
 uint32_t pd_dice_duration(const pd_dice_animation *a);
 bool pd_dice_tick(pd_dice_animation *a,uint32_t now);
 void pd_dice_finish(pd_dice_animation *a);
