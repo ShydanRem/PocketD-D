@@ -20,3 +20,29 @@ export function beyondCoreFixture(){
     {definition:{name:'Lama sonda',filterType:'Weapon',grantedModifiers:[]},quantity:1,equipped:false}];
   return payload;
 }
+
+// Synthetic extended sheet: invented text and values, including a spellcaster.
+export function beyondRichFixture(){
+  const p=beyondCoreFixture(),c=p.data;
+  c.name='Sonda estesa';
+  c.classes[0]={...c.classes[0],id:777,definition:{id:9,name:'Classe sonda',hitDice:12,spellCastingAbilityId:4},hitDiceUsed:1};
+  c.classes[0].classFeatures.push({definition:{id:51,requiredLevel:1,name:'Rage',description:'Vigore di prova.',levelScales:[]},levelScale:{fixedValue:2}});
+  c.modifiers.class.push({id:'pick',componentId:500,type:'proficiency',subType:'perception',isGranted:false},
+    {componentId:500,type:'proficiency',subType:'strength-saving-throws',isGranted:true},
+    {componentId:500,type:'proficiency',subType:'constitution-saving-throws',isGranted:true},
+    {componentId:500,type:'proficiency',subType:'simple-weapons',isGranted:true},
+    {componentId:500,type:'proficiency',subType:'martial-weapons',isGranted:true});
+  c.choices.class.push({id:'2-pick',componentId:500,optionValue:81});
+  c.choices.choiceDefinitions=[{options:[{id:81,label:'Perception'}]}];
+  c.race={fullName:'Specie sonda',racialTraits:[{definition:{id:58,name:'Relentless Endurance',description:'Torna a un punto ferita, dopo verifica.'}},{definition:{id:59,name:'Savage Attacks',description:'Un dado aggiuntivo nei critici in mischia.'}}]};
+  c.feats=[{definition:{id:21,name:'Great Weapon Master',description:'Opzione condizionale di prova.'}}];
+  c.actions={class:[{id:'action-rage',componentId:51,name:'Rage',snippet:'Vigore {{scalevalue#signed}}.',limitedUse:{maxUses:3,numberUsed:1,resetType:2}}],race:[{id:'action-endurance',componentId:58,name:'Relentless Endurance',limitedUse:{maxUses:1,numberUsed:0,resetType:2}}]};
+  c.inventory=[{quantity:2,equipped:true,definition:{name:'Lancia sonda',type:'Javelin',filterType:'Weapon',categoryId:1,attackType:1,damage:{diceCount:1,diceValue:6},damageType:'Piercing',range:30,longRange:120,properties:[{name:'Thrown'}],grantedModifiers:[]}},
+    {quantity:1,equipped:true,definition:{name:'Ascia sonda',type:'Greataxe',filterType:'Weapon',categoryId:2,attackType:1,damage:{diceCount:1,diceValue:12},damageType:'Slashing',range:5,longRange:5,properties:[{name:'Heavy'},{name:'Two-Handed'}],grantedModifiers:[]}},
+    {quantity:1,equipped:false,definition:{name:'Arco sonda',type:'Shortbow',filterType:'Weapon',categoryId:1,attackType:2,damage:{diceCount:1,diceValue:6},damageType:'Piercing',range:80,longRange:320,properties:[],grantedModifiers:[]}}];
+  c.classSpells=[{characterClassId:777,spells:[{id:101,prepared:true,usesSpellSlot:true,definition:{id:201,name:'Luce di prova',level:1,concentration:true,description:'<p>Bagliore <b>inventato</b>.</p>'}},{id:102,prepared:false,definition:{id:202,name:'Eco di prova',level:1,concentration:false,description:'Nota inventata.'}}]}];
+  c.spells={race:[{id:103,spellCastingAbilityId:6,usesSpellSlot:false,limitedUse:{maxUses:2,numberUsed:1,resetType:2},definition:{id:203,name:'Scintilla innata',level:1,concentration:false,description:'Effetto originale.'}}]};
+  c.spellSlots=[{level:1,available:3,used:1}];c.pactMagic=[{level:2,available:2,used:1}];
+  c.temporaryHitPoints=4;c.conditions=[{id:11,level:0},{id:4,level:1}];c.deathSaves={successCount:1,failCount:2,isStabilized:false};c.currencies={cp:1,sp:2,ep:0,gp:12,pp:0};
+  return p;
+}

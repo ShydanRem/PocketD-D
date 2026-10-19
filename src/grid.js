@@ -1,4 +1,4 @@
-import {equippedWeapon} from './inventory.js';
+import {weaponReach} from './inventory.js';
 export const GRID_SIZE = 9;
 const cellValid=cell=>Number.isInteger(cell)&&cell>=0&&cell<GRID_SIZE*GRID_SIZE;
 export const emptyGrid=()=>({walls:[],positions:{},spent:0});
@@ -90,8 +90,8 @@ export function sightCells(start,end){
   }
   return [...cells];
 }
-export function targetGeometry(state,targetId,reach=equippedWeapon(state)?.reach??1){
-  if(!Number.isInteger(reach)||reach<1||reach>9)throw new Error('Portata non valida');
+export function targetGeometry(state,targetId,reach=weaponReach(state)){
+  if(!Number.isInteger(reach)||reach<1||reach>(state.extended?120:9))throw new Error('Portata non valida');
   if(!state.encounter.participants.some(item=>item.id===targetId))throw new Error('Bersaglio non trovato');
   const positions=state.encounter.grid.positions,start=positions.hero,end=positions[targetId];
   if(!state.encounter.participants.some(item=>item.id==='hero')||!cellValid(start)||!cellValid(end))return {known:false,distance:null,inRange:null,visible:null,cells:[]};

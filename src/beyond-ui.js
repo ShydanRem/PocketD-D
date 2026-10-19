@@ -9,6 +9,8 @@ export function openBeyondImport({commit}) {
     <p data-status role="status" aria-live="polite"></p>
     <section data-preview hidden><h3 data-name></h3><p data-checks></p><dl data-values></dl>
       <h4>Verifica dei calcoli</h4><ul data-evidence></ul>
+      <h4>Campi compilati</h4><ul data-coverage></ul><ul data-training></ul><ul data-attacks></ul><ul data-powers></ul>
+      <label data-weapon-label hidden>Arma attiva<select data-weapon></select></label>
       <h4>Inventario sorgente</h4><ul data-items></ul>
       <h4>Limiti e dati da completare</h4><ul data-omissions></ul><ul data-blockers role="alert"></ul>
       <label class="checkbox-label"><input type="checkbox" data-accept>Ho letto le omissioni e accetto di creare una scheda parziale.</label>
@@ -41,6 +43,14 @@ export function openBeyondImport({commit}) {
         const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=String(value);values.append(dt,dd);
       }
       list('[data-evidence]',report.conversion?.evidence??[]);
+      list('[data-coverage]',(report.conversion?.coverage??[]).map(c=>`${c.section}: ${c.count} · ${c.status==='converted'?'compilati':c.status==='data-only'?'dati conservati, effetti manuali':'da verificare'}`));
+      list('[data-training]',[...(report.details?.skills??[]).filter(s=>s.rank||s.blocked).map(s=>`${s.name}: ${s.bonus>=0?'+':''}${s.bonus}${s.blocked?' · tiro da verificare':''}`),...(report.details?.saves??[]).filter(s=>s.proficient||s.blocked).map(s=>`${s.label}: ${s.bonus>=0?'+':''}${s.bonus}${s.blocked?' · tiro da verificare':''}`)]);
+      list('[data-attacks]',(report.details?.weapons??[]).map(w=>`${w.name}: attacco ${w.attack>=0?'+':''}${w.attack} · ${w.damage} · portata ${w.reach} caselle`));
+      list('[data-powers]',(report.draft?.powers??[]).map(p=>`${p.name}: ${p.type==='spell'?`magia ${p.level}° · ${p.castingAbility??'caratteristica locale'}${p.limited?` · usi ${p.limited.remaining}/${p.limited.maxUses}`:''}`:p.passive?'nota/effetto manuale':`${p.remaining}/${p.maxUses} utilizzi`}`));
+      const weapons=report.draft?.inventory.filter(i=>i.type==='weapon'&&i.quantity>0)??[];
+      $('[data-weapon-label]').hidden=!weapons.length;
+      $('[data-weapon]').replaceChildren();
+      for(const item of [{id:'',name:'Scegli in seguito'},...weapons]){const option=document.createElement('option');option.value=item.id;option.textContent=item.name;option.selected=item.id===(report.draft?.equippedWeaponId??'');$('[data-weapon]').append(option);}
       list('[data-items]',report.inventory.items.map(i=>`${i.name} ×${i.quantity??'?'} · ${i.equipped?'equipaggiato':'non equipaggiato'}`));
       list('[data-omissions]',report.conversion?.omissions??report.warnings);
       list('[data-blockers]',report.conversion?.blockers??['Questa versione del connettore non supporta la creazione.']);
@@ -50,6 +60,7 @@ export function openBeyondImport({commit}) {
     }catch(error){if(token===generation && error.name!=='AbortError')$('[data-status]').textContent=error.message;}
     finally{if(token===generation)$('[data-read] button').disabled=false;}
   };
+  $('[data-weapon]').onchange=()=>{if(report?.draft)report.draft.equippedWeaponId=$('[data-weapon]').value||null;};
   $('[data-accept]').onchange=()=>{$('[data-create]').disabled=!report?.canImport || !$('[data-accept]').checked;};
   $('[data-create]').onclick=()=>{
     if(creating || !report?.canImport || !report.draft || !$('[data-accept]').checked)return;

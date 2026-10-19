@@ -1,10 +1,10 @@
-# Formato scheda locale — v9
+# Formato scheda locale — v9 e v10
 
 Il backup individuale è un singolo JSON UTF-8. Non è un formato D&D Beyond. Dalla versione 0.9 l'app conserva una raccolta di fino a 20 personaggi, uno attivo alla volta. Dalla versione 0.10 lo schema individuale è v9; il formato della raccolta è descritto in fondo al documento.
 
 | Campo | Significato e limiti |
 | --- | --- |
-| `version` | `9`; lettura compatibile con v1–v8 |
+| `version` | `9` per schede precedenti, `10` con dati estesi dalla v0.14; lettura compatibile con v1–v9 |
 | `name`, `title` | Nome non vuoto fino a 24 caratteri, titolo fino a 40 |
 | `level` | Intero da 1 a 20 |
 | `maxHp`, `hp` | Massimi da 1 a 999, attuali da 0 ai massimi |
@@ -175,3 +175,31 @@ Sezione attiva, scorrimento delle liste e vista Solo dispositivo sono stato temp
 `importInfo` è facoltativo per non alterare le schede esistenti: `{provider: "dndbeyond", characterId: "ID", scope: "core-v1", limitations: ["testo", ...]}`. ID numerico positivo come stringa, fino a 15 cifre; massimo 30 omissioni, 500 caratteri ciascuna. Il parser convalida e conserva solo questi campi. Non contiene cookie, token o JSON sorgente completo. Le vecchie app che ignorano i campi sconosciuti possono perdere questa informazione: usare la v0.13 per mantenere gli avvisi. Il formato della raccolta resta v1.
 
 La nuova importazione crea una scheda con profilo/PF/CA verificati nel sottoinsieme supportato, inventario di oggetti generici e note di equipaggiamento sorgente. Nessuna arma attiva, oggetto o risorsa dimostrativa, competenza, slot o capacità viene aggiunta. Gli avvisi rimangono visibili e nei backup; la provenienza non abilita aggiornamenti o scritture su Beyond. La conferma salva prima la nuova raccolta con controllo del valore atteso nello storage e soltanto dopo seleziona il nuovo personaggio. Errori di quota, conflitti, raccolta piena e recupero da corruzione non modificano la raccolta persistente. Dettagli in [BEYOND-PROVE.md](BEYOND-PROVE.md).
+
+## Formato v10 — dati importati estesi (app v0.14)
+
+Le nuove importazioni usano v10; le schede senza `extended` continuano a serializzarsi come v9. Una raccolta v1 può contenere entrambi i formati. Le app vecchie rifiutano v10; non aprire un backup nuovo in un'app precedente sperando che conservi i campi. Un JSON marcato v9 con `extended` viene rifiutato. I backup individuali sono limitati a 1 MB nell'interfaccia, la raccolta resta a 5 MB e 20 personaggi.
+
+`extended` è obbligatorio in v10 e contiene dati selezionati, mai JSON sorgente o credenziali:
+
+| Campo | Significato |
+| --- | --- |
+| `tempHp` | 0–9999, assorbe danni prima dei PF anche nel tracker |
+| `conditions` | Fino a 30 `{name,level}`, nome 60 caratteri, livello 0–6; effetti manuali salvo Avvelenato |
+| `deathSaves` | Successi/fallimenti 0–3 e `stabilized` booleano; gestione manuale |
+| `hitDice` | Fino a 20 `{name,die,max,used}`; d6/8/10/12, massimi 1–20 e usati entro massimo |
+| `currencies` | cp/sp/ep/gp/pp interi 0–999999999 |
+| `pactSlots` | Nove livelli `{max,current}`, riserva distinta dagli slot ordinari |
+| `skillBonuses`, `saveBonuses`, `checkBonuses` | Bonus additivi interi −30…30 per identificatore |
+| `halfSkills`, `halfAbilityChecks` | Mezza competenza riconosciuta, senza sommarla a competenza/maestria |
+| `blockedChecks` | Tiri con formule non riconciliate (`skill:ID`, `save:KEY`, `check:KEY`) da verificare prima di usare |
+| `combat` | Bonus/attivazione Ira, disponibilità/attivazione GWM 2014, dadi critici extra in mischia, modalità lancio |
+| `facts` | Fino a 100 note da 500 caratteri; consultabili nel pannello stato |
+
+`importInfo.scope` ammette `extended-v1` in v10; `core-v1` rimane leggibile. `limitations` persistono nei backup e nell'interfaccia. Il profilo si può correggere senza perdere i dati estesi. Le schede precedenti restano identiche all'aggiunta di un nuovo personaggio.
+
+Le armi v10 accettano portata fino a 120 caselle e un `profile` selezionato: tipo a distanza, pesante, gittata di lancio, gittata lunga e nomi delle proprietà. Non si deduce l'arma attiva da più oggetti equipaggiati. Le modalità di lancio e di mischia applicano bonus e dadi critici coerenti. Lo storico v10 ammette fino a 18 dadi danno e bonus fino a 60 per i casi estesi; v9 mantiene i limiti precedenti.
+
+Magie/capacità v10: massimo 120 voci, descrizione fino a 6000 caratteri. Le note passive hanno `passive: true`, nessun consumo fittizio; capacità con utilizzi conservano massimi, rimasti e recupero. Le magie possono specificare `castingAbility`, `attackModifier`, `saveModifier`, `prepared`, `usesSpellSlot` e un contatore innato `limited`. Il lancio sceglie una riserva ordinaria o `pact:LIVELLO`; i contatori innati rimangono separati. I recuperi giornalieri, variabili o condivisi non riconosciuti sono dichiarati manuali. Nessun recupero dei dadi vita viene indovinato.
+
+Descrizioni sanificate in testo, entità HTML decodificate e rendering con escape. Eventuali estratti oltre 6000 caratteri e formule dinamiche residue sono segnalati. Gli effetti riconosciuti sono un sottoinsieme esplicito, non una certificazione di tutte le meccaniche Beyond.

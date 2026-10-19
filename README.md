@@ -2,7 +2,7 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato:** prototipo web interattivo **v0.13**, con party simulato tra più finestre, interfaccia circolare, avatar, raccolta di personaggi, inventario, armi e importazione parziale da Beyond su PC. Il firmware ESP32 non è ancora implementato.
+**Stato:** prototipo web interattivo **v0.14**, con party simulato tra più finestre, interfaccia circolare, avatar, raccolta di personaggi, inventario, armi e importazione estesa da Beyond su PC. Il firmware ESP32 non è ancora implementato.
 
 Hardware previsto: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, display touch rotondo da 466 × 466 pixel. La descrizione del produttore fornita dall’utente indica 8 MB di PSRAM, 16 MB di flash e slot microSD integrato, con controller CO5300 e touch CST9217. Pin, driver e prestazioni restano da verificare sugli esempi ufficiali e sul dispositivo.
 
@@ -177,3 +177,13 @@ Il connettore PocketD-D legge un personaggio pubblico senza Foundry o credenzial
 Verificati sui dati reali: caratteristiche con bonus razziali, PF, CA e tutte le righe dell'inventario. Corretta l'anteprima precedente che ignorava i bonus razziali e non determinava la CA. **Non è una conversione completa:** competenze e salvezze, armi operative, magie, slot, capacità, talenti, effetti e parte dello stato di sessione sono da completare. Le omissioni restano sulla scheda e nei backup; effetti non risolti sui valori principali bloccano la creazione. Nessun personaggio personale o JSON sorgente completo è incluso nel progetto.
 
 103 test locali passati, build riuscita, controlli browser di anteprima/conferma, conservazione delle schede, backup/reload, conflitti/quota/limiti e viewport desktop/mobile 390/320 px. Prova reale e test sintetici sono distinti nel [resoconto delle prove](docs/BEYOND-PROVE.md). Firmware, autenticazione privata e scrittura su Beyond rimangono successivi.
+
+## Incremento 0.14 — scheda Beyond compilata e risorse estese
+
+L'importazione PC compila competenze/salvezze, armi con dadi e bonus, magie per incantatore, slot ordinari/patto, capacità e relativi contatori; conserva anche condizioni, PF temporanei, dadi vita, tiri morte e monete. L'anteprima mostra i risultati e permette di scegliere l'arma attiva prima della conferma. Nessuna dipendenza Foundry o riscrittura delle schede esistenti.
+
+Nuove importazioni in **formato v10**, vecchie schede conservate in v9 e backup precedenti leggibili. Sono disponibili il pannello Stato/risorse/note e comandi espliciti per gli effetti riconosciuti di Ira, GWM 2014 e dado critico aggiuntivo in mischia. Gli effetti condizionali non coperti rimangono dichiarati, con descrizioni e proprietà importate. Non è promessa una conversione completa di ogni regola o homebrew.
+
+Verificati sul personaggio reale tre abilità competenti, due salvezze, quattro armi, 23 capacità/note e i contatori riconosciuti. Le magie sono provate con fixture sintetiche: il personaggio reale non è un incantatore. **121 test locali passati**, build e controlli browser di importazione/gioco/persistenza e regressioni riusciti. [Prove, copertura e limiti aggiornati](docs/BEYOND-PROVE.md).
+
+Avvio dall'archivio con Node 24.19+: `npm start`, poi **http://127.0.0.1:5173**. Per rigenerare la build: `npm ci` e `npm run build`. Le vecchie schede Beyond non vengono sostituite: un nuovo import crea una scheda distinta, preservando i progressi locali. Firmware e scrittura verso Beyond restano successivi.

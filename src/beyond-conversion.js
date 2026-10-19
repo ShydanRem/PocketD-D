@@ -1,3 +1,4 @@
+import {extendBeyond} from './beyond-details.js';
 import {previewBeyond} from './beyond.js';
 import {initialState, parseBackup, serialize} from './model.js';
 
@@ -17,7 +18,7 @@ export const BEYOND_LIMITATIONS = [
 
 // Deliberately bounded conversion. Unknown core effects block creation instead of
 // turning a successful HTTP request into a claim of mechanical equivalence.
-export function convertBeyond(payload, expectedId) {
+export function convertBeyondCore(payload, expectedId) {
   const report = previewBeyond(payload, expectedId), c = {...payload.data};
   const blockers = [], evidence = [];
   const block = message => { if (!blockers.includes(message)) blockers.push(message); };
@@ -173,3 +174,5 @@ export function convertBeyond(payload, expectedId) {
     conversion:{scope:'core-v1',complete:false,blockers,evidence:[...new Set(evidence)],omissions},draft,
     canImport:draft!==null,warnings:[...blockers,...omissions]};
 }
+
+export function convertBeyond(payload,expectedId){return extendBeyond(convertBeyondCore(payload,expectedId),payload.data)}

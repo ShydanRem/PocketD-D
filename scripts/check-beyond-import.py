@@ -70,7 +70,7 @@ try:
         assert len(new['inventory'])==2 and new['equippedWeaponId'] is None and new['powers']==[]
         assert new['importInfo']['limitations'] and new['resolve']==0
         page.reload();expect(page.locator('.import-notice')).to_be_visible()
-        page.locator('[data-action=beyond-info]').click();expect(page.locator('.beyond-import')).to_contain_text('salvezze');page.locator('.beyond-import button').click()
+        page.locator('[data-action=beyond-info]').click();expect(page.locator('.beyond-import')).to_contain_text('CA e PF');page.locator('.beyond-import button').click()
         page.locator('[data-action=manage-characters]').click()
         with page.expect_download() as download:page.locator('[data-action=export-library]').click()
         exported=json.loads(Path(download.value.path()).read_text());assert exported==imported

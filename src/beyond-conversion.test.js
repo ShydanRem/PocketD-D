@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {convertBeyond} from './beyond-conversion.js';
+import {convertBeyondCore as convertBeyond} from './beyond-conversion.js';
 import {beyondCoreFixture} from './beyond-fixtures.js';
 import {parseBackup,serialize} from './model.js';
 import {createLibrary,addCharacter,serializeLibrary,parseLibrary,storeLibrary,LIBRARY_KEY} from './library.js';

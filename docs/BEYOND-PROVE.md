@@ -1,4 +1,65 @@
-# Beyond: prove e importazione PC — 19 ottobre 2026
+# Beyond: importazione estesa PC v0.14 — 19 ottobre 2026
+
+**L'importazione compila ora anche competenze, salvezze, configurazioni delle armi, magie, slot e capacità riconosciute. I dati conservati e gli effetti di gioco automatizzati rimangono distinti.** `conversion.complete` resta `false`: l'app non è un motore completo di tutte le regole Beyond.
+
+## Prova reale della v0.14
+
+Partenza da `main`, commit `27e8978`. Il connettore ordinario PocketD-D ha letto nuovamente il personaggio autorizzato: HTTP 200, 180.034 byte, ID e struttura validati. Nessuna credenziale, dipendenza Foundry o scrittura remota. Il sorgente completo è stato ispezionato in memoria, non salvato o incluso nel repository/archivio. I resoconti privati contengono soltanto i campi selezionati.
+
+| Parte | Esito verificato sui dati reali |
+| --- | --- |
+| Caratteristiche, PF, CA, inventario | Confermati i risultati corretti della v0.13 e tutte le 24 righe, con duplicati e quantità conservati. |
+| Competenze e salvezze | Tre abilità competenti e due salvezze ricostruite dai modificatori e dalle scelte con ID corrispondenti; confrontati i bonus finali. Alcune scelte ancora vuote nel sorgente sono segnalate, senza inventare competenze. |
+| Armi | Quattro armi configurate con caratteristica, competenza, dadi, danno, bonus e proprietà. Verificati attacco base, danni e gittate. Più armi equipaggiate restano distinte: si sceglie quella attiva nell'anteprima o nelle Azioni. |
+| Capacità e talenti | 23 voci fra capacità e note di classe/specie/talenti/background; esclusi i privilegi di livelli futuri. Due contatori riconosciuti: 3 e 1 utilizzi, con recupero lungo. Nessun utilizzo fittizio per una capacità passiva. |
+| Effetti riconosciuti | Verificati uso di Ira (3 → 2), bonus ai danni in mischia con FOR, opzione GWM 2014 −5/+10 e dado critico aggiuntivo in mischia. Il test browser ha controllato attacco e danni dopo le scelte esplicite dell'utente. |
+| Stato | Conservati PF temporanei, condizioni, contatori dei dadi vita, tiri morte e monete presenti nel sorgente. Sul caso reale molti sono zero: i casi non zero hanno prove sintetiche dedicate. |
+| Magie | Il personaggio reale non ha incantesimi: nessuna prova reale di conversione di un incantatore. Caratteristiche multiple, preparazione, magie innate, slot ordinari/patto e riposi sono verificati con sorgenti inventati. |
+| Persistenza | API reale → anteprima → scelta arma → conferma → nuova scheda v10 → uso risorse → reload, in un profilo browser isolato. Le schede già presenti sono rimaste identiche. Nessun accesso al profilo personale dell'utente. |
+
+L'accesso HTTP, il formato JSON e la correttezza dei campi convertiti sono controlli separati. I confronti sono con il JSON effettivamente ricevuto e con l'aritmetica dei valori, non con una schermata autenticata del sito. Il successo di questo caso non prova ogni combinazione di classe, homebrew o regole 2014/2024.
+
+## Che cosa viene compilato
+
+- **Tiri:** competenza, maestria, mezza competenza e bonus numerici riconosciuti per abilità/salvezze/prove. Le scelte sono abbinate agli identificativi e alle opzioni del sorgente; formule di tiro ignote bloccano il tiro interessato, con avviso e sblocco dopo verifica manuale.
+- **Armi:** dadi, tipo di danno, FOR/DES e finesse, competenza, bonus magici riconosciuti con controllo di sintonia, proprietà e gittate. Modalità lancio separata per le armi da lancio; gittate coerenti con la griglia. Più armi non vengono fuse né selezionate arbitrariamente.
+- **Magie:** nome, testo, livello, concentrazione, preparazione/disponibilità, caratteristica di lancio per voce, bonus di attacco e CD riconosciuti. Consumi innati separati dai normali slot. Slot del patto in una riserva distinta, recuperata al riposo breve/lungo; slot ordinari solo al lungo. Le formule non risolte diventano note con avviso, senza un pulsante di lancio ingannevole.
+- **Capacità e talenti:** descrizioni come testo, contatori `limitedUse`, usi rimasti e recupero riconosciuto. Privilegi filtrati per livello, note passive senza contatori inventati. Azioni personalizzate conservate come note. Nessun catalogo o testo del personaggio viene incorporato nella distribuzione.
+- **Stato:** PF temporanei che assorbono i danni anche nel combattimento, condizioni, dadi vita usati, tiri morte e monete. Pannello **Stato, risorse e note** per consultarli/correggerli. Un recupero a PF positivi azzera i contatori di morte; non si risolvono automaticamente esiti di morte/stabilizzazione.
+
+Ira, GWM 2014 e Savage Attacks sono riconosciuti da identità sorgente e condizioni supportate. Ira richiede l'uso della capacità e consuma una risorsa; termina la concentrazione e impedisce il lancio. Il bonus ai danni si applica solo in mischia con FOR, non al lancio dell'arma. GWM si abilita esplicitamente e vale solo con arma pesante competente in mischia. Il dado critico aggiuntivo vale solo in mischia. Resistenza Implacabile richiede zero PF e verifica col DM. Queste regole non vengono estese a varianti sconosciute soltanto perché hanno un nome simile.
+
+## Limiti ancora espliciti
+
+Maestrie 2024, effetti aggiuntivi, armi versatili/due armi, resistenze, durata delle capacità, automazioni delle condizioni diverse da Avvelenato, preparazione completa per tutte le classi e risorse condivise/variabili restano parziali o manuali. Le descrizioni e proprietà disponibili aiutano a gestirli al tavolo. I dadi vita sono conservati e modificabili: recupero e guarigione da riposo non vengono indovinati senza scelta del regolamento.
+
+CA/PF massimi restano fotografie da correggere dopo modifiche locali. Contenitori, peso, consumo automatico di munizioni e sincronizzazione non sono automatizzati. Alcuni override, origini opzionali, massimi modificati, ASI non risolti o effetti sui valori principali continuano a bloccare l'importazione. Limiti: 20 personaggi, 60 oggetti, nome personaggio 24 caratteri, nome voce 40; v10 fino a 120 magie/capacità con 6000 caratteri ciascuna. Descrizioni più lunghe sono dichiarate come estratti; altre voci non rappresentabili sono segnalate. La raccolta ha un limite complessivo di 5 MB.
+
+Il resoconto v3 espone copertura per sezione, dettagli dei tiri/armi/magie e omissioni. `canImport` abilita una nuova scheda utilizzabile nel sottoinsieme dichiarato; non certifica equivalenza completa di tutti gli effetti D&D. Anteprima e scelta dell'arma non scrivono; soltanto conferma e salvataggio riuscito attivano la nuova scheda. La raccolta non viene sostituita. Non si aggiornano automaticamente le vecchie importazioni v0.13: conservarle o reimportare come nuova scheda, per non sovrascrivere progressi locali.
+
+## Avvio e verifiche
+
+Richiede Node.js 24.19+. `npm ci`, `npm run build`, `npm start`, poi **http://127.0.0.1:5173**. L'archivio include `dist/`: per l'avvio basta `npm start`. Il solo HTML autonomo e Vite non forniscono il connettore. Usare lo stesso browser/hostname/porta per ritrovare la raccolta; esportarla prima di trasferirla. La nuova scheda usa v10, mentre le schede precedenti mantengono v9 senza riscritture preventive. Le app precedenti rifiutano v10 invece di scartare i nuovi dati.
+
+```sh
+npm test
+npm run build
+python scripts/check-beyond-import.py
+python scripts/check-beyond-rich.py
+python scripts/check-beyond.py
+python scripts/check-library.py
+python scripts/check-interface.py
+python scripts/check-inventory.py
+python scripts/check-party.py
+```
+
+**121 test locali passati**, build riuscita. Playwright Python e Chromium `/usr/bin/chromium` verificano importazione, scelte, contatori, attacchi e critici, spellcaster multipli, magie innate, patto, riposi, stato, modifiche di profilo/oggetti/capacità, backup/reload, HTML ostile, conflitti/quota/corruzione e viewport 390/320 px. Nessun errore JavaScript rilevato. Queste prove usano sorgenti sintetici, distinti dalla prova reale sopra. Le regressioni della raccolta, dell'inventario, dell'interfaccia e del party non modificano raccolte personali.
+
+Firmware, importazione autonoma dal dispositivo, autenticazione privata e scrittura verso Beyond rimangono successivi. Le fonti e i vincoli di distribuzione restano in [BEYOND-FATTIBILITA.md](BEYOND-FATTIBILITA.md).
+
+---
+
+# Storico delle prove v0.13 — 19 ottobre 2026
 
 **PocketD-D v0.13 importa un sottoinsieme verificato dei dati principali, con anteprima, omissioni e conferma prima di creare una nuova scheda. Non è una conversione completa del personaggio.** L'integrazione usa il connettore PocketD-D, senza Foundry, esportazioni intermedie, servizi MrPrimate o credenziali per la lettura pubblica.
 

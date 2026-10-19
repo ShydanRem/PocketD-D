@@ -16,7 +16,7 @@ export function startingInventory(legacy={}) {
   };
 }
 
-export function validateItem(input) {
+export function validateItem(input,extended=false) {
   if(!input || !validId(input.id) || !['gear','consumable','healing','weapon'].includes(input.type) || typeof input.name!=='string' || !input.name.trim() || input.name.length>40 || typeof input.notes!=='string' || input.notes.length>400 || !integer(input.quantity,0,999)) throw new Error('Oggetto non valido');
   const item={id:input.id,type:input.type,name:input.name.trim(),notes:input.notes,quantity:input.quantity};
   if(['weapon','healing'].includes(input.type)) {
@@ -24,19 +24,24 @@ export function validateItem(input) {
     Object.assign(item,{diceCount:input.diceCount,dieSides:input.dieSides});
   }
   if(input.type==='weapon') {
-    if(!abilities.includes(input.ability) || typeof input.proficient!=='boolean' || typeof input.addAbilityToDamage!=='boolean' || !integer(input.attackModifier,-10,10) || !integer(input.damageModifier,-10,10) || !integer(input.reach,1,9) || typeof input.damageType!=='string' || input.damageType.length>24) throw new Error('Arma non valida');
+    if(!abilities.includes(input.ability) || typeof input.proficient!=='boolean' || typeof input.addAbilityToDamage!=='boolean' || !integer(input.attackModifier,-10,10) || !integer(input.damageModifier,-10,10) || !integer(input.reach,1,extended?120:9) || typeof input.damageType!=='string' || input.damageType.length>24) throw new Error('Arma non valida');
     Object.assign(item,{ability:input.ability,proficient:input.proficient,addAbilityToDamage:input.addAbilityToDamage,attackModifier:input.attackModifier,damageModifier:input.damageModifier,reach:input.reach,damageType:input.damageType});
   }
   if(input.type==='healing') {
     if(!integer(input.healingModifier,0,30)) throw new Error('Bonus cura non valido');
     item.healingModifier=input.healingModifier;
   }
+  if(extended&&input.profile!==undefined){
+    const p=input.profile;
+    if(!p||typeof p.ranged!=='boolean'||typeof p.heavy!=='boolean'||!integer(p.thrownRange,0,120)||!integer(p.longRange,0,240)||!Array.isArray(p.properties)||p.properties.length>20||p.properties.some(t=>typeof t!=='string'||t.length>60))throw new Error('Proprietà arma non valide');
+    item.profile={ranged:p.ranged,heavy:p.heavy,thrownRange:p.thrownRange,longRange:p.longRange,properties:[...p.properties]};
+  }
   return item;
 }
 
-export function validateInventory(input) {
+export function validateInventory(input,extended=false) {
   if(!input || !Array.isArray(input.inventory) || input.inventory.length>MAX_ITEMS) throw new Error(`Massimo ${MAX_ITEMS} oggetti`);
-  const inventory=input.inventory.map(validateItem);
+  const inventory=input.inventory.map(item=>validateItem(item,extended));
   if(new Set(inventory.map(item=>item.id)).size!==inventory.length) throw new Error('Oggetti duplicati');
   if(input.equippedWeaponId!==null && !inventory.some(item=>item.id===input.equippedWeaponId && item.type==='weapon' && item.quantity>0)) throw new Error('Arma equipaggiata non valida');
   return {inventory,equippedWeaponId:input.equippedWeaponId};
@@ -49,11 +54,11 @@ export function equippedWeapon(state) {
 // Equipment and quantity edits invalidate a previously prepared strike.
 function changed(state,inventory,equippedWeaponId=state.equippedWeaponId) {
   if(!inventory.some(item=>item.id===equippedWeaponId && item.type==='weapon' && item.quantity>0)) equippedWeaponId=null;
-  return {...state,inventory,equippedWeaponId,encounter:{...state.encounter,strike:null}};
+  return {...state,...(state.extended?{extended:{...state.extended,combat:{...state.extended.combat,thrown:false}}}:{}),inventory,equippedWeaponId,encounter:{...state.encounter,strike:null}};
 }
 
 export function upsertItem(state,input) {
-  const item=validateItem(input),exists=state.inventory.some(other=>other.id===item.id);
+  const item=validateItem(input,Boolean(state.extended)),exists=state.inventory.some(other=>other.id===item.id);
   if(!exists && state.inventory.length>=MAX_ITEMS) throw new Error(`Massimo ${MAX_ITEMS} oggetti`);
   return changed(state,exists?state.inventory.map(other=>other.id===item.id?item:other):[...state.inventory,item]);
 }
@@ -72,4 +77,9 @@ export function adjustQuantity(state,id,delta) {
   const item=state.inventory.find(item=>item.id===id);
   if(!item || !integer(delta,-999,999) || !integer(item.quantity+delta,0,999)) throw new Error('Quantità non valida');
   return changed(state,state.inventory.map(other=>other.id===id?{...other,quantity:item.quantity+delta}:other));
+}
+
+export function weaponReach(state){
+  const weapon=equippedWeapon(state);
+  return state.extended?.combat.thrown&&weapon?.profile?.thrownRange?weapon.profile.thrownRange:weapon?.reach??1;
 }

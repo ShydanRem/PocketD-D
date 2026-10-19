@@ -1,3 +1,4 @@
+import {adjustHeroHp} from './extended.js';
 import {emptyGrid,validateGrid} from './grid.js';
 const integer=(n,min,max)=>Number.isInteger(n)&&n>=min&&n<=max;
 const validId=id=>typeof id==='string'&&/^[a-zA-Z0-9_-]{1,64}$/.test(id);
@@ -62,7 +63,7 @@ export function adjustParticipantHp(state,id,delta){
   if(!integer(delta,-9999,9999))throw new Error('Variazione PF non valida');
   const participant=participantView(state,id);
   const hp=Math.max(0,Math.min(participant.maxHp,participant.hp+delta));
-  if(id==='hero')return {...state,hp,concentration:hp===0?null:state.concentration};
+  if(id==='hero')return adjustHeroHp(state,delta);
   return {...state,encounter:{...state.encounter,participants:state.encounter.participants.map(item=>item.id===id?{...item,hp}:item)}};
 }
 export function queueDamage(state,targetId,amount,id){
