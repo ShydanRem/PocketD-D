@@ -11,9 +11,17 @@ test('device export is a bounded projection and never mutates the source',()=>{
   const {packet,warnings}=projectDevice(s);
   assert.equal(packet.name,'Elian ??');assert.equal(packet.hp,24);assert.equal(packet.armorClass,16);
   assert.deepEqual(packet.abilities,s.abilities);assert.deepEqual(s,before);
-  assert.equal(packet.format,'pocketdd-device');assert.equal(packet.version,1);
+  assert.equal(packet.format,'pocketdd-device');assert.equal(packet.version,2);
   assert.equal(packet.resources[0].current,1);assert(warnings.some(w=>w.includes('inventario')));
   assert(!serializeDevice(packet).includes('inventory'));
+});
+test('all avatar choices transfer as independent indices without changing any character data',()=>{
+  for(let skin=0;skin<3;skin++)for(let hair=0;hair<3;hair++)for(let cloak=0;cloak<3;cloak++)for(let style=0;style<3;style++){
+    const s=initialState();s.avatar={skin,hair,cloak,style};const before=structuredClone(s);
+    const {packet}=projectDevice(s);assert.deepEqual(packet.avatar,s.avatar);assert.deepEqual(s,before);
+    packet.avatar.skin=(skin+1)%3;assert.deepEqual(s,before);
+  }
+  const s=initialState();s.avatar.style=3;assert.throws(()=>projectDevice(s),/Avatar non valido/);
 });
 test('slot counters retain current values and excluded counters are named',()=>{
   const s=initialState();s.slots=s.slots.map((_,i)=>({max:3,current:i%3}));

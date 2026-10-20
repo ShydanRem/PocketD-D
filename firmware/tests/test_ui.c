@@ -31,6 +31,12 @@ static void screenshot(const char *name) {
     }
     fclose(f);
 }
+static lv_obj_t *button_label(lv_obj_t *button) {
+    for(unsigned i=0;i<lv_obj_get_child_count(button);i++) {
+        lv_obj_t *o=lv_obj_get_child(button,i);if(lv_obj_check_type(o,&lv_label_class))return o;
+    }
+    assert(!"button label missing");return NULL;
+}
 static void bounds(void) {
     lv_obj_t *root=lv_screen_active();lv_obj_update_layout(root);
     /* Text must not grow into another field/control for long imported names. */
@@ -52,7 +58,7 @@ static void bounds(void) {
         assert(a.y2-a.y1+1>=44);
         int xs[]={a.x1,a.x2},ys[]={a.y1,a.y2};
         for(int x=0;x<2;x++)for(int y=0;y<2;y++)assert((xs[x]-233)*(xs[x]-233)+(ys[y]-233)*(ys[y]-233)<=233*233);
-        lv_obj_t *l=lv_obj_get_child(o,0);lv_area_t text;lv_obj_get_coords(l,&text);
+        lv_obj_t *l=button_label(o);lv_area_t text;lv_obj_get_coords(l,&text);
         if(!(text.x1>=a.x1&&text.x2<=a.x2&&text.y1>=a.y1&&text.y2<=a.y2)) { fprintf(stderr,"Overflow %s: button %d,%d,%d,%d text %d,%d,%d,%d\n",lv_label_get_text(l),a.x1,a.y1,a.x2,a.y2,text.x1,text.y1,text.x2,text.y2); abort(); }
     }
 }
@@ -60,7 +66,7 @@ static void click(const char *name) {
     lv_obj_t *root=lv_screen_active();
     for(unsigned i=0;i<lv_obj_get_child_count(root);i++) {
         lv_obj_t *o=lv_obj_get_child(root,i);
-        if(lv_obj_check_type(o,&lv_button_class)&&!strcmp(lv_label_get_text(lv_obj_get_child(o,0)),name)) {
+        if(lv_obj_check_type(o,&lv_button_class)&&!strcmp(lv_label_get_text(button_label(o)),name)) {
             assert(!lv_obj_has_state(o,LV_STATE_DISABLED));lv_obj_send_event(o,LV_EVENT_CLICKED,NULL);bounds();return;
         }
     }
@@ -81,6 +87,27 @@ int main(void) {
     lv_init();lv_display_t *d=lv_display_create(466,466);static uint16_t buffer[466*40];
     lv_display_set_buffers(d,buffer,NULL,sizeof buffer,LV_DISPLAY_RENDER_MODE_PARTIAL);lv_display_set_flush_cb(d,paint);
     pd_demo(&state);render();bounds();screenshot("hero.ppm");
+    pd_state animated_before=state;unsigned idle_saves=save_calls,idle_rng=random_calls;
+    assert(avatar_timer&&avatar_sprite&&!dice_timer);
+    for(int frame=0;frame<16;frame++) {
+        char name[48];snprintf(name,sizeof name,"avatar-frame-%02d.ppm",frame);
+        screenshot(name);lv_tick_inc(200);lv_timer_handler();
+    }
+    assert(!memcmp(&state,&animated_before,sizeof state)&&save_calls==idle_saves&&random_calls==idle_rng);
+    click("Aspetto");assert(page==APPEARANCE&&avatar_timer);screenshot("appearance.ppm");
+    click("Animazione: si");assert(!state.idle_animation&&!avatar_timer);screenshot("appearance-still.ppm");
+    uint8_t still[PD_AVATAR_LARGE_BYTES];memcpy(still,avatar_data,sizeof still);
+    lv_tick_inc(2000);lv_timer_handler();assert(!memcmp(still,avatar_data,sizeof still));
+    click("Indietro");assert(page==HERO&&!avatar_timer);click("-1 PF");assert(state.hp==23);
+    click("Aspetto");click("Animazione: no");assert(state.idle_animation&&avatar_timer);
+    click("Indietro");click("Annulla");assert(state.hp==24&&state.idle_animation&&!undo_available);
+    click("Aspetto");fail_save=true;click("Animazione: si");assert(state.idle_animation&&avatar_timer);
+    fail_save=false;click("Indietro");
+    const pd_avatar presets[]={{0,0,0,0},{1,1,1,1},{2,2,2,2}};
+    for(int i=0;i<3;i++) {
+        state.avatar=presets[i];render();char name[40];snprintf(name,sizeof name,"avatar-preset-%d.ppm",i);screenshot(name);
+    }
+    state.avatar=presets[0];render();
     /* Long names and maximum supported values must remain usable in the new layout. */
     pd_state demo=state;
     memset(state.name,'W',PD_NAME_BYTES-1);state.name[PD_NAME_BYTES-1]=0;
@@ -91,7 +118,7 @@ int main(void) {
     fail_save=false;render();
     click("-1 PF");assert(state.hp==23&&undo_available);click("Annulla");assert(state.hp==24&&!undo_available);
     fail_save=true;click("-1 PF");assert(state.hp==24);fail_save=false;
-    click("Scheda");screenshot("sheet.ppm");click("DES 16\n+3");
+    click("Scheda");assert(!avatar_timer&&!avatar_sprite);screenshot("sheet.ppm");click("DES 16\n+3");
     unsigned saved_before=save_calls;
     click("Lancia");assert(result.total==13&&result.count==1&&dice_animation.active&&!has_roll);
     unsigned rng_before=random_calls;
@@ -138,8 +165,7 @@ int main(void) {
     assert(result.natural==20&&result.total==30);screenshot("dice-twenty.ppm");
     /* An import preview stops a flight without replacing its already-generated result. */
     click("Rilancia");pd_roll before_import=result;
-    pd_dice_finish(&dice_animation);has_roll=true;
-    pending=state;import_pending=true;render();click("Annulla");
+    pd_state incoming=state;assert(stage_import(&incoming));assert(!avatar_timer&&!dice_timer);click("Annulla");
     assert(has_roll&&!memcmp(&result,&before_import,sizeof result)&&!dice_timer);
     click("Altri");click("Prova");assert(!pool_view&&ability==-1&&mode==0&&!has_roll);
     /* Prepare a manual 6d6 +3 damage roll through the actual touch UI. */
@@ -184,8 +210,16 @@ int main(void) {
     assert(pool_view&&has_roll&&!dice_animation.active&&random_calls==calls+2&&!dice_timer);fail_canvas=false;
     click("Eroe");assert(!dice_pixels&&!dice_timer);click("Dadi");assert(dice_pixels);
     click("Usi");click("-1");assert(state.resources[0].current==0);click("+1");assert(state.resources[0].current==1);screenshot("resources.ppm");
-    pending=state;strcpy(pending.name,"Nuovo eroe");pending.hp=6;import_pending=true;render();bounds();screenshot("confirm.ppm");
+    incoming=state;strcpy(incoming.name,"Nuovo eroe");incoming.hp=6;incoming.avatar=presets[2];
+    assert(stage_import(&incoming));assert(!stage_import(&incoming));bounds();screenshot("confirm.ppm");
     click("Annulla");assert(state.hp==24&&!import_pending);
-    import_pending=true;render();click("Conferma");assert(state.hp==6&&!import_pending&&!undo_available);
+    state.idle_animation=false;assert(stage_import(&incoming));assert(!pending.idle_animation);
+    click("Conferma");assert(state.hp==6&&!import_pending&&!undo_available&&state.avatar.skin==2&&!state.idle_animation&&!avatar_timer);
+    screenshot("hero-imported.ppm");
+    for(int i=0;i<8;i++) {
+        click("Aspetto");click("Animazione: no");assert(avatar_timer);
+        click("Indietro");click("Scheda");assert(!avatar_timer&&!avatar_sprite);
+        click("Eroe");click("Aspetto");click("Animazione: si");assert(!avatar_timer);click("Indietro");
+    }
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px passed");
 }

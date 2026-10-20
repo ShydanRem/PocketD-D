@@ -70,6 +70,9 @@ d4/d6/d8/d10/d12 e lanci manuali Somma/Danni fino a sei dadi con bonus,
 senza applicare danni automaticamente o migrare salvataggi.
 La v0.18 stabilisce la prima base grafica moderna in pixel art direttamente
 nel firmware: scena originale, avatar base, icone e tema condiviso.
+La v0.19 aggiunge avatar personale con 81 combinazioni dall'editor PC,
+anteprima USB coerente, animazione sobria e preferenza locale per fermarla.
+Il disegno pixel per pixel e nuove silhouette restano successivi.
 Il porting della scheda estesa procede con questa direzione visiva; collaudo
 hardware, alimentazione e autonomia restano attività necessarie in parallelo.
 Vedere [FIRMWARE.md](FIRMWARE.md) e [DIREZIONE-VISIVA.md](DIREZIONE-VISIVA.md).

@@ -3,7 +3,9 @@
 #include "storage.h"
 #include "dice_animation.h"
 #include "visual.h"
+#include "avatar.h"
 #include "../assets/device_art.h"
+#include "src/misc/cache/instance/lv_image_cache.h"
 #ifndef PD_UI_TEST
 #include "driver/usb_serial_jtag.h"
 #include "freertos/FreeRTOS.h"
@@ -15,7 +17,7 @@
 #include <stdint.h>
 #include <assert.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE } page_t;
 static pd_state state,previous,pending;
 static bool undo_available,import_pending,has_roll;
 static pd_roll result;
@@ -23,6 +25,18 @@ static pd_dice_animation dice_animation;
 static lv_obj_t *dice_canvas;
 static uint16_t *dice_pixels;
 static lv_timer_t *dice_timer;
+static lv_obj_t *avatar_sprite;
+static lv_timer_t *avatar_timer;
+static uint32_t avatar_started;
+static unsigned avatar_phase;
+static bool avatar_large;
+_Alignas(4) static uint8_t avatar_data[PD_AVATAR_LARGE_BYTES];
+static lv_image_dsc_t avatar_image={
+    .header={.magic=LV_IMAGE_HEADER_MAGIC,.cf=LV_COLOR_FORMAT_I4,
+             .w=PD_AVATAR_WIDTH,.h=PD_AVATAR_HEIGHT,.stride=PD_AVATAR_WIDTH/2},
+    .data_size=PD_AVATAR_IMAGE_BYTES,.data=avatar_data
+};
+static void avatar_frame(lv_timer_t *timer);
 static void dice_frame(lv_timer_t *timer);
 static page_t page;
 static int ability=-1,mode,resource_index;
@@ -74,6 +88,17 @@ static lv_obj_t *decoration(int x,int y,int w,int h,unsigned color,int radius) {
 static void art(const lv_image_dsc_t *source,int x,int y,lv_obj_t *parent) {
     lv_obj_t *o=lv_image_create(parent);lv_image_set_src(o,source);lv_obj_set_pos(o,x,y);
     lv_obj_remove_flag(o,LV_OBJ_FLAG_CLICKABLE|LV_OBJ_FLAG_SCROLLABLE);
+}
+static void avatar_show(const pd_avatar *appearance,int x,int y,lv_obj_t *parent,bool large,bool animate) {
+    avatar_large=large;
+    if(large)pd_avatar_large(appearance,0,avatar_data);else pd_avatar_image(appearance,0,avatar_data);
+    avatar_image.header.w=PD_AVATAR_WIDTH*(large?2:1);avatar_image.header.h=PD_AVATAR_HEIGHT*(large?2:1);
+    avatar_image.header.stride=avatar_image.header.w/2;
+    avatar_image.data_size=large?PD_AVATAR_LARGE_BYTES:PD_AVATAR_IMAGE_BYTES;
+    avatar_phase=0;avatar_started=lv_tick_get();
+    avatar_sprite=lv_image_create(parent);lv_image_set_src(avatar_sprite,&avatar_image);
+    lv_obj_set_pos(avatar_sprite,x,y);lv_obj_remove_flag(avatar_sprite,LV_OBJ_FLAG_CLICKABLE|LV_OBJ_FLAG_SCROLLABLE);
+    if(animate&&state.idle_animation)avatar_timer=lv_timer_create(avatar_frame,200,NULL);
 }
 static void meter(unsigned current,unsigned maximum,int y,unsigned color) {
     decoration(89,y,288,4,PD_EDGE,0);
@@ -155,6 +180,14 @@ static void event(lv_event_t *e) {
         } else { reply("PDD ERROR storage\n");import_pending=false; }
     }
     else if (action==31) { import_pending=false;reply("PDD CANCELLED\n"); }
+    else if (action==50)page=APPEARANCE;
+    else if (action==51) {
+        next.idle_animation=!state.idle_animation;
+        if(pd_storage_save(&next)) {
+            state=next;previous.idle_animation=next.idle_animation;
+        }
+    }
+    else if (action==52)page=HERO;
     render();
 }
 static lv_obj_t *button(const char *text,int x,int y,int w,int h,intptr_t action,bool enabled) {
@@ -204,7 +237,9 @@ static void render(void) {
     /* Destroy the LVGL image/cache before freeing its pixel buffer. A root redraw
        cancels the old timer; the roll itself remains in the pure presentation state. */
     if(dice_timer) { lv_timer_delete(dice_timer);dice_timer=NULL; }
+    if(avatar_timer) { lv_timer_delete(avatar_timer);avatar_timer=NULL; }
     lv_obj_t *root=lv_screen_active();lv_obj_clean(root);
+    avatar_sprite=NULL;lv_image_cache_drop(&avatar_image);
     lv_free(dice_pixels);dice_pixels=NULL;dice_canvas=NULL;
     lv_obj_set_style_bg_color(root,lv_color_hex(PD_INK),0);
     lv_obj_remove_flag(root,LV_OBJ_FLAG_SCROLLABLE);
@@ -212,20 +247,37 @@ static void render(void) {
     frame();
     if (import_pending) {
         label("COPIA DA USB",83,112,300,true);
-        label(pending.name,83,151,300,true);
+        avatar_show(&pending.avatar,83,151,root,false,false);
+        label(pending.name,139,151,244,true);
         snprintf(text,sizeof text,"Liv %u  PF %u/%u  CA %u",pending.level,pending.hp,pending.max_hp,pending.armor);
-        label(text,83,190,300,false);
+        small_label(text,139,190,244,PD_GOLD);
         label("Sostituisce la copia locale.",83,229,300,false);
         label("PC: raccolta conservata.",83,257,300,false);
         button("Annulla",83,303,144,54,31,true); button("Conferma",239,303,144,54,30,true);
         return;
     }
     if(page==DICE && dice_setup) { render_dice_setup();return; }
+    if(page==APPEARANCE) {
+        label("Aspetto",83,111,300,true);
+        avatar_show(&state.avatar,185,143,root,true,true);
+        snprintf(text,sizeof text,"Mantello %s / %s",(const char *const[]){"bosco","vino","notte"}[state.avatar.cloak],
+                 (const char *const[]){"corti","lunghi","rasati"}[state.avatar.style]);
+        small_label(text,83,268,300,PD_GOLD);
+        button(state.idle_animation?"Animazione: si":"Animazione: no",83,299,300,48,51,true);
+        button("Indietro",83,359,300,48,52,true);return;
+    }
     if (page==HERO) {
         label(state.name,83,101,300,true);
         snprintf(text,sizeof text,"LIVELLO %02u   /   CA %02u",state.level,state.armor);
         lv_obj_t *meta=small_label(text,83,133,300,PD_GOLD);lv_obj_set_style_text_letter_space(meta,1,0);
-        art(&pd_art_scene,83,153,root);
+        lv_obj_t *stage=button("Aspetto",83,153,300,72,50,true);
+        lv_obj_set_style_pad_all(stage,0,0);lv_obj_set_style_border_width(stage,0,0);
+        lv_obj_set_style_bg_opa(stage,LV_OPA_TRANSP,0);
+        art(&pd_art_scene,0,0,stage);avatar_show(&state.avatar,126,0,stage,false,true);
+        lv_obj_t *hint=lv_obj_get_child(stage,0);lv_obj_set_style_text_font(hint,&lv_font_montserrat_16,0);
+        lv_obj_set_style_text_color(hint,lv_color_hex(PD_GOLD),0);
+        lv_obj_set_style_bg_color(hint,lv_color_hex(PD_INK),0);lv_obj_set_style_bg_opa(hint,LV_OPA_COVER,0);
+        lv_obj_align(hint,LV_ALIGN_BOTTOM_RIGHT,-2,0);lv_obj_move_foreground(hint);
         snprintf(text,sizeof text,"%u / %u",state.hp,state.max_hp);
         lv_obj_t *hp=label(text,133,225,200,true);label_font(hp,&lv_font_montserrat_32);
         lv_obj_set_style_text_color(hp,lv_color_hex(state.hp?PD_MINT:PD_DANGER),0);
@@ -311,6 +363,24 @@ static void dice_frame(lv_timer_t *timer) {
     pd_dice_paint(&dice_animation,dice_pixels);
     lv_obj_invalidate(dice_canvas);
 }
+static void avatar_frame(lv_timer_t *timer) {
+    (void)timer;
+    unsigned pose=pd_avatar_pose(lv_tick_get()-avatar_started);
+    if(pose==avatar_phase)return;
+    avatar_phase=pose;
+    lv_image_cache_drop(&avatar_image);
+    if(avatar_large)pd_avatar_large(&state.avatar,pose,avatar_data);else pd_avatar_image(&state.avatar,pose,avatar_data);
+    lv_obj_invalidate(avatar_sprite);
+}
+static bool stage_import(const pd_state *candidate) {
+    if(import_pending) { reply("PDD ERROR busy\n");return false; }
+    if(dice_animation.active) { pd_dice_finish(&dice_animation);has_roll=true; }
+    pending=*candidate;pending.idle_animation=state.idle_animation;import_pending=true;
+#ifndef PD_UI_TEST
+    import_started=xTaskGetTickCount();
+#endif
+    reply("PDD WAIT_CONFIRM\n");render();return true;
+}
 #ifndef PD_UI_TEST
 static void usb_task(void *unused) {
     size_t used=0;bool overflow=false;uint8_t data[64];
@@ -322,7 +392,7 @@ static void usb_task(void *unused) {
             if(c=='\n') {
                 if(!overflow && used) {
                     line[used]=0;
-                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 1\n");
+                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 2\n");
                     else {
                         pd_state candidate;
                         if(pd_parse_packet(line,used,&candidate)) {
@@ -348,8 +418,7 @@ void app_main(void) {
     for(;;) {
         pd_state candidate;
         if(xQueueReceive(packets,&candidate,0)==pdPASS) {
-            if(import_pending)reply("PDD ERROR busy\n");
-            else { if(dice_animation.active) { pd_dice_finish(&dice_animation);has_roll=true; } pending=candidate;import_pending=true;import_started=xTaskGetTickCount();reply("PDD WAIT_CONFIRM\n");render(); }
+            stage_import(&candidate);
         }
         if(import_pending && (xTaskGetTickCount()-import_started)>pdMS_TO_TICKS(120000)) {
             import_pending=false;reply("PDD CANCELLED timeout\n");render();

@@ -1,4 +1,4 @@
-# Firmware PocketD-D 0.18 — pixel art moderna e percorso offline
+# Firmware PocketD-D 0.19 — avatar personale e percorso offline
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
@@ -22,13 +22,19 @@ scena con avatar base originale, icone pixel art, tema notturno, gerarchia dei
 valori e barre PF/risorse. L'avatar è statico e decorativo; l'aspetto scelto sul
 PC non viene ancora trasferito. Dati e formati USB/NVS restano invariati.
 
+La v0.19 trasferisce anche l'aspetto scelto nell'editor PC: tre carnagioni,
+colori capelli, mantelli e tagli, con animazione di attesa disattivabile da
+Eroe → Aspetto. L'anteprima PC usa i disegni del firmware. La copia USB è v2;
+lettura delle vecchie copie v1 ancora supportata, con aspetto base. I salvataggi
+v1 restano leggibili; le nuove scritture sono v2 (vedere compatibilità sotto).
+
 Primo percorso: avvio con Elian originale o copia precedentemente salvata →
 Scheda → caratteristica → d20 → risultato → Eroe → PF ±1 → annulla →
 salvataggio locale. Anche PF temporanei e fino a otto contatori manuali.
 Vantaggio e svantaggio selezionabili dal pulsante Base/Vant/Svant. Durante il volo
 si può accelerare; modalità e navigazione attendono l'arresto del tiro.
 
-Non è ancora una scheda completa: mancano avatar personalizzabile, inventario, attacchi, magie,
+Non è ancora una scheda completa: mancano inventario, attacchi, magie,
 abilità e salvezze con competenze, effetti/condizioni, morte, dadi vita,
 monete, storico persistente, mappa e party. Le prove sono **solo di
 caratteristica base**, senza competenza, bonus extra o effetti. Il dado libero
@@ -140,8 +146,15 @@ Nessun reset/flash, scrittura verso Beyond o modifica della raccolta da questo
 strumento. Il trasferimento fisico USB resta da collaudare, benché parser,
 protocollo host e conferma grafica siano testati separatamente.
 
-Formato `pocketdd-device` v1, massimo 4096 byte, campi esatti: `format`, `version`,
+Formato `pocketdd-device` v2, massimo 4096 byte, campi esatti: `format`, `version`,
 `name`, `level`, `hp`, `maxHp`, `tempHp`, `armorClass`, `abilities` e `resources`.
+In v2 è obbligatorio anche `avatar`, con esattamente `skin`, `hair`, `cloak`,
+`style`: indici interi 0–2 corrispondenti alle scelte PC. Il firmware accetta
+anche v1, senza `avatar`, e assegna l'aspetto base. La preferenza locale per
+l'animazione non viene trasferita dal PC: la conferma conserva quella già attiva.
+Il nuovo uploader negozia `PDD READY 1/2` e blocca una copia v2 prima dell'invio
+se il firmware dichiara solo v1. Usare lo script di questa versione; i precedenti
+uploader riconoscono soltanto `PDD READY 1`.
 Nome ASCII 1–48 byte, contatore 1–32; accenti traslitterati e altri simboli
 sostituiti nell'anteprima PC. Livello 1–20, caratteristiche 1–30, CA 1–40,
 PF 0–massimo (massimo 1–999), temporanei 0–999. Massimo otto contatori con
@@ -158,7 +171,7 @@ reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
 ## Salvataggio e dadi
 
 NVS nel namespace `pocketdd`, due chiavi alternate `state_a`/`state_b`.
-Record binario esplicito di 384 byte, magic/versione `PDD1`, generazione uint32,
+Record binario esplicito di 384 byte, magic/versione `PDD2`, generazione uint32,
 CRC32; niente dump di struct C con padding. La nuova copia è scritta, committata
 e riletta prima di aggiornare lo stato visibile. Quella precedente rimane valida.
 All'avvio si sceglie la generazione valida più recente, incluso wrap del contatore.
@@ -167,6 +180,14 @@ sconosciuta con CRC valido bloccano scritture. Nessun erase/reformat automatico.
 Se un'operazione I/O fallisce, ulteriori scritture restano bloccate fino al riavvio;
 un errore di commit può avere esito ambiguo e non va dichiarato annullamento certo.
 La demo visualizzata con errore memoria non sostituisce dati salvati.
+
+La v0.19 legge anche `PDD1` e assegna avatar base e animazione abilitata senza
+scrivere nulla durante il caricamento. La prima modifica confermata scrive
+`PDD2` nell'altra banca, conservando la precedente; avatar agli offset 368–371,
+preferenza 0/1 all'offset 372. I dati e il CRC mantengono le dimensioni precedenti.
+Un firmware precedente non legge `PDD2`: riconosce la versione sconosciuta con
+CRC valido e blocca le scritture. Tornare a una vecchia versione non è una
+migrazione automatica; conservare i backup prima di cambiare firmware.
 
 PF e contatori vengono persistiti ad ogni modifica; “Annulla modifica” ripristina
 l'ultima modifica di sessione ai PF/contatori e la salva, non la vecchia scheda dopo
@@ -257,3 +278,27 @@ occupano 12.272 byte in flash. Il canvas Dadi rimane da 81.920 byte dinamici.
 Le nuove dimensioni non stabiliscono heap disponibile o prestazioni reali.
 Nessun flash o lettura Beyond eseguiti per questa revisione. Anteprime e limiti
 in [DIREZIONE-VISIVA.md](DIREZIONE-VISIVA.md).
+
+## Verifiche v0.19 — avatar personale e animazione
+
+126 test JavaScript e build PC passati. Core C/NVS verifica record v1 golden
+prodotto dall'encoder della v0.18, lettura senza scritture, prima scrittura v2
+con banca precedente conservata, riavvio e recupero. Parser USB v1/v2 e uploader
+finto verificano aspetto, rifiuti e capacità del firmware prima di inviare v2.
+La UI PC è verificata in un profilo browser effimero con avatar sintetico:
+anteprima dai disegni firmware, download corretto e raccolta invariata.
+
+Renderer avatar: 81 aspetti × quattro pose, trasparenza, ingrandimento esatto e
+guardie del buffer. UI LVGL: animazione senza RNG/salvataggi, arresto nelle altre
+sezioni, preferenza persistente, annulla PF conservato, errore memoria e
+anteprima/conferma/annulla importazione. ASan/UBSan passati dopo la correzione
+di una lettura oltre il buffer nello scaler di immagini indicizzate: la vista
+grande ora usa pixel replicati alla dimensione nativa. Leak detector disabilitato
+per l'istanza globale LVGL mantenuta fino alla fine del processo.
+
+Cross-compilazione finale ESP32-S3 con ESP-IDF v5.5.5 e toolchain Xtensa ufficiale
+esp-14.2.0_20260121, archivio verificato con SHA256 dal manifest ufficiale.
+Binario **808.736 byte**, partizione app da 4 MiB **81% libera**. Buffer avatar
+statico aggiuntivo da **5.824 byte**, canvas Dadi invariato a 81.920 byte dinamici.
+Sono misure di compilazione: heap, resa, fluidità e consumi fisici restano da
+misurare. Nessun flash o accesso al personaggio Beyond per questo incremento.

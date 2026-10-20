@@ -26,3 +26,9 @@ not depend on third-party images, fonts or online asset services.
 The device scene, base adventurer and navigation icons in `assets/device_art.h`
 are original PocketD-D pixel art authored by `scripts/generate-device-art.py`.
 No third-party artwork or imported character appearance is used.
+
+The personalized avatar masks in `assets/avatar_atlas.h` and
+`src/device-avatar-masks.json` are original integer-grid artwork from the same
+generator. `src/avatar-palette.json` preserves the existing PocketD-D palettes.
+The PC export preview and firmware share these masks and colors; no third-party
+avatar images or D&D Beyond portraits are embedded.

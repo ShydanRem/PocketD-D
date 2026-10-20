@@ -40,18 +40,28 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
     cJSON *root=cJSON_ParseWithLengthOpts(json,size,&end,false);
     if (!root) return false;
     while (end<json+size && (*end==' ' || *end=='\n' || *end=='\r' || *end=='\t')) end++;
-    bool ok=false; pd_state candidate={0};
-    const char *const fields[]={"format","version","name","level","hp","maxHp","tempHp","armorClass","abilities","resources"};
+    bool ok=false; pd_state candidate={.idle_animation=true};
+    const char *const fields[]={"format","version","name","level","hp","maxHp","tempHp","armorClass","abilities","resources","avatar"};
     const char *const abilities[]={"FOR","DES","COS","INT","SAG","CAR"};
     const char *const resource_keys[]={"name","current","maximum"};
+    const char *const avatar_keys[]={"skin","hair","cloak","style"};
+    int version=number(root,"version",1,2);
     cJSON *fmt=cJSON_GetObjectItemCaseSensitive(root,"format");
-    if (end!=json+size || !keys(root,fields,10) || !cJSON_IsString(fmt) ||
-        strcmp(fmt->valuestring,"pocketdd-device") || number(root,"version",1,1)!=1 ||
+    if (version<0 || end!=json+size || !keys(root,fields,version==1?10:11) || !cJSON_IsString(fmt) ||
+        strcmp(fmt->valuestring,"pocketdd-device") ||
         !copy(root,"name",candidate.name,sizeof candidate.name)) goto done;
     int level=number(root,"level",1,20),hp=number(root,"hp",0,999),max=number(root,"maxHp",1,999),
         temp=number(root,"tempHp",0,999),armor=number(root,"armorClass",1,40);
     if (level<0 || hp<0 || max<0 || temp<0 || armor<0) goto done;
     candidate.level=level; candidate.hp=hp; candidate.max_hp=max; candidate.temp_hp=temp; candidate.armor=armor;
+    if(version==2) {
+        cJSON *avatar=cJSON_GetObjectItemCaseSensitive(root,"avatar");
+        if(!keys(avatar,avatar_keys,4))goto done;
+        int skin=number(avatar,"skin",0,2),hair=number(avatar,"hair",0,2),
+            cloak=number(avatar,"cloak",0,2),style=number(avatar,"style",0,2);
+        if(skin<0||hair<0||cloak<0||style<0)goto done;
+        candidate.avatar=(pd_avatar){skin,hair,cloak,style};
+    }
     cJSON *a=cJSON_GetObjectItemCaseSensitive(root,"abilities");
     if (!keys(a,abilities,6)) goto done;
     for (int i=0;i<6;i++) { int n=number(a,abilities[i],1,30); if (n<0) goto done; candidate.abilities[i]=n; }

@@ -18,6 +18,13 @@ modificare i formati USB/NVS. La v0.18 aggiunge la palette comune in
 Il tema è applicato alle viste LVGL reali e non modifica il modello di gioco.
 Testi di una riga con altezza esplicita impediscono ai nomi lunghi di invadere
 i valori. Dettagli e anteprime in [DIREZIONE-VISIVA.md](DIREZIONE-VISIVA.md).
+La v0.19 separa ambiente e avatar: maschere originali, palette condivisa con il
+PC, buffer I4 statico da 5.824 byte e timer attivo solo nelle viste Eroe/Aspetto.
+L'ingrandimento è prodotto a dimensione nativa con replica dei pixel, senza
+trasformare l'immagine indicizzata in LVGL. Il core di presentazione resta puro.
+La copia USB v2 porta quattro indici estetici; il firmware legge v1/v2 e negozia
+la capacità tramite `PDD READY 2`. NVS scrive `PDD2`, legge anche `PDD1` senza
+riscrittura all'avvio e conserva la banca precedente alla prima modifica.
 Il resto di questo documento conserva le scelte
 progettuali e le verifiche ancora necessarie.
 

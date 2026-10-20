@@ -1,12 +1,14 @@
-// Original SVG pixel art. Indices match the existing v3–v9 character palettes.
-export const skinColors=['#e5b181','#bb805c','#785044'];
-export const hairColors=['#704635','#d0b676','#222637'];
-export const cloakColors=[['#245a50','#59a17d','#173f3a'],['#613748','#b16f80','#432739'],['#334d75','#739bc1','#243655']];
+import palette from './avatar-palette.json' with {type:'json'};
+// Original SVG pixel art. Firmware uses the same palette and appearance indices.
+export const {skinColors,hairColors,cloakColors}=palette;
 export const avatarPresets=[
   {name:'Custode',avatar:{skin:0,hair:0,cloak:0,style:0}},
   {name:'Viandante',avatar:{skin:1,hair:1,cloak:1,style:1}},
   {name:'Sentinella',avatar:{skin:2,hair:2,cloak:2,style:2}}
 ];
+export function avatarDescription(avatar) {
+  return `Mantello ${['bosco','vino','notte'][avatar.cloak]}, capelli ${['castani','biondi','scuri'][avatar.hair]} ${['corti','lunghi','rasati'][avatar.style]}, carnagione ${['chiara','media','scura'][avatar.skin]}`;
+}
 
 export function avatarSvg(avatar,{armed=true}={}) {
   const cloak=cloakColors[avatar.cloak],skin=skinColors[avatar.skin],hair=hairColors[avatar.hair];

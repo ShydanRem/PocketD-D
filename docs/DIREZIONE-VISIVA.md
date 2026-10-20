@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.18
+# Direzione visiva del dispositivo — v0.19
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -27,18 +27,30 @@ dell'interfaccia, senza un rettangolo di colore diverso.
 ## Implementato nel firmware
 
 - Cornice circolare, marchio discreto, stato del salvataggio sempre visibile.
-- Eroe con scena notturna originale, avventuriero, luna, pini e rovina;
+- Eroe con scena notturna originale, avatar personalizzabile, luna, pini e rovina;
   livello/CA separati, PF grandi, PF temporanei, barra proporzionale e controlli.
 - Navigazione con quattro icone pixel art e selezione evidenziata.
 - Caratteristiche, contatori, preparazione dei dadi, scelta del tipo e conferma
   USB con lo stesso linguaggio grafico. Feedback premuto e disabilitato distinto.
 - Nomi lunghi limitati a una riga con ellissi: non invadono i valori sottostanti.
 
-L'avventuriero è un **avatar base originale e statico**: non è l'aspetto del
-personaggio Beyond e non dipende dalla sua classe o dall'equipaggiamento.
-Non viene trasferita o sovrascritta alcuna preferenza dell'avatar PC.
+L'avventuriero è un **avatar originale personalizzabile**: carnagione, colore dei
+capelli, mantello e taglio hanno tre scelte ciascuno, per 81 combinazioni. Si
+configura nell'editor PC e si trasferisce con la copia USB v2. Non rappresenta
+ritratti di Beyond, classe o equipaggiamento. La raccolta PC rimane conservata.
 Livello, CA, PF, caratteristiche e contatori visualizzati restano quelli dello
 stato attivo; le illustrazioni decorative non aggiungono regole.
+
+Toccare **Aspetto** nella scena Eroe apre l'avatar ingrandito e il comando
+**Animazione: si/no**. La preferenza viene salvata sul dispositivo; un nuovo
+trasferimento conserva la scelta locale. Il comando non sostituisce l'ultima
+modifica PF/contatori annullabile.
+
+Quattro pose muovono leggermente il mantello e chiudono gli occhi una volta in
+un ciclo da 3,2 secondi. Un timer da 200 ms aggiorna solo la figura e soltanto
+quando cambia posa. Si ferma nelle altre sezioni e nella conferma USB, che mostra
+un'anteprima statica del nuovo avatar. L'animazione non usa RNG o scritture NVS.
+Non vengono dichiarati risparmi energetici o prestazioni hardware misurati.
 
 ## Asset e riproducibilità
 
@@ -48,6 +60,20 @@ replicate a 24×24. Formato LVGL I4, palette BGRA a 16 colori, costanti in flash
 **12.272 byte** complessivi di dati immagine, oltre ai descrittori. Nessun file
 esterno, servizio online o nuova allocazione canvas applicativa per la scena.
 Decoder e oggetti LVGL usano comunque heap: non è una misura di memoria a runtime.
+
+Lo stesso generatore produce `firmware/assets/avatar_atlas.h` e
+`src/device-avatar-masks.json`: tre tagli × quattro pose, disegnati a 24×30 e
+replicati a 48×60; 17.280 byte di maschere I4 e 60 byte di colori base in flash.
+La palette canonica è `src/avatar-palette.json`, condivisa dal vecchio avatar
+SVG del PC e dal generatore firmware. L'anteprima di esportazione usa le stesse
+maschere e gli stessi colori del dispositivo attraverso `src/device-avatar.js`.
+
+Il buffer avatar statico è **5.824 byte**, palette inclusa: ospita la figura
+48×60 oppure l'ingrandimento 96×120 prodotto per replica esatta dei pixel.
+Non si trasforma a runtime un'immagine indicizzata con lo scaler LVGL. Questo
+evita una lettura oltre il buffer riscontrata dal sanitizer nella vista grande.
+La cache immagine viene invalidata prima di aggiornare palette o pixel e quando
+si esce dalla vista. Non occorre un secondo canvas completo del display.
 
 ```sh
 python3 scripts/generate-device-art.py
@@ -63,6 +89,7 @@ Le anteprime richiedono Pillow e si trovano in
 Scheda e Usi. Sono fotogrammi del **codice firmware LVGL eseguito su host**,
 con dati sintetici; non concept generati e non fotografie del dispositivo.
 L'archivio include PNG, GIF e altri fotogrammi se prodotti prima del pacchetto.
+La v0.19 aggiunge `avatar-preview.gif`, `avatar-presets.png` e le viste Aspetto.
 
 ## Verifiche v0.18
 
@@ -78,10 +105,23 @@ sulla scheda fisica. Nitidezza, luminosità, touch, memoria disponibile e fluidi
 devono ancora essere osservati sul dispositivo. Nessuna lettura personale Beyond
 o modifica alla raccolta PC per questa revisione. Formati USB/NVS invariati.
 
+## Verifiche v0.19
+
+126 test JavaScript, core C/NVS e test LVGL nativi passati. Il renderer verifica
+81 aspetti × quattro pose, palette trasparenti, guardie del buffer e ingrandimento
+esatto. UI verificata anche con ASan/UBSan dopo la correzione della lettura oltre
+il buffer: timer, abilitazione/disabilitazione, annulla PF, errore memoria,
+anteprima/conferma/annulla importazione e preferenza locale conservata.
+Migrazione da un record v1 prodotto dall'encoder effettivo della v0.18, senza
+riscrittura all'avvio; prima scrittura v2 conserva la vecchia banca. L'uploader
+non invia una copia v2 a un firmware che dichiara solo v1. La prova browser usa
+un profilo effimero e un avatar sintetico, verificando anteprima, download e
+raccolta invariata. Nessun personaggio personale Beyond letto o modificato.
+
 ## Da sviluppare con questa direzione
 
-1. Avatar personalizzabile trasferibile dal PC, con animazione di attesa sobria
-   e aspetto coerente con le scelte esplicite del giocatore.
+1. Ulteriori silhouette e personalizzazioni, mantenendo esplicite le scelte del
+   giocatore; eventuale aspetto dell'equipaggiamento dopo il porting dell'inventario.
 2. Componenti per elenchi, dettagli e testi lunghi mentre abilità, inventario,
    attacchi e magie vengono portati sul dispositivo. Icone specifiche e pochi
    tocchi per le azioni frequenti, evitando di stipare tutto nella schermata Eroe.
@@ -89,5 +129,6 @@ o modifica alla raccolta PC per questa revisione. Formati USB/NVS invariati.
 4. Transizioni leggere e preferenza per ridurre le animazioni. Le animazioni
    ambientali restano subordinate alla gestione energetica da implementare.
 
-Questa versione stabilisce la prima base visiva reale; non completa il
-trasferimento della scheda estesa, l'editor avatar o le funzioni di alimentazione.
+Questa versione aggiunge personalizzazione e animazione alla base visiva; non
+completa il trasferimento della scheda estesa, il disegno pixel per pixel
+dell'avatar o le funzioni di alimentazione.

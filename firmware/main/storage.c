@@ -21,7 +21,7 @@ bool pd_storage_load(pd_state *s) {
     }
     for (int i=0;i<2;i++) if (size[i]==PD_RECORD_SIZE &&
         pd_crc32(data[i],PD_RECORD_SIZE-4)==((uint32_t)data[i][380]|((uint32_t)data[i][381]<<8)|((uint32_t)data[i][382]<<16)|((uint32_t)data[i][383]<<24)) &&
-        memcmp(data[i],"PDD1",4)) return failure();
+        memcmp(data[i],"PDD1",4) && memcmp(data[i],"PDD2",4)) return failure();
     bank=pd_select(data[0],size[0],data[1],size[1],s,&generation);
     bool absent=errors[0]==ESP_ERR_NVS_NOT_FOUND && errors[1]==ESP_ERR_NVS_NOT_FOUND;
     if (bank<0) {

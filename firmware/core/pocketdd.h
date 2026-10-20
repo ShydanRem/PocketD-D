@@ -10,11 +10,14 @@
 #define PD_PACKET_MAX 4096
 
 typedef struct { char name[PD_RESOURCE_BYTES]; uint16_t current, maximum; } pd_resource;
+typedef struct { uint8_t skin,hair,cloak,style; } pd_avatar;
 typedef struct {
     char name[PD_NAME_BYTES];
     uint16_t hp, max_hp, temp_hp;
     uint8_t level, armor, abilities[6], resource_count;
     pd_resource resources[PD_RESOURCES];
+    pd_avatar avatar;
+    bool idle_animation;
 } pd_state;
 typedef struct { uint8_t dice[2], count, natural; int total, bonus; } pd_roll;
 typedef uint32_t (*pd_random)(void *context);

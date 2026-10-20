@@ -18,3 +18,17 @@ for i, name in enumerate(names):
 output = base/'device-preview.png'
 gallery.save(output)
 print(output)
+for name in ['appearance','appearance-still','hero-imported']:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+frames=[Image.open(p).convert('RGB') for p in sorted(base.glob('avatar-frame-*.ppm'))]
+if frames:
+    frames[0].save(base/'avatar-preview.gif',save_all=True,append_images=frames[1:],duration=200,loop=0,disposal=2,optimize=True)
+    print(base/'avatar-preview.gif')
+presets=Image.new('RGB',(466*3,466),'black')
+for i in range(3):
+    source=base/f'avatar-preset-{i}.ppm'
+    if not source.is_file():break
+    presets.paste(Image.open(source),(i*466,0))
+else:
+    presets.save(base/'avatar-presets.png');print(base/'avatar-presets.png')

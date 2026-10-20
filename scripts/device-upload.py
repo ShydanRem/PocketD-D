@@ -20,7 +20,7 @@ def payload(path):
             result[key] = value
         return result
     obj = json.loads(raw, object_pairs_hook=unique)
-    if not isinstance(obj, dict) or obj.get('format') != 'pocketdd-device' or obj.get('version') != 1:
+    if not isinstance(obj, dict) or obj.get('format') != 'pocketdd-device' or type(obj.get('version')) is not int or obj['version'] not in (1, 2):
         raise ValueError('Usa la copia da “Prepara per dispositivo”, non il backup completo')
     encoded = json.dumps(obj, ensure_ascii=False, separators=(',', ':')).encode('ascii')
     if len(encoded) > 4096 or b'\n' in encoded:
@@ -29,6 +29,7 @@ def payload(path):
 
 
 def wait_for(port, expected, timeout, log=print):
+    accepted = (expected,) if isinstance(expected, str) else expected
     deadline = time.monotonic() + timeout
     buffer = bytearray()
     while time.monotonic() < deadline:
@@ -41,19 +42,26 @@ def wait_for(port, expected, timeout, log=print):
         buffer.clear()
         if not line:
             continue
-        if expected == 'PDD READY 1' and line in ['PDD ERROR packet', 'PDD ERROR size']:
+        if 'PDD READY 1' in accepted and line in ['PDD ERROR packet', 'PDD ERROR size']:
             continue  # Discard an interrupted frame before the leading newline.
         if line.startswith('PDD ERROR') or line.startswith('PDD CANCELLED'):
             raise RuntimeError(line)
-        if line == expected:
+        if 'PDD READY 1' in accepted and line.startswith('PDD READY') and line not in accepted:
+            raise RuntimeError('Versione protocollo del firmware non supportata')
+        if line in accepted:
             log(line)
-            return
+            return line
     raise TimeoutError(f'Nessuna risposta {expected}; esito non confermato. Controlla il display prima di riprovare.')
 
 
 def upload(port, data, log=print):
+    version = json.loads(data).get('version')
+    if type(version) is not int or version not in (1, 2):
+        raise ValueError('Versione della copia non supportata')
     port.write(b'\nPDD HELLO\n'); port.flush()
-    wait_for(port, 'PDD READY 1', 10, log)
+    ready = wait_for(port, ('PDD READY 1', 'PDD READY 2'), 10, log)
+    if version > int(ready.rsplit(' ', 1)[1]):
+        raise RuntimeError('Aggiorna il firmware PocketD-D: questa copia include un avatar e richiede la versione USB 2. Nessuna copia inviata.')
     port.write(data); port.flush()
     wait_for(port, 'PDD WAIT_CONFIRM', 10, log)
     log('Conferma sul display entro 120 secondi. Sostituisce solo la copia sul dispositivo.')

@@ -137,6 +137,10 @@ footer { max-width:1200px;padding:22px 24px;font-size:8px; }
 .editor-dialog .editor-controls>button { font-size:12px;min-height:40px; }
 .hero-editor-dialog .editor-body { grid-template-columns:170px 1fr;gap:25px; }
 .hero-editor-dialog .editor-preview { position:sticky;top:0;min-height:300px;padding:0 0 18px;border:1px solid #6a7e5244;border-radius:9px;background:#0f2118; }
+.device-export-avatar { display:flex;align-items:center;gap:18px;padding:16px;background:#0b101c;border:1px solid #30465a;border-radius:6px;margin:16px 0; }
+.device-export-avatar .device-avatar-sprite { display:block;flex:none;width:72px;height:90px; }
+.device-export-avatar p { margin:8px 0; }
+.device-export-avatar small { color:#a5b5c6; }
 .avatar-stage { position:relative;height:222px;overflow:hidden;background:radial-gradient(ellipse at 50% 75%,#5b7d4c55,transparent 65%); }
 .avatar-stage::after { content:'';position:absolute;left:20px;right:20px;bottom:18px;height:10px;background:#07170c;clip-path:polygon(0 30%,20% 0,80% 0,100% 30%,90% 100%,10% 100%); }
 .hero-editor-dialog .avatar-stage>.sprite { width:144px;height:176px;left:calc(50% - 72px);top:auto;bottom:22px;z-index:1; }
