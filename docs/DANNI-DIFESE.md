@@ -1,5 +1,9 @@
 # Danni ricevuti e difese per tipo — v0.28
 
+> Documento della v0.28. La v0.29 aggiunge [salvezza COS e CD opzionale max 30](CONCENTRAZIONE.md).
+> La risoluzione manuale resta disponibile; i limiti sul tiro riportati sotto
+> descrivono l'incremento storico. Formati invariati.
+
 Il dispositivo aggiunge **Usi → Stato → Danni**, con una componente di danno
 in entrata e configurazione manuale delle difese per i 13 tipi comuni. Sono
 funzioni offline, senza Foundry, servizi o PC al tavolo. Nessuna nuova lettura

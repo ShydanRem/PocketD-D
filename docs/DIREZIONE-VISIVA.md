@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.28
+# Direzione visiva del dispositivo — v0.29
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -188,3 +188,11 @@ risolvere e casi bloccati. Il risultato resta leggibile dopo la conferma; Nuovo
 richiede una nuova anteprima. Controllate anche le sovrapposizioni fra pulsanti,
 con almeno 44 px nel cerchio; nessun nuovo asset esterno. Anteprima host:
 firmware/tests/out/ui-build/damage-overview.png, non una foto dell'hardware.
+
+
+La v0.29 aggiunge conferma Concentrazione, breakdown COS/competenza/extra,
+selettore CD e modalità. Lo stesso dado pixel art si anima soltanto dopo il
+salvataggio; il risultato indica concentrazione mantenuta/persa senza pulsante
+di rilancio. Un errore mostra tiro fissato e comandi disabilitati. Font/contrasto
+e pulsanti ≥44 px nel cerchio verificati sul renderer host; anteprima
+concentration-preview.png. Nessuna nuova risorsa esterna o prova fisica.

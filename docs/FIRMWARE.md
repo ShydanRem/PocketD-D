@@ -69,6 +69,10 @@ con anteprima dei temporanei/PF ed esito della concentrazione scelto col DM.
 Non configurato distinto da normale; zero PF/morte istantanea rimangono bloccati.
 PDD11 (PDDB), USB v7 e layout invariati.
 
+La v0.29 aggiunge il [tiro COS di concentrazione](CONCENTRAZIONE.md), bonus e
+CD espliciti, danni/esito salvati insieme prima dell'animazione e retry del
+medesimo tiro. Formati e layout invariati; nessun giornale persistente della faccia.
+
 Primo percorso: avvio con Elian originale o copia precedentemente salvata →
 Scheda → caratteristica → d20 → risultato → Eroe → PF ±1 → annulla →
 salvataggio locale. Anche PF temporanei e fino a otto contatori manuali.
@@ -496,3 +500,20 @@ allocazioni e UI; leak detector disattivato nel sandbox.
 Build v0.28: **860688 byte**, partizione app da 4 MiB **79% libera**;
 ESP-IDF 5.5.5/LVGL 9.4.0, layout invariato. Nessun flash, collaudo fisico,
 nuova lettura personale Beyond o modifica della raccolta personale.
+
+
+## Verifiche v0.29 — salvezza di concentrazione
+
+78840 casi di COS/competenza/bonus/facce/modalità/CD, criterio max 30 e naturale
+1/20 confrontati sul totale. Rifiuti prima del RNG per salvezze mancanti/bloccate
+e piani non idonei; candidato danni/esito riletto in PDD11. UI LVGL per scelte,
+conferma, successo/fallimento, save error con tiro fissato, opzioni bloccate,
+nessun rilancio dal risultato, canvas mancante, annullamento e fallback manuale.
+Regressioni 138 JS/build PC, 37751 confronti PC→USB→C, 139904 casi dei danni,
+17266 degli effetti e 40648 delle durate. ASan/UBSan su concentrazione/danni,
+allocazioni e UI; leak detector disattivato. PDD11 e layout invariati.
+
+Build v0.29: **863008 byte**, partizione app da 4 MiB **79% libera**;
+ESP-IDF 5.5.5/LVGL 9.4.0. Il controller NVS rimane bloccato dopo errore I/O:
+riavvio e verifica necessari; il tiro pendente non sopravvive al reboot. Nessun
+flash, collaudo fisico, nuova lettura Beyond o modifica della raccolta personale.

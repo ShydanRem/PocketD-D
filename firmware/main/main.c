@@ -31,7 +31,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP } page_t;
 PD_EXT static pd_state state,previous,pending,scratch;
 static bool undo_available,import_pending,has_roll;
 static pd_roll result;
@@ -61,7 +61,8 @@ static bool pool_view,dice_setup,die_picker,pool_damage;
 static unsigned pool_sides=6,pool_count=1;
 static int pool_bonus;
 static unsigned inventory_page,item_index,target_armor=15,healing_gained;
-/* 0: checks/pools, 1: attack, 2: damage, 3: item cure, 4: hit die cure, 5: committed death save. */
+/* 0: checks/pools, 1: attack, 2: damage, 3: item cure, 4: hit die cure,
+   5: committed death save, 6: committed concentration save + incoming damage. */
 static unsigned combat_roll;
 static pd_strike strike;
 static bool strike_ready,damage_used;
@@ -79,9 +80,13 @@ static bool rest_active,hit_rolled;
 PD_EXT static pd_state hit_candidate;
 static pd_pool hit_result;
 static unsigned hit_gained;
-static bool confirmation_open(void){return page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM;}
+static bool confirmation_open(void){return page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP;}
 static pd_damage_plan damage_plan;
 static pd_damage_summary incoming_result;
+static pd_damage_summary concentration_damage;
+static pd_roll concentration_result;
+static int concentration_mode,concentration_extra;
+static bool concentration_rolled,concentration_cap30;
 static unsigned damage_hp_before,damage_temp_before,defence_index,defence_page,defence_flags;
 static bool defence_configured;
 static page_t defence_return_page;
@@ -204,7 +209,8 @@ static void frame(void) {
 static void act(intptr_t action) {
     if(import_pending&&action!=30&&action!=31)return;
     if(page==DEFENCE_CONFIRM&&action!=1816&&action!=1817)return;
-    if(page==DAMAGE_CONFIRM&&action!=1804&&action!=1805&&action!=1806&&action!=1807)return;
+    if(page==DAMAGE_CONFIRM&&action!=1804&&action!=1805&&action!=1806&&action!=1807&&action!=1860)return;
+    if(page==CONCENTRATION_SETUP&&(action<1861||action>1866||(concentration_rolled&&action!=1865)))return;
     if(page==EFFECT_CONFIRM&&action!=1708&&action!=1709)return;
     if(page==EFFECT_ROUND&&action!=1741&&action!=1742)return;
     if(page==STATUS_CONFIRM&&action!=1505&&action!=1506)return;
@@ -358,6 +364,29 @@ static void act(intptr_t action) {
     else if(action==1806&&page==DAMAGE_CONFIRM){pd_damage_summary r;if(pd_damage_preview(&state,&damage_plan,&r)&&r.needs_concentration)damage_plan.concentration=(damage_plan.concentration+1)%3;}
     else if(action==1807&&page==DAMAGE_CONFIRM)edit_defence(damage_plan.type,DAMAGE_HOME);
     else if(action==1808&&page==DAMAGE_RESULT){damage_plan.amount=1;damage_plan.concentration=0;page=DAMAGE_HOME;}
+    else if(action==1809&&page==DICE&&combat_roll==6){page=DAMAGE_RESULT;}
+    else if(action==1860&&page==DAMAGE_CONFIRM){
+        pd_damage_plan plan=damage_plan;plan.concentration=0;pd_check_info info;pd_damage_summary summary;
+        if(!pd_concentration_info(&state,&plan,0,0,&info,&summary,false))return;
+        damage_plan=plan;concentration_mode=0;concentration_extra=0;concentration_cap30=false;concentration_rolled=false;page=CONCENTRATION_SETUP;
+    }
+    else if(action==1861&&page==CONCENTRATION_SETUP)page=DAMAGE_CONFIRM;
+    else if(action==1862&&page==CONCENTRATION_SETUP)concentration_mode=concentration_mode==0?1:concentration_mode==1?-1:0;
+    else if((action==1863||action==1864)&&page==CONCENTRATION_SETUP){int value=concentration_extra+(action==1863?-1:1);concentration_extra=value< -30?-30:value>30?30:value;}
+    else if(action==1866&&page==CONCENTRATION_SETUP)concentration_cap30=!concentration_cap30;
+    else if(action==1865&&page==CONCENTRATION_SETUP){
+        if(!concentration_rolled){
+            if(!pd_concentration_roll(&state,&damage_plan,concentration_mode,concentration_extra,pd_board_random,NULL,&hit_candidate,&concentration_result,&concentration_damage,concentration_cap30))return;
+            concentration_rolled=true;
+        }
+        next=hit_candidate;
+        if(pd_storage_save(&next)){
+            damage_hp_before=state.hp;damage_temp_before=state.temp_hp;incoming_result=concentration_damage;
+            previous=state;undo_available=true;state=next;invalidate_strike();
+            result=concentration_result;mode=concentration_mode;concentration_rolled=false;combat_roll=6;pool_view=false;has_roll=false;ability=-1;page=DICE;
+            pd_dice_start(&dice_animation,&result,lv_tick_get());
+        }
+    }
     else if(action>=1810&&action<=1813&&page==DEFENCE_EDIT){
         if(action==1813){defence_configured=!defence_configured;if(!defence_configured)defence_flags=0;}
         else {defence_flags^=1u<<(action-1810);defence_configured=true;}
@@ -1091,17 +1120,36 @@ static void render_damage(void) {
             snprintf(text,sizeof text,"PF %u -> %u",state.hp,r.hp_after);label(text,83,239,300,false);
             if(r.massive||r.at_zero){small_label(r.massive?"Possibile morte istantanea: DM":"Zero PF: usa il registro con il DM",83,285,300,PD_DANGER);small_label("Nessun danno applicato da questo flusso",83,317,300,PD_MUTED);}
             else if(r.needs_concentration){
-                snprintf(text,sizeof text,"Concentrazione CD %u (con DM)",r.concentration_dc);small_label(text,83,269,300,PD_GOLD);
+                pd_damage_plan plan=damage_plan;plan.concentration=0;pd_check_info info;pd_damage_summary summary;
+                bool known=pd_concentration_info(&state,&plan,0,0,&info,&summary,false);
+                snprintf(text,sizeof text,known?"Concentrazione CD %u (con DM)":"CD %u | COS da verificare",r.concentration_dc);small_label(text,83,269,300,PD_GOLD);
                 snprintf(text,sizeof text,"Esito: %s",(const char *const[]){"da risolvere","mantieni","termina"}[damage_plan.concentration]);button(text,83,299,300,44,1806,true);
             } else {small_label(r.ends_concentration?"A zero PF termina concentrazione":!r.adjusted?"Nessun danno effettivo":"Una componente di danno per volta",83,285,300,PD_MINT);small_label("Difese selezionate manualmente",83,317,300,PD_MUTED);}
         }
-        button("Indietro",83,359,144,48,1804,true);button("Conferma",239,359,144,48,1805,r.allowed);
+        if(r.needs_concentration){
+            pd_check_info info;pd_damage_summary summary;pd_damage_plan plan=damage_plan;plan.concentration=0;
+            bool ready=pd_concentration_info(&state,&plan,0,0,&info,&summary,false);
+            const char *names[]={"Indietro","Tira COS","Conferma"};const unsigned actions[]={1804,1860,1805};
+            for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names[i],83+i*104,359,92,48,actions[i],i==0||(i==1?ready:r.allowed));lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
+        } else {button("Indietro",83,359,144,48,1804,true);button("Conferma",239,359,144,48,1805,r.allowed);}
     } else if(page==DAMAGE_RESULT){
         label("Danni confermati",83,111,300,true);snprintf(text,sizeof text,"%s: %u -> %u",pd_damage_name(damage_plan.type),damage_plan.amount,incoming_result.adjusted);small_label(text,83,161,300,PD_GOLD);
         snprintf(text,sizeof text,"Temporanei %u -> %u",damage_temp_before,state.temp_hp);label(text,83,211,300,false);
         snprintf(text,sizeof text,"PF %u -> %u",damage_hp_before,state.hp);label(text,83,251,300,true);
-        small_label(incoming_result.ends_concentration?"Concentrazione terminata":incoming_result.needs_concentration?"Concentrazione mantenuta con il DM":"Concentrazione: non richiesta",83,299,300,PD_MINT);
+        small_label(incoming_result.ends_concentration?"Concentrazione terminata":incoming_result.needs_concentration?(combat_roll==6?"Concentrazione mantenuta dal tiro":"Concentrazione mantenuta con il DM"):"Concentrazione: non richiesta",83,299,300,PD_MINT);
         small_label("Eroe > Annulla ripristina la modifica",83,329,300,PD_MUTED);button("Stato",83,359,144,48,1500,true);button("Nuovo",239,359,144,48,1808,true);
+    } else if(page==CONCENTRATION_SETUP){
+        pd_check_info info={0};pd_damage_summary summary={0};bool ready=pd_concentration_info(&state,&damage_plan,concentration_mode,concentration_extra,&info,&summary,concentration_cap30);
+        label("Concentrazione",83,103,300,true);
+        snprintf(text,sizeof text,concentration_cap30?"CD max 30: %u >":"CD base: %u >",summary.concentration_dc);button(text,83,143,300,44,1866,!concentration_rolled);
+        snprintf(text,sizeof text,"COS %+d | comp %+d | scheda %+d",info.base,info.trained,info.extra);small_label(text,83,193,300,PD_TEXT);
+        if(concentration_rolled)snprintf(text,sizeof text,"Tiro fissato: %d",concentration_result.total);else snprintf(text,sizeof text,"Bonus totale %+d",info.total+concentration_extra);label(text,83,219,300,true);
+        snprintf(text,sizeof text,"Modalita: %s >",concentration_mode>0?"Vantaggio":concentration_mode<0?"Svantaggio":"Base");button(text,83,257,300,44,1862,!concentration_rolled);
+        button("-",83,307,48,44,1863,!concentration_rolled&&concentration_extra> -30);
+        if(concentration_rolled)strcpy(text,"Riprova lo stesso tiro");else snprintf(text,sizeof text,"Extra locale %+d",concentration_extra);small_label(text,139,319,188,concentration_rolled?PD_GOLD:PD_TEXT);
+        button("+",335,307,48,44,1864,!concentration_rolled&&concentration_extra<30);
+        button("Indietro",83,359,144,48,1861,!concentration_rolled);
+        lv_obj_t *confirm=button(concentration_rolled?"Riprova":"Tira e applica",239,359,144,48,1865,ready||concentration_rolled);lv_obj_set_style_text_font(confirm,&lv_font_montserrat_16,0);
     }
 }
 
@@ -1197,6 +1245,7 @@ static void render(void) {
         }
         else if(combat_roll==3||combat_roll==4)snprintf(text,sizeof text,"Cura %ud%u %+d",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
         else if(combat_roll==5)snprintf(text,sizeof text,"Salvezza morte");
+        else if(combat_roll==6)snprintf(text,sizeof text,"COS %+d | CD %u",result.bonus,incoming_result.concentration_dc);
         else if(pool_view)snprintf(text,sizeof text,"%s %ud%u %+d",dice_animation.pool.damage?"Danni":"Somma",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
         else if(ability<0)snprintf(text,sizeof text,"d20 libero +0");else check_name(text,sizeof text,true);
         if(!combat_roll&&!pool_view&&ability>=0) {
@@ -1223,6 +1272,7 @@ static void render(void) {
             if(combat_roll==1)snprintf(text,sizeof text,"%s %d / CA %u",strike.critical?"Critico!":strike.hits?"Colpito":"Mancato",strike.roll.total,strike.armor);
             else if(combat_roll==3||combat_roll==4)snprintf(text,sizeof text,"Cura %d | PF +%u -> %u/%u",dice_animation.pool.total,healing_gained,state.hp,pd_max_hp(&state));
             else if(combat_roll==5)snprintf(text,sizeof text,"%u | %s",result.natural,state.hp?"Riprendi 1 PF":state.status.failures==3?"Tre fallimenti":state.status.stabilized?"Stabilizzato":result.natural>=10?"Riuscita":"Fallita");
+            else if(combat_roll==6)snprintf(text,sizeof text,"%u %+d = %d | %s",result.natural,result.bonus,result.total,incoming_result.ends_concentration?"persa":"mantenuta");
             else if(pool_view) {
                 pd_pool *r=&dice_animation.pool;
                 if(r->damage && r->sum+r->bonus<0)snprintf(text,sizeof text,"Somma %d -> Danni 0",r->sum+r->bonus);
@@ -1233,7 +1283,11 @@ static void render(void) {
         } else snprintf(text,sizeof text,"%s",!allowed?"Da verificare: apri i dettagli":dice_animation.active?"In volo...":effective>0?"Pronto: vantaggio":effective<0?"Pronto: svantaggio":"Pronto al lancio");
         label(text,73,269,320,false);
         if(!dice_pixels)label("Animazione non disponibile",73,183,320,false);
-        if(combat_roll) {
+        if(combat_roll==6){
+            button("Stato",83,296,76,44,1500,!dice_animation.active);
+            button(dice_animation.active?"Accelera":"Riepilogo",167,296,132,44,dice_animation.active?16:1809,true);
+            button("Fine",307,296,76,44,100,!dice_animation.active);
+        } else if(combat_roll) {
             button(combat_roll==5?"Stato":combat_roll==4?"Riposo":combat_roll==3?"Zaino":"Arma",83,296,76,44,combat_roll==5?1501:combat_roll==4?911:combat_roll==3?80:85,!dice_animation.active);
             button(dice_animation.active?"Accelera":combat_roll>=4?"Altro":"Nuovo",167,296,132,44,dice_animation.active?16:combat_roll==5?1501:combat_roll==4?910:combat_roll==3?80:81,true);
             button(combat_roll>=4?"Fine":"Danni",307,296,76,44,combat_roll==5?100:combat_roll==4?918:90,!dice_animation.active&&(combat_roll>=4||(combat_roll==1&&has_roll&&strike_ready&&strike.hits&&!damage_used)));

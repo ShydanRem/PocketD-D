@@ -109,3 +109,13 @@ if all((base/(name+'.ppm')).is_file() for name in damage):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(damage):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'damage-overview.png');print(base/'damage-overview.png')
+
+# Committed concentration checks, including frozen retry and capped-DC option.
+concentration=['concentration-setup','concentration-success','concentration-save-error','concentration-failure']
+for name in concentration+['concentration-extra','concentration-flight','concentration-summary','concentration-legacy','concentration-no-canvas','concentration-cap30','concentration-capped-result']:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in concentration):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(concentration):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'concentration-preview.png');print(base/'concentration-preview.png')

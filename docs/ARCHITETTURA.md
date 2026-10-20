@@ -220,3 +220,12 @@ da sconosciuto, non da normale. PDD11 (PDDB) aggiunge 8 byte prima del CRC;
 fixture PDD10 generato dall'encoder 066e3d8 prima della modifica. Scorciatoia 12
 Danni; conferme/import/input protetti. USB v7, backup PC v10 e layout invariati.
 [Uso e limiti](DANNI-DIFESE.md).
+
+
+Incremento 0.29: pd_concentration_info valida il piano e la salvezza COS prima
+del RNG; pd_concentration_roll usa il totale contro la CD scelta e produce un
+solo candidato con danni/esito. UI riusa hit_candidate in PSRAM, con esclusione
+reciproca delle conferme. Dopo estrazione un save error fissa dado e opzioni fino
+al retry/riavvio; lo stato non salvato non è un giornale persistente. L'animazione
+combat_roll=6 mostra il risultato impegnato senza percorso di rilancio. Nessuna
+migrazione o nuovo campo in PDD11/USB v7. [Uso e limiti](CONCENTRAZIONE.md).

@@ -43,3 +43,6 @@ target_include_directories(durations PRIVATE ../core)
 
 add_executable(damage test_damage.c ../core/damage.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
 target_include_directories(damage PRIVATE ../core)
+
+add_executable(concentration test_concentration.c ../core/damage.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
+target_include_directories(concentration PRIVATE ../core)
