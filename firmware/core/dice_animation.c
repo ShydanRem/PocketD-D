@@ -41,11 +41,13 @@ static int ease(int t,int duration) {
 }
 pd_dice_pose pd_dice_position(const pd_dice_animation *a,unsigned die) {
     unsigned count=pd_dice_count(a);assert(die<count);
-    unsigned row=count>3?die/(count==4?2:3):0;
-    unsigned columns=count>3?(count==4?2:(row?count-3:3)):count;
-    unsigned column=count>3?die%(count==4?2:3):die;
-    int target=columns==1?160:columns==2?(column?218:102):54+column*106;
-    int base=count>3?(row?96:32):68,size=count>3?64:96;
+    unsigned width=count>6?6:count==4?2:count>3?3:count;
+    unsigned row=die/width,columns=count>6?(count-row*width<width?count-row*width:width):count>3?(row?count-width:width):count;
+    unsigned column=die%width;
+    int target=count>6?(PD_DICE_WIDTH-(int)columns*52)/2+26+column*52:columns==1?160:columns==2?(column?218:102):54+column*106;
+    int rows=(count+width-1)/width;
+    int base=count>6?(PD_DICE_HEIGHT-rows*40)/2+20+row*40:count>3?(row?96:32):68;
+    int size=count>6?40:count>3?64:96;
     if (a->preview || a->elapsed>=PD_DICE_FLIGHT_MS+die*PD_DICE_STAGGER_MS)
         return (pd_dice_pose){.x=target,.y=base,.frame=0,.settled=true,.size=size};
     int t=(int)a->elapsed-(int)die*PD_DICE_STAGGER_MS;
@@ -106,8 +108,8 @@ void pd_dice_paint(const pd_dice_animation *a,uint16_t p[PD_DICE_PIXELS]) {
         const unsigned violet[]={0,0x080f10,0xe2c9ec,0x49304f,0x815483,0xb47bb2,0xe2addc};
         const unsigned gray[]={0,0x0a1113,0x78928c,0x283c37,0x3c5750,0x5b766a,0x8ca697};
         uint16_t palette[7];for(int i=0;i<7;i++)palette[i]=color(discarded?gray[i]:(sides==6||sides==8)?mint[i]:(sides==4||sides==12)?violet[i]:gold[i]);
-        int radius=(pose.size==64?18:26)-pose.height/3;
-        int ground=pose.size==64?(pose.y+pose.height+28):111;
+        int radius=pose.size/4-pose.height/3;
+        int ground=pose.size<=64?(pose.y+pose.height+pose.size/2-4):111;
         for(int y=-4;y<=4;y+=2)for(int x=-radius;x<=radius;x+=2)
             if(x*x*16+y*y*radius*radius<=16*radius*radius)block(p,pose.x+x,ground+y,2,2,color(0x080e0c));
         const uint8_t *sprite=atlas(sides,pose.frame);
@@ -118,7 +120,7 @@ void pd_dice_paint(const pd_dice_animation *a,uint16_t p[PD_DICE_PIXELS]) {
             if(ink)block(p,pose.x-pose.size/2+x*2,pose.y-pose.size/2+y*2,2,2,palette[ink]);
         }
         unsigned face=pose.settled?(a->pool_roll?a->pool.dice[d]:a->roll.dice[d]):1+(pose.frame*7+d*11)%sides;
-        number(p,pose.x+(sides==6?pose.size/12:0),pose.y-(pose.size==64?6:8)+(sides==6?pose.size/24:0),face,pose.size==64?3:4);
+        number(p,pose.x+(sides==6?pose.size/12:0),pose.y-(pose.size==64?6:8)+(sides==6?pose.size/24:0),face,pose.size==40?2:pose.size==64?3:4);
         if(!a->pool_roll && !a->active && !a->preview && d==selected) {
             /* A small gold chevron indicates the selected die, including ties. */
             for(int i=0;i<3;i++)block(p,pose.x-6+i*2,119+i*2,12-i*4,2,color(0xffde8b));

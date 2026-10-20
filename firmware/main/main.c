@@ -5,6 +5,7 @@
 #include "visual.h"
 #include "avatar.h"
 #include "checks.h"
+#include "combat.h"
 #include "../assets/device_art.h"
 #include "src/misc/cache/instance/lv_image_cache.h"
 #ifndef PD_UI_TEST
@@ -18,7 +19,7 @@
 #include <stdint.h>
 #include <assert.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL } page_t;
 static pd_state state,previous,pending;
 static bool undo_available,import_pending,has_roll;
 static pd_roll result;
@@ -47,6 +48,13 @@ static int sheet_tab,skill_page;
 static bool pool_view,dice_setup,die_picker,pool_damage;
 static unsigned pool_sides=6,pool_count=1;
 static int pool_bonus;
+static unsigned inventory_page,item_index,target_armor=15,healing_gained;
+/* 0: checks/manual pools, 1: attack, 2: damage, 3: committed healing. */
+static unsigned combat_roll;
+static pd_strike strike;
+static bool strike_ready,damage_used;
+static pd_pool damage_result;
+
 #ifndef PD_UI_TEST
 static QueueHandle_t packets;
 static TickType_t import_started;
@@ -58,8 +66,12 @@ static void reply(const char *text) { usb_serial_jtag_write_bytes(text,strlen(te
 #else
 static void reply(const char *text) { (void)text; }
 #endif
+static void invalidate_strike(void) {
+    strike_ready=false;
+    if(combat_roll) {combat_roll=0;pool_view=false;has_roll=false;ability=-1;pd_dice_idle(&dice_animation,1);}
+}
 static void apply(pd_state *next) {
-    if (pd_storage_save(next)) { previous=state; undo_available=true; state=*next; }
+    if (pd_storage_save(next)) { previous=state; undo_available=true; state=*next;invalidate_strike(); }
 }
 static void label_font(lv_obj_t *l,const lv_font_t *font) {
     lv_obj_set_style_text_font(l,font,0);
@@ -132,21 +144,26 @@ static void event(lv_event_t *e) {
         pd_check_kind selected_kind=action>=240?PD_SAVE:action>=220?PD_SKILL:PD_CHECK;
         int index=action-(selected_kind==PD_SAVE?240:selected_kind==PD_SKILL?220:200);
         pd_check_info info;if(!pd_describe_check(&state,selected_kind,index,&info))return;
-        check_kind=selected_kind;ability=index;
+        combat_roll=0;strike_ready=false;check_kind=selected_kind;ability=index;
         page=DICE;has_roll=false;mode=0;ignore_effects=false;pool_view=false;dice_setup=false;die_picker=false;
         pd_dice_idle(&dice_animation,pd_check_mode(&state,check_kind,ability,mode,false)?2:1);
     }
     else if (action==1) { pd_hp(&next,-1);apply(&next); }
     else if (action==2) { pd_hp(&next,1);apply(&next); }
     else if (action==3 && undo_available) {
-        if (pd_storage_save(&previous)) { state=previous; undo_available=false; }
+        if (pd_storage_save(&previous)) { state=previous; undo_available=false;invalidate_strike(); }
     }
     else if (action>=10 && action<=12) { mode=action-11;has_roll=false;pd_dice_idle(&dice_animation,mode?2:1); }
     else if (action==15) { mode=mode==0?1:mode==1?-1:0;has_roll=false;pd_dice_idle(&dice_animation,mode?2:1); }
     else if (action==13||action==72) {
         if (dice_animation.active) { pd_dice_finish(&dice_animation);has_roll=true; }
         else {
-            if(pool_view) {
+            if(combat_roll==1) {
+                if(!pd_attack(&state,target_armor,mode,pd_board_random,NULL,&strike))return;
+                result=strike.roll;strike_ready=true;damage_used=false;
+                pd_dice_start(&dice_animation,&result,lv_tick_get());
+            } else if(combat_roll>1)return;
+            else if(pool_view) {
                 pd_pool next_roll;
                 pd_pool *last=&dice_animation.pool;
                 if(!pd_roll_pool(last->sides,last->count,last->bonus,last->damage,pd_board_random,NULL,&next_roll))return;
@@ -166,8 +183,8 @@ static void event(lv_event_t *e) {
         if(!dice_animation.active)return;
         pd_dice_finish(&dice_animation);has_roll=true;
     }
-    else if (action==14) { ability=-1;page=DICE;has_roll=false;mode=0;ignore_effects=false;pool_view=false;dice_setup=false;die_picker=false;pd_dice_idle(&dice_animation,1); }
-    else if (action==40) {
+    else if (action==14) { combat_roll=0;strike_ready=false;ability=-1;page=DICE;has_roll=false;mode=0;ignore_effects=false;pool_view=false;dice_setup=false;die_picker=false;pd_dice_idle(&dice_animation,1); }
+    else if (action==40 && !combat_roll) {
         dice_setup=true;die_picker=false;
         if(pool_view) { pool_sides=dice_animation.pool.sides;pool_count=dice_animation.pool.count;pool_bonus=dice_animation.pool.bonus;pool_damage=dice_animation.pool.damage; }
     }
@@ -175,13 +192,13 @@ static void event(lv_event_t *e) {
     else if (action==42)die_picker=true;
     else if (action==43)pool_damage=!pool_damage;
     else if (action==44 && pool_count>1)pool_count--;
-    else if (action==45 && pool_count<PD_POOL_MAX)pool_count++;
+    else if (action==45 && pool_count<6)pool_count++;
     else if (action==47 && pool_bonus>PD_POOL_MIN_BONUS)pool_bonus--;
-    else if (action==48 && pool_bonus<PD_POOL_MAX_BONUS)pool_bonus++;
+    else if (action==48 && pool_bonus<30)pool_bonus++;
     else if (action==46) {
         pd_pool next_roll;
         if(!pd_roll_pool(pool_sides,pool_count,pool_bonus,pool_damage,pd_board_random,NULL,&next_roll))return;
-        pool_view=true;dice_setup=false;die_picker=false;has_roll=false;
+        combat_roll=0;pool_view=true;dice_setup=false;die_picker=false;has_roll=false;
         pd_dice_pool_start(&dice_animation,&next_roll,lv_tick_get());
     }
     else if(action>=404 && action<=420 && pd_pool_sides(action-400) && die_picker) { pool_sides=action-400;die_picker=false; }
@@ -189,7 +206,7 @@ static void event(lv_event_t *e) {
     else if (action==22 && state.resource_count) resource_index=(resource_index+1)%state.resource_count;
     else if (action==30) {
         if (pd_storage_save(&pending)) {
-            state=pending;undo_available=false;resource_index=0;has_roll=false;ability=-1;mode=0;page=HERO;pool_view=false;dice_setup=false;die_picker=false;pd_dice_idle(&dice_animation,1);
+            state=pending;combat_roll=0;strike_ready=false;inventory_page=0;item_index=0;undo_available=false;resource_index=0;has_roll=false;ability=-1;mode=0;page=HERO;pool_view=false;dice_setup=false;die_picker=false;pd_dice_idle(&dice_animation,1);
             reply("PDD IMPORTED\n"); import_pending=false;
         } else { reply("PDD ERROR storage\n");import_pending=false; }
     }
@@ -205,9 +222,47 @@ static void event(lv_event_t *e) {
     else if(action>=60&&action<=62) { sheet_tab=action-60;skill_page=0; }
     else if(action==63&&skill_page>0)skill_page--;
     else if(action==64&&skill_page<5)skill_page++;
-    else if(action==70&&ability>=0&&!pool_view)page=CHECK_DETAIL;
+    else if(action==70&&ability>=0&&!pool_view&&!combat_roll)page=CHECK_DETAIL;
     else if(action==71)page=DICE;
     else if(action==73) { ignore_effects=!ignore_effects;has_roll=false;pd_dice_idle(&dice_animation,1); }
+    else if(action==80)page=INVENTORY;
+    else if(action==81||action==85) {
+        pd_weapon_info w;if(!pd_weapon_stats(&state,state.equipped,&w))return;
+        page=COMBAT;combat_roll=1;pool_view=false;has_roll=false;mode=0;strike_ready=false;damage_used=false;
+        pd_dice_idle(&dice_animation,pd_attack_mode(&state,mode)?2:1);
+    }
+    else if(action==82&&inventory_page)inventory_page--;
+    else if(action==83&&(inventory_page+1)*3<state.item_count)inventory_page++;
+    else if(action>=500&&action<500+PD_ITEMS) { item_index=action-500;if(item_index>=state.item_count)return;page=ITEM_DETAIL; }
+    else if(action==84&&page==ITEM_DETAIL) { if(pd_equip(&next,state.equipped==item_index?PD_NO_WEAPON:item_index)) {apply(&next);strike_ready=false;} }
+    else if(action==86&&target_armor>1)target_armor--;
+    else if(action==87&&target_armor<30)target_armor++;
+    else if(action==88&&page==ITEM_DETAIL&&item_index<state.item_count) {
+        const pd_item *v=&state.items[item_index];
+        if(!v->quantity||(v->kind!=PD_CONSUMABLE&&v->kind!=PD_HEALING)||(v->kind==PD_HEALING&&state.hp==state.max_hp))return;
+        page=ITEM_CONFIRM;
+    }
+    else if(action==89&&page==ITEM_CONFIRM) {
+        pd_pool roll;unsigned gained;
+        if(!pd_use_item(&state,item_index,pd_board_random,NULL,&next,&roll,&gained))return;
+        if(pd_storage_save(&next)) {
+            previous=state;undo_available=true;state=next;invalidate_strike();
+            if(roll.count) {
+                healing_gained=gained;combat_roll=3;pool_view=true;has_roll=false;page=DICE;
+                pd_dice_pool_start(&dice_animation,&roll,lv_tick_get());
+            } else page=ITEM_DETAIL;
+        }
+    }
+    else if(action==90&&combat_roll==1&&has_roll&&strike_ready&&strike.hits&&!damage_used) {
+        if(!pd_weapon_damage(&strike,pd_board_random,NULL,&damage_result))return;
+        damage_used=true;combat_roll=2;pool_view=true;has_roll=false;page=DICE;
+        pd_dice_pool_start(&dice_animation,&damage_result,lv_tick_get());
+    }
+    else if(action==91)page=ITEM_DETAIL;
+    else if(action==93)page=COMBAT_DETAIL;
+    else if(action==92&&page==COMBAT&&state.equipped!=PD_NO_WEAPON&&state.items[state.equipped].thrown_range) {
+        next.combat.thrown=!state.combat.thrown;apply(&next);strike_ready=false;
+    }
     render();
 }
 static lv_obj_t *button(const char *text,int x,int y,int w,int h,intptr_t action,bool enabled) {
@@ -247,10 +302,10 @@ static void render_dice_setup(void) {
     button(pool_damage?"Danni":"Somma",239,148,144,48,43,true);
     button("-",83,210,48,48,44,pool_count>1);
     snprintf(text,sizeof text,"Quantita %u",pool_count);label(text,139,223,188,false);
-    button("+",335,210,48,48,45,pool_count<PD_POOL_MAX);
+    button("+",335,210,48,48,45,pool_count<6);
     button("-",83,272,48,48,47,pool_bonus>PD_POOL_MIN_BONUS);
     snprintf(text,sizeof text,"Bonus %+d",pool_bonus);label(text,139,285,188,false);
-    button("+",335,272,48,48,48,pool_bonus<PD_POOL_MAX_BONUS);
+    button("+",335,272,48,48,48,pool_bonus<30);
     button("Esci",83,332,76,48,41,true);button("Lancia",167,332,132,48,46,true);button("Prova",307,332,76,48,14,true);
 }
 static void check_name(char *out,size_t size,bool bonus) {
@@ -314,6 +369,77 @@ static void render_sheet(void) {
         lv_obj_set_style_text_color(b,lv_color_hex(info.blocked?PD_GOLD:PD_MINT),0);
     }
 }
+static void render_inventory(void) {
+    char text[160];
+    snprintf(text,sizeof text,"Zaino %u/%u",inventory_page+1,state.item_count?(state.item_count+2)/3:1);
+    label(text,139,111,188,false);button("<",83,99,48,44,82,inventory_page>0);
+    button(">",335,99,48,44,83,(inventory_page+1)*3<state.item_count);
+    if(!state.inventory_available) {
+        small_label("Inventario non disponibile",83,190,300,PD_GOLD);
+        small_label("Importa una copia aggiornata",83,220,300,PD_TEXT);
+    } else if(!state.item_count)label("Zaino vuoto",83,210,300,false);
+    else for(unsigned row=0;row<3;row++) {
+        unsigned i=inventory_page*3+row;if(i>=state.item_count)break;
+        const pd_item *v=&state.items[i];
+        /* Reserve space for quantity and equipment marker even for 40-char names. */
+        size_t length=strlen(v->name),shown=length;lv_point_t extent;
+        do {
+            snprintf(text,sizeof text,"%.*s%s%s  x%u",(int)shown,v->name,shown<length?"...":"",i==state.equipped?" *":"",v->quantity);
+            lv_text_get_size(&extent,text,&lv_font_montserrat_20,0,0,1000,LV_TEXT_FLAG_NONE);
+            if(extent.x<=284||!shown)break;
+            shown--;
+        } while(true);
+        lv_obj_t *b=button(text,83,155+row*49,300,44,500+i,true);
+        lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_width(l,284);lv_obj_set_height(l,lv_font_get_line_height(&lv_font_montserrat_20));
+        lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_center(l);
+    }
+    small_label("* arma scelta | note sul PC",83,312,300,PD_MUTED);
+    button("Usi",83,359,144,48,103,true);
+    button("Attacco",239,359,144,48,81,state.equipped!=PD_NO_WEAPON);
+}
+static void render_item(void) {
+    char text[160];const pd_item *v=&state.items[item_index];
+    lv_obj_t *title=small_label(v->name,83,99,300,PD_TEXT);lv_label_set_long_mode(title,LV_LABEL_LONG_WRAP);lv_obj_set_height(title,58);
+    snprintf(text,sizeof text,"Quantita %u",v->quantity);label(text,83,164,300,false);
+    if(page==ITEM_CONFIRM) {
+        label("Usare una unita?",83,201,300,false);
+        if(v->kind==PD_HEALING)snprintf(text,sizeof text,"Cura %ud%u %+d PF",v->count,v->sides,v->healing_modifier);
+        else snprintf(text,sizeof text,"Altri effetti: gestisci con il DM");
+        small_label(text,83,237,300,PD_GOLD);
+        small_label("PF e quantita salvati insieme",83,273,300,PD_MUTED);
+        button("Indietro",83,359,144,48,91,true);button("Conferma",239,359,144,48,89,true);return;
+    }
+    if(v->kind==PD_WEAPON) {
+        pd_weapon_info w={0};bool available=pd_weapon_stats(&state,item_index,&w);
+        if(available) {
+        snprintf(text,sizeof text,"%s: base %+d / comp. %+d",pd_abilities[v->ability],w.base,w.trained);small_label(text,83,196,300,PD_TEXT);
+        snprintf(text,sizeof text,"Attacco %+d (extra %+d)",w.attack_bonus,w.attack_extra);label(text,83,224,300,false);
+        snprintf(text,sizeof text,"Danni %ud%u %+d %s",v->count,v->sides,w.damage_bonus,v->damage_type);small_label(text,83,255,300,PD_GOLD);
+        } else {label("Arma esaurita",83,224,300,false);small_label("Quantita zero: tiri non disponibili",83,255,300,PD_MUTED);}
+        button(state.equipped==item_index?"Riponi":"Scegli",83,299,144,44,84,v->quantity);
+        button("Attacco",239,299,144,44,81,v->quantity&&state.equipped==item_index);
+    } else {
+        label(v->kind==PD_HEALING?"Cura":v->kind==PD_CONSUMABLE?"Consumabile":"Oggetto",83,199,300,false);
+        small_label("Note ed effetti speciali sul PC",83,237,300,PD_MUTED);
+        if(v->kind==PD_HEALING) { snprintf(text,sizeof text,"%ud%u %+d PF | limite PF massimi",v->count,v->sides,v->healing_modifier);small_label(text,83,268,300,PD_GOLD); }
+        if(v->kind==PD_CONSUMABLE||v->kind==PD_HEALING)button(v->kind==PD_HEALING&&state.hp==state.max_hp?"PF al massimo":"Usa",83,299,300,44,88,v->quantity&&(v->kind!=PD_HEALING||state.hp<state.max_hp));
+    }
+    button("Zaino",83,359,300,48,80,true);
+}
+static void render_combat(void) {
+    pd_weapon_info w;char text[160];if(!pd_weapon_stats(&state,state.equipped,&w)) {page=INVENTORY;render_inventory();return;}
+    combat_roll=1;pool_view=false;
+    const pd_item *v=&state.items[state.equipped];label(v->name,83,111,300,false);
+    snprintf(text,sizeof text,"Attacco %+d >",w.attack_bonus);button(text,83,144,300,44,93,true);
+    snprintf(text,sizeof text,"%s %+d / comp. %+d / extra %+d",pd_abilities[v->ability],w.base,w.trained,w.attack_extra);small_label(text,83,193,300,PD_TEXT);
+    snprintf(text,sizeof text,"Danni %ud%u %+d | gittata %u q.",w.count,w.sides,w.damage_bonus,w.reach);small_label(text,83,215,300,PD_GOLD);
+    small_label("Effetti PC fotografati; speciali: DM",83,239,300,PD_MUTED);
+    button("-",83,263,48,44,86,target_armor>1);snprintf(text,sizeof text,"CA bersaglio %u",target_armor);label(text,139,274,188,false);button("+",335,263,48,44,87,target_armor<30);
+    int effective=pd_attack_mode(&state,mode);
+    button(effective>0?"Vantaggio":effective<0?"Svantaggio":"Normale",83,315,144,44,15,true);button("Lancia",239,315,144,44,72,true);
+    button("Zaino",83,363,144,44,80,true);
+    button(state.combat.thrown?"Lancio: si":"Lancio: no",239,363,144,44,92,v->thrown_range>0);
+}
 static void render(void) {
     /* Destroy the LVGL image/cache before freeing its pixel buffer. A root redraw
        cancels the old timer; the roll itself remains in the pure presentation state. */
@@ -336,6 +462,20 @@ static void render(void) {
         label("PC: raccolta conservata.",83,257,300,false);
         button("Annulla",83,303,144,54,31,true); button("Conferma",239,303,144,54,30,true);
         return;
+    }
+    if(page==INVENTORY) {render_inventory();return;}
+    if(page==ITEM_DETAIL||page==ITEM_CONFIRM) {render_item();return;}
+    if(page==COMBAT) {render_combat();return;}
+    if(page==COMBAT_DETAIL) {
+        pd_weapon_info w;if(!pd_weapon_stats(&state,state.equipped,&w)){page=INVENTORY;render_inventory();return;}
+        label("Bonus dell'arma",83,111,300,true);
+        snprintf(text,sizeof text,"Attacco: %+d %+d %+d = %+d",w.base,w.trained,w.attack_extra,w.attack_bonus);label(text,83,155,300,false);
+        small_label("Caratteristica / competenza / extra",83,185,300,PD_MUTED);
+        snprintf(text,sizeof text,"Danni: base %+d / extra %+d",w.damage_base,w.damage_extra);label(text,83,215,300,false);
+        snprintf(text,sizeof text,"Ira %s | potente %s | critico +%ud",state.combat.raging&&w.melee&&state.items[state.equipped].ability==0?"si":"no",w.power_attack?"si":"no",w.critical_dice);small_label(text,83,247,300,PD_GOLD);
+        small_label(state.training.poisoned?"PC: avvelenato (svantaggio attacco)":"PC: nessuno svantaggio da veleno",83,277,300,PD_MUTED);
+        small_label("Extra include modificatori ed effetti",83,307,300,PD_MUTED);
+        button("Indietro",83,359,144,48,85,true);button("Lancia",239,359,144,48,72,true);return;
     }
     if(page==DICE && dice_setup) { render_dice_setup();return; }
     if(page==CHECK_DETAIL) { render_check_detail();return; }
@@ -373,14 +513,19 @@ static void render(void) {
     } else if (page==SHEET) {
         render_sheet();
     } else if (page==DICE) {
-        if(pool_view)snprintf(text,sizeof text,"%s %ud%u %+d",dice_animation.pool.damage?"Danni":"Somma",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
+        if(combat_roll==1) {
+            pd_weapon_info w={0};pd_weapon_stats(&state,state.equipped,&w);
+            snprintf(text,sizeof text,"Attacco %+d",strike_ready?strike.roll.bonus:w.attack_bonus);
+        }
+        else if(combat_roll==3)snprintf(text,sizeof text,"Cura %ud%u %+d",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
+        else if(pool_view)snprintf(text,sizeof text,"%s %ud%u %+d",dice_animation.pool.damage?"Danni":"Somma",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
         else if(ability<0)snprintf(text,sizeof text,"d20 libero +0");else check_name(text,sizeof text,true);
-        if(!pool_view&&ability>=0) {
+        if(!combat_roll&&!pool_view&&ability>=0) {
             lv_obj_t *detail=button(text,83,94,300,44,70,!dice_animation.active);
             if(check_kind==PD_SKILL)lv_obj_set_style_text_font(detail,&lv_font_montserrat_20,0);
         } else label(text,83,105,300,true);
-        pd_check_info selected={0};bool allowed=pool_view||ability<0||(pd_describe_check(&state,check_kind,ability,&selected)&&!selected.blocked);
-        int effective=pool_view?0:ability<0?mode:pd_check_mode(&state,check_kind,ability,mode,ignore_effects);
+        pd_check_info selected={0};bool allowed=combat_roll||pool_view||ability<0||(pd_describe_check(&state,check_kind,ability,&selected)&&!selected.blocked);
+        int effective=combat_roll==1?pd_attack_mode(&state,mode):pool_view?0:ability<0?mode:pd_check_mode(&state,check_kind,ability,mode,ignore_effects);
         if(!pool_view&&!has_roll&&!dice_animation.active)pd_dice_idle(&dice_animation,effective?2:1);
         if(!pd_dice_count(&dice_animation))pd_dice_idle(&dice_animation,mode?2:1);
         dice_pixels=lv_malloc(PD_DICE_PIXELS*sizeof *dice_pixels);
@@ -396,7 +541,9 @@ static void render(void) {
             pd_dice_finish(&dice_animation);has_roll=true;
         }
         if(has_roll) {
-            if(pool_view) {
+            if(combat_roll==1)snprintf(text,sizeof text,"%s %d / CA %u",strike.critical?"Critico!":strike.hits?"Colpito":"Mancato",strike.roll.total,strike.armor);
+            else if(combat_roll==3)snprintf(text,sizeof text,"Cura %d | PF +%u -> %u/%u",dice_animation.pool.total,healing_gained,state.hp,state.max_hp);
+            else if(pool_view) {
                 pd_pool *r=&dice_animation.pool;
                 if(r->damage && r->sum+r->bonus<0)snprintf(text,sizeof text,"Somma %d -> Danni 0",r->sum+r->bonus);
                 else snprintf(text,sizeof text,"%d %+d = %d",r->sum,r->bonus,r->total);
@@ -406,11 +553,17 @@ static void render(void) {
         } else snprintf(text,sizeof text,"%s",!allowed?"Da verificare: apri i dettagli":dice_animation.active?"In volo...":effective>0?"Pronto: vantaggio":effective<0?"Pronto: svantaggio":"Pronto al lancio");
         label(text,73,269,320,false);
         if(!dice_pixels)label("Animazione non disponibile",73,183,320,false);
+        if(combat_roll) {
+            button(combat_roll==3?"Zaino":"Arma",83,296,76,44,combat_roll==3?80:85,!dice_animation.active);
+            button(dice_animation.active?"Accelera":"Nuovo",167,296,132,44,dice_animation.active?16:combat_roll==3?80:81,true);
+            button("Danni",307,296,76,44,90,combat_roll==1&&has_roll&&strike_ready&&strike.hits&&!damage_used&&!dice_animation.active);
+        } else {
         button(pool_view?"Prova":mode==-1?"Svant":mode==1?"Vant":"Base",83,296,76,44,pool_view?14:15,!dice_animation.active);
         button(dice_animation.active?"Accelera":has_roll?"Rilancia":"Lancia",167,296,132,44,13,allowed);
         button("Altri",307,296,76,44,40,!dice_animation.active);
+        }
     } else {
-        label("Contatori manuali",83,111,300,true);
+        button("Contatori",83,99,144,44,103,true);button("Zaino",239,99,144,44,80,true);
         if(state.resource_count) {
             pd_resource *r=&state.resources[resource_index];label(r->name,83,158,300,false);
             snprintf(text,sizeof text,"%u / %u",r->current,r->maximum);
@@ -473,7 +626,7 @@ static void usb_task(void *unused) {
             if(c=='\n') {
                 if(!overflow && used) {
                     line[used]=0;
-                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 3\n");
+                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 4\n");
                     else {
                         pd_state candidate;
                         if(pd_parse_packet(line,used,&candidate)) {
@@ -494,7 +647,7 @@ void app_main(void) {
     usb.rx_buffer_size=PD_PACKET_MAX+128;usb.tx_buffer_size=1024;
     ESP_ERROR_CHECK(usb_serial_jtag_driver_install(&usb));
     packets=xQueueCreate(1,sizeof(pd_state));assert(packets);
-    assert(xTaskCreate(usb_task,"usb_import",8192,NULL,3,NULL)==pdPASS);
+    assert(xTaskCreate(usb_task,"usb_import",24576,NULL,3,NULL)==pdPASS);
     render();
     for(;;) {
         pd_state candidate;

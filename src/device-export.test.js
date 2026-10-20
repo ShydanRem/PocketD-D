@@ -12,9 +12,9 @@ test('device export is a bounded projection and never mutates the source',()=>{
   const {packet,warnings}=projectDevice(s);
   assert.equal(packet.name,'Elian ??');assert.equal(packet.hp,24);assert.equal(packet.armorClass,16);
   assert.deepEqual(packet.abilities,s.abilities);assert.deepEqual(s,before);
-  assert.equal(packet.format,'pocketdd-device');assert.equal(packet.version,3);
+  assert.equal(packet.format,'pocketdd-device');assert.equal(packet.version,4);
   assert.equal(packet.resources[0].current,1);assert(warnings.some(w=>w.includes('inventario')));
-  assert(!serializeDevice(packet).includes('inventory'));
+  assert.equal(packet.inventory.items.length,s.inventory.length);assert.equal(packet.inventory.equipped,1);
 });
 test('training projection preserves ranks, half proficiency, extras, blocked checks and effect snapshots',()=>{
   const s=initialState();s.extended=emptyExtended();s.condition=true;s.level=20;
@@ -27,7 +27,7 @@ test('training projection preserves ranks, half proficiency, extras, blocked che
   assert.deepEqual(t.skillBonuses,s.extended.skillBonuses);assert.deepEqual(t.halfSkills,s.extended.halfSkills);
   assert.deepEqual(t.blockedChecks,s.extended.blockedChecks);assert(t.poisoned&&t.strengthAdvantage&&t.halfAbilityChecks);
   assert.deepEqual(s,before);t.skillRanks.arcana=2;t.halfSkills.push('history');assert.deepEqual(s,before);
-  assert(serializeDevice(packet).length<4096);
+  assert(serializeDevice(packet).length<32768);
 });
 test('all avatar choices transfer as independent indices without changing any character data',()=>{
   for(let skin=0;skin<3;skin++)for(let hair=0;hair<3;hair++)for(let cloak=0;cloak<3;cloak++)for(let style=0;style<3;style++){
@@ -63,4 +63,26 @@ test('extended imported projection preserves HP, temp HP and resources without d
   }
   assert.deepEqual(s,before);assert(warnings.some(w=>w.includes('condizioni')));
   assert(!serializeDevice(packet).includes('importInfo'));
+});
+
+test('full 60-item inventory fits USB v4 without dropping quantities, including zero and escaped names',()=>{
+  const s=initialState();s.inventory[1].quantity=0;
+  while(s.inventory.length<60)s.inventory.push({id:`item-${s.inventory.length}`,name:'"Oggetto\\ lungo per il dispositivo abcde'.slice(0,40),type:'gear',quantity:999,notes:'Nota solo PC '.repeat(30)});
+  const before=structuredClone(s),{packet,warnings}=projectDevice(s);
+  assert.equal(packet.inventory.items.length,60);assert.equal(packet.inventory.items[1].quantity,0);
+  assert.equal(packet.inventory.items[59].quantity,999);assert.equal(packet.inventory.items[59].kind,0);
+  assert.equal(packet.inventory.equipped,1);assert(serializeDevice(packet).length<=32768);
+  assert(!serializeDevice(packet).includes('Nota solo PC'));assert(warnings.some(w=>w.includes('Note e proprietà')));
+  assert.deepEqual(s,before);
+});
+test('combat projection preserves recognized weapon and healing data; notes never grant effects',()=>{
+  const s=initialState();s.extended=emptyExtended();
+  Object.assign(s.extended.combat,{raging:true,rageBonus:3,greatWeaponMaster:true,greatWeaponMasterAvailable:true,extraMeleeCriticalDice:2,thrown:true});
+  s.inventory[0].profile={ranged:false,heavy:true,thrownRange:4,longRange:12,properties:['Esempio descrittivo']};
+  s.inventory.push({id:'unsupported-effect',name:'Oggetto magico',type:'gear',quantity:1,notes:'Arma +99: descrizione da verificare'});
+  const {packet}=projectDevice(s),inv=packet.inventory;
+  assert.deepEqual(inv.combat,{raging:true,rageBonus:3,powerAttack:true,criticalDice:2,thrown:true});
+  assert.equal(inv.items[0].flags,11);assert.equal(inv.items[0].thrownRange,4);
+  assert.equal(inv.items[1].healingModifier,2);assert.equal(inv.items[3].kind,0);
+  assert(!serializeDevice(packet).includes('+99'));
 });

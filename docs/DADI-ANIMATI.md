@@ -147,3 +147,10 @@ Beyond è necessaria per questo incremento. Le prove usano soltanto dati sinteti
 Build ESP32-S3 v0.17: **713.808 byte** (circa 697 KiB), partizione
 app da 4 MiB **83% libera**, DIRAM statica **78.335 byte**. Il canvas rimane
 da 81.920 byte dinamici; heap, prestazioni e consumo vanno misurati sulla scheda.
+
+## Integrazione armi v0.21
+
+Il tiro manuale rimane da 1–6 dadi. Attacchi e critici usano le regole dell'arma
+e il renderer supporta fino a 18 dadi, tutti visibili a sei colonne su tre righe.
+Danni disponibili una volta per colpo riuscito, bonus una sola volta e minimo
+zero. Cure animate dopo il salvataggio. [Uso e limiti](INVENTARIO-ATTACCHI.md).

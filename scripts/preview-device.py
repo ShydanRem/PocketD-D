@@ -40,3 +40,11 @@ if all((base/(name+'.ppm')).is_file() for name in checks):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(checks):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'skills-preview.png');print(base/'skills-preview.png')
+combat=['inventory','combat-detail','attack-critical','damage-eighteen']
+for name in combat+['combat','weapon','weapon-damage','attack-miss','item-confirm','healing','inventory-last','inventory-legacy','item-long-name','weapon-empty']:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in combat):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(combat):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'inventory-preview.png');print(base/'inventory-preview.png')

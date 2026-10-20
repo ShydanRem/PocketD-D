@@ -23,7 +23,7 @@ class Port:
 
 class USBTests(unittest.TestCase):
     def test_success_requires_device_ack_after_confirmation(self):
-        for version, ready in [(1, 1), (1, 2), (2, 2), (1, 3), (2, 3), (3, 3)]:
+        for version, ready in [(v,r) for r in range(1,5) for v in range(1,r+1)]:
             data=json.dumps({'version':version}).encode()+b'\n'
             port = Port([f'PDD READY {ready}\n'.encode(), b'PDD WAIT_CONFIRM\n', b'PDD IMPORTED\n'])
             upload.upload(port, data, lambda _: None)
@@ -36,15 +36,15 @@ class USBTests(unittest.TestCase):
             port = Port([b'PDD READY 2\n', b'PDD WAIT_CONFIRM\n', response])
             with self.assertRaises(RuntimeError):
                 upload.upload(port, b'{"version":2}\n', lambda _: None)
-    def test_old_or_unknown_firmware_receives_no_v3_payload(self):
-        for ready in [b'PDD READY 1\n',b'PDD READY 2\n',b'PDD READY 4\n']:
+    def test_old_or_unknown_firmware_receives_no_v4_payload(self):
+        for ready in [b'PDD READY 1\n',b'PDD READY 2\n',b'PDD READY 3\n',b'PDD READY 5\n']:
             port=Port([ready])
-            with self.assertRaises(RuntimeError):upload.upload(port,b'{"version":3}\n',lambda _:None)
+            with self.assertRaises(RuntimeError):upload.upload(port,b'{"version":4}\n',lambda _:None)
             self.assertEqual(port.sent,[b'\nPDD HELLO\n'])
     def test_backup_wrong_schema_and_duplicate_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'input.json'
-            for raw in ['{"version":10}', '{"format":"pocketdd-device","version":1,"version":1}', '[]', '{"format":"pocketdd-device","version":4}', '{"format":"pocketdd-device","version":true}']:
+            for raw in ['{"version":10}', '{"format":"pocketdd-device","version":1,"version":1}', '[]', '{"format":"pocketdd-device","version":5}', '{"format":"pocketdd-device","version":true}']:
                 path.write_text(raw)
                 with self.assertRaises(ValueError):
                     upload.payload(path)

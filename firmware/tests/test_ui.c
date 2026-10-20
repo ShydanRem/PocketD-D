@@ -255,5 +255,46 @@ int main(void) {
     assert(save_calls==check_saves&&!memcmp(&state,&trained,sizeof state));
     state.training.available=false;page=SHEET;sheet_tab=1;render();bounds();screenshot("skills-legacy.ppm");
     click("Caratt.");click("DES 16\n+3");click("Lancia");assert(result.count==1&&result.bonus==3);click("Accelera");
+    /* Device inventory: atomic consumables, attack -> critical -> one damage roll. */
+    pd_demo(&state);combat_roll=0;has_roll=false;page=RESOURCES;inventory_page=0;render();bounds();
+    click("Zaino");assert(page==INVENTORY);screenshot("inventory.ppm");
+    click("Spada *  x1");assert(page==ITEM_DETAIL);screenshot("weapon.ppm");click("Riponi");assert(state.equipped==PD_NO_WEAPON);click("Scegli");assert(state.equipped==0);click("Attacco");
+    assert(page==COMBAT);screenshot("combat.ppm");click("Attacco +4 >");screenshot("combat-detail.ppm");click("Indietro");
+    random_values[0]=random_values[1]=19;calls=random_calls;unsigned combat_saves=save_calls;
+    click("Lancia");assert(strike.critical&&strike.hits&&random_calls==calls+1);
+    click("Accelera");screenshot("attack-critical.ppm");
+    random_values[0]=random_values[1]=0;click("Danni");assert(damage_used&&dice_animation.pool.count==2&&dice_animation.pool.total==4);
+    click("Accelera");screenshot("weapon-damage.ppm");assert(save_calls==combat_saves);
+    calls=random_calls;root=lv_screen_active();
+    for(unsigned i=0;i<lv_obj_get_child_count(root);i++) {
+        lv_obj_t *b=lv_obj_get_child(root,i);
+        if(lv_obj_check_type(b,&lv_button_class)&&!strcmp(lv_label_get_text(button_label(b)),"Danni"))lv_obj_send_event(b,LV_EVENT_CLICKED,NULL);
+    }
+    assert(random_calls==calls);click("Nuovo");click("Lancia");assert(!strike.hits&&strike.roll.natural==1);
+    click("Accelera");screenshot("attack-miss.ppm");click("Arma");click("Zaino");
+    click("Pozione  x2");assert(page==ITEM_DETAIL);calls=random_calls;click("Usa");assert(page==ITEM_CONFIRM&&random_calls==calls);
+    screenshot("item-confirm.ppm");click("Indietro");assert(state.items[1].quantity==2&&state.hp==24);
+    click("Usa");state.temp_hp=4;click("Conferma");assert(combat_roll==3&&state.hp==28&&state.temp_hp==4&&state.items[1].quantity==1&&random_calls==calls+2);
+    click("Accelera");screenshot("healing.ppm");click("Eroe");click("Annulla");assert(state.hp==24&&state.temp_hp==4&&state.items[1].quantity==2);
+    click("Usi");click("Zaino");click("Torcia  x3");calls=random_calls;click("Usa");click("Conferma");assert(state.items[2].quantity==2&&random_calls==calls);
+    click("Zaino");click("Pozione  x2");click("Usa");pd_state before_failed_use=state;fail_save=true;click("Conferma");
+    assert(!memcmp(&state,&before_failed_use,sizeof state)&&page==ITEM_CONFIRM);fail_save=false;click("Indietro");click("Zaino");
+    state.hp=state.max_hp;click("Pozione  x2");calls=random_calls;
+    root=lv_screen_active();for(unsigned i=0;i<lv_obj_get_child_count(root);i++) {
+        lv_obj_t *b=lv_obj_get_child(root,i);if(lv_obj_check_type(b,&lv_button_class)&&!strcmp(lv_label_get_text(button_label(b)),"PF al massimo"))lv_obj_send_event(b,LV_EVENT_CLICKED,NULL);
+    }
+    assert(page==ITEM_DETAIL&&random_calls==calls&&state.items[1].quantity==2);
+    pd_demo(&state);state.items[0].count=6;state.combat.critical_dice=6;page=COMBAT;combat_roll=1;pool_view=false;has_roll=false;render();
+    random_values[0]=random_values[1]=19;click("Lancia");click("Accelera");random_values[0]=random_values[1]=0;click("Danni");
+    assert(dice_animation.pool.count==18&&dice_animation.pool.total==20);click("Accelera");screenshot("damage-eighteen.ppm");
+    pd_demo(&state);for(unsigned i=3;i<PD_ITEMS;i++){state.items[i]=(pd_item){.name="Nome molto lungo dell oggetto da vedere",.quantity=999};}
+    state.item_count=PD_ITEMS;page=INVENTORY;inventory_page=0;render();bounds();
+    for(unsigned i=0;i<19;i++)click(">");
+    assert(inventory_page==19);screenshot("inventory-last.ppm");tap(210,177);screenshot("item-long-name.ppm");
+    memset(state.items[item_index].name,'W',40);state.items[item_index].name[40]=0;render();bounds();
+    lv_point_t extent;lv_text_get_size(&extent,state.items[item_index].name,&lv_font_montserrat_16,0,0,300,LV_TEXT_FLAG_NONE);assert(extent.y<=58);
+    page=INVENTORY;render();bounds();
+    pd_demo(&state);state.items[0].quantity=0;state.equipped=PD_NO_WEAPON;item_index=0;page=ITEM_DETAIL;render();bounds();screenshot("weapon-empty.ppm");page=INVENTORY;
+    state.inventory_available=false;state.item_count=0;state.equipped=PD_NO_WEAPON;inventory_page=0;render();bounds();screenshot("inventory-legacy.ppm");
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px passed");
 }

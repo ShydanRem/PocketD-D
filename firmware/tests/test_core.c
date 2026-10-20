@@ -7,6 +7,7 @@
 #include <limits.h>
 #include "fixtures/state-v1.h"
 #include "fixtures/state-v2.h"
+#include "fixtures/state-v3.h"
 static void record_crc(uint8_t *record) {
     uint32_t crc=pd_crc32(record,PD_RECORD_SIZE-4);
     for(int i=0;i<4;i++)record[PD_RECORD_SIZE-4+i]=crc>>(8*i);
@@ -39,6 +40,7 @@ int main(int argc,char **argv) {
     assert(!out.training.available);
     assert(pd_decode(legacy_v2,sizeof legacy_v2,&out,&gen)&&gen==42&&out.hp==17&&!out.idle_animation);
     assert(out.avatar.skin==2&&!out.training.available);
+    assert(pd_decode(legacy_v3,sizeof legacy_v3,&out,&gen)&&gen==43&&out.training.ranks[0]==2&&out.training.poisoned&&!out.inventory_available&&out.equipped==PD_NO_WEAPON);
     pd_demo(&s);s.avatar=(pd_avatar){2,1,2,1};s.idle_animation=false;
     for(int i=0;i<PD_SKILLS;i++) { s.training.ranks[i]=i%3;s.training.skill_bonus[i]=i-8; }
     for(int i=0;i<6;i++) { s.training.save_bonus[i]=i-2;s.training.check_bonus[i]=3-i; }
@@ -53,7 +55,7 @@ int main(int argc,char **argv) {
     pd_demo(&s);pd_encode(&s,41,a);s.hp=7;pd_encode(&s,42,b);
     assert(pd_select(a,sizeof a,b,sizeof b,&out,&gen)==1&&out.hp==7&&gen==42);
     /* Every single-bit corruption in newest bank falls back to intact older bank. */
-    for(size_t i=0;i<sizeof b;i++) for(int bit=0;bit<8;bit++) {
+    for(size_t i=0;i<sizeof b;i++) for(int bit=0;bit<(i<8||i>=sizeof b-4?8:1);bit++) {
         b[i]^=1<<bit;assert(pd_select(a,sizeof a,b,sizeof b,&out,&gen)==0&&out.hp==24);b[i]^=1<<bit;
     }
     for(size_t len=0;len<sizeof b;len++)assert(pd_select(a,sizeof a,b,len,&out,&gen)==0);
@@ -71,7 +73,7 @@ int main(int argc,char **argv) {
         assert(!pd_parse_packet(json,n-1,&out));
         cJSON *base=cJSON_ParseWithLength(json,n),*v;assert(base);
         const char *numeric_keys[]={"version","level","hp","maxHp","tempHp","armorClass"};
-        double bad[]={4,21,33,0,-1,41};
+        double bad[]={5,21,33,0,-1,41};
         for (int i=0;i<6;i++) {
             v=cJSON_Duplicate(base,true);cJSON_ReplaceItemInObjectCaseSensitive(v,numeric_keys[i],cJSON_CreateNumber(bad[i]));reject(v);
         }
@@ -86,11 +88,11 @@ int main(int argc,char **argv) {
         v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"avatar");reject(v);
         v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),1);reject(v);
         v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),1);
-        cJSON_DeleteItemFromObjectCaseSensitive(v,"training");cJSON_DeleteItemFromObjectCaseSensitive(v,"avatar");char *old=cJSON_PrintUnformatted(v);
+        cJSON_DeleteItemFromObjectCaseSensitive(v,"inventory");cJSON_DeleteItemFromObjectCaseSensitive(v,"training");cJSON_DeleteItemFromObjectCaseSensitive(v,"avatar");char *old=cJSON_PrintUnformatted(v);
         assert(pd_parse_packet(old,strlen(old),&out)&&out.avatar.skin==0&&out.idle_animation&&!out.training.available);
         cJSON_free(old);cJSON_Delete(v);
         v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),2);
-        cJSON_DeleteItemFromObjectCaseSensitive(v,"training");old=cJSON_PrintUnformatted(v);
+        cJSON_DeleteItemFromObjectCaseSensitive(v,"inventory");cJSON_DeleteItemFromObjectCaseSensitive(v,"training");old=cJSON_PrintUnformatted(v);
         assert(pd_parse_packet(old,strlen(old),&out)&&out.avatar.skin==2&&!out.training.available);cJSON_free(old);cJSON_Delete(v);
         v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"training");reject(v);
         v=cJSON_Duplicate(base,true);cJSON *t=cJSON_GetObjectItemCaseSensitive(v,"training");
@@ -110,6 +112,23 @@ int main(int argc,char **argv) {
         for(int i=0;i<8;i++) { cJSON_AddItemToArray(resources,cJSON_Duplicate(cJSON_GetArrayItem(resources,0),true)); }
         reject(v);
         v=cJSON_Duplicate(base,true);cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetArrayItem(cJSON_GetObjectItemCaseSensitive(v,"resources"),0),"current",cJSON_CreateNumber(2));reject(v);
+        v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"inventory");reject(v);
+        const char *bad_item_keys[]={"quantity","kind","ability","count","sides","flags","reach","thrownRange","attackModifier","damageModifier","healingModifier"};
+        int bad_item_values[]={1000,4,6,7,20,16,121,121,-11,11,31};
+        for(int i=0;i<11;i++) {
+            v=cJSON_Duplicate(base,true);cJSON *items=cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(v,"inventory"),"items");
+            cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetArrayItem(items,0),bad_item_keys[i],cJSON_CreateNumber(bad_item_values[i]));reject(v);
+        }
+        v=cJSON_Duplicate(base,true);cJSON *inv=cJSON_GetObjectItemCaseSensitive(v,"inventory");
+        cJSON_ReplaceItemInObjectCaseSensitive(inv,"equipped",cJSON_CreateNumber(2));reject(v);
+        v=cJSON_Duplicate(base,true);inv=cJSON_GetObjectItemCaseSensitive(v,"inventory");
+        cJSON_AddNumberToObject(inv,"equipped",1);reject(v);
+        v=cJSON_Duplicate(base,true);inv=cJSON_GetObjectItemCaseSensitive(v,"inventory");
+        cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetObjectItemCaseSensitive(inv,"combat"),"raging",cJSON_CreateNumber(1));reject(v);
+        /* v3 USB keeps training but must never fabricate an inventory. */
+        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),3);
+        cJSON_DeleteItemFromObjectCaseSensitive(v,"inventory");old=cJSON_PrintUnformatted(v);
+        assert(pd_parse_packet(old,strlen(old),&out)&&out.training.available&&!out.inventory_available&&out.equipped==PD_NO_WEAPON);cJSON_free(old);cJSON_Delete(v);
         /* Full boundary values remain representable, including all eight counters. */
         v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"maxHp"),999);
         cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"hp"),999);

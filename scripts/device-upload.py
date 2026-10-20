@@ -10,8 +10,8 @@ from pathlib import Path
 
 def payload(path):
     raw = Path(path).read_bytes()
-    if len(raw) > 4096:
-        raise ValueError('File oltre 4096 byte')
+    if len(raw) > 32768:
+        raise ValueError('File oltre 32768 byte')
     def unique(pairs):
         result = {}
         for key, value in pairs:
@@ -20,10 +20,10 @@ def payload(path):
             result[key] = value
         return result
     obj = json.loads(raw, object_pairs_hook=unique)
-    if not isinstance(obj, dict) or obj.get('format') != 'pocketdd-device' or type(obj.get('version')) is not int or obj['version'] not in (1, 2, 3):
+    if not isinstance(obj, dict) or obj.get('format') != 'pocketdd-device' or type(obj.get('version')) is not int or obj['version'] not in (1, 2, 3, 4):
         raise ValueError('Usa la copia da “Prepara per dispositivo”, non il backup completo')
     encoded = json.dumps(obj, ensure_ascii=False, separators=(',', ':')).encode('ascii')
-    if len(encoded) > 4096 or b'\n' in encoded:
+    if len(encoded) > 32768 or b'\n' in encoded:
         raise ValueError('Copia non compatibile')
     return encoded + b'\n'
 
@@ -56,10 +56,10 @@ def wait_for(port, expected, timeout, log=print):
 
 def upload(port, data, log=print):
     version = json.loads(data).get('version')
-    if type(version) is not int or version not in (1, 2, 3):
+    if type(version) is not int or version not in (1, 2, 3, 4):
         raise ValueError('Versione della copia non supportata')
     port.write(b'\nPDD HELLO\n'); port.flush()
-    ready = wait_for(port, ('PDD READY 1', 'PDD READY 2', 'PDD READY 3'), 10, log)
+    ready = wait_for(port, ('PDD READY 1', 'PDD READY 2', 'PDD READY 3', 'PDD READY 4'), 10, log)
     if version > int(ready.rsplit(' ', 1)[1]):
         raise RuntimeError(f'Aggiorna il firmware PocketD-D: questa copia richiede la versione USB {version}. Nessuna copia inviata.')
     port.write(data); port.flush()

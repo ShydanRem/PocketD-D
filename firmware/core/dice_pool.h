@@ -1,9 +1,9 @@
 #ifndef PD_DICE_POOL_H
 #define PD_DICE_POOL_H
 #include "pocketdd.h"
-#define PD_POOL_MAX 6
+#define PD_POOL_MAX 18
 #define PD_POOL_MIN_BONUS (-15)
-#define PD_POOL_MAX_BONUS 30
+#define PD_POOL_MAX_BONUS 60
 /* Transient roll data only: USB and NVS character formats do not change. */
 typedef struct {
     uint8_t dice[PD_POOL_MAX],count,sides;

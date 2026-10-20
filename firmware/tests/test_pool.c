@@ -14,7 +14,7 @@ static void paint(pd_dice_animation *a) {
 }
 int main(void) {
     unsigned sides[]={4,6,8,10,12,20};pd_pool r,before;pd_dice_animation a;
-    for(unsigned s=0;s<6;s++)for(unsigned count=1;count<=6;count++) {
+    for(unsigned s=0;s<6;s++)for(unsigned count=1;count<=18;count++) {
         for(unsigned i=0;i<32;i++)values[i]=sides[s]-1;
         used=0;assert(pd_roll_pool(sides[s],count,30,false,random_value,NULL,&r));
         assert(used==count&&r.sum==(int)(count*sides[s])&&r.total==r.sum+30);
@@ -36,7 +36,7 @@ int main(void) {
         }
         memset(values,0,sizeof values);used=0;
         assert(pd_roll_pool(sides[s],count,-15,false,random_value,NULL,&r));assert(r.total==(int)count-15);
-        used=0;assert(pd_roll_pool(sides[s],count,-15,true,random_value,NULL,&r));assert(r.total==0&&r.sum==(int)count);
+        used=0;assert(pd_roll_pool(sides[s],count,-15,true,random_value,NULL,&r));assert(r.total==((int)count>15?(int)count-15:0)&&r.sum==(int)count);
         /* Exact upper bound is accepted for d4/d8; other dice reject the bias tail. */
         values[0]=UINT32_MAX;values[1]=sides[s]-1;used=0;
         assert(pd_roll_pool(sides[s],1,0,false,random_value,NULL,&r));
@@ -45,11 +45,11 @@ int main(void) {
     before=r;unsigned calls=used;
     assert(!pd_roll_pool(3,1,0,false,random_value,NULL,&r));
     assert(!pd_roll_pool(6,0,0,false,random_value,NULL,&r));
-    assert(!pd_roll_pool(6,7,0,false,random_value,NULL,&r));
+    assert(!pd_roll_pool(6,19,0,false,random_value,NULL,&r));
     assert(!pd_roll_pool(6,1,INT_MIN,false,random_value,NULL,&r));
     assert(!pd_roll_pool(6,1,INT_MAX,false,random_value,NULL,&r));
     assert(!pd_roll_pool(6,1,0,false,NULL,NULL,&r));
     assert(!pd_roll_pool(6,1,0,false,random_value,NULL,NULL));
     assert(used==calls&&!memcmp(&before,&r,sizeof r));
-    puts("Poly dice: six shapes, 1..6 dice, every face, signed sums, damage floor, bias-tail/power-of-two, invalid input, wrap, buffer guards and skip passed");
+    puts("Poly dice: six shapes, 1..18 dice, every face, signed sums, damage floor, bias-tail/power-of-two, invalid input, wrap, buffer guards and skip passed");
 }

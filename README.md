@@ -2,11 +2,12 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.20:** abilità e tiri salvezza sul dispositivo con competenza, maestria, mezza competenza, extra e dettaglio dei bonus. Le prove da verificare restano bloccate; le vecchie copie mantengono le prove di caratteristica e richiedono una nuova esportazione per le competenze mancanti. Avatar personale animato con 81 combinazioni, PF/annulla, contatori, dadi poliedrici e salvataggio offline. Supporto PC per importazione Beyond, configurazione, backup ed esportazione USB con anteprima e conferma sul display. Il firmware non è ancora collaudato sulla scheda fisica.
+**Stato v0.21:** inventario fino a 60 voci, armi scegliibili, attacchi/danni animati e critici fino a 18 dadi sul dispositivo. Cure e consumabili con conferma, salvataggio congiunto di PF/quantità e annullamento. Abilità e salvezze con competenza, maestria, mezza competenza, extra e dettaglio dei bonus. Le prove da verificare restano bloccate; le vecchie copie mantengono le prove di caratteristica e richiedono una nuova esportazione per competenze e inventario mancanti. Avatar personale animato con 81 combinazioni, PF/annulla, contatori, dadi poliedrici e salvataggio offline. Supporto PC per importazione Beyond, configurazione, backup ed esportazione USB con anteprima e conferma sul display. Il firmware non è ancora collaudato sulla scheda fisica.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
 - [Direzione visiva: pixel art moderna e anteprime del firmware](docs/DIREZIONE-VISIVA.md)
+- [Inventario e attacchi: uso, regole, limiti e verifiche](docs/INVENTARIO-ATTACCHI.md)
 - [Abilità e salvezze: bonus, effetti, limiti e compatibilità](docs/ABILITA-SALVEZZE.md)
 - [Dadi animati: uso, rendering e verifiche](docs/DADI-ANIMATI.md)
 - [Firmware: compilazione, trasferimento USB, limiti e prove hardware](docs/FIRMWARE.md)
@@ -17,7 +18,7 @@ Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazi
 
 ## Primo traguardo
 
-Scheda → caratteristica → d20 → risultato → PF → salvataggio offline sul dispositivo. Il firmware include Elian originale e una copia limitata della scheda preparata da PC, con avatar personale. Inventario, attacchi e magie restano nel simulatore finché non vengono portati e verificati nel firmware. Non considerare una build riuscita equivalente a una prova fisica.
+Scheda → caratteristica → d20 → risultato → PF → salvataggio offline sul dispositivo. Il firmware include Elian originale e una copia limitata della scheda preparata da PC, con avatar personale. Inventario, attacchi e cure sono portati nel firmware; magie e gestione completa degli effetti restano da portare. Non considerare una build riuscita equivalente a una prova fisica.
 
 ## Avvio del prototipo
 

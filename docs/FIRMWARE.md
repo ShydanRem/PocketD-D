@@ -1,4 +1,4 @@
-# Firmware PocketD-D 0.20 — abilità, salvezze e percorso offline
+# Firmware PocketD-D 0.21 — inventario e combattimento offline
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
@@ -34,17 +34,21 @@ Copia USB v3, record NVS PDD3 da 512 byte. Le copie v1/v2 restano leggibili e
 conservano PF/avatar/contatori, ma non hanno competenze: per quelle viene
 richiesta una copia aggiornata, senza assegnare falsi gradi zero.
 
+La v0.21 aggiunge [inventario, attacchi e cure](INVENTARIO-ATTACCHI.md):
+Usi → Zaino, scelta/rimozione arma, CA bersaglio, dettaglio bonus, danni e critici
+fino a 18 dadi, consumabili con conferma e annullamento. USB v4 e record PDD4,
+con lettura delle copie precedenti; niente oggetti inventati per schede vecchie.
+
 Primo percorso: avvio con Elian originale o copia precedentemente salvata →
 Scheda → caratteristica → d20 → risultato → Eroe → PF ±1 → annulla →
 salvataggio locale. Anche PF temporanei e fino a otto contatori manuali.
 Vantaggio e svantaggio selezionabili dal pulsante Base/Vant/Svant. Durante il volo
 si può accelerare; modalità e navigazione attendono l'arresto del tiro.
 
-Non è ancora una scheda completa: mancano inventario, attacchi, magie,
+Non è ancora una scheda completa: mancano magie,
 gestione completa di effetti/condizioni, morte, dadi vita,
 monete, storico persistente, mappa e party. Le prove applicano i contributi
-riconosciuti e trasferiti; i contesti da verificare restano bloccati. Le sole
-istantanee automatiche sono Avvelenato e vantaggio FOR da Ira: non gestiscono
+riconosciuti e trasferiti; i contesti da verificare restano bloccati. Le istantanee per prove e attacchi includono Avvelenato, Ira, attacco potente e dadi critici extra: non gestiscono
 durate, utilizzi o altri effetti. Il dado libero
 usa bonus zero. La CA è il valore esportato, non un ricalcolo dell'equipaggiamento.
 I contatori sono manuali: usarli non attiva effetti né riposi automatici.
@@ -70,8 +74,8 @@ DMA diretto da PSRAM. Un solo task possiede LVGL; il task USB passa copie
 validate attraverso una coda. Il trasferimento SPI termina prima di riutilizzare
 il buffer. Rettangoli allineati a coordinate pari come richiesto dal pannello.
 Le aree touch sono alte almeno 44 pixel e restano dentro il cerchio.
-Stack del task principale a 8192 byte per il percorso LVGL e lo stato esteso;
-task USB separato da 8192 byte. Il margine effettivo degli stack resta da misurare
+Stack del task principale a 49152 byte per LVGL, stato e migrazione;
+task USB separato da 24576 byte. Il margine effettivo degli stack resta da misurare
 sulla scheda insieme a heap e PSRAM.
 
 Non vengono scritti registri di carica/voltaggio del PMIC AXP2101: si segue il
@@ -157,18 +161,19 @@ Nessun reset/flash, scrittura verso Beyond o modifica della raccolta da questo
 strumento. Il trasferimento fisico USB resta da collaudare, benché parser,
 protocollo host e conferma grafica siano testati separatamente.
 
-Formato `pocketdd-device` v3, massimo 4096 byte, campi esatti di base: `format`, `version`,
+Formato `pocketdd-device` v4, massimo 32768 byte, campi esatti di base: `format`, `version`,
 `name`, `level`, `hp`, `maxHp`, `tempHp`, `armorClass`, `abilities` e `resources`.
 Da v2 è obbligatorio anche `avatar`, con esattamente `skin`, `hair`, `cloak`,
 `style`: indici interi 0–2 corrispondenti alle scelte PC. Da v3 è obbligatorio
 `training`, con gradi, competenze, extra, mezze competenze, blocchi e le due
 istantanee; [schema completo](ABILITA-SALVEZZE.md). Il firmware accetta anche
-v1/v2: v1 usa l'aspetto base, entrambe segnalano le competenze mancanti.
+v1/v2/v3: v1 usa l'aspetto base, entrambe segnalano le competenze mancanti.
+Da v4 è obbligatorio `inventory`; [schema e omissioni](INVENTARIO-ATTACCHI.md).
 La preferenza locale per
 l'animazione non viene trasferita dal PC: la conferma conserva quella già attiva.
-Il nuovo uploader negozia `PDD READY 1/2/3` e blocca una copia prima dell'invio
+Il nuovo uploader negozia `PDD READY 1/2/3/4` e blocca una copia prima dell'invio
 se il firmware non ne supporta la versione. Usare lo script di questa versione;
-i precedenti uploader non riconoscono `PDD READY 3`.
+i precedenti uploader non riconoscono `PDD READY 4`.
 Nome ASCII 1–48 byte, contatore 1–32; accenti traslitterati e altri simboli
 sostituiti nell'anteprima PC. Livello 1–20, caratteristiche 1–30, CA 1–40,
 PF 0–massimo (massimo 1–999), temporanei 0–999. Massimo otto contatori con
@@ -185,7 +190,7 @@ reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
 ## Salvataggio e dadi
 
 NVS nel namespace `pocketdd`, due chiavi alternate `state_a`/`state_b`.
-Record binario esplicito di 512 byte, magic/versione `PDD3`, generazione uint32,
+Record binario esplicito di 5184 byte, magic/versione `PDD4`, generazione uint32,
 CRC32; niente dump di struct C con padding. La nuova copia è scritta, committata
 e riletta prima di aggiornare lo stato visibile. Quella precedente rimane valida.
 All'avvio si sceglie la generazione valida più recente, incluso wrap del contatore.
@@ -195,17 +200,16 @@ Se un'operazione I/O fallisce, ulteriori scritture restano bloccate fino al riav
 un errore di commit può avere esito ambiguo e non va dichiarato annullamento certo.
 La demo visualizzata con errore memoria non sostituisce dati salvati.
 
-La v0.20 legge `PDD1/PDD2` da 384 byte senza scritture al caricamento. Per v1
-assegna avatar base e animazione abilitata; per entrambe segna le competenze
-come non importate. La prima modifica confermata scrive PDD3 nell'altra banca,
-conservando la precedente. Dati PF/avatar mantengono gli offset; la formazione
-parte dall'offset 373 e il CRC è agli ultimi quattro byte del record da 512.
-I firmware precedenti non leggono PDD3 e bloccano scritture su formati non
-supportati, senza cancellazione. Tornare a una vecchia versione non è una
-migrazione automatica; conservare i backup prima di cambiare firmware.
+La v0.21 legge `PDD1/PDD2` da 384 byte e `PDD3` da 512 senza scritture al boot.
+PDD3 conserva la formazione; i formati precedenti la segnano non disponibile.
+Tutti segnalano inventario non importato: nessun inserimento di oggetti demo.
+La prima modifica confermata scrive PDD4 nell'altra banca. Profilo e formazione
+mantengono gli offset; inventario dall'offset 434, CRC alla fine dei 5184 byte.
+I firmware precedenti non leggono PDD4. Nessuna migrazione automatica all'indietro;
+conservare i backup prima di cambiare firmware. Partizioni non modificate.
 
 PF e contatori vengono persistiti ad ogni modifica; “Annulla modifica” ripristina
-l'ultima modifica di sessione ai PF/contatori e la salva, non la vecchia scheda dopo
+l'ultima modifica di sessione a PF/contatori/inventario e la salva, non la vecchia scheda dopo
 un'importazione. I tiri non scrivono flash e non hanno storico persistente.
 L'uso prolungato della flash va misurato prima di cambiare strategia di scrittura.
 
@@ -342,3 +346,12 @@ Stesso canvas Dadi da 81.920 byte e buffer avatar da 5.824 byte. Stack principal
 configurato a 8192 byte; sono dimensioni di compilazione e configurazione,
 senza misure di heap o margine stack sul dispositivo. Nessun flash o accesso
 al personaggio personale Beyond per questa revisione.
+
+## Verifiche v0.21 — inventario e attacchi
+
+129 test JS, 1608 confronti di combattimento PC/USB/C più i 1890 delle prove,
+UI LVGL host, protocollo simulato e Chromium passanti. Migrazione golden PDD3,
+CRC/troncamenti del nuovo record e consumo atomico verificati; controlli
+ASan/UBSan inclusi. [Dettaglio e limiti](INVENTARIO-ATTACCHI.md).
+La build ESP32-S3 è riuscita; nessun flash o lettura personale Beyond.
+App `822.368` byte, partizione da 4 MiB **80% libera**.

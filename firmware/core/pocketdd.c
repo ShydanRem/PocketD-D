@@ -10,7 +10,10 @@ static bool text(const char *s, size_t cap) {
 void pd_demo(pd_state *s) {
     *s = (pd_state){.name="Elian", .hp=24, .max_hp=32, .level=3, .armor=16,
         .abilities={14,16,14,10,12,8}, .resource_count=1,
-        .resources={{.name="Slancio", .current=1, .maximum=1}},.idle_animation=true,.training={.available=true}};
+        .resources={{.name="Slancio", .current=1, .maximum=1}},.idle_animation=true,.training={.available=true},.inventory_available=true,.item_count=3,.equipped=0,
+        .items={{.name="Spada",.damage_type="Tagliente",.quantity=1,.kind=PD_WEAPON,.ability=0,.count=1,.sides=8,.flags=3,.reach=1},
+        {.name="Pozione",.quantity=2,.kind=PD_HEALING,.count=2,.sides=4,.healing_modifier=2},
+        {.name="Torcia",.quantity=3,.kind=PD_CONSUMABLE}}};
 }
 bool pd_valid(const pd_state *s) {
     if (!text(s->name, sizeof s->name) || s->level < 1 || s->level > 20 ||
@@ -25,6 +28,20 @@ bool pd_valid(const pd_state *s) {
     for (int i=0;i<s->resource_count;i++) if (!text(s->resources[i].name, PD_RESOURCE_BYTES) ||
         !s->resources[i].maximum || s->resources[i].maximum > 999 ||
         s->resources[i].current > s->resources[i].maximum) return false;
+    if(s->item_count>PD_ITEMS || (!s->inventory_available&&s->item_count) ||
+       (s->equipped!=PD_NO_WEAPON&&(s->equipped>=s->item_count||s->items[s->equipped].kind!=PD_WEAPON||!s->items[s->equipped].quantity)))return false;
+    if(s->combat.rage_bonus>10||s->combat.critical_dice>6||(s->combat.raging&&!s->combat.rage_bonus))return false;
+    if(s->combat.thrown&&(s->equipped==PD_NO_WEAPON||!s->items[s->equipped].thrown_range))return false;
+    for(int i=0;i<s->item_count;i++) {
+        const pd_item *v=&s->items[i];
+        if(!text(v->name,sizeof v->name)||v->quantity>999||v->kind>PD_WEAPON||v->ability>5||v->flags>15||v->reach>120||v->thrown_range>120||
+           v->attack_modifier< -10||v->attack_modifier>10||v->damage_modifier< -10||v->damage_modifier>10||v->healing_modifier<0||v->healing_modifier>30)return false;
+        if(v->damage_type[0]&&!text(v->damage_type,sizeof v->damage_type))return false;
+        if(v->kind>=PD_HEALING) {
+            if(v->count<1||v->count>6||!(v->sides==4||v->sides==6||v->sides==8||v->sides==10||v->sides==12))return false;
+            if(v->kind==PD_WEAPON&&!v->reach)return false;
+        }
+    }
     return true;
 }
 int pd_modifier(int score) { return score / 2 - 5; }
@@ -73,7 +90,7 @@ static void put32(uint8_t *p, uint32_t n) { for (int i=0;i<4;i++) p[i]=n>>(8*i);
 static uint32_t get32(const uint8_t *p) { return (uint32_t)p[0]|((uint32_t)p[1]<<8)|((uint32_t)p[2]<<16)|((uint32_t)p[3]<<24); }
 void pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
     memset(out, 0, PD_RECORD_SIZE);
-    memcpy(out, "PDD3", 4); put32(out+4,gen);
+    memcpy(out, "PDD4", 4); put32(out+4,gen);
     uint8_t *p=out+8;
     memcpy(p,s->name,PD_NAME_BYTES); p+=PD_NAME_BYTES;
     put16(&p,s->hp); put16(&p,s->max_hp); put16(&p,s->temp_hp);
@@ -92,16 +109,24 @@ void pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
     for(int i=0;i<PD_SKILLS;i++)*p++=(uint8_t)(t->skill_bonus[i]+30);
     for(int i=0;i<6;i++)*p++=(uint8_t)(t->save_bonus[i]+30);
     for(int i=0;i<6;i++)*p++=(uint8_t)(t->check_bonus[i]+30);
+    *p++=s->inventory_available;*p++=s->item_count;*p++=s->equipped;
+    *p++=s->combat.rage_bonus;*p++=s->combat.critical_dice;*p++=s->combat.raging;*p++=s->combat.power_attack;*p++=s->combat.thrown;
+    for(int i=0;i<PD_ITEMS;i++) {
+        const pd_item *v=&s->items[i];
+        memcpy(p,v->name,41);p+=41;memcpy(p,v->damage_type,25);p+=25;put16(&p,v->quantity);
+        *p++=v->kind;*p++=v->ability;*p++=v->count;*p++=v->sides;*p++=v->flags;*p++=v->reach;*p++=v->thrown_range;
+        *p++=v->attack_modifier+10;*p++=v->damage_modifier+10;*p++=v->healing_modifier;
+    }
     put32(out+PD_RECORD_SIZE-4,pd_crc32(out,PD_RECORD_SIZE-4));
 }
 bool pd_record_known(const uint8_t *data,size_t size) {
     return data&&((size==384&&(!memcmp(data,"PDD1",4)||!memcmp(data,"PDD2",4)))||
-                  (size==PD_RECORD_SIZE&&!memcmp(data,"PDD3",4)));
+                  (size==512&&!memcmp(data,"PDD3",4))||(size==PD_RECORD_SIZE&&!memcmp(data,"PDD4",4)));
 }
 bool pd_decode(const uint8_t *data,size_t size,pd_state *s,uint32_t *gen) {
     if (!pd_record_known(data,size) ||
         pd_crc32(data,size-4) != get32(data+size-4)) return false;
-    pd_state candidate={0}; const uint8_t *p=data+8;
+    pd_state candidate={.equipped=PD_NO_WEAPON}; const uint8_t *p=data+8;
     memcpy(candidate.name,p,PD_NAME_BYTES); p+=PD_NAME_BYTES;
     candidate.hp=get16(&p); candidate.max_hp=get16(&p); candidate.temp_hp=get16(&p);
     candidate.level=*p++; candidate.armor=*p++;
@@ -116,7 +141,7 @@ bool pd_decode(const uint8_t *data,size_t size,pd_state *s,uint32_t *gen) {
         if(p[4]>1)return false;
         candidate.idle_animation=p[4]!=0;
     }
-    if(!memcmp(data,"PDD3",4)) {
+    if(!memcmp(data,"PDD3",4)||!memcmp(data,"PDD4",4)) {
         p+=5;pd_training *t=&candidate.training;
         for(int i=0;i<4;i++)if(p[i]>1)return false;
         t->available=*p++;t->half_checks=*p++;t->poisoned=*p++;t->strength_advantage=*p++;t->saves=*p++;
@@ -125,6 +150,17 @@ bool pd_decode(const uint8_t *data,size_t size,pd_state *s,uint32_t *gen) {
         for(int i=0;i<PD_SKILLS;i++) { if(*p>60)return false;t->skill_bonus[i]=(int)*p++-30; }
         for(int i=0;i<6;i++) { if(*p>60)return false;t->save_bonus[i]=(int)*p++-30; }
         for(int i=0;i<6;i++) { if(*p>60)return false;t->check_bonus[i]=(int)*p++-30; }
+    }
+    if(!memcmp(data,"PDD4",4)) {
+        if(p[0]>1||p[5]>1||p[6]>1||p[7]>1)return false;
+        candidate.inventory_available=*p++;candidate.item_count=*p++;candidate.equipped=*p++;
+        candidate.combat.rage_bonus=*p++;candidate.combat.critical_dice=*p++;candidate.combat.raging=*p++;candidate.combat.power_attack=*p++;candidate.combat.thrown=*p++;
+        for(int i=0;i<PD_ITEMS;i++) {
+            pd_item *v=&candidate.items[i];memcpy(v->name,p,41);p+=41;memcpy(v->damage_type,p,25);p+=25;v->quantity=get16(&p);
+            v->kind=*p++;v->ability=*p++;v->count=*p++;v->sides=*p++;v->flags=*p++;v->reach=*p++;v->thrown_range=*p++;
+            if(p[0]>20||p[1]>20||p[2]>30)return false;
+            v->attack_modifier=(int)*p++-10;v->damage_modifier=(int)*p++-10;v->healing_modifier=*p++;
+        }
     }
     if (!pd_valid(&candidate)) return false;
     *s=candidate; *gen=get32(data+4); return true;

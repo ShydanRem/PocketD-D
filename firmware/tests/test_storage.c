@@ -5,6 +5,7 @@
 #include "../main/storage.c"
 #include "fixtures/state-v1.h"
 #include "fixtures/state-v2.h"
+#include "fixtures/state-v3.h"
 static uint8_t blobs[2][PD_RECORD_SIZE];static size_t sizes[2];
 static int fail_init,fail_set,fail_commit,fail_read,set_calls;
 static int index_of(const char *key) { return !strcmp(key,"state_a")?0:1; }
@@ -35,6 +36,10 @@ int main(void) {
     s.training.available=true;s.training.ranks[0]=2;s.training.skill_bonus[0]=-3;
     assert(pd_storage_save(&s));assert(!memcmp(blobs[1],legacy_v2,sizeof legacy_v2));
     reboot();assert(pd_storage_load(&s)&&s.training.available&&s.training.ranks[0]==2&&s.training.skill_bonus[0]==-3);
+    memset(sizes,0,sizeof sizes);memcpy(blobs[0],legacy_v3,sizeof legacy_v3);sizes[0]=sizeof legacy_v3;
+    reboot();unchanged=set_calls;assert(pd_storage_load(&s)&&!s.inventory_available&&s.training.ranks[0]==2&&set_calls==unchanged);
+    pd_demo(&s);s.items[1].quantity=1;s.hp=28;assert(pd_storage_save(&s));assert(!memcmp(blobs[0],legacy_v3,sizeof legacy_v3));
+    reboot();assert(pd_storage_load(&s)&&s.inventory_available&&s.items[1].quantity==1&&s.hp==28);
     memset(sizes,0,sizeof sizes);set_calls=0;reboot();
     assert(pd_storage_load(&s)&&s.hp==24);
     s.hp=23;assert(pd_storage_save(&s));uint8_t first[PD_RECORD_SIZE];memcpy(first,blobs[0],sizeof first);
@@ -51,7 +56,7 @@ int main(void) {
        a fully valid newer record may already exist, but old bank is preserved. */
     reboot();assert(pd_storage_load(&s)&&s.hp==19);
     /* A valid record from a future format must never be overwritten. */
-    pd_encode(&s,100,blobs[1]);blobs[1][3]='4';
+    pd_encode(&s,100,blobs[1]);blobs[1][3]='5';
     uint32_t crc=pd_crc32(blobs[1],PD_RECORD_SIZE-4);
     for(int i=0;i<4;i++)blobs[1][PD_RECORD_SIZE-4+i]=crc>>(8*i);
     reboot();assert(!pd_storage_load(&s)&&blocked);

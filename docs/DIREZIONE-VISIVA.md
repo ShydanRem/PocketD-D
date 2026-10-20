@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.20
+# Direzione visiva del dispositivo — v0.21
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -125,8 +125,8 @@ raccolta invariata. Nessun personaggio personale Beyond letto o modificato.
 
 1. Ulteriori silhouette e personalizzazioni, mantenendo esplicite le scelte del
    giocatore; eventuale aspetto dell'equipaggiamento dopo il porting dell'inventario.
-2. Estendere elenchi e dettagli già introdotti per le abilità a inventario,
-   attacchi, magie e testi lunghi. Icone specifiche e pochi
+2. Inventario e attacchi introdotti nella v0.21 con liste paginate e dettaglio
+   dei bonus; estendere il linguaggio a magie e testi lunghi. Icone specifiche e pochi
    tocchi per le azioni frequenti, evitando di stipare tutto nella schermata Eroe.
 3. Illustrazioni coordinate per nuove sezioni, stati vuoti e feedback delle azioni.
 4. Transizioni leggere e preferenza per ridurre le animazioni. Le animazioni
@@ -135,3 +135,8 @@ raccolta invariata. Nessun personaggio personale Beyond letto o modificato.
 Questa versione aggiunge personalizzazione e animazione alla base visiva; non
 completa il trasferimento della scheda estesa, il disegno pixel per pixel
 dell'avatar o le funzioni di alimentazione.
+
+La v0.21 aggiunge tre oggetti per pagina, quantità e arma scelta, dettaglio
+leggibile e vassoio compatto fino a 18 dadi. `inventory-preview.png` è una
+cattura LVGL host, non una foto dell'AMOLED. I nomi completi restano nel dettaglio;
+la lista li abbrevia per conservare quantità e aree touch.
