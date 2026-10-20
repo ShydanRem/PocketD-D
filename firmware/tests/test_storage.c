@@ -10,6 +10,7 @@
 #include "fixtures/state-v5.h"
 #include "fixtures/state-v6.h"
 #include "fixtures/state-v7.h"
+#include "fixtures/state-v8.h"
 static uint8_t blobs[2][2][PD_RECORD_SIZE];static size_t sizes[2][2];
 static int fail_init,fail_set,fail_commit,fail_read,set_calls,missing_layout;
 static int index_of(const char *key){return !strcmp(key,"state_a")?0:1;}
@@ -46,6 +47,10 @@ int main(void){
  memset(sizes,0,sizeof sizes);memcpy(blobs[1][0],golden_v7,sizeof golden_v7);sizes[1][0]=sizeof golden_v7;reboot();int v7_calls=set_calls;
  assert(pd_storage_load(&s)&&s.status.failures==2&&s.brightness==50&&!s.dim_timeout&&set_calls==v7_calls);s.brightness=80;s.dim_timeout=2;assert(pd_storage_save(&s));
  assert(!memcmp(blobs[1][0],golden_v7,sizeof golden_v7));reboot();assert(pd_storage_load(&s)&&s.brightness==80&&s.dim_timeout==2&&s.status.failures==2);
+ memset(sizes,0,sizeof sizes);memcpy(blobs[1][0],golden_v8,sizeof golden_v8);sizes[1][0]=sizeof golden_v8;reboot();int v8_calls=set_calls;
+ assert(pd_storage_load(&s)&&s.hp==29&&s.brightness==80&&s.dim_timeout==2&&!s.effect_count&&set_calls==v8_calls);
+ assert(pd_effect_set(&s,0,(pd_effect){.target=PD_EFFECT_MAX_HP,.value=10,.active=true}));pd_hp(&s,99);assert(s.hp==42&&pd_storage_save(&s));
+ assert(!memcmp(blobs[1][0],golden_v8,sizeof golden_v8));reboot();assert(pd_storage_load(&s)&&s.hp==42&&s.max_hp==32&&pd_max_hp(&s)==42&&s.effect_count==1&&s.brightness==80);
  memset(sizes,0,sizeof sizes);memcpy(blobs[0][0],legacy_v4,sizeof legacy_v4);sizes[0][0]=sizeof legacy_v4;missing_layout=1;reboot();
  assert(!pd_storage_load(&s)&&s.hp==17&&blocked&&!strcmp(status,"Layout da aggiornare"));int calls=set_calls;assert(!pd_storage_save(&s)&&set_calls==calls);missing_layout=0;
  memset(sizes,0,sizeof sizes);reboot();assert(pd_storage_load(&s)&&s.hp==24&&s.magic.available);s.hp=23;assert(pd_storage_save(&s));
@@ -54,8 +59,8 @@ int main(void){
  s.hp=21;assert(pd_storage_save(&s));assert(!memcmp(first,blobs[1][0],sizeof first));
  fail_set=1;s.hp=20;assert(!pd_storage_save(&s));fail_set=0;calls=set_calls;assert(!pd_storage_save(&s)&&calls==set_calls);reboot();assert(pd_storage_load(&s)&&s.hp==21);
  fail_commit=1;s.hp=19;assert(!pd_storage_save(&s)&&blocked);fail_commit=0;reboot();assert(pd_storage_load(&s)&&s.hp==19);
- sizes[1][1]=pd_encode(&s,100,blobs[1][1]);blobs[1][1][3]='9';uint32_t crc=pd_crc32(blobs[1][1],sizes[1][1]-4);for(int i=0;i<4;i++)blobs[1][1][sizes[1][1]-4+i]=crc>>(8*i);
+ sizes[1][1]=pd_encode(&s,100,blobs[1][1]);blobs[1][1][3]='X';uint32_t crc=pd_crc32(blobs[1][1],sizes[1][1]-4);for(int i=0;i<4;i++)blobs[1][1][sizes[1][1]-4+i]=crc>>(8*i);
  reboot();assert(!pd_storage_load(&s)&&blocked);blobs[1][0][0]=0;blobs[1][1][0]=0;reboot();assert(!pd_storage_load(&s));
  fail_init=1;reboot();assert(!pd_storage_load(&s));fail_init=0;fail_read=1;reboot();assert(!pd_storage_load(&s));
- puts("NVS: new/legacy partitions, golden v1..v7 migration without boot writes, missing layout, alternate banks, errors, rollback and future-version preservation passed");
+ puts("NVS: new/legacy partitions, golden v1..v8 migration without boot writes, missing layout, alternate banks, errors, rollback and future-version preservation passed");
 }

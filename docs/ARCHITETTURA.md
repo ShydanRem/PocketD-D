@@ -188,3 +188,13 @@ LVGL prima del rilascio. screen_service esercita tasti, blocchi e driver nel tas
 proprietario. Il setter usa l'API CO5300 pubblica dopo il drain DMA. PDD8 aggiunge
 due byte locali prima del CRC; USB v7 invariato, prefs conservate da import/undo.
 Fixture PDD7 generato dall'encoder a39413c. [Dettagli](SCHERMO-IMPOSTAZIONI.md).
+
+
+Incremento 0.26: pd_state mantiene CA/max_hp come basi e un elenco di otto
+pd_effect locali. pd_armor/pd_max_hp sommano solo i delta attivi; pd_effect_set
+valida il totale prima di applicare il limite ai correnti, senza allocare un
+intero stato sullo stack. Cure, pozioni, dadi vita e riposi usano lo stesso
+massimo effettivo. Le conferme riusano scratch in PSRAM; nessun tiro RNG.
+PDD9 aggiunge 33 byte a PDD8; USB v7 e backup PC v10 non cambiano. Fixture PDD8
+prodotto dall'encoder 9a5c946 prima della modifica, con dati sintetici. Scorciatoia
+10 Effetti, conferme/import protetti. [Uso e limiti](EFFETTI-LOCALI.md).

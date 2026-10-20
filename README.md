@@ -2,11 +2,12 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.25:** luminosità locale, attenuazione per inattività e risveglio con primo gesto assorbito; nuova scorciatoia Schermo. Registro morte con d20 base animato, stabilizzazione e correzioni confermate; 30 condizioni annotate e Avvelenato come effetto separato. Riposi breve/lungo con anteprima e conferma, dadi vita per classe con cure animate, recupero lungo manuale/2014/2024 e scorciatoia Riposi. Magie/capacità sul dispositivo (120 voci), slot ordinari/patto, utilizzi e concentrazione con conferma. Tasti PWR/BOOT configurabili, con PWR lungo riservato all’alimentazione. Testi oltre 500 caratteri dichiarati come estratti. Inventario fino a 60 voci, armi scegliibili, attacchi/danni animati e critici fino a 18 dadi sul dispositivo. Cure e consumabili con conferma, salvataggio congiunto di PF/quantità e annullamento. Abilità e salvezze con competenza, maestria, mezza competenza, extra e dettaglio dei bonus. Le prove da verificare restano bloccate; le vecchie copie mantengono le prove di caratteristica e richiedono una nuova esportazione per competenze, inventario e magie mancanti. Avatar personale animato con 81 combinazioni, PF/annulla, contatori, dadi poliedrici e salvataggio offline. Supporto PC per importazione Beyond, configurazione, backup ed esportazione USB con anteprima e conferma sul display. Il firmware non è ancora collaudato sulla scheda fisica.
+**Stato v0.26:** fino a otto modificatori locali a CA/PF massimi, con basi conservate, anteprima, conferma, annullamento e scorciatoia Effetti; cure e riposi usano il massimo effettivo. Effetti completi e durate restano successivi. luminosità locale, attenuazione per inattività e risveglio con primo gesto assorbito; nuova scorciatoia Schermo. Registro morte con d20 base animato, stabilizzazione e correzioni confermate; 30 condizioni annotate e Avvelenato come effetto separato. Riposi breve/lungo con anteprima e conferma, dadi vita per classe con cure animate, recupero lungo manuale/2014/2024 e scorciatoia Riposi. Magie/capacità sul dispositivo (120 voci), slot ordinari/patto, utilizzi e concentrazione con conferma. Tasti PWR/BOOT configurabili, con PWR lungo riservato all’alimentazione. Testi oltre 500 caratteri dichiarati come estratti. Inventario fino a 60 voci, armi scegliibili, attacchi/danni animati e critici fino a 18 dadi sul dispositivo. Cure e consumabili con conferma, salvataggio congiunto di PF/quantità e annullamento. Abilità e salvezze con competenza, maestria, mezza competenza, extra e dettaglio dei bonus. Le prove da verificare restano bloccate; le vecchie copie mantengono le prove di caratteristica e richiedono una nuova esportazione per competenze, inventario e magie mancanti. Avatar personale animato con 81 combinazioni, PF/annulla, contatori, dadi poliedrici e salvataggio offline. Supporto PC per importazione Beyond, configurazione, backup ed esportazione USB con anteprima e conferma sul display. Il firmware non è ancora collaudato sulla scheda fisica.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
 - [Direzione visiva: pixel art moderna e anteprime del firmware](docs/DIREZIONE-VISIVA.md)
+- [Effetti locali: CA, PF massimi, conferme e limiti](docs/EFFETTI-LOCALI.md)
 - [Schermo: luminosità, inattività, risveglio e limiti energetici](docs/SCHERMO-IMPOSTAZIONI.md)
 - [Stato, condizioni e morte: uso, regole base e limiti](docs/STATO-CONDIZIONI-MORTE.md)
 - [Riposi e dadi vita: uso, recuperi, compatibilità e limiti](docs/RIPOSI-RECUPERI.md)
@@ -265,3 +266,20 @@ protetti. Preferenze conservate da import e annullamento; PDD8 con lettura dei
 formati precedenti, USB v7 e layout flash invariati. Il driver CO5300 applica
 la luminosità, senza scritture PMIC. Non è ancora sospensione né una prova di
 autonomia. [Uso e verifiche](docs/SCHERMO-IMPOSTAZIONI.md).
+
+
+## Incremento 0.26 — effetti numerici locali
+
+Primo passo del blocco effetti sul dispositivo: **Usi → Stato → Effetti** gestisce
+otto modificatori numerati a CA o PF massimi, attivabili e modificabili con
+anteprima e conferma. Valori base importati conservati, nessuna cura implicita,
+limite dei PF correnti dichiarato prima della riduzione. Pozioni, dadi vita e
+lungo usano il massimo effettivo. Annullamento congiunto di effetto/PF e nuova
+scorciatoia Effetti per i tasti configurabili. USB v7/backup PC v10 invariati;
+PDD9 legge PDD1–PDD8 e mantiene il layout flash. Una nuova copia USB sostituisce
+anche gli effetti locali, con avviso e conferma; raccolta PC conservata.
+
+17266 casi indipendenti del modello, regressioni 138 JS/37751 confronti PC→USB→C,
+UI LVGL, migrazioni, sanitizzatori e build ESP32-S3. Questo non completa il motore
+delle condizioni: durate, resistenze, proprietà speciali e ricalcolo da oggetti
+restano da implementare. Nessun collaudo fisico. [Uso e limiti](docs/EFFETTI-LOCALI.md).

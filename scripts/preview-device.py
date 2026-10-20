@@ -79,3 +79,13 @@ if all((base/(name+'.ppm')).is_file() for name in status):
 for name in ['screen-settings','screen-configured','screen-error']:
     source=base/(name+'.ppm')
     if source.is_file():Image.open(source).save(base/(name+'.png'))
+
+# Explicit local modifier screens from the actual firmware UI.
+effects=['effects-list','effect-editor','effect-confirm','effect-cap']
+for name in effects+['effects-empty','effects-hero','effect-invalid','effects-last','effects-import']:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in effects):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(effects):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'effects-preview.png');print(base/'effects-preview.png')

@@ -34,7 +34,7 @@ bool pd_equip(pd_state *s,unsigned index) {
 bool pd_use_item(const pd_state *s,unsigned index,pd_random random,void *context,pd_state *next,pd_pool *roll,unsigned *gained) {
     if(!s||!next||!roll||!gained||!s->inventory_available||index>=s->item_count)return false;
     const pd_item *v=&s->items[index];if(!v->quantity||(v->kind!=PD_CONSUMABLE&&v->kind!=PD_HEALING))return false;
-    pd_pool r={0};if(v->kind==PD_HEALING&&(s->hp==s->max_hp||(!s->hp&&s->status.available&&s->status.failures==3)||!pd_roll_pool(v->sides,v->count,v->healing_modifier,false,random,context,&r)))return false;
+    pd_pool r={0};if(v->kind==PD_HEALING&&(s->hp==pd_max_hp(s)||(!s->hp&&s->status.available&&s->status.failures==3)||!pd_roll_pool(v->sides,v->count,v->healing_modifier,false,random,context,&r)))return false;
     *next=*s;next->items[index].quantity--;next->combat.thrown=false;unsigned old=s->hp;
     if(v->kind==PD_HEALING)pd_hp(next,r.total);
     *gained=next->hp-old;*roll=r;return true;

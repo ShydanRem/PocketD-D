@@ -423,5 +423,27 @@ int main(void) {
     page=DEVICE_SETTINGS;state.brightness=80;fail_brightness=true;screen_service(-1,0);assert(display_screen.failed&&display_screen.applied==70);screenshot("screen-error.ppm");
     unsigned attempts=brightness_calls;screen_service(-1,0);assert(brightness_calls==attempts);fail_brightness=false;lv_tick_inc(1000);screen_service(-1,0);assert(!display_screen.failed&&display_screen.applied==80);
     state.shortcuts[0]=8;act(850);click("PWR breve: Stato");assert(state.shortcuts[0]==9);shortcut(0);assert(page==DEVICE_SETTINGS);screenshot("screen-configured.ppm");
-    puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy and guarded physical buttons passed");
+    /* Explicit local deltas: draft/cancel, atomic confirmation, HP cap, undo and import. */
+    pd_demo(&state);page=STATUS_HOME;render();click("Effetti");assert(page==EFFECT_LIST);screenshot("effects-empty.ppm");
+    static pd_state effects_before;effects_before=state;unsigned effects_calls=random_calls,effects_saves=save_calls;
+    click("Aggiungi");click("+1");click("+1");assert(!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves);screenshot("effect-editor.ppm");
+    click("Anteprima");assert(page==EFFECT_CONFIRM);screenshot("effect-confirm.ppm");shortcut(0);act(100);assert(page==EFFECT_CONFIRM&&!stage_import(&imported_magic));
+    click("Indietro");click("Elenco");assert(!state.effect_count&&save_calls==effects_saves);click("Aggiungi");click("+1");click("+1");click("Anteprima");
+    fail_save=true;click("Conferma");assert(page==EFFECT_CONFIRM&&!memcmp(&state,&effects_before,sizeof state));fail_save=false;click("Conferma");
+    assert(page==EFFECT_LIST&&state.armor==16&&pd_armor(&state)==18&&state.effects[0].value==2&&random_calls==effects_calls);
+    effects_saves=save_calls;click("1. CA +2 | si");click("Anteprima");click("Conferma");assert(save_calls==effects_saves);
+    click("Aggiungi");click("Modifica: CA >");click("+10");click("Anteprima");click("Conferma");assert(state.hp==24&&state.max_hp==32&&pd_max_hp(&state)==42);
+    pd_hp(&state,17);assert(state.hp==41);render();screenshot("effects-list.ppm");click("2. PF max +10 | si");click("Attivo: si");click("Anteprima");screenshot("effect-cap.ppm");
+    assert(state.hp==41&&scratch.hp==32);click("Conferma");assert(state.hp==32&&pd_max_hp(&state)==32);act(100);click("Annulla");assert(state.hp==41&&pd_max_hp(&state)==42&&pd_armor(&state)==18);screenshot("effects-hero.ppm");
+    act(1700);click("2. PF max +10 | si");click("Rimuovi");assert(effect_removing&&page==EFFECT_CONFIRM);click("Indietro");click("Elenco");assert(state.effect_count==2&&state.hp==41);
+    click("2. PF max +10 | si");click("Rimuovi");click("Conferma");assert(state.effect_count==1&&state.hp==32&&pd_max_hp(&state)==32);
+    /* Invalid totals cannot be confirmed through touch or synthetic actions. */
+    state.armor=38;render();click("Aggiungi");click("+1");click("Anteprima");effects_before=state;effects_saves=save_calls;act(1709);assert(page==EFFECT_CONFIRM&&save_calls==effects_saves&&!memcmp(&state,&effects_before,sizeof state));screenshot("effect-invalid.ppm");
+    click("Indietro");click("Elenco");state.armor=16;
+    for(unsigned i=state.effect_count;i<PD_EFFECTS;i++)assert(pd_effect_set(&state,i,(pd_effect){PD_EFFECT_MAX_HP,1,true}));
+    page=EFFECT_LIST;effect_page=2;render();bounds();screenshot("effects-last.ppm");click("8. PF max +1 | si");assert(effect_index==7);click("Elenco");
+    assert(stage_import(&imported_magic)&&pending.effect_count==0);screenshot("effects-import.ppm");click("Annulla");assert(state.effect_count==8);
+    state.shortcuts[0]=9;act(850);click("PWR breve: Schermo");assert(state.shortcuts[0]==10);shortcut(0);assert(page==EFFECT_LIST);
+    assert(stage_import(&imported_magic));click("Conferma");assert(!state.effect_count&&state.shortcuts[0]==10&&state.max_hp==32&&pd_max_hp(&state)==32);
+    puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects and guarded physical buttons passed");
 }

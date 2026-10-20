@@ -51,3 +51,8 @@ The v0.25 screen controller and input quarantine are original PocketD-D code.
 Brightness uses the public esp_lcd_panel_co5300_set_brightness API in the pinned
 Espressif component; its SPI implementation handles QSPI and DCS 0x51. No new
 PMIC code, dependencies or external artwork is introduced.
+
+
+The v0.26 local numeric modifier model, editor and fixtures are original
+PocketD-D code. No rules catalogue, character data, external assets or new
+runtime dependency is introduced.

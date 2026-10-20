@@ -6,7 +6,7 @@
 #define PD_RESOURCES 8
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
-#define PD_RECORD_SIZE 74157
+#define PD_RECORD_SIZE 74190
 #define PD_POWERS 120
 #define PD_POWER_TEXT_BYTES 501
 #define PD_ITEMS 60
@@ -51,6 +51,10 @@ typedef struct { bool available; uint8_t count; pd_hit_die pools[PD_HIT_POOLS]; 
 #define PD_CONDITIONS 30
 typedef struct { char name[61]; uint8_t level; } pd_condition;
 typedef struct { bool available; uint8_t count,successes,failures; bool stabilized; pd_condition conditions[PD_CONDITIONS]; } pd_status;
+#define PD_EFFECTS 8
+enum { PD_EFFECT_ARMOR,PD_EFFECT_MAX_HP };
+/* Explicit additive deltas to the imported bases; no rule inferred from a label. */
+typedef struct { uint8_t target; int16_t value; bool active; } pd_effect;
 typedef struct {
     char name[PD_NAME_BYTES];
     uint16_t hp, max_hp, temp_hp;
@@ -66,6 +70,8 @@ typedef struct {
     pd_magic magic;
     pd_recovery recovery;
     pd_status status;
+    uint8_t effect_count;
+    pd_effect effects[PD_EFFECTS];
     uint8_t brightness,dim_timeout; /* Device-local: 10..100%, off/30/60/120s. */
     uint8_t shortcuts[3]; /* PWR short, BOOT short, BOOT long; device-local. */
 } pd_state;
@@ -73,6 +79,13 @@ typedef struct { uint8_t dice[2], count, natural; int total, bonus; } pd_roll;
 typedef uint32_t (*pd_random)(void *context);
 void pd_demo(pd_state *state);
 bool pd_valid(const pd_state *state);
+int pd_effect_bonus(const pd_state *state,unsigned target);
+unsigned pd_armor(const pd_state *state);
+unsigned pd_max_hp(const pd_state *state);
+/* Index == count appends. Invalid totals reject without changing the state.
+   A lower maximum caps current HP; a higher maximum never heals. */
+bool pd_effect_set(pd_state *state,unsigned index,pd_effect effect);
+bool pd_effect_remove(pd_state *state,unsigned index);
 int pd_modifier(int score);
 void pd_hp(pd_state *state, int delta);
 bool pd_resource_change(pd_state *state, unsigned index, int delta);

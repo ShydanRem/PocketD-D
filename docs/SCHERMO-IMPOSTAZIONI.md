@@ -1,5 +1,8 @@
 # Schermo e preferenze locali — v0.25
 
+> Documento della v0.25. La v0.26 aggiunge [effetti locali](EFFETTI-LOCALI.md)
+> e PDD9; il comportamento dello schermo rimane invariato.
+
 Il dispositivo aggiunge luminosità e attenuazione per inattività. Il PC rimane
 lo strumento di importazione/configurazione/backup; nessun servizio serve al tavolo.
 Questo blocco non implementa sospensione del microcontrollore o telemetria batteria.

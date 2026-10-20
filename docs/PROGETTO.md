@@ -56,11 +56,12 @@ Non fanno parte di questo traguardo: importazione Beyond, editor completo, incan
 
 L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco non impedisce le altre fasi. L'ordine delle fasi 0 e 1 può sovrapporsi se l'hardware non è immediatamente disponibile.
 
-## Punto attuale — v0.25
+## Punto attuale — v0.26
 
 | Blocco | Stato software | Cosa manca |
 | --- | --- | --- |
 | Scheda individuale offline | PF/temporanei, prove, abilità/salvezze, zaino, armi, magie, risorse, riposi e dadi vita nel firmware | Monete, storico persistente, effetti completi e regole speciali; sessione reale |
+| Effetti numerici | Otto modificatori locali a CA/PF massimi, basi separate, anteprima/conferma e cure integrate | Durate, resistenze, proprietà speciali e ricalcolo da equipaggiamento |
 | Stato e morte | Note delle condizioni, Avvelenato separato, d20 morte base e correzioni | Effetti delle altre condizioni, eccezioni e morte istantanea |
 | Grafica e comandi | Tema pixel art, avatar 81 combinazioni, dadi animati, PWR/BOOT configurabili | Leggibilità e precisione touch sulla scheda |
 | Impostazioni schermo | Luminosità, inattività e risveglio protetto nella v0.25 | Consumi misurati, sospensione, batteria e alimentazione |
@@ -149,14 +150,23 @@ L'incremento 0.11 rivede la presentazione fantasy, le icone e i comandi del disp
 
 L'incremento 0.12 anticipa le fasi 5 e 6 con un trasporto browser sostituibile. Il coordinatore conserva lo stato autorevole del party; ogni finestra mantiene la propria identità e riprende lo snapshot corrente dopo un'interruzione. I dati del party sono separati dalla raccolta personale. La prova con più finestre non completa le fasi hardware o la comunicazione tra dispositivi. Uso e limiti sono descritti in [PARTY.md](PARTY.md).
 
-Ordine dei prossimi incrementi: backup/ripristino dello stato aggiornato del
-dispositivo verso PC, poi collaudo fisico di uso/trasferimento e gestione
-energetica. Impostazioni schermo e attenuazione sono portate nella v0.25;
-sospensione e autonomia restano aperte. Riposi/dadi vita sono portati nella v0.23;
-registro morte base e note delle condizioni nella v0.24. Gli effetti completi
-rimangono un lavoro distinto con regole esplicite. Grafica
-e tasti accompagnano ogni vista, mantenendo le conferme touch. Importazione
-autonoma, party/griglia e scrittura Beyond successivi.
+Il percorso principale rimane articolato nei quattro blocchi concordati:
+
+1. **Scheda sul dispositivo:** magie/slot/capacità/concentrazione, riposi, dadi
+   vita e tiro morte base implementati; eccezioni e sessione fisica aperte.
+2. **Effetti:** priorità software attuale. La v0.26 aggiunge modificatori locali
+   espliciti a CA/PF massimi; seguono altre interazioni supportate, durate,
+   resistenze e proprietà speciali. Nessuna regola dedotta dai nomi delle note.
+3. **Prodotto fisico:** luminosità/attenuazione implementate; batteria,
+   sospensione/spegnimento e collaudo di touch, tasti, USB, memoria, fluidità e
+   perdita d'alimentazione restano aperti.
+4. **Estetica:** base pixel art, avatar e dadi animati implementati; illustrazioni,
+   icone specifiche, transizioni e feedback proseguono insieme alle viste.
+
+Il backup/ripristino dei progressi dal dispositivo verso PC rimane supporto
+necessario alla conservazione dei dati e ancora da completare. Non sostituisce
+il blocco effetti né sposta il prodotto sul PC. Importazione autonoma,
+party/griglia fra dispositivi e scrittura Beyond rimangono successivi.
 
 
 L'incremento 0.23 completa il blocco di riposi espliciti e dadi vita: anteprima,
@@ -176,7 +186,12 @@ La scorciatoia Stato si aggiunge alle assegnazioni fisiche esistenti.
 
 La v0.25 aggiunge impostazioni locali e prima gestione dell'inattività del
 pannello. Non completa la fase hardware/energia: niente percentuali batteria
-inventate o promesse d'autonomia. Il passo software seguente è poter conservare
-sul PC anche i progressi fatti sul dispositivo, senza sovrascrivere in silenzio
-la raccolta originale. Importazione autonoma e comunicazione fra dispositivi
+inventate o promesse d'autonomia. Il backup dei progressi dal dispositivo al PC rimane aperto, senza sovrascrivere
+in silenzio la raccolta originale. Importazione autonoma e comunicazione fra dispositivi
 rimangono successivi. [Dettagli](SCHERMO-IMPOSTAZIONI.md).
+
+
+La v0.26 avvia il blocco effetti con CA/PF massimi locali e valori base separati.
+Conferma touch, annullamento, cure e riposi rimangono coerenti; i tasti possono
+aprire Effetti senza confermare al posto del giocatore. È un modello numerico
+esplicito, non un ricalcolo generale delle regole D&D. [Dettagli](EFFETTI-LOCALI.md).

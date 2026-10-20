@@ -34,3 +34,6 @@ target_include_directories(status PRIVATE ../core)
 
 add_executable(screen test_screen.c ../core/screen.c)
 target_include_directories(screen PRIVATE ../core)
+
+add_executable(effects test_effects.c ../core/pocketdd.c ../core/magic.c ../core/checks.c ../core/status.c ../core/combat.c ../core/rest.c ../core/dice_pool.c)
+target_include_directories(effects PRIVATE ../core)

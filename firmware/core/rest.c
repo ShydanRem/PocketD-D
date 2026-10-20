@@ -19,7 +19,7 @@ bool pd_rest_apply(pd_state *s,const pd_rest_plan *plan) {
         regain+=selected;
     }
     if(regain>pd_hit_budget(s,plan->policy))return false;
-    if(plan->long_rest){pd_hp(s,s->max_hp);s->temp_hp=0;s->magic.concentration=0;s->status.successes=0;s->status.failures=0;s->status.stabilized=false;}
+    if(plan->long_rest){pd_hp(s,pd_max_hp(s));s->temp_hp=0;s->magic.concentration=0;s->status.successes=0;s->status.failures=0;s->status.stabilized=false;}
     pd_end_rage(s);s->combat.power_attack=false;
     if(s->magic.available) {
         for(unsigned i=0;i<9;i++) {
@@ -49,7 +49,7 @@ bool pd_rest_preview(const pd_state *s,const pd_rest_plan *plan,pd_state *scratc
     *out=result;return true;
 }
 bool pd_spend_hit_die(const pd_state *s,unsigned index,pd_random random,void *context,pd_state *next,pd_pool *roll,unsigned *gained) {
-    if(!s||!next||s==next||!roll||!gained||!random||!pd_valid(s)||!s->recovery.available||index>=s->recovery.count||!s->hp||s->hp==s->max_hp)return false;
+    if(!s||!next||s==next||!roll||!gained||!random||!pd_valid(s)||!s->recovery.available||index>=s->recovery.count||!s->hp||s->hp==pd_max_hp(s))return false;
     const pd_hit_die *h=&s->recovery.pools[index];if(h->used==h->maximum)return false;
     pd_pool result;if(!pd_roll_pool(h->die,1,pd_modifier(s->abilities[2]),true,random,context,&result))return false;
     *next=*s;next->recovery.pools[index].used++;pd_hp(next,result.total);
