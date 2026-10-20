@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.34
+# Direzione visiva del dispositivo — v0.35
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -239,3 +239,10 @@ proprietà, attivazione, timer e vincolo prima/dopo. I round distinguono ogni
 extra, senza nascondere la difesa complessiva ancora disponibile. Anteprima
 host: `firmware/tests/out/ui-build/multiple-defences-preview.png`; nessuna
 verifica di leggibilità fisica è stata dedotta dalle catture.
+
+
+La v0.35 rende visibile l'ordine delle sottrazioni: selettore con parte/tipo o
+intero colpo, quantità scelta ed eccedenza ignorata. Tipi → Conto mostra cinque
+passaggi fino al danno effettivo, preservati nel risultato. Anteprima host:
+`firmware/tests/out/ui-build/reductions-preview.png`; leggibilità fisica ancora
+da verificare sulla scheda.

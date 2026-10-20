@@ -95,3 +95,6 @@ private character JSON, credential, external artwork or dependency is introduced
 La v0.34 aggiunge codice, test e UI originali per tre extra difensivi, senza
 asset esterni. La fixture PDD14 è sintetica e proviene dall'encoder originale
 v0.33 `7cc17f8`; non contiene dati Beyond o informazioni personali.
+
+La v0.35 aggiunge codice, test e interfaccia originali per riduzioni esplicite
+prima/dopo e conto del colpo. Nessun nuovo asset esterno o dato personale.

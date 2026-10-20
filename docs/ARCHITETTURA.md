@@ -295,3 +295,17 @@ fine e rilancio di concentrazione includono tutti gli slot, anche inattivi per
 la rimozione dei vincoli. UI e NVS confermano l'intero candidato, non una sequenza
 di stati intermedi. PDD15 aggiunge 208 byte e legge PDD1–PDD14.
 [Dettagli](DIFESE-MULTIPLE.md).
+
+
+## Riduzioni esplicite del colpo — v0.35
+
+L'evento in RAM aggiunge un vettore parallelo di quantità prima delle difese e
+una quantità finale condivisa. La preview valida i valori prima di pubblicare
+output o usare RNG; sottrae per riga con pavimento zero, raggruppa i residui per
+tipo/proprietà, applica difese/arrotondamenti e sottrae una volta dal totale.
+PF/temporanei, guardie morte e COS ricevono quest'ultimo totale. Report completo
+con richieste, sottrazioni reali, somma dopo difese e gruppi originali; candidato
+e report si congelano insieme al dado sul retry. Editor generale e di parte
+mantengono bozze separate; rimozione/promozione muove riduzione e fonte insieme
+alla riga. Nessun campo nello stato persistente, PDD15/USB v7 invariati.
+[Dettagli](RIDUZIONI-DANNI.md).

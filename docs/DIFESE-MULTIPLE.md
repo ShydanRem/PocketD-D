@@ -1,5 +1,8 @@
 # Tre extra difensivi indipendenti — v0.34
 
+> Aggiornamento v0.35: [riduzioni esplicite prima/dopo e conto del colpo](RIDUZIONI-DANNI.md).
+> PDD15/USB v7/layout invariati; le regole automatiche di riduzione restano successive.
+
 Sul dispositivo ogni tipo di danno conserva una **base e tre extra**. Ogni
 extra ha proprietà, condizioni, attivazione, durata e vincolo alla concentrazione
 propri. La resistenza concessa da due extra non dimezza due volte il danno;

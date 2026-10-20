@@ -1,5 +1,8 @@
 # Danni ricevuti e difese per tipo — v0.28
 
+> Aggiornamento v0.35: [riduzioni esplicite prima/dopo e conto del colpo](RIDUZIONI-DANNI.md).
+> PDD15/USB v7/layout invariati; le regole automatiche di riduzione restano successive.
+
 > Aggiornamento v0.33: [condizioni difensive e fonte esplicita](DIFESE-CONDIZIONALI.md),
 > raggruppamento per applicabilità e PDD14. Le omissioni/formati sotto sono storici.
 

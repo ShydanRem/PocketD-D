@@ -36,18 +36,20 @@ static void resolve(const pd_state *s,unsigned type,pd_damage_context context,un
     }
 }
 bool pd_damage_event_preview(const pd_state *s,const pd_damage_event *event,pd_damage_event_summary *out) {
-    if(!s||!event||!out||!pd_valid(s)||!event->count||event->count>PD_DAMAGE_COMPONENTS||event->concentration>PD_CONCENTRATION_END)return false;
+    if(!s||!event||!out||!pd_valid(s)||!event->count||event->count>PD_DAMAGE_COMPONENTS||event->concentration>PD_CONCENTRATION_END||event->reduction_after>9999)return false;
     pd_damage_event_summary report={0};
     for(unsigned i=0;i<event->count;i++) {
         const pd_damage_component *c=&event->components[i];pd_damage_context context=event->contexts[i];
-        if(c->type>=PD_DAMAGE_TYPES||c->amount>9999||context.known>15||(context.values&~context.known))return false;
+        if(c->type>=PD_DAMAGE_TYPES||c->amount>9999||event->reductions[i]>9999||context.known>15||(context.values&~context.known))return false;
         unsigned flags,unresolved,needed;resolve(s,c->type,context,&flags,&unresolved,&needed);
         bool configured=(s->defences.configured&(1u<<c->type))!=0;
         if(!configured)report.missing|=1u<<c->type;
         else if(unresolved){report.context_missing|=1u<<i;report.needed[i]=needed;}
         unsigned group=0;while(group<report.count&&(report.groups[group].type!=c->type||report.groups[group].flags!=flags||report.groups[group].unresolved!=unresolved))group++;
         if(group==report.count){pd_damage_group *g=&report.groups[report.count++];g->type=c->type;g->flags=flags;g->unresolved=unresolved;g->configured=configured;}
-        report.groups[group].amount+=c->amount;report.raw+=c->amount;
+        unsigned reduction=event->reductions[i]<c->amount?event->reductions[i]:c->amount;
+        report.groups[group].amount+=c->amount;report.groups[group].reduction+=reduction;
+        report.raw+=c->amount;report.requested_before+=event->reductions[i];report.reduction_before+=reduction;
     }
     /* Same type + applied properties share one rounding. Different applicability
        stays separate, including magical/nonmagical portions of a single impact. */
@@ -57,10 +59,12 @@ bool pd_damage_event_preview(const pd_state *s,const pd_damage_event *event,pd_d
         report.groups[j]=g;
     }
     unsigned total=0;
-    for(unsigned i=0;i<report.count;i++){pd_damage_group *g=&report.groups[i];if(g->configured&&!g->unresolved){g->adjusted=adjusted(g->amount,g->flags);total+=g->adjusted;}}
+    for(unsigned i=0;i<report.count;i++){pd_damage_group *g=&report.groups[i];if(g->configured&&!g->unresolved){g->adjusted=adjusted(g->amount-g->reduction,g->flags);total+=g->adjusted;}}
     pd_damage_summary *r=&report.total;r->configured=!report.missing&&!report.context_missing;r->hp_after=s->hp;r->temp_after=s->temp_hp;r->max_hp_after=pd_max_hp(s);
     if(report.count==1)r->flags=report.groups[0].flags;
+    report.requested_after=event->reduction_after;
     if(r->configured){
+        report.mitigated=total;report.reduction_after=event->reduction_after<total?event->reduction_after:total;total-=report.reduction_after;
         r->adjusted=total;r->absorbed=total<s->temp_hp?total:s->temp_hp;r->temp_after-=r->absorbed;
         unsigned remainder=total-r->absorbed;r->hp_after=remainder<s->hp?s->hp-remainder:0;
         r->at_zero=!s->hp&&total>0;

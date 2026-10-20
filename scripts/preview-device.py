@@ -169,3 +169,13 @@ if all((base/(name+'.ppm')).is_file() for name in multiple):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(multiple):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'multiple-defences-preview.png');print(base/'multiple-defences-preview.png')
+
+# Explicit pre-defence allocations and a single post-defence impact reduction.
+reductions=['reduction-before','reduction-after','reduction-math','reduction-result']
+for name in reductions+['reduction-preview','reduction-groups','reduction-mixed','reduction-unknown','reduction-zero','reduction-retry','reduction-snapshot','reduction-last','reduction-maximum-group','reduction-maximum','reduction-maximum-damage']:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in reductions):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(reductions):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'reductions-preview.png');print(base/'reductions-preview.png')

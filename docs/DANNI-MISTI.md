@@ -1,5 +1,8 @@
 # Danni misti di un solo colpo — v0.32
 
+> Aggiornamento v0.35: [riduzioni esplicite prima/dopo e conto del colpo](RIDUZIONI-DANNI.md).
+> PDD15/USB v7/layout invariati; le regole automatiche di riduzione restano successive.
+
 > Aggiornamento v0.34: [tre extra indipendenti per tipo](DIFESE-MULTIPLE.md),
 > PDD15 con lettura PDD1–PDD14. I limiti sul singolo extra descritti qui sono storici.
 

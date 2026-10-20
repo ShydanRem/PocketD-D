@@ -1,10 +1,10 @@
-# Firmware PocketD-D 0.34 — extra difensivi indipendenti
+# Firmware PocketD-D 0.35 — riduzioni esplicite del colpo
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
-[Novità v0.34: tre extra difensivi indipendenti per tipo](DIFESE-MULTIPLE.md).
+[Novità v0.35: riduzioni prima/dopo e conto completo](RIDUZIONI-DANNI.md).
 PDD15, USB v7/layout invariati e lettura dei salvataggi precedenti.
 
 ## Stato e perimetro
@@ -636,3 +636,29 @@ Firmware v0.34: **880096 byte**, partizione app 4 MiB **79% libera**,
 ESP-IDF 5.5.5/LVGL 9.4.0. PDD15, USB v7/layout invariati. Nessun flash o
 collaudo fisico, nessuna lettura Beyond o modifica della raccolta personale.
 [Uso e limiti](DIFESE-MULTIPLE.md).
+
+
+## Verifiche v0.35 — riduzioni esplicite prima/dopo
+
+66560 casi indipendenti di tipo/proprietà/danno/riduzioni prima-dopo, con
+confronto del danno e dei PF/temporanei; 95728 assegnazioni/suddivisioni e tutte
+le 720 permutazioni di sei parti, una sola sottrazione finale. Eccedenze,
+immunità/zero, profili/fonti sconosciuti ancora bloccanti, campi malformati,
+rifiuti prima del RNG, CD sul totale finale e candidato PDD15. UI LVGL di editor
+generale/per parte, annulla/usa, promozione e aggiunta, conto completo e quantità
+scelte/effettive, retry fissato, esito originale dopo fine concentrazione,
+annullamento, import e tasti protetti. Anche sei parti, somme a cinque/sei cifre,
+totale massimo, controlli ≥44 px e testi senza sovrapposizioni.
+
+Suite firmware completa passata: migrazioni PDD1–PDD14 e record PDD15, parser,
+NVS/allocazioni, 37751 confronti PC→USB→C, dadi/tasti/schermo e regressioni
+404352 condizioni, 212992 extra/83349 fonti, 494312 misti/19968 suddivisioni,
+139904 danni, 78840 salvezze, 4608 vincoli, 32032 difese/64350 avanzamenti,
+17266 effetti e 40648 durate. ASan/UBSan su riduzioni, extra/condizioni/misti,
+danni/concentrazione/vincoli/difese, effetti/durate, magie/riposi/stato,
+allocazioni e UI; leak detector disattivato. 138 test JS e build PC passati.
+
+Firmware v0.35: **882288 byte**, partizione app 4 MiB **79% libera**;
+ESP-IDF 5.5.5/LVGL 9.4.0. PDD15/USB v7/layout invariati, quantità del colpo solo
+RAM. Nessun flash/collaudo fisico, nuova lettura Beyond o modifica della raccolta
+personale. [Uso e limiti](RIDUZIONI-DANNI.md).

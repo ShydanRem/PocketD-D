@@ -14,12 +14,16 @@ enum { PD_SOURCE_MAGICAL=1,PD_SOURCE_ATTACK=2,PD_SOURCE_SILVERED=4,PD_SOURCE_ADA
 typedef struct { uint8_t known,values; } pd_damage_context;
 typedef struct { unsigned type,amount; } pd_damage_component;
 /* One source/impact, not a sequence of separate hits. Count 1..6, amount 0..9999.
-   Same type + resolved defensive flags are summed before rounding. */
-typedef struct { unsigned count,concentration; pd_damage_component components[PD_DAMAGE_COMPONENTS]; pd_damage_context contexts[PD_DAMAGE_COMPONENTS]; } pd_damage_event;
-typedef struct { unsigned type,amount,adjusted,flags; bool configured; uint8_t unresolved; /* Property bits not decided by the known source facts. */ } pd_damage_group;
+   Subtract explicit per-part reductions (floor 0), group same type + resolved
+   flags before rounding, then subtract the final reduction once (floor 0). */
+typedef struct { unsigned count,concentration; pd_damage_component components[PD_DAMAGE_COMPONENTS]; pd_damage_context contexts[PD_DAMAGE_COMPONENTS];
+    unsigned reductions[PD_DAMAGE_COMPONENTS],reduction_after; /* Explicit per-part before defences, then once per impact; each 0..9999. */
+} pd_damage_event;
+typedef struct { unsigned type,amount,adjusted,flags,reduction; /* Actual pre-defence subtraction, before grouping/rounding. */ bool configured; uint8_t unresolved; /* Property bits not decided by the known source facts. */ } pd_damage_group;
 typedef struct {
     pd_damage_summary total; /* flags meaningful only when there is one group. */
     unsigned raw,count;
+    unsigned requested_before,requested_after,reduction_before,reduction_after,mitigated; /* mitigated: sum after defences, before final reduction. */
     uint16_t missing; /* Unconfigured damage-type bits. */
     uint8_t context_missing,needed[PD_DAMAGE_COMPONENTS]; /* Row bits, then needed trait bits per row. */
     pd_damage_group groups[PD_DAMAGE_COMPONENTS]; /* Sorted by type, effective flags and unresolved properties. */
