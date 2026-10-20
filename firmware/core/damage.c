@@ -19,10 +19,14 @@ static bool rule_applies(unsigned rule,unsigned values) {
 static void resolve(const pd_state *s,unsigned type,pd_damage_context context,unsigned *flags,unsigned *unresolved,unsigned *needed) {
     *flags=*unresolved=*needed=0;
     if(!pd_defence_conditional(s,type)){*flags=pd_defence_flags(s,type);return;}
-    unsigned base=pd_defence_base_flags(s,type),possible=0,truth[3]={0};const pd_defence_temporary *d=&s->defences.temporary[type];
+    unsigned base=pd_defence_base_flags(s,type),possible=0,truth[3]={0};
     for(unsigned values=0;values<16;values++)if((values&context.known)==context.values){
         possible|=1u<<values;
-        for(unsigned i=0;i<3;i++)if(((base&(1u<<i))&&rule_applies(s->defences.conditions[type][i],values))||(d->active&&(d->flags&(1u<<i))&&rule_applies(d->conditions[i],values)))truth[i]|=1u<<values;
+        for(unsigned i=0;i<3;i++){
+            bool applies=(base&(1u<<i))&&rule_applies(s->defences.conditions[type][i],values);
+            for(unsigned slot=0;slot<PD_DEFENCE_SLOTS;slot++){const pd_defence_temporary *d=pd_defence_grant(s,type,slot);applies|=d->active&&(d->flags&(1u<<i))&&rule_applies(d->conditions[i],values);}
+            if(applies)truth[i]|=1u<<values;
+        }
     }
     for(unsigned i=0;i<3;i++){if(truth[i]==possible)*flags|=1u<<i;else if(truth[i])*unresolved|=1u<<i;}
     /* Definite immunity makes uncertainty in resistance/vulnerability irrelevant. */

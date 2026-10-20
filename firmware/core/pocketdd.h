@@ -6,7 +6,7 @@
 #define PD_RESOURCES 8
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
-#define PD_RECORD_SIZE 74365
+#define PD_RECORD_SIZE 74573
 #define PD_POWERS 120
 #define PD_POWER_TEXT_BYTES 501
 #define PD_ITEMS 60
@@ -59,14 +59,17 @@ typedef struct { uint8_t target; int16_t value; bool active,timed; uint8_t round
 enum { PD_RESISTANCE=1,PD_VULNERABILITY=2,PD_IMMUNITY=4 };
 enum { PD_RULE_ALWAYS,PD_RULE_MAGICAL,PD_RULE_NONMAGICAL,PD_RULE_NONMAGICAL_ATTACK,
     PD_RULE_NON_SILVERED_ATTACK,PD_RULE_NON_ADAMANTINE_ATTACK,PD_RULE_NEITHER_ATTACK,PD_RULE_COUNT };
-/* One additional grant per damage type. Equal flags do not stack; the base stays separate. */
+/* Three independent grants per type. Equal flags do not stack; base stays separate. */
+#define PD_DEFENCE_SLOTS 3
+#define PD_DEFENCE_GRANTS (PD_DAMAGE_TYPES * PD_DEFENCE_SLOTS)
 typedef struct { uint8_t flags; bool active,timed; uint8_t rounds,concentration,conditions[3]; } pd_defence_temporary;
 typedef struct {
     uint16_t configured,resistance,vulnerability,immunity;
     pd_defence_temporary temporary[PD_DAMAGE_TYPES];
     uint8_t conditions[PD_DAMAGE_TYPES][3];
+    pd_defence_temporary additional[PD_DAMAGE_TYPES][PD_DEFENCE_SLOTS-1];
 } pd_defences;
-typedef struct { uint8_t effects_advanced,effects_expired; uint16_t defences_advanced,defences_expired; } pd_round_summary;
+typedef struct { uint8_t effects_advanced,effects_expired; uint64_t defences_advanced,defences_expired; /* Bit slot*13 + type. */ } pd_round_summary;
 typedef struct {
     char name[PD_NAME_BYTES];
     uint16_t hp, max_hp, temp_hp;
@@ -119,6 +122,9 @@ bool pd_defence_conditional(const pd_state *state,unsigned type);
 bool pd_defence_rule_set(pd_state *state,unsigned type,bool temporary,unsigned property,unsigned condition);
 bool pd_defence_set(pd_state *state,unsigned type,bool configured,unsigned flags);
 bool pd_defence_temporary_set(pd_state *state,unsigned type,pd_defence_temporary defence);
+/* Legacy setters above address slot 0; slots are stable and never compacted. */
+const pd_defence_temporary *pd_defence_grant(const pd_state *state,unsigned type,unsigned slot);
+bool pd_defence_grant_set(pd_state *state,unsigned type,unsigned slot,pd_defence_temporary defence);
 int pd_modifier(int score);
 void pd_hp(pd_state *state, int delta);
 bool pd_resource_change(pd_state *state, unsigned index, int delta);

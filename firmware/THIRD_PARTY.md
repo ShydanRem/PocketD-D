@@ -91,3 +91,7 @@ external artwork, credential, runtime service or dependency is introduced.
 The v0.33 bounded defence predicates, explicit source-fact editor and synthetic
 PDD13 migration fixture are original PocketD-D work. No rules catalogue,
 private character JSON, credential, external artwork or dependency is introduced.
+
+La v0.34 aggiunge codice, test e UI originali per tre extra difensivi, senza
+asset esterni. La fixture PDD14 è sintetica e proviene dall'encoder originale
+v0.33 `7cc17f8`; non contiene dati Beyond o informazioni personali.

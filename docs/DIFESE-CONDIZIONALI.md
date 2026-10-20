@@ -1,5 +1,8 @@
 # Difese condizionali e fonte del danno — v0.33
 
+> Aggiornamento v0.34: [tre extra indipendenti per tipo](DIFESE-MULTIPLE.md),
+> PDD15 con lettura PDD1–PDD14. I limiti sul singolo extra descritti qui sono storici.
+
 Le proprietà resistenza, vulnerabilità e immunità possono dipendere dalla
 fonte del danno. Le condizioni sono scelte esplicite, disponibili sul dispositivo
 offline e senza Foundry. Le proprietà di un colpo non vengono ricavate da nomi,

@@ -1,5 +1,8 @@
 # Danni misti di un solo colpo — v0.32
 
+> Aggiornamento v0.34: [tre extra indipendenti per tipo](DIFESE-MULTIPLE.md),
+> PDD15 con lettura PDD1–PDD14. I limiti sul singolo extra descritti qui sono storici.
+
 > Aggiornamento v0.33: [condizioni difensive e fonte esplicita](DIFESE-CONDIZIONALI.md),
 > raggruppamento per applicabilità e PDD14. Le omissioni/formati sotto sono storici.
 

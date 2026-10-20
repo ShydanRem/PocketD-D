@@ -281,3 +281,17 @@ risolte. Raggruppamento canonico per tipo/flags applicati, con separazione delle
 applicabilità diverse. Candidato e gruppi restano fissi sul retry. PDD14 aggiunge
 78 byte, massimo 74365, e legge PDD1–PDD13 con Sempre senza scritture al boot.
 Fonte solo RAM, USB v7/backup PC v10/layout invariati. [Dettagli](DIFESE-CONDIZIONALI.md).
+
+
+## Tre extra difensivi per tipo — v0.34
+
+La prima concessione mantiene posizione e API precedenti; due concessioni
+aggiuntive per tipo hanno gli stessi campi espliciti. `pd_defence_grant` e il
+setter validato accedono agli slot stabili 0–2. Il resolver valuta l'unione dei
+quattro contributi (base + tre extra) su ogni completamento compatibile della
+fonte, prima di raggruppare il danno. Il round usa 39 bit in maschere uint64_t;
+nessuna scadenza numerica respinta può avanzare un timer aggiuntivo. Conteggio,
+fine e rilancio di concentrazione includono tutti gli slot, anche inattivi per
+la rimozione dei vincoli. UI e NVS confermano l'intero candidato, non una sequenza
+di stati intermedi. PDD15 aggiunge 208 byte e legge PDD1–PDD14.
+[Dettagli](DIFESE-MULTIPLE.md).

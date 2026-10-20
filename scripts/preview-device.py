@@ -159,3 +159,13 @@ if all((base/(name+'.ppm')).is_file() for name in conditional):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(conditional):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'conditional-defences-preview.png');print(base/'conditional-defences-preview.png')
+
+# Stable extra slots with separate drafts, timers and concentration bindings.
+multiple=['multiple-picker','multiple-review','multiple-round','multiple-impact']
+for name in multiple+['multiple-editor','multiple-rules','multiple-list','multiple-surviving','multiple-import','multiple-full-round','multiple-last']:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in multiple):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(multiple):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'multiple-defences-preview.png');print(base/'multiple-defences-preview.png')

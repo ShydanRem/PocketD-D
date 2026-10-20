@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.33
+# Direzione visiva del dispositivo — v0.34
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -232,3 +232,10 @@ profili risolti di uno stesso tipo; il risultato mantiene i valori all'impatto.
 Le descrizioni lunghe vanno a capo, senza comprimere i pulsanti ≥44 px nel cerchio.
 `conditional-defences-preview.png` e le viste allegate sono render LVGL su host,
 non fotografie hardware. [Uso](DIFESE-CONDIZIONALI.md).
+
+
+La v0.34 mantiene numeri stabili per i tre extra e permette di consultare
+proprietà, attivazione, timer e vincolo prima/dopo. I round distinguono ogni
+extra, senza nascondere la difesa complessiva ancora disponibile. Anteprima
+host: `firmware/tests/out/ui-build/multiple-defences-preview.png`; nessuna
+verifica di leggibilità fisica è stata dedotta dalle catture.
