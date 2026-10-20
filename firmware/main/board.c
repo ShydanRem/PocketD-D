@@ -9,6 +9,7 @@
 #include "driver/spi_master.h"
 #include "driver/i2c_master.h"
 #include "esp_heap_caps.h"
+#include "driver/gpio.h"
 #include "esp_timer.h"
 #include "esp_random.h"
 #include "bootloader_random.h"
@@ -21,6 +22,13 @@ static esp_lcd_panel_handle_t panel;
 static esp_lcd_touch_handle_t touch;
 static SemaphoreHandle_t flushed;
 static int64_t last_tick;
+static i2c_master_dev_handle_t expander;
+static bool pwr_ready;
+static uint8_t pwr_polarity;
+static int pwr_level=-1;
+static int64_t buttons_read_at=-100;
+static esp_err_t expander_read(uint8_t reg,uint8_t *value) {return i2c_master_transmit_receive(expander,&reg,1,value,1,5);}
+
 static bool transfer_pending;
 static const co5300_lcd_init_cmd_t commands[]={
     {0xFE,(uint8_t[]){0x20},1,0}, {0x19,(uint8_t[]){0x10},1,0}, {0x1C,(uint8_t[]){0xA0},1,0},
@@ -79,6 +87,18 @@ void pd_board_init(void) {
     esp_lcd_touch_config_t tp={.x_max=RES,.y_max=RES,.rst_gpio_num=40,.int_gpio_num=11,
         .levels={.reset=0,.interrupt=0},.flags={.mirror_x=1,.mirror_y=1}};
     ESP_ERROR_CHECK(esp_lcd_touch_new_i2c_cst9217(tp_io,&tp,&touch));
+    /* Only P4 direction may change. Preserve every other expander bit and output.
+       PWR SYS_OUT is active high; do not touch AXP2101 charging/power registers. */
+    i2c_device_config_t ex={.dev_addr_length=I2C_ADDR_BIT_LEN_7,.device_address=0x20,.scl_speed_hz=400000};
+    if(i2c_master_bus_add_device(i2c,&ex,&expander)==ESP_OK) {
+        uint8_t direction=0;
+        if(expander_read(3,&direction)==ESP_OK&&expander_read(2,&pwr_polarity)==ESP_OK) {
+            uint8_t config[]={3,direction|0x10};
+            pwr_ready=(direction&0x10)||i2c_master_transmit(expander,config,sizeof config,5)==ESP_OK;
+        }
+    }
+    gpio_config_t key={.pin_bit_mask=UINT64_C(1)<<0,.mode=GPIO_MODE_INPUT,.pull_up_en=GPIO_PULLUP_DISABLE,.pull_down_en=GPIO_PULLDOWN_DISABLE,.intr_type=GPIO_INTR_DISABLE};
+    ESP_ERROR_CHECK(gpio_config(&key)); /* GPIO0 already has the board pull-up. */
     lv_init();
     lv_display_t *display=lv_display_create(RES,RES);
     uint8_t *buffer=heap_caps_malloc(RES*LINES*2,MALLOC_CAP_DMA|MALLOC_CAP_INTERNAL);
@@ -97,3 +117,12 @@ void pd_board_tick(void) {
     lv_timer_handler();
 }
 uint32_t pd_board_random(void *unused) { return esp_random(); }
+
+void pd_board_buttons(int levels[2]) {
+    int64_t now=esp_timer_get_time()/1000;
+    if(now-buttons_read_at>=20) {
+        buttons_read_at=now;uint8_t raw;
+        pwr_level=pwr_ready&&expander_read(0,&raw)==ESP_OK?((raw^pwr_polarity)&0x10?1:0):-1;
+    }
+    levels[0]=pwr_level;levels[1]=gpio_get_level(GPIO_NUM_0)==0;
+}

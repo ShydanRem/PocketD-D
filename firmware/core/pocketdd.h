@@ -6,12 +6,14 @@
 #define PD_RESOURCES 8
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
-#define PD_RECORD_SIZE 5184
+#define PD_RECORD_SIZE 71408
+#define PD_POWERS 120
+#define PD_POWER_TEXT_BYTES 501
 #define PD_ITEMS 60
 #define PD_ITEM_NAME_BYTES 41
 #define PD_NO_WEAPON 255
 #define PD_SKILLS 18
-#define PD_PACKET_MAX 32768
+#define PD_PACKET_MAX 262144
 
 typedef struct { char name[PD_RESOURCE_BYTES]; uint16_t current, maximum; } pd_resource;
 typedef struct { uint8_t skin,hair,cloak,style; } pd_avatar;
@@ -30,6 +32,19 @@ typedef struct {
     int8_t attack_modifier,damage_modifier,healing_modifier;
 } pd_item;
 typedef struct { uint8_t rage_bonus,critical_dice; bool raging,power_attack,thrown; } pd_combat;
+enum { PD_CONCENTRATES=1,PD_PREPARED=2,PD_USES_SLOT=4,PD_LIMITED=8,PD_PASSIVE=16,PD_EXCERPT=32 };
+typedef struct {
+    char name[41],description[PD_POWER_TEXT_BYTES];
+    uint8_t kind,level,flags,ability,maximum,remaining,recovery,effect;
+    int8_t attack_modifier,save_modifier;
+} pd_power;
+typedef struct { uint8_t current,maximum; } pd_slot;
+typedef struct {
+    bool available;
+    uint8_t count,concentration; /* 0: none, otherwise index + 1. */
+    pd_slot slots[9],pact[9];
+    pd_power powers[PD_POWERS];
+} pd_magic;
 typedef struct {
     char name[PD_NAME_BYTES];
     uint16_t hp, max_hp, temp_hp;
@@ -42,6 +57,8 @@ typedef struct {
     uint8_t item_count,equipped;
     pd_combat combat;
     pd_item items[PD_ITEMS];
+    pd_magic magic;
+    uint8_t shortcuts[3]; /* PWR short, BOOT short, BOOT long; device-local. */
 } pd_state;
 typedef struct { uint8_t dice[2], count, natural; int total, bonus; } pd_roll;
 typedef uint32_t (*pd_random)(void *context);
@@ -52,7 +69,8 @@ void pd_hp(pd_state *state, int delta);
 bool pd_resource_change(pd_state *state, unsigned index, int delta);
 pd_roll pd_d20(int bonus, int mode, pd_random random, void *context);
 uint32_t pd_crc32(const uint8_t *data, size_t size);
-void pd_encode(const pd_state *state, uint32_t generation, uint8_t out[PD_RECORD_SIZE]);
+size_t pd_encoded_size(const pd_state *state);
+size_t pd_encode(const pd_state *state, uint32_t generation, uint8_t out[PD_RECORD_SIZE]);
 bool pd_decode(const uint8_t *data, size_t size, pd_state *state, uint32_t *generation);
 bool pd_record_known(const uint8_t *data,size_t size);
 /* -1: neither record valid; otherwise newest valid bank, including uint32 wrap. */

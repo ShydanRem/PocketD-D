@@ -48,3 +48,12 @@ if all((base/(name+'.ppm')).is_file() for name in combat):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(combat):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'inventory-preview.png');print(base/'inventory-preview.png')
+
+magic=['magic-list','magic-detail','magic-text','keys']
+for name in magic+['magic-confirm','magic-status','magic-slots','magic-recovery','magic-last','magic-legacy']:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in magic):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(magic):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'magic-preview.png');print(base/'magic-preview.png')

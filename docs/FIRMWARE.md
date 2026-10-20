@@ -1,4 +1,4 @@
-# Firmware PocketD-D 0.21 — inventario e combattimento offline
+# Firmware PocketD-D 0.22 — magie, capacità e tasti configurabili
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
@@ -39,17 +39,21 @@ Usi → Zaino, scelta/rimozione arma, CA bersaglio, dettaglio bonus, danni e cri
 fino a 18 dadi, consumabili con conferma e annullamento. USB v4 e record PDD4,
 con lettura delle copie precedenti; niente oggetti inventati per schede vecchie.
 
+La v0.22 aggiunge [magie/capacità e tasti configurabili](MAGIE-TASTI.md),
+slot ordinari/patto, preparazione, utilizzi e concentrazione con conferma.
+USB v5, record PDD5 compatti in una nuova partizione NVS; vecchia area conservata.
+I testi oltre 500 caratteri sono estratti dichiarati; effetti delle magie al DM.
+
 Primo percorso: avvio con Elian originale o copia precedentemente salvata →
 Scheda → caratteristica → d20 → risultato → Eroe → PF ±1 → annulla →
 salvataggio locale. Anche PF temporanei e fino a otto contatori manuali.
 Vantaggio e svantaggio selezionabili dal pulsante Base/Vant/Svant. Durante il volo
 si può accelerare; modalità e navigazione attendono l'arresto del tiro.
 
-Non è ancora una scheda completa: mancano magie,
+Non è ancora una scheda completa: mancano riposi automatici,
 gestione completa di effetti/condizioni, morte, dadi vita,
 monete, storico persistente, mappa e party. Le prove applicano i contributi
-riconosciuti e trasferiti; i contesti da verificare restano bloccati. Le istantanee per prove e attacchi includono Avvelenato, Ira, attacco potente e dadi critici extra: non gestiscono
-durate, utilizzi o altri effetti. Il dado libero
+riconosciuti e trasferiti; i contesti da verificare restano bloccati. Le istantanee per prove e attacchi includono Avvelenato, Ira, attacco potente e dadi critici extra: Ira riconosciuta usa ora il contatore della capacità; altre durate e interazioni restano manuali. Il dado libero
 usa bonus zero. La CA è il valore esportato, non un ricalcolo dell'equipaggiamento.
 I contatori sono manuali: usarli non attiva effetti né riposi automatici.
 Il firmware tiene una sola scheda attiva; non sincronizza modifiche al PC.
@@ -74,8 +78,8 @@ DMA diretto da PSRAM. Un solo task possiede LVGL; il task USB passa copie
 validate attraverso una coda. Il trasferimento SPI termina prima di riutilizzare
 il buffer. Rettangoli allineati a coordinate pari come richiesto dal pannello.
 Le aree touch sono alte almeno 44 pixel e restano dentro il cerchio.
-Stack del task principale a 49152 byte per LVGL, stato e migrazione;
-task USB separato da 24576 byte. Il margine effettivo degli stack resta da misurare
+Stati estesi/linea USB in PSRAM e temporanei nel heap; stack principale da
+16384 byte, USB da 12288 byte. Il margine effettivo degli stack resta da misurare
 sulla scheda insieme a heap e PSRAM.
 
 Non vengono scritti registri di carica/voltaggio del PMIC AXP2101: si segue il
@@ -114,7 +118,10 @@ layout di fabbrica. L'archivio di questa versione include una cartella
 
 ### Prima accensione e flash: prova hardware ancora da fare
 
-Il layout PocketD-D ha NVS a 0x9000 e app a 0x10000, dimensione app 4 MB.
+Il layout conserva NVS legacy a 0x9000 e app a 0x10000 da 4 MiB.
+La v0.22 aggiunge `pdd_state` da 256 KiB a 0x410000, senza spostare quelle aree.
+Aggiornare solo l’app con layout v0.21 lascia il dispositivo in sola lettura:
+serve anche il nuovo layout, dopo backup. [Migrazione e downgrade](MAGIE-TASTI.md).
 **Scrivere bootloader/layout/app sostituisce il firmware di fabbrica.** Prima
 conservare una copia completa della flash e il recovery ufficiale della propria
 revisione; non mescolare immagini di versioni diverse. Il backup flash può
@@ -161,26 +168,27 @@ Nessun reset/flash, scrittura verso Beyond o modifica della raccolta da questo
 strumento. Il trasferimento fisico USB resta da collaudare, benché parser,
 protocollo host e conferma grafica siano testati separatamente.
 
-Formato `pocketdd-device` v4, massimo 32768 byte, campi esatti di base: `format`, `version`,
+Formato `pocketdd-device` v5, massimo 262144 byte, campi esatti di base: `format`, `version`,
 `name`, `level`, `hp`, `maxHp`, `tempHp`, `armorClass`, `abilities` e `resources`.
 Da v2 è obbligatorio anche `avatar`, con esattamente `skin`, `hair`, `cloak`,
 `style`: indici interi 0–2 corrispondenti alle scelte PC. Da v3 è obbligatorio
 `training`, con gradi, competenze, extra, mezze competenze, blocchi e le due
 istantanee; [schema completo](ABILITA-SALVEZZE.md). Il firmware accetta anche
-v1/v2/v3: v1 usa l'aspetto base, entrambe segnalano le competenze mancanti.
+v1/v2/v3/v4: v1 usa l'aspetto base; v1/v2 segnalano le competenze mancanti.
 Da v4 è obbligatorio `inventory`; [schema e omissioni](INVENTARIO-ATTACCHI.md).
+Da v5 è obbligatorio `magic`; [schema, testi e tasti locali](MAGIE-TASTI.md).
 La preferenza locale per
 l'animazione non viene trasferita dal PC: la conferma conserva quella già attiva.
-Il nuovo uploader negozia `PDD READY 1/2/3/4` e blocca una copia prima dell'invio
+Il nuovo uploader negozia `PDD READY 1/2/3/4/5` e blocca una copia prima dell'invio
 se il firmware non ne supporta la versione. Usare lo script di questa versione;
-i precedenti uploader non riconoscono `PDD READY 4`.
+i precedenti uploader non riconoscono `PDD READY 5`.
 Nome ASCII 1–48 byte, contatore 1–32; accenti traslitterati e altri simboli
 sostituiti nell'anteprima PC. Livello 1–20, caratteristiche 1–30, CA 1–40,
 PF 0–massimo (massimo 1–999), temporanei 0–999. Massimo otto contatori con
-`name`, `current` 0–maximum, `maximum` 1–999. Priorità: Slancio solo per schede
-originali/manuali, capacità con utilizzi, slot ordinari e slot patto. L'anteprima
-nomina i contatori esclusi oltre il limite. Nessun valore numerico viene troncato
-per farlo entrare. Nessun collegamento tra contatori con lo stesso nome.
+`name`, `current` 0–maximum, `maximum` 1–999. La v5 trasferisce Slancio per le
+schede originali/manuali; capacità e slot hanno riserve dedicate in `magic`,
+senza duplicazione nei contatori. Le vecchie copie conservano i loro contatori
+manuali senza trasformarli in magie. Nessun numero viene troncato per entrare.
 
 Il firmware rifiuta chiavi sconosciute/duplicate, valori frazionari, Unicode
 nel formato USB, strutture troppo annidate, payload troppo grandi e versioni
@@ -189,24 +197,17 @@ reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
 
 ## Salvataggio e dadi
 
-NVS nel namespace `pocketdd`, due chiavi alternate `state_a`/`state_b`.
-Record binario esplicito di 5184 byte, magic/versione `PDD4`, generazione uint32,
-CRC32; niente dump di struct C con padding. La nuova copia è scritta, committata
-e riletta prima di aggiornare lo stato visibile. Quella precedente rimane valida.
-All'avvio si sceglie la generazione valida più recente, incluso wrap del contatore.
-Una copia corrotta permette il recupero dall'altra; entrambe corrotte o versione
-sconosciuta con CRC valido bloccano scritture. Nessun erase/reformat automatico.
-Se un'operazione I/O fallisce, ulteriori scritture restano bloccate fino al riavvio;
-un errore di commit può avere esito ambiguo e non va dichiarato annullamento certo.
-La demo visualizzata con errore memoria non sostituisce dati salvati.
+NVS nel namespace `pocketdd`, nuova partizione `pdd_state`, due chiavi alternate
+`state_a`/`state_b`. Record PDD5 da **5168 + 552 × numero voci** byte, massimo
+71408. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
+visibile. Nessun dump di struct, erase o fallback distruttivo. Errori I/O o
+allocazioni insufficienti bloccano scritture; CRC e versioni future conservati.
 
-La v0.21 legge `PDD1/PDD2` da 384 byte e `PDD3` da 512 senza scritture al boot.
-PDD3 conserva la formazione; i formati precedenti la segnano non disponibile.
-Tutti segnalano inventario non importato: nessun inserimento di oggetti demo.
-La prima modifica confermata scrive PDD4 nell'altra banca. Profilo e formazione
-mantengono gli offset; inventario dall'offset 434, CRC alla fine dei 5184 byte.
-I firmware precedenti non leggono PDD4. Nessuna migrazione automatica all'indietro;
-conservare i backup prima di cambiare firmware. Partizioni non modificate.
+Se la nuova area è vuota, legge PDD1/PDD2 da 384 byte, PDD3 da 512 o PDD4 da
+5184 dalla vecchia `pdd_nvs`, aperta in sola lettura. Nessun record vecchio viene
+riscritto al boot o al primo salvataggio nuovo. Magie assenti restano dichiarate
+non importate. Il nuovo uploader supporta USB v1–v5. Preferenze avatar/tasti
+locali conservate durante l'importazione. [Dettagli](MAGIE-TASTI.md).
 
 PF e contatori vengono persistiti ad ogni modifica; “Annulla modifica” ripristina
 l'ultima modifica di sessione a PF/contatori/inventario e la salva, non la vecchia scheda dopo
@@ -355,3 +356,13 @@ CRC/troncamenti del nuovo record e consumo atomico verificati; controlli
 ASan/UBSan inclusi. [Dettaglio e limiti](INVENTARIO-ATTACCHI.md).
 La build ESP32-S3 è riuscita; nessun flash o lettura personale Beyond.
 App `822.368` byte, partizione da 4 MiB **80% libera**.
+
+## Verifiche v0.22 — magie e pulsanti
+
+131 test JavaScript; 10400 confronti aggiuntivi PC/USB/C, oltre ai 3498 precedenti.
+Costi, concentrazione/Ira, record compatti, migrazione golden v4, errori di
+allocazione, tasti e UI LVGL host verificati, anche con ASan/UBSan. Chromium
+verifica anteprima/download senza cambiare la raccolta effimera.
+Nessun nuovo accesso Beyond, modifica personale, flash o collaudo fisico.
+[Uso, sorgenti dei tasti e limiti](MAGIE-TASTI.md).
+Build v0.22: **833.072 byte**, partizione app da 4 MiB **80% libera**.

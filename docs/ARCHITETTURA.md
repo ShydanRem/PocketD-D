@@ -144,3 +144,11 @@ applicano consumo/PF nella stessa transazione; i tiri di attacco/danno restano
 transienti. `scripts/check-combat.js` confronta le regole C con il modello PC
 attraverso il parser effettivo, senza leggere dati personali. Dettagli, omissioni
 e verifiche in [INVENTARIO-ATTACCHI.md](INVENTARIO-ATTACCHI.md).
+
+Incremento 0.22: `core/magic.c` modella costi, slot/patto, concentrazione e
+capacità riconosciute; `core/buttons.c` filtra PWR/BOOT con azioni al rilascio.
+`board.c` legge BOOT GPIO0 e PWR dal TCA9554 P4 senza scritture PMIC. La UI
+conserva le preferenze locali agli import. USB v5, stati estesi in PSRAM,
+PDD5 compatti e nuova NVS a 0x410000; la partizione legacy resta in sola lettura.
+Selezione record senza allocazioni intermedie ambigue: OOM non diventa perdita
+silenziosa della banca più recente. [Schema e verifiche](MAGIE-TASTI.md).

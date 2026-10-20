@@ -6,19 +6,16 @@ export function projectDevice(input){
   const s=parseBackup(serialize(input));
   const warnings=[
     'Firmware iniziale: una sola scheda attiva. La conferma sul display sostituisce la copia sul dispositivo; la raccolta PC resta conservata.',
-    'Trasferisce nome, livello, aspetto dell’avatar, PF, PF temporanei, CA, caratteristiche, abilità, salvezze, inventario (60 voci), attacchi e fino a 8 contatori manuali. Non trasferisce la risposta originale di Beyond.',
+    'Trasferisce nome, livello, aspetto dell’avatar, PF, PF temporanei, CA, caratteristiche, abilità, salvezze, inventario (60 voci), attacchi, magie/capacità e fino a 8 contatori manuali. Non trasferisce la risposta originale di Beyond.',
     'Avatar originale: carnagione, colore/taglio dei capelli e mantello scelti sul PC. Non rappresenta equipaggiamento o immagini di Beyond. Animazione disattivabile dal dispositivo in Aspetto.',
-    'Non disponibili sul dispositivo: magie, gestione completa di condizioni/effetti, tiri salvezza contro morte, dadi vita, monete, mappa, party e storico.',
+    'Non disponibili sul dispositivo: gestione completa di condizioni/effetti, tiri salvezza contro morte, dadi vita, monete, mappa, party e storico.',
     'Prove con competenze, maestrie, bonus extra e mezza competenza riconosciuti dal PC. Le prove da verificare restano bloccate; per eccezioni del DM è disponibile il dado libero.',
-    'Avvelenato e vantaggio FOR da Ira sono fotografati al trasferimento. Non aggiornano condizioni, durate o utilizzi sul dispositivo. Effetti PC disattivabili per il singolo tiro; altri effetti restano da gestire con il DM.',
+    'Avvelenato e vantaggio FOR da Ira sono fotografati al trasferimento. Ira riconosciuta attivabile dalla capacità; altre condizioni e durate restano manuali. Effetti PC disattivabili per il singolo tiro; altri effetti restano da gestire con il DM.',
     'CA fotografata al momento dell’esportazione; non ricalcolata cambiando equipaggiamento. I contatori non applicano recuperi o effetti automatici.',
     'Nomi limitati ad ASCII: accenti traslitterati, altri simboli sostituiti; nome massimo 48 caratteri, contatori 32.'
   ];
-  const counters=[...(!s.importInfo?[{name:'Slancio',current:s.resolve,maximum:1}]:[]),
-    ...s.powers.filter(p=>p.type==='feature'&&!p.passive&&p.maxUses>0).map(p=>({name:p.name,current:p.remaining,maximum:p.maxUses})),
-    ...s.slots.flatMap((slot,i)=>slot.max>0?[{name:`Slot livello ${i+1}`,current:slot.current,maximum:slot.max}]:[]),
-    ...(s.extended?.pactSlots??[]).flatMap((slot,i)=>slot.max>0?[{name:`Patto livello ${i+1}`,current:slot.current,maximum:slot.max}]:[])];
-  if(counters.length>DEVICE_MAX_RESOURCES)warnings.push(`Contatori esclusi per limite di 8: ${counters.slice(DEVICE_MAX_RESOURCES).map(r=>r.name).join(', ')}.`);
+  // Structured resources belong to magic, never to duplicated manual counters.
+  const counters=!s.importInfo?[{name:'Slancio',current:s.resolve,maximum:1}]:[];
   const map=(names,source)=>Object.fromEntries(names.map(k=>[k,integer(source?.[k]??0,-30,30,k)]));
   const training={skillRanks:{...s.skillRanks},saveProficiencies:{...s.saveProficiencies},
     skillBonuses:map(skills.map(k=>k.id),s.extended?.skillBonuses),saveBonuses:map(abilityKeys,s.extended?.saveBonuses),checkBonuses:map(abilityKeys,s.extended?.checkBonuses),
@@ -34,13 +31,27 @@ export function projectDevice(input){
   warnings.push('Zaino: nomi, quantità, armi e cure riconosciute dal PC. Note e proprietà descrittive restano sul PC; gli oggetti generici non acquisiscono effetti automatici.');
   warnings.push('Attacchi: bonus e danni secondo il modello PC, avvelenato, Ira, attacco potente e critico extra fotografati al trasferimento. CA bersaglio manuale. Nessun consumo automatico di munizioni, resistenze, danni aggiuntivi o regole speciali dalle note.');
   warnings.push('Cambiare arma non ricalcola CA o avatar. Cure e consumabili richiedono conferma; Annulla sull’Eroe ripristina PF e quantità insieme. Le modifiche sul dispositivo non ritornano al PC.');
-  const packet={format:'pocketdd-device',version:4,name:ascii(s.name,48),level:integer(s.level,1,20,'Livello'),hp:integer(s.hp,0,999,'PF'),
+  const magic={powers:s.powers.map(p=>{
+    const description=String(p.description).normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').replace(/[^\x20-\x7e]/g,'?').trim();
+    const excerpt=description.length>500;
+    if(excerpt)warnings.push(`Descrizione in estratto (500 caratteri): ${p.name}. Testo completo conservato sul PC.`);
+    const uses=p.type==='feature'?p:p.limited;
+    return {name:ascii(p.name,40),description:description.slice(0,500),kind:p.type==='feature'?1:0,level:p.level??0,
+      flags:(p.concentration?1:0)|(p.prepared!==false?2:0)|(p.usesSpellSlot!==false?4:0)|(p.limited?8:0)|(p.passive?16:0)|(excerpt?32:0),
+      ability:abilityKeys.indexOf(p.castingAbility??s.spellcastingAbility),maximum:uses?.maxUses??0,remaining:uses?.remaining??0,
+      recovery:['manual','short','long'].indexOf(uses?.recovery??'manual'),effect:p.effect==='rage'?1:p.effect==='relentless-endurance'?2:0,
+      attackModifier:p.attackModifier??0,saveModifier:p.saveModifier??0};
+  }),slots:s.slots.map(v=>({current:v.current,maximum:v.max})),pact:(s.extended?.pactSlots??Array.from({length:9},()=>({current:0,max:0}))).map(v=>({current:v.current,maximum:v.max})),
+    concentration:s.concentration?s.powers.findIndex(p=>p.id===s.concentration)+1:0};
+  warnings.push('Magie e capacità: fino a 120 voci, descrizioni ASCII fino a 500 caratteri con estratti segnalati, slot ordinari/patto, utilizzi innati, preparazione e concentrazione. Consumo solo dopo conferma; effetti, danni e salvezze delle magie da risolvere con il DM.');
+  warnings.push('Recuperi di magie/capacità manuali: nessun riposo o recupero dadi vita automatico in questa versione. Tasti configurabili sul dispositivo; la copia conserva le preferenze locali.');
+  const packet={format:'pocketdd-device',version:5,name:ascii(s.name,48),level:integer(s.level,1,20,'Livello'),hp:integer(s.hp,0,999,'PF'),
     maxHp:integer(s.maxHp,1,999,'PF massimi'),tempHp:integer(s.extended?.tempHp??0,0,999,'PF temporanei'),armorClass:integer(s.armorClass,1,40,'CA'),
     avatar:Object.fromEntries(['skin','hair','cloak','style'].map(k=>[k,integer(s.avatar[k],0,2,k)])),
-    training,inventory,
+    training,inventory,magic,
     abilities:Object.fromEntries(abilityKeys.map(k=>[k,integer(s.abilities[k],1,30,k)])),
     resources:counters.slice(0,DEVICE_MAX_RESOURCES).map(r=>({name:ascii(r.name,32),current:integer(r.current,0,999,r.name),maximum:integer(r.maximum,1,999,r.name)}))};
-  if(serializeDevice(packet).length>32768)throw new Error('Copia oltre 32768 byte: nessun inventario troncato.');
+  if(serializeDevice(packet).length>262144)throw new Error('Copia oltre 262144 byte: nessun inventario troncato.');
   return {packet,warnings};
 }
 export const serializeDevice=packet=>JSON.stringify(packet);

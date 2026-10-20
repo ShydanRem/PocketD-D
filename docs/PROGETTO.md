@@ -75,7 +75,7 @@ anteprima USB coerente, animazione sobria e preferenza locale per fermarla.
 Il disegno pixel per pixel e nuove silhouette restano successivi.
 La v0.20 porta 18 abilità e sei salvezze nel firmware, con contributi spiegati,
 maestria, mezze competenze, extra e blocchi espliciti dei valori non verificati.
-La v0.21 porta inventario, attacchi/danni e cure. Magie, gestione completa di effetti/risorse, morte/dadi vita e storico rimangono da portare.
+La v0.21 porta inventario, attacchi/danni e cure. La v0.22 porta magie/capacità, slot ordinari/patto, utilizzi e concentrazione, oltre a PWR/BOOT configurabili. Restano riposi/recuperi automatici, gestione completa di effetti/stato, morte/dadi vita e storico.
 Il porting della scheda estesa procede con questa direzione visiva; collaudo
 hardware, alimentazione e autonomia restano attività necessarie in parallelo.
 Vedere [FIRMWARE.md](FIRMWARE.md) e [DIREZIONE-VISIVA.md](DIREZIONE-VISIVA.md).
@@ -121,7 +121,7 @@ L'hardware non è ancora disponibile. Lo sviluppo procede sulla simulazione e su
 2. **Completato nella 0.10:** inventario estensibile, armi e cure personalizzabili, mantenendo le regole dimostrative esplicite e la compatibilità dei backup.
 3. **Completato nella 0.11:** prima revisione di grafica, avatar e navigazione del display circolare con prove browser desktop/mobile. La verifica fisica resta aperta.
 4. **Completato nella 0.12:** primo protocollo di party tra finestre dello stesso browser, con iniziativa, turni, PF e mappa condivisi, riconnessione e deduplicazione. Restano collegamento tra dispositivi, associazione, controlli del party nel cerchio e gestione completa della sessione.
-5. Base firmware v0.15 preparata dagli esempi ufficiali. Completare collaudo della scheda: display/touch, USB, riavvio e perdita di alimentazione, PMIC e autonomia. Inventario e attacchi portati nella v0.21; portare poi magie e gli altri flussi, con le stesse verifiche del modello PC; SD e party successivi.
+5. Base firmware v0.15 preparata dagli esempi ufficiali. Completare collaudo della scheda: display/touch, USB, riavvio e perdita di alimentazione, PMIC e autonomia. Inventario/attacchi portati nella v0.21 e magie/capacità nella v0.22; portare poi recuperi, stato e gli altri flussi, con le stesse verifiche del modello PC; SD e party successivi.
 
 Codice e stato della roadmap vengono salvati su GitHub a ogni incremento verificato. Il recupero della v0.8 è documentato separatamente in [RECUPERO-v0.8.md](RECUPERO-v0.8.md).
 
@@ -132,3 +132,8 @@ L'incremento 0.11 rivede la presentazione fantasy, le icone e i comandi del disp
 
 
 L'incremento 0.12 anticipa le fasi 5 e 6 con un trasporto browser sostituibile. Il coordinatore conserva lo stato autorevole del party; ogni finestra mantiene la propria identità e riprende lo snapshot corrente dopo un'interruzione. I dati del party sono separati dalla raccolta personale. La prova con più finestre non completa le fasi hardware o la comunicazione tra dispositivi. Uso e limiti sono descritti in [PARTY.md](PARTY.md).
+
+Ordine dei prossimi incrementi: riposi e recuperi con regole esplicite; stato
+(morte, dadi vita, condizioni); impostazioni/energia e collaudo fisico. Grafica
+e tasti accompagnano ogni vista, mantenendo le conferme touch. Importazione
+autonoma, party/griglia e scrittura Beyond successivi.

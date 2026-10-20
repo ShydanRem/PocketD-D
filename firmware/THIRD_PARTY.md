@@ -32,3 +32,9 @@ The personalized avatar masks in `assets/avatar_atlas.h` and
 generator. `src/avatar-palette.json` preserves the existing PocketD-D palettes.
 The PC export preview and firmware share these masks and colors; no third-party
 avatar images or D&D Beyond portraits are embedded.
+
+The v0.22 physical-key mapping was checked against HARDWARE_REFERENCE.md and
+firmware/brookesia/components/ButtonTest/ButtonTest.cpp at the same pinned
+Waveshare commit. BOOT is active-low GPIO0; conditioned PWR is active-high
+TCA9554 P4. PocketD-D implements its own bounded polling/debounce state machine
+and preserves the other expander direction/output/polarity bits.

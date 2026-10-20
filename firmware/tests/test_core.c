@@ -8,9 +8,11 @@
 #include "fixtures/state-v1.h"
 #include "fixtures/state-v2.h"
 #include "fixtures/state-v3.h"
+#include "fixtures/state-v4.h"
 static void record_crc(uint8_t *record) {
-    uint32_t crc=pd_crc32(record,PD_RECORD_SIZE-4);
-    for(int i=0;i<4;i++)record[PD_RECORD_SIZE-4+i]=crc>>(8*i);
+    size_t size=5168; /* This test uses no powers; v5 fixed prefix + CRC. */
+    uint32_t crc=pd_crc32(record,size-4);
+    for(int i=0;i<4;i++)record[size-4+i]=crc>>(8*i);
 }
 static void reject(cJSON *root) {
     char *encoded=cJSON_PrintUnformatted(root);pd_state untouched,before;
@@ -34,34 +36,36 @@ int main(int argc,char **argv) {
     pd_roll r=pd_d20(-5,0,rng,NULL);assert(at==2&&r.natural==20&&r.total==15&&r.count==1);
     values[0]=0;values[1]=19;at=0;r=pd_d20(2,1,rng,NULL);assert(r.natural==20&&r.total==22);
     at=0;r=pd_d20(-1,-1,rng,NULL);assert(r.natural==1&&r.total==0);
-    uint8_t a[PD_RECORD_SIZE],b[PD_RECORD_SIZE];
+    uint8_t a[PD_RECORD_SIZE],b[PD_RECORD_SIZE];size_t record_size=pd_encoded_size(&s);
     assert(pd_decode(legacy_v1,sizeof legacy_v1,&out,&gen)&&gen==41&&out.hp==17&&out.temp_hp==4);
     assert(!out.avatar.skin&&!out.avatar.hair&&!out.avatar.cloak&&!out.avatar.style&&out.idle_animation);
     assert(!out.training.available);
     assert(pd_decode(legacy_v2,sizeof legacy_v2,&out,&gen)&&gen==42&&out.hp==17&&!out.idle_animation);
     assert(out.avatar.skin==2&&!out.training.available);
     assert(pd_decode(legacy_v3,sizeof legacy_v3,&out,&gen)&&gen==43&&out.training.ranks[0]==2&&out.training.poisoned&&!out.inventory_available&&out.equipped==PD_NO_WEAPON);
+    assert(pd_decode(legacy_v4,sizeof legacy_v4,&out,&gen)&&gen==44&&out.inventory_available&&out.item_count==3&&!out.magic.available&&out.shortcuts[0]==1);
     pd_demo(&s);s.avatar=(pd_avatar){2,1,2,1};s.idle_animation=false;
     for(int i=0;i<PD_SKILLS;i++) { s.training.ranks[i]=i%3;s.training.skill_bonus[i]=i-8; }
     for(int i=0;i<6;i++) { s.training.save_bonus[i]=i-2;s.training.check_bonus[i]=3-i; }
     s.training.saves=63;s.training.half_skills=0x3ffff;s.training.blocked=0x3fffffff;
     s.training.half_checks=true;s.training.poisoned=true;s.training.strength_advantage=true;
-    pd_encode(&s,42,b);assert(pd_decode(b,sizeof b,&out,&gen));
+    pd_encode(&s,42,b);assert(pd_decode(b,record_size,&out,&gen));
     assert(!memcmp(&s.avatar,&out.avatar,sizeof s.avatar)&&!out.idle_animation);
-    uint8_t encoded_again[PD_RECORD_SIZE];pd_encode(&out,gen,encoded_again);assert(!memcmp(b,encoded_again,sizeof b));
-    assert(pd_select(legacy_v1,sizeof legacy_v1,b,sizeof b,&out,&gen)==1&&gen==42);
-    b[368]=3;record_crc(b);assert(!pd_decode(b,sizeof b,&out,&gen));
-    pd_encode(&s,42,b);b[372]=2;record_crc(b);assert(!pd_decode(b,sizeof b,&out,&gen));
+    uint8_t encoded_again[PD_RECORD_SIZE];pd_encode(&out,gen,encoded_again);assert(!memcmp(b,encoded_again,record_size));
+    assert(pd_select(legacy_v1,sizeof legacy_v1,b,record_size,&out,&gen)==1&&gen==42);
+    b[368]=3;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
+    pd_encode(&s,42,b);b[372]=2;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
     pd_demo(&s);pd_encode(&s,41,a);s.hp=7;pd_encode(&s,42,b);
-    assert(pd_select(a,sizeof a,b,sizeof b,&out,&gen)==1&&out.hp==7&&gen==42);
-    /* Every single-bit corruption in newest bank falls back to intact older bank. */
-    for(size_t i=0;i<sizeof b;i++) for(int bit=0;bit<(i<8||i>=sizeof b-4?8:1);bit++) {
-        b[i]^=1<<bit;assert(pd_select(a,sizeof a,b,sizeof b,&out,&gen)==0&&out.hp==24);b[i]^=1<<bit;
+    assert(pd_select(a,record_size,b,record_size,&out,&gen)==1&&out.hp==7&&gen==42);
+    /* Every header/CRC bit and distributed payload corruption falls back to older bank. */
+    for(size_t i=0;i<record_size;i++) for(int bit=0;bit<((i<8||i>=record_size-4)?8:i%128==0?1:0);bit++) {
+        b[i]^=1<<bit;assert(pd_select(a,record_size,b,record_size,&out,&gen)==0&&out.hp==24);b[i]^=1<<bit;
     }
-    for(size_t len=0;len<sizeof b;len++)assert(pd_select(a,sizeof a,b,len,&out,&gen)==0);
+    for(size_t len=0;len<record_size;len++)assert(!pd_decode(b,len,&out,&gen));
+    assert(pd_select(a,record_size,b,record_size/2,&out,&gen)==0);
     assert(pd_select(NULL,0,NULL,0,&out,&gen)==-1);
     pd_encode(&s,UINT32_MAX,a);pd_encode(&s,0,b);
-    assert(pd_select(a,sizeof a,b,sizeof b,&out,&gen)==1&&gen==0);
+    assert(pd_select(a,record_size,b,record_size,&out,&gen)==1&&gen==0);
     assert(pd_crc32((const uint8_t*)"123456789",9)==0xcbf43926);
     if(argc==2) {
         FILE *f=fopen(argv[1],"rb");assert(f);char json[PD_PACKET_MAX+1];
@@ -73,7 +77,7 @@ int main(int argc,char **argv) {
         assert(!pd_parse_packet(json,n-1,&out));
         cJSON *base=cJSON_ParseWithLength(json,n),*v;assert(base);
         const char *numeric_keys[]={"version","level","hp","maxHp","tempHp","armorClass"};
-        double bad[]={5,21,33,0,-1,41};
+        double bad[]={6,21,33,0,-1,41};
         for (int i=0;i<6;i++) {
             v=cJSON_Duplicate(base,true);cJSON_ReplaceItemInObjectCaseSensitive(v,numeric_keys[i],cJSON_CreateNumber(bad[i]));reject(v);
         }
@@ -88,11 +92,11 @@ int main(int argc,char **argv) {
         v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"avatar");reject(v);
         v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),1);reject(v);
         v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),1);
-        cJSON_DeleteItemFromObjectCaseSensitive(v,"inventory");cJSON_DeleteItemFromObjectCaseSensitive(v,"training");cJSON_DeleteItemFromObjectCaseSensitive(v,"avatar");char *old=cJSON_PrintUnformatted(v);
+        cJSON_DeleteItemFromObjectCaseSensitive(v,"magic");cJSON_DeleteItemFromObjectCaseSensitive(v,"inventory");cJSON_DeleteItemFromObjectCaseSensitive(v,"training");cJSON_DeleteItemFromObjectCaseSensitive(v,"avatar");char *old=cJSON_PrintUnformatted(v);
         assert(pd_parse_packet(old,strlen(old),&out)&&out.avatar.skin==0&&out.idle_animation&&!out.training.available);
         cJSON_free(old);cJSON_Delete(v);
         v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),2);
-        cJSON_DeleteItemFromObjectCaseSensitive(v,"inventory");cJSON_DeleteItemFromObjectCaseSensitive(v,"training");old=cJSON_PrintUnformatted(v);
+        cJSON_DeleteItemFromObjectCaseSensitive(v,"magic");cJSON_DeleteItemFromObjectCaseSensitive(v,"inventory");cJSON_DeleteItemFromObjectCaseSensitive(v,"training");old=cJSON_PrintUnformatted(v);
         assert(pd_parse_packet(old,strlen(old),&out)&&out.avatar.skin==2&&!out.training.available);cJSON_free(old);cJSON_Delete(v);
         v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"training");reject(v);
         v=cJSON_Duplicate(base,true);cJSON *t=cJSON_GetObjectItemCaseSensitive(v,"training");
@@ -127,8 +131,18 @@ int main(int argc,char **argv) {
         cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetObjectItemCaseSensitive(inv,"combat"),"raging",cJSON_CreateNumber(1));reject(v);
         /* v3 USB keeps training but must never fabricate an inventory. */
         v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),3);
-        cJSON_DeleteItemFromObjectCaseSensitive(v,"inventory");old=cJSON_PrintUnformatted(v);
+        cJSON_DeleteItemFromObjectCaseSensitive(v,"magic");cJSON_DeleteItemFromObjectCaseSensitive(v,"inventory");old=cJSON_PrintUnformatted(v);
         assert(pd_parse_packet(old,strlen(old),&out)&&out.training.available&&!out.inventory_available&&out.equipped==PD_NO_WEAPON);cJSON_free(old);cJSON_Delete(v);
+        v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"magic");reject(v);
+        v=cJSON_Duplicate(base,true);cJSON *magic=cJSON_GetObjectItemCaseSensitive(v,"magic");
+        cJSON_ReplaceItemInObjectCaseSensitive(magic,"concentration",cJSON_CreateNumber(1));reject(v);
+        v=cJSON_Duplicate(base,true);magic=cJSON_GetObjectItemCaseSensitive(v,"magic");cJSON_AddNumberToObject(magic,"concentration",0);reject(v);
+        v=cJSON_Duplicate(base,true);magic=cJSON_GetObjectItemCaseSensitive(v,"magic");
+        cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetArrayItem(cJSON_GetObjectItemCaseSensitive(magic,"slots"),0),"current",cJSON_CreateNumber(10));reject(v);
+        v=cJSON_Duplicate(base,true);magic=cJSON_GetObjectItemCaseSensitive(v,"magic");
+        cJSON_AddItemToArray(cJSON_GetObjectItemCaseSensitive(magic,"powers"),cJSON_CreateObject());reject(v);
+        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),4);cJSON_DeleteItemFromObjectCaseSensitive(v,"magic");old=cJSON_PrintUnformatted(v);
+        assert(pd_parse_packet(old,strlen(old),&out)&&out.inventory_available&&!out.magic.available&&out.shortcuts[1]==3);cJSON_free(old);cJSON_Delete(v);
         /* Full boundary values remain representable, including all eight counters. */
         v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"maxHp"),999);
         cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"hp"),999);

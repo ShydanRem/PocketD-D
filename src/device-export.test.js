@@ -12,7 +12,7 @@ test('device export is a bounded projection and never mutates the source',()=>{
   const {packet,warnings}=projectDevice(s);
   assert.equal(packet.name,'Elian ??');assert.equal(packet.hp,24);assert.equal(packet.armorClass,16);
   assert.deepEqual(packet.abilities,s.abilities);assert.deepEqual(s,before);
-  assert.equal(packet.format,'pocketdd-device');assert.equal(packet.version,4);
+  assert.equal(packet.format,'pocketdd-device');assert.equal(packet.version,5);
   assert.equal(packet.resources[0].current,1);assert(warnings.some(w=>w.includes('inventario')));
   assert.equal(packet.inventory.items.length,s.inventory.length);assert.equal(packet.inventory.equipped,1);
 });
@@ -37,12 +37,11 @@ test('all avatar choices transfer as independent indices without changing any ch
   }
   const s=initialState();s.avatar.style=3;assert.throws(()=>projectDevice(s),/Avatar non valido/);
 });
-test('slot counters retain current values and excluded counters are named',()=>{
+test('all nine slot levels transfer without duplicated manual counters',()=>{
   const s=initialState();s.slots=s.slots.map((_,i)=>({max:3,current:i%3}));
-  const {packet,warnings}=projectDevice(s);
-  assert.equal(packet.resources.length,8);assert.equal(packet.resources[1].current,0);
-  assert.equal(packet.resources[2].current,1);
-  assert(warnings.some(w=>w.includes('Slot livello 8')&&w.includes('Slot livello 9')));
+  const {packet}=projectDevice(s);
+  assert.equal(packet.resources.length,1);assert.equal(packet.magic.slots.length,9);
+  packet.magic.slots.forEach((v,i)=>assert.deepEqual(v,{current:i%3,maximum:3}));
 });
 test('firmware limits reject values without silently clamping',()=>{
   const s=initialState();s.maxHp=1000;
@@ -58,14 +57,14 @@ test('extended imported projection preserves HP, temp HP and resources without d
   assert.deepEqual(packet.training.skillRanks,s.skillRanks);assert.deepEqual(packet.training.saveProficiencies,s.saveProficiencies);
   assert.deepEqual(packet.training.blockedChecks,s.extended.blockedChecks);
   for(const p of s.powers.filter(p=>p.type==='feature'&&!p.passive&&p.maxUses>0)){
-    const resource=packet.resources.find(r=>r.name===p.name);assert(resource);
-    assert.equal(resource.current,p.remaining);assert.equal(resource.maximum,p.maxUses);
+    const resource=packet.magic.powers.find(r=>r.name===p.name);assert(resource);
+    assert.equal(resource.remaining,p.remaining);assert.equal(resource.maximum,p.maxUses);
   }
   assert.deepEqual(s,before);assert(warnings.some(w=>w.includes('condizioni')));
   assert(!serializeDevice(packet).includes('importInfo'));
 });
 
-test('full 60-item inventory fits USB v4 without dropping quantities, including zero and escaped names',()=>{
+test('full 60-item inventory fits USB v5 without dropping quantities, including zero and escaped names',()=>{
   const s=initialState();s.inventory[1].quantity=0;
   while(s.inventory.length<60)s.inventory.push({id:`item-${s.inventory.length}`,name:'"Oggetto\\ lungo per il dispositivo abcde'.slice(0,40),type:'gear',quantity:999,notes:'Nota solo PC '.repeat(30)});
   const before=structuredClone(s),{packet,warnings}=projectDevice(s);
@@ -85,4 +84,20 @@ test('combat projection preserves recognized weapon and healing data; notes neve
   assert.equal(inv.items[0].flags,11);assert.equal(inv.items[0].thrownRange,4);
   assert.equal(inv.items[1].healingModifier,2);assert.equal(inv.items[3].kind,0);
   assert(!serializeDevice(packet).includes('+99'));
+});
+
+test('all 120 power rows fit v5; long descriptions are explicitly marked without mutating the source',()=>{
+  const s=initialState();s.extended=emptyExtended();s.powers=Array.from({length:120},(_,i)=>({id:`spell-${i}`,type:'spell',name:`Magia sintetica ${i}`,description:'"\\'.repeat(3000),level:i%10,concentration:false}));
+  const before=structuredClone(s),{packet,warnings}=projectDevice(s);
+  assert.equal(packet.magic.powers.length,120);assert(serializeDevice(packet).length<=262144);
+  for(const p of packet.magic.powers){assert.equal(p.description.length,500);assert(p.flags&32)}
+  assert.equal(warnings.filter(w=>w.startsWith('Descrizione in estratto')).length,120);assert.deepEqual(s,before);
+});
+test('magic projection keeps slot pools, innate uses, per-spell stats and concentration separate',()=>{
+  const s=initialState();s.extended=emptyExtended();s.slots[0]={max:3,current:2};s.extended.pactSlots[1]={max:2,current:1};
+  s.powers=[{id:'innate',type:'spell',name:'Innato',description:'Testo breve.',level:1,concentration:true,prepared:true,usesSpellSlot:false,castingAbility:'SAG',attackModifier:2,saveModifier:-1,limited:{maxUses:3,remaining:1,recovery:'long'}}];s.concentration='innate';
+  const {packet}=projectDevice(s),m=packet.magic;
+  assert.deepEqual(m.slots[0],{current:2,maximum:3});assert.deepEqual(m.pact[1],{current:1,maximum:2});assert.equal(m.concentration,1);
+  assert.equal(m.powers[0].flags,11);assert.equal(m.powers[0].ability,4);assert.equal(m.powers[0].remaining,1);assert.equal(m.powers[0].maximum,3);assert.equal(m.powers[0].recovery,2);
+  assert.equal(m.powers[0].description,'Testo breve.');assert.equal(packet.resources.length,1);
 });

@@ -1,6 +1,8 @@
 #include "pocketdd.h"
 #include <string.h>
 #include <limits.h>
+#include <stdlib.h>
+#include "magic.h"
 
 static bool text(const char *s, size_t cap) {
     size_t n = 0;
@@ -8,12 +10,13 @@ static bool text(const char *s, size_t cap) {
     return n > 0 && n < cap;
 }
 void pd_demo(pd_state *s) {
-    *s = (pd_state){.name="Elian", .hp=24, .max_hp=32, .level=3, .armor=16,
+    static const pd_state demo = {.name="Elian", .hp=24, .max_hp=32, .level=3, .armor=16,
         .abilities={14,16,14,10,12,8}, .resource_count=1,
         .resources={{.name="Slancio", .current=1, .maximum=1}},.idle_animation=true,.training={.available=true},.inventory_available=true,.item_count=3,.equipped=0,
         .items={{.name="Spada",.damage_type="Tagliente",.quantity=1,.kind=PD_WEAPON,.ability=0,.count=1,.sides=8,.flags=3,.reach=1},
         {.name="Pozione",.quantity=2,.kind=PD_HEALING,.count=2,.sides=4,.healing_modifier=2},
-        {.name="Torcia",.quantity=3,.kind=PD_CONSUMABLE}}};
+        {.name="Torcia",.quantity=3,.kind=PD_CONSUMABLE}},.magic={.available=true},.shortcuts={1,3,5}};
+    *s=demo;
 }
 bool pd_valid(const pd_state *s) {
     if (!text(s->name, sizeof s->name) || s->level < 1 || s->level > 20 ||
@@ -42,7 +45,7 @@ bool pd_valid(const pd_state *s) {
             if(v->kind==PD_WEAPON&&!v->reach)return false;
         }
     }
-    return true;
+    return pd_magic_valid(s)&&s->shortcuts[0]<=6&&s->shortcuts[1]<=6&&s->shortcuts[2]<=6;
 }
 int pd_modifier(int score) { return score / 2 - 5; }
 void pd_hp(pd_state *s, int delta) {
@@ -54,6 +57,7 @@ void pd_hp(pd_state *s, int delta) {
     }
     amount += s->hp;
     s->hp = amount < 0 ? 0 : amount > s->max_hp ? s->max_hp : amount;
+    if(!s->hp) {s->magic.concentration=0;s->combat.raging=false;if(s->magic.available)s->training.strength_advantage=false;}
 }
 bool pd_resource_change(pd_state *s, unsigned index, int delta) {
     if (index >= s->resource_count) return false;
@@ -88,9 +92,10 @@ static void put16(uint8_t **p, unsigned n) { *(*p)++=n; *(*p)++=n>>8; }
 static unsigned get16(const uint8_t **p) { unsigned n=(*p)[0]|((*p)[1]<<8); *p+=2; return n; }
 static void put32(uint8_t *p, uint32_t n) { for (int i=0;i<4;i++) p[i]=n>>(8*i); }
 static uint32_t get32(const uint8_t *p) { return (uint32_t)p[0]|((uint32_t)p[1]<<8)|((uint32_t)p[2]<<16)|((uint32_t)p[3]<<24); }
-void pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
-    memset(out, 0, PD_RECORD_SIZE);
-    memcpy(out, "PDD4", 4); put32(out+4,gen);
+size_t pd_encoded_size(const pd_state *s){return 5168u+552u*s->magic.count;}
+size_t pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
+    memset(out, 0, pd_encoded_size(s));
+    memcpy(out, "PDD5", 4); put32(out+4,gen);
     uint8_t *p=out+8;
     memcpy(p,s->name,PD_NAME_BYTES); p+=PD_NAME_BYTES;
     put16(&p,s->hp); put16(&p,s->max_hp); put16(&p,s->temp_hp);
@@ -117,16 +122,28 @@ void pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
         *p++=v->kind;*p++=v->ability;*p++=v->count;*p++=v->sides;*p++=v->flags;*p++=v->reach;*p++=v->thrown_range;
         *p++=v->attack_modifier+10;*p++=v->damage_modifier+10;*p++=v->healing_modifier;
     }
-    put32(out+PD_RECORD_SIZE-4,pd_crc32(out,PD_RECORD_SIZE-4));
+    const pd_magic *m=&s->magic;
+    *p++=m->available;*p++=m->count;*p++=m->concentration;
+    for(int i=0;i<9;i++){*p++=m->slots[i].current;*p++=m->slots[i].maximum;*p++=m->pact[i].current;*p++=m->pact[i].maximum;}
+    memcpy(p,s->shortcuts,3);p+=3;
+    for(int i=0;i<m->count;i++) {
+        const pd_power *v=&m->powers[i];memcpy(p,v->name,41);p+=41;memcpy(p,v->description,PD_POWER_TEXT_BYTES);p+=PD_POWER_TEXT_BYTES;
+        *p++=v->kind;*p++=v->level;*p++=v->flags;*p++=v->ability;*p++=v->maximum;*p++=v->remaining;*p++=v->recovery;*p++=v->effect;
+        *p++=v->attack_modifier+15;*p++=v->save_modifier+15;
+    }
+    size_t size=pd_encoded_size(s);put32(out+size-4,pd_crc32(out,size-4));return size;
 }
 bool pd_record_known(const uint8_t *data,size_t size) {
     return data&&((size==384&&(!memcmp(data,"PDD1",4)||!memcmp(data,"PDD2",4)))||
-                  (size==512&&!memcmp(data,"PDD3",4))||(size==PD_RECORD_SIZE&&!memcmp(data,"PDD4",4)));
+                  (size==512&&!memcmp(data,"PDD3",4))||(size==5184&&!memcmp(data,"PDD4",4))||(size>=5168&&size<=PD_RECORD_SIZE&&!memcmp(data,"PDD5",4)&&data[5123]<=PD_POWERS&&size==5168u+552u*data[5123]));
 }
-bool pd_decode(const uint8_t *data,size_t size,pd_state *s,uint32_t *gen) {
+static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint32_t *gen) {
     if (!pd_record_known(data,size) ||
         pd_crc32(data,size-4) != get32(data+size-4)) return false;
-    pd_state candidate={.equipped=PD_NO_WEAPON}; const uint8_t *p=data+8;
+    memset(allocated,0,sizeof *allocated);
+    #define candidate (*allocated)
+    candidate.equipped=PD_NO_WEAPON;candidate.shortcuts[0]=1;candidate.shortcuts[1]=3;candidate.shortcuts[2]=5;
+    const uint8_t *p=data+8;
     memcpy(candidate.name,p,PD_NAME_BYTES); p+=PD_NAME_BYTES;
     candidate.hp=get16(&p); candidate.max_hp=get16(&p); candidate.temp_hp=get16(&p);
     candidate.level=*p++; candidate.armor=*p++;
@@ -138,37 +155,58 @@ bool pd_decode(const uint8_t *data,size_t size,pd_state *s,uint32_t *gen) {
     candidate.idle_animation=true;
     if(memcmp(data,"PDD1",4)) {
         candidate.avatar=(pd_avatar){p[0],p[1],p[2],p[3]};
-        if(p[4]>1)return false;
+        if(p[4]>1)goto invalid;
         candidate.idle_animation=p[4]!=0;
     }
-    if(!memcmp(data,"PDD3",4)||!memcmp(data,"PDD4",4)) {
+    if(size>=512) {
         p+=5;pd_training *t=&candidate.training;
-        for(int i=0;i<4;i++)if(p[i]>1)return false;
+        for(int i=0;i<4;i++)if(p[i]>1)goto invalid;
         t->available=*p++;t->half_checks=*p++;t->poisoned=*p++;t->strength_advantage=*p++;t->saves=*p++;
         t->half_skills=get32(p);p+=4;t->blocked=get32(p);p+=4;
         for(int i=0;i<PD_SKILLS;i++)t->ranks[i]=*p++;
-        for(int i=0;i<PD_SKILLS;i++) { if(*p>60)return false;t->skill_bonus[i]=(int)*p++-30; }
-        for(int i=0;i<6;i++) { if(*p>60)return false;t->save_bonus[i]=(int)*p++-30; }
-        for(int i=0;i<6;i++) { if(*p>60)return false;t->check_bonus[i]=(int)*p++-30; }
+        for(int i=0;i<PD_SKILLS;i++) { if(*p>60)goto invalid;t->skill_bonus[i]=(int)*p++-30; }
+        for(int i=0;i<6;i++) { if(*p>60)goto invalid;t->save_bonus[i]=(int)*p++-30; }
+        for(int i=0;i<6;i++) { if(*p>60)goto invalid;t->check_bonus[i]=(int)*p++-30; }
     }
-    if(!memcmp(data,"PDD4",4)) {
-        if(p[0]>1||p[5]>1||p[6]>1||p[7]>1)return false;
+    if(!memcmp(data,"PDD4",4)||!memcmp(data,"PDD5",4)) {
+        if(p[0]>1||p[5]>1||p[6]>1||p[7]>1)goto invalid;
         candidate.inventory_available=*p++;candidate.item_count=*p++;candidate.equipped=*p++;
         candidate.combat.rage_bonus=*p++;candidate.combat.critical_dice=*p++;candidate.combat.raging=*p++;candidate.combat.power_attack=*p++;candidate.combat.thrown=*p++;
         for(int i=0;i<PD_ITEMS;i++) {
             pd_item *v=&candidate.items[i];memcpy(v->name,p,41);p+=41;memcpy(v->damage_type,p,25);p+=25;v->quantity=get16(&p);
             v->kind=*p++;v->ability=*p++;v->count=*p++;v->sides=*p++;v->flags=*p++;v->reach=*p++;v->thrown_range=*p++;
-            if(p[0]>20||p[1]>20||p[2]>30)return false;
+            if(p[0]>20||p[1]>20||p[2]>30)goto invalid;
             v->attack_modifier=(int)*p++-10;v->damage_modifier=(int)*p++-10;v->healing_modifier=*p++;
         }
     }
-    if (!pd_valid(&candidate)) return false;
-    *s=candidate; *gen=get32(data+4); return true;
+    if(!memcmp(data,"PDD5",4)) {
+        pd_magic *m=&candidate.magic;if(*p>1)goto invalid;m->available=*p++;m->count=*p++;m->concentration=*p++;
+        for(int i=0;i<9;i++){m->slots[i].current=*p++;m->slots[i].maximum=*p++;m->pact[i].current=*p++;m->pact[i].maximum=*p++;}
+        memcpy(candidate.shortcuts,p,3);p+=3;
+        for(int i=0;i<m->count;i++) {
+            pd_power *v=&m->powers[i];memcpy(v->name,p,41);p+=41;memcpy(v->description,p,PD_POWER_TEXT_BYTES);p+=PD_POWER_TEXT_BYTES;
+            v->kind=*p++;v->level=*p++;v->flags=*p++;v->ability=*p++;v->maximum=*p++;v->remaining=*p++;v->recovery=*p++;v->effect=*p++;
+            if(p[0]>45||p[1]>45)goto invalid;
+            v->attack_modifier=(int)*p++-15;v->save_modifier=(int)*p++-15;
+        }
+    }
+    if (!pd_valid(&candidate)) goto invalid;
+    *gen=get32(data+4);return true;
+invalid:
+    return false;
+    #undef candidate
+}
+bool pd_decode(const uint8_t *data,size_t size,pd_state *s,uint32_t *gen) {
+    if(!s||!gen||!pd_record_known(data,size))return false;
+    pd_state *candidate=malloc(sizeof *candidate);if(!candidate)return false;
+    uint32_t sequence;bool ok=decode_into(data,size,candidate,&sequence);
+    if(ok){*s=*candidate;*gen=sequence;}free(candidate);return ok;
 }
 int pd_select(const uint8_t *a,size_t as,const uint8_t *b,size_t bs,pd_state *s,uint32_t *gen) {
-    pd_state sa,sb; uint32_t ga=0,gb=0;
-    bool va=pd_decode(a,as,&sa,&ga), vb=pd_decode(b,bs,&sb,&gb);
-    if (!va && !vb) return -1;
-    bool use_b=vb && (!va || (gb != ga && (uint32_t)(gb-ga)<UINT32_C(0x80000000)));
-    *s=use_b?sb:sa; *gen=use_b?gb:ga; return use_b?1:0;
+    pd_state *states=malloc(2*sizeof *states);if(!states)return -1;
+    uint32_t ga=0,gb=0;
+    bool va=decode_into(a,as,&states[0],&ga),vb=decode_into(b,bs,&states[1],&gb);
+    if(!va&&!vb){free(states);return -1;}
+    bool use_b=vb&&(!va||(gb!=ga&&(uint32_t)(gb-ga)<UINT32_C(0x80000000)));
+    *s=states[use_b?1:0];*gen=use_b?gb:ga;free(states);return use_b?1:0;
 }

@@ -296,5 +296,46 @@ int main(void) {
     page=INVENTORY;render();bounds();
     pd_demo(&state);state.items[0].quantity=0;state.equipped=PD_NO_WEAPON;item_index=0;page=ITEM_DETAIL;render();bounds();screenshot("weapon-empty.ppm");page=INVENTORY;
     state.inventory_available=false;state.item_count=0;state.equipped=PD_NO_WEAPON;inventory_page=0;render();bounds();screenshot("inventory-legacy.ppm");
+    /* Full magic and configurable-key flows use the actual LVGL views/actions. */
+    pd_demo(&state);state.magic.count=6;state.magic.slots[0]=(pd_slot){2,3};state.magic.pact[0]=(pd_slot){1,1};state.combat.rage_bonus=2;
+    state.magic.powers[0]=(pd_power){.name="Luce sintetica",.description="Una luce originale per il test.",.flags=PD_PREPARED};
+    state.magic.powers[1]=(pd_power){.name="Scudo sintetico",.level=1,.flags=PD_PREPARED|PD_USES_SLOT|PD_CONCENTRATES|PD_EXCERPT,.ability=3};
+    snprintf(state.magic.powers[1].description,sizeof state.magic.powers[1].description,"%s",
+      "Una barriera di luce si accende intorno al viandante. Il mantello si solleva e piccoli frammenti luminosi disegnano un cerchio sul terreno. "
+      "Questa descrizione originale serve a verificare la lettura sul display rotondo. "
+      "Prima di usare una magia controlla preparazione, slot disponibile e concentrazione. "
+      "I valori di attacco e CD derivano dalla caratteristica indicata e dalla competenza. "
+      "Gli effetti sul bersaglio e le eccezioni si risolvono al tavolo con il DM. "
+      "Il testo completo resta nella copia sul PC quando questa vista contiene solo un estratto della descrizione personale.");
+    state.magic.powers[2]=(pd_power){.name="Innato sintetico",.level=2,.flags=PD_PREPARED|PD_LIMITED,.maximum=1,.remaining=1};
+    state.magic.powers[3]=(pd_power){.name="Ira sintetica",.kind=1,.effect=1,.maximum=2,.remaining=2};
+    state.magic.powers[4]=(pd_power){.name="Nota sintetica",.kind=1,.flags=PD_PASSIVE};
+    state.magic.powers[5]=(pd_power){.name="Resistenza sintetica",.kind=1,.effect=2,.maximum=1,.remaining=1};
+    assert(pd_valid(&state));page=RESOURCES;magic_filter=2;magic_page=0;render();bounds();click("Magie");screenshot("magic-list.ppm");
+    click("Scudo sintetico");assert(page==MAGIC_DETAIL&&cast_level==1&&!cast_pact);click("Slot 1 ordinario >");assert(cast_level==1&&cast_pact);screenshot("magic-detail.ppm");
+    click("Testo");assert(page==MAGIC_TEXT);screenshot("magic-text.ppm");click(">");assert(text_page==1);click("Indietro");
+    static pd_state before_magic;before_magic=state;unsigned magic_saves=save_calls;calls=random_calls;
+    click("Lancia");assert(page==MAGIC_CONFIRM&&!memcmp(&state,&before_magic,sizeof state)&&save_calls==magic_saves&&random_calls==calls);screenshot("magic-confirm.ppm");
+    shortcut(0);assert(page==MAGIC_CONFIRM&&!memcmp(&state,&before_magic,sizeof state));click("Indietro");click("Lancia");click("Conferma");
+    assert(page==MAGIC_DETAIL&&state.magic.concentration==2&&!state.magic.pact[0].current&&state.magic.slots[0].current==2&&random_calls==calls);
+    click("Elenco");click("Usi");click("Eroe");click("Annulla");assert(!state.magic.concentration&&state.magic.pact[0].current==1);
+    click("Usi");click("Magie");click("Scudo sintetico");click("Lancia");click("Conferma");click("Elenco");click("Risorse");screenshot("magic-status.ppm");
+    click("Concentrazione: termina");assert(page==MAGIC_STOP);shortcut(0);assert(page==MAGIC_STOP);click("Conferma");assert(!state.magic.concentration);
+    click("Slot ordinari / patto");assert(page==MAGIC_SLOTS);screenshot("magic-slots.ppm");unsigned slot_before=state.magic.slots[0].current;click("-1");assert(state.magic.slots[0].current==slot_before-1);click("+1");assert(state.magic.slots[0].current==slot_before);click("Patto");assert(slot_pact);click("-1");assert(!state.magic.pact[0].current);click("+1");assert(state.magic.pact[0].current==1);
+    click("Risorse");click("Elenco");click("Innato sintetico");click("Lancia");click("Conferma");assert(!state.magic.powers[2].remaining);click("Utilizzi");screenshot("magic-recovery.ppm");click("+1");assert(state.magic.powers[2].remaining==1);click("Indietro");
+    click("Elenco");click("Capacita");click("Ira sintetica");click("Usa");click("Conferma");assert(state.combat.raging&&state.training.strength_advantage&&state.magic.powers[3].remaining==1);
+    click("Elenco");click("Magie");click("Luce sintetica");before_magic=state;act(831);assert(page==MAGIC_DETAIL&&!memcmp(&state,&before_magic,sizeof state));
+    click("Elenco");click("Risorse");click("Ira: termina");click("Conferma");assert(!state.combat.raging&&!state.training.strength_advantage);
+    click("Elenco");click("Luce sintetica");magic_saves=save_calls;click("Lancia");click("Conferma");assert(save_calls==magic_saves); /* A cantrip with no state changes does not wear flash. */
+    click("Elenco");click("Scudo sintetico");click("Lancia");before_magic=state;fail_save=true;click("Conferma");assert(page==MAGIC_CONFIRM&&!memcmp(&state,&before_magic,sizeof state));fail_save=false;click("Indietro");
+    click("Elenco");click("Usi");click("Eroe");click("Aspetto");click("Tasti");assert(page==KEY_SETTINGS);screenshot("keys.ppm");
+    click("BOOT breve: Dadi");assert(state.shortcuts[1]==4);calls=random_calls;shortcut(1);assert(page==INVENTORY&&random_calls==calls);
+    shortcut(0);assert(page==HERO);state.shortcuts[1]=6;act(14);shortcut(1);assert(dice_animation.active);calls=random_calls;shortcut(0);assert(page==DICE&&dice_animation.active);shortcut(1);assert(!dice_animation.active&&random_calls==calls);
+    static pd_state imported_magic;pd_demo(&imported_magic);assert(stage_import(&imported_magic)&&pending.shortcuts[1]==6);shortcut(0);assert(import_pending);click("Annulla");
+    act(100);click("Aspetto");click("Tasti");before_magic=state;fail_save=true;act(860);assert(!memcmp(&state,&before_magic,sizeof state));fail_save=false;
+    pd_demo(&state);state.magic.count=PD_POWERS;for(unsigned i=0;i<PD_POWERS;i++)state.magic.powers[i]=(pd_power){.name="Magia sintetica lunga da consultare",.flags=PD_PREPARED};
+    page=MAGIC_LIST;magic_filter=2;magic_page=39;render();bounds();screenshot("magic-last.ppm");
+    memset(state.magic.powers[0].description,'W',500);state.magic.powers[0].description[500]=0;power_index=0;page=MAGIC_TEXT;text_page=3;render();bounds();
+    state.magic.available=false;state.magic.count=0;magic_page=0;page=MAGIC_LIST;render();bounds();screenshot("magic-legacy.ppm");
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px passed");
 }
