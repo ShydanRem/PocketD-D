@@ -1,5 +1,8 @@
 # Durate e scadenze degli effetti — v0.27
 
+> Aggiornamento v0.31: [difese temporanee, concentrazione e round comune](DIFESE-TEMPORANEE.md)
+> con PDD13. I limiti/formati dell’incremento sotto sono storici.
+
 > Aggiornamento v0.30: [effetti collegati alla concentrazione](EFFETTI-CONCENTRAZIONE.md),
 > fine/sostituzione congiunta e PDD12. I limiti e formati sotto sono storici.
 

@@ -76,3 +76,8 @@ no new external art, rules catalogue, runtime service or dependency is bundled.
 The v0.30 explicit effect/concentration binding, atomic end transitions and
 synthetic PDD11 migration fixture are original PocketD-D work. No private
 character data, rules catalogue, external artwork or dependency is introduced.
+
+
+The v0.31 additional defence grants, shared-round preview and synthetic PDD12
+fixture are original PocketD-D code. No external artwork, rules catalogue,
+private character data, credentials, runtime service or dependency is bundled.

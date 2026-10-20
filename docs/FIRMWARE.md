@@ -1,11 +1,11 @@
-# Firmware PocketD-D 0.30 — effetti e concentrazione
+# Firmware PocketD-D 0.31 — difese temporanee
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
-[Novità v0.30: vincoli degli effetti alla concentrazione](EFFETTI-CONCENTRAZIONE.md),
-PDD12 e lettura dei salvataggi precedenti.
+[Novità v0.31: difese temporanee e avanzamento comune](DIFESE-TEMPORANEE.md),
+PDD13 e lettura dei salvataggi precedenti.
 
 ## Stato e perimetro
 
@@ -233,8 +233,8 @@ reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
 ## Salvataggio e dadi
 
 NVS nel namespace `pocketdd`, nuova partizione `pdd_state`, due chiavi alternate
-`state_a`/`state_b`. Record PDD12 (tag `PDDC`) da **7982 + 552 × numero voci** byte, massimo
-74222. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
+`state_a`/`state_b`. Record PDD13 (tag `PDDD`) da **8047 + 552 × numero voci** byte, massimo
+74287. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
 visibile. Nessun dump di struct, erase o fallback distruttivo. Errori I/O o
 allocazioni insufficienti bloccano scritture; CRC e versioni future conservati.
 
@@ -248,9 +248,11 @@ PDD8 conserva le preferenze; le copie precedenti iniziano senza effetti locali.
 PDD9 conserva i modificatori con durata manuale, PDD10 conserva i timer; le
 vecchie copie iniziano con difese da configurare. PDD11 conserva le difese;
 le copie precedenti a PDD12 iniziano con effetti senza vincoli alla concentrazione.
-Otto byte prima del CRC contengono gli indici dei collegamenti (zero: nessuno).
-Le nuove scritture PDD12 richiedono firmware v0.30 o successivo:
-[compatibilità e downgrade](EFFETTI-CONCENTRAZIONE.md).
+PDD12 conserva i vincoli numerici; le copie precedenti a PDD13 iniziano senza
+extra temporanei alle difese. Dopo gli otto riferimenti numerici si aggiungono
+65 byte (proprietà/attivazione/timer/round/vincolo per 13 tipi), prima del CRC.
+Le nuove scritture PDD13 richiedono firmware v0.31 o successivo:
+[compatibilità e downgrade](DIFESE-TEMPORANEE.md).
 Il nuovo uploader supporta USB v1–v7. Preferenze avatar/tasti
 locali conservate durante l'importazione. [Dettagli](MAGIE-TASTI.md).
 
@@ -481,7 +483,7 @@ implicita. Regressioni 138 JS, build PC, 37751 confronti PC→USB→C e 17266 ca
 modificatori; fixture PDD1–PDD9 e NVS con durata salvata/riavvio/scadenza.
 UI LVGL host per bozze, conferme, errori/riprova, annullamento, import busy,
 scorciatoia Round e attenuazione sospesa. ASan/UBSan su core/parser, storage,
-effetti/durate, riposi, stato, allocazioni e UI; leak detector disattivato.
+effetti/durate, riposi, stato, core/parser, NVS, allocazioni e UI; leak detector disattivato.
 
 Build v0.27: **855360 byte**, partizione app da 4 MiB **80% libera**;
 ESP-IDF 5.5.5/LVGL 9.4.0, layout flash invariato. Nessun flash o prova fisica.
@@ -500,7 +502,7 @@ e CRC valido con campi invalidi. UI LVGL con bozze, conferme, retry, esiti della
 concentrazione, zero danni senza scritture, annullamento, limiti, import e tasti.
 Controllo delle sovrapposizioni fra pulsanti oltre alle dimensioni e al cerchio.
 ASan/UBSan su core/parser, storage, danni/difese, effetti/durate, riposi, stato,
-allocazioni e UI; leak detector disattivato nel sandbox.
+core/parser, NVS, allocazioni e UI; leak detector disattivato nel sandbox.
 
 Build v0.28: **860688 byte**, partizione app da 4 MiB **79% libera**;
 ESP-IDF 5.5.5/LVGL 9.4.0, layout invariato. Nessun flash, collaudo fisico,
@@ -516,7 +518,7 @@ conferma, successo/fallimento, save error con tiro fissato, opzioni bloccate,
 nessun rilancio dal risultato, canvas mancante, annullamento e fallback manuale.
 Regressioni 138 JS/build PC, 37751 confronti PC→USB→C, 139904 casi dei danni,
 17266 degli effetti e 40648 delle durate. ASan/UBSan su concentrazione/danni,
-allocazioni e UI; leak detector disattivato. PDD11 e layout invariati.
+core/parser, NVS, allocazioni e UI; leak detector disattivato. PDD11 e layout invariati.
 
 Build v0.29: **863008 byte**, partizione app da 4 MiB **79% libera**;
 ESP-IDF 5.5.5/LVGL 9.4.0. Il controller NVS rimane bloccato dopo errore I/O:
@@ -536,9 +538,29 @@ UI LVGL di vincolo/anteprima/fine, sostituzione, riposo, danni, errore e tiro
 fissato, annullamento e tasti protetti. Regressioni 138 JS/build PC,
 37751 confronti PC→USB→C, 17266 effetti, 40648 durate, 139904 danni e 78840
 salvezze. ASan/UBSan su vincoli/effetti/durate/danni/concentrazione,
-magie/riposi/stato, allocazioni e UI; leak detector disattivato nel sandbox.
+magie/riposi/stato, core/parser, NVS, allocazioni e UI; leak detector disattivato nel sandbox.
 
 Build v0.30: **865008 byte**, partizione app da 4 MiB **79% libera**;
 ESP-IDF 5.5.5/LVGL 9.4.0. PDD12, layout/USB v7 invariati. Nessun flash,
 collaudo fisico, nuova lettura Beyond o modifica della raccolta personale.
 [Uso e limiti](EFFETTI-CONCENTRAZIONE.md).
+
+
+## Verifiche v0.31 — difese temporanee
+
+32032 combinazioni indipendenti di proprietà base/extra, tipo, attivazione e
+danno; 64350 avanzamenti delle durate 1–99. Proprietà uguali non moltiplicate,
+base sconosciuta conservata, scadenze comuni e rifiuti atomici, difese all'impatto,
+CD/temporanei corretti e fine concentrazione congiunta. Fixture sintetica PDD12
+dall'encoder v0.30 `a9bcd6f`; lettura PDD1–PDD12 senza scritture al boot,
+prima modifica nella banca alternata e 65 campi corrotti con CRC valido.
+UI LVGL di base/extra, durata/vincolo, scadenze filtrate e paginazione dei 13 tipi,
+21 voci collegate, errore/riprova, annullamento e import; tasti e conferme protetti.
+Regressioni 138 JS/build PC, 37751 confronti PC→USB→C, 17266 effetti, 40648 durate,
+139904 danni, 78840 salvezze e 4608 vincoli. ASan/UBSan su extra/effetti/durate,
+danni/concentrazione/vincoli, magie/riposi/stato, core/parser, NVS, allocazioni e UI; leak detector
+disattivato nel sandbox. Nuove scritture PDD13; USB v7 e layout invariati.
+
+Build v0.31: **869200 byte**, partizione app da 4 MiB **79% libera**;
+ESP-IDF 5.5.5/LVGL 9.4.0. Nessun flash, collaudo fisico, nuova lettura Beyond
+o modifica della raccolta personale. [Uso e limiti](DIFESE-TEMPORANEE.md).

@@ -1,5 +1,8 @@
 # Effetti collegati alla concentrazione — v0.30
 
+> Aggiornamento v0.31: [difese temporanee, concentrazione e round comune](DIFESE-TEMPORANEE.md)
+> con PDD13. I limiti/formati dell’incremento sotto sono storici.
+
 Gli otto modificatori locali a CA/PF massimi possono essere associati
 **esplicitamente alla magia attualmente concentrata**. Quando quella
 concentrazione finisce, vengono disattivati e scollegati insieme. Il dispositivo

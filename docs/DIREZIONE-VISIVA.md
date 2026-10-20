@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.30
+# Direzione visiva del dispositivo — v0.31
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -205,3 +205,12 @@ Sostituzione, riposo e danni spiegano la fine degli effetti. Nessun nuovo asset;
 la vista conserva tema, centro leggibile e pulsanti ≥44 px nel cerchio.
 Preview `links-preview.png` e sette schermate sono render reali LVGL su host,
 non fotografie hardware. [Uso](EFFETTI-CONCENTRAZIONE.md).
+
+
+La v0.31 distingue Base e A tempo nelle difese: proprietà effettive e contributi
+base/extra nell'anteprima, durata e concentrazione in viste dedicate. +T segnala
+un extra attivo; il round comune mostra effetti/difese e apre il dettaglio delle
+sole difese con timer in avanzamento, tre per pagina. La navigazione conserva
+conferma touch e pulsanti ≥44 px nel cerchio. `temporary-defences-preview.png`
+e le viste allegate sono render LVGL su host, non catture hardware. Nessun nuovo
+asset esterno. [Uso](DIFESE-TEMPORANEE.md).

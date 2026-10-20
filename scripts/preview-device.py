@@ -129,3 +129,13 @@ if all((base/(name+'.ppm')).is_file() for name in links):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(links):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'links-preview.png');print(base/'links-preview.png')
+
+# Additional timed defences and a shared round confirmation, rendered by host LVGL.
+temporary=['temporary-editor','temporary-confirm','temporary-round-defences','temporary-result']
+for name in temporary+['temporary-duration','temporary-link','temporary-list','temporary-round','temporary-round-last','temporary-round-full','temporary-stop-maximum','temporary-expiry','temporary-damage','temporary-stop','temporary-unknown','temporary-invalid','temporary-import']:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in temporary):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(temporary):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'temporary-defences-preview.png');print(base/'temporary-defences-preview.png')

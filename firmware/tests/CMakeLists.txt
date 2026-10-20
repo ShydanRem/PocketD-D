@@ -49,3 +49,6 @@ target_include_directories(concentration PRIVATE ../core)
 
 add_executable(links test_links.c ../core/damage.c ../core/rest.c ../core/dice_pool.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
 target_include_directories(links PRIVATE ../core)
+
+add_executable(temporary-defences test_temporary_defences.c ../core/damage.c ../core/rest.c ../core/dice_pool.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
+target_include_directories(temporary-defences PRIVATE ../core)

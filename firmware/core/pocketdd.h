@@ -6,7 +6,7 @@
 #define PD_RESOURCES 8
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
-#define PD_RECORD_SIZE 74222
+#define PD_RECORD_SIZE 74287
 #define PD_POWERS 120
 #define PD_POWER_TEXT_BYTES 501
 #define PD_ITEMS 60
@@ -57,7 +57,13 @@ enum { PD_EFFECT_ARMOR,PD_EFFECT_MAX_HP };
 typedef struct { uint8_t target; int16_t value; bool active,timed; uint8_t rounds,concentration; /* 0 or current magic index + 1; cleared on end/recast. */ } pd_effect;
 #define PD_DAMAGE_TYPES 13
 enum { PD_RESISTANCE=1,PD_VULNERABILITY=2,PD_IMMUNITY=4 };
-typedef struct { uint16_t configured,resistance,vulnerability,immunity; } pd_defences;
+/* One additional grant per damage type. Equal flags do not stack; the base stays separate. */
+typedef struct { uint8_t flags; bool active,timed; uint8_t rounds,concentration; } pd_defence_temporary;
+typedef struct {
+    uint16_t configured,resistance,vulnerability,immunity;
+    pd_defence_temporary temporary[PD_DAMAGE_TYPES];
+} pd_defences;
+typedef struct { uint8_t effects_advanced,effects_expired; uint16_t defences_advanced,defences_expired; } pd_round_summary;
 typedef struct {
     char name[PD_NAME_BYTES];
     uint16_t hp, max_hp, temp_hp;
@@ -100,8 +106,14 @@ bool pd_effect_remove(pd_state *state,unsigned index);
 /* One explicit round for all active timed effects at once; output bitmasks
    and state remain untouched on invalid final totals. Zero rounds means expired. */
 bool pd_effect_advance(pd_state *state,uint8_t *advanced,uint8_t *expired);
+/* A single explicit round for all timed numeric effects and temporary defences.
+   A rejected numeric expiry leaves all timers and output unchanged. */
+bool pd_round_advance(pd_state *state,pd_round_summary *summary);
+unsigned pd_defence_base_flags(const pd_state *state,unsigned type);
+/* Effective flags: base OR active additional grant. Unknown bases remain unknown. */
 unsigned pd_defence_flags(const pd_state *state,unsigned type);
 bool pd_defence_set(pd_state *state,unsigned type,bool configured,unsigned flags);
+bool pd_defence_temporary_set(pd_state *state,unsigned type,pd_defence_temporary defence);
 int pd_modifier(int score);
 void pd_hp(pd_state *state, int delta);
 bool pd_resource_change(pd_state *state, unsigned index, int delta);

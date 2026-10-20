@@ -1,5 +1,8 @@
 # Salvezza di concentrazione nel flusso danni — v0.29
 
+> Aggiornamento v0.31: [difese temporanee, concentrazione e round comune](DIFESE-TEMPORANEE.md)
+> con PDD13. I limiti/formati dell’incremento sotto sono storici.
+
 > Documento della v0.29. La v0.30 aggiunge [vincoli degli effetti alla concentrazione](EFFETTI-CONCENTRAZIONE.md)
 > e PDD12; i formati e i limiti sui collegamenti sotto descrivono lo stato storico.
 

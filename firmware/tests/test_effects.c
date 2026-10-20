@@ -53,9 +53,9 @@ int main(void){
  s.shortcuts[0]=10;pd_hp(&s,999);static uint8_t data[PD_RECORD_SIZE];uint32_t generation;
  size_t size=pd_encode(&s,127,data);assert(size==PD_RECORD_SIZE&&pd_decode(data,size,&next,&generation)&&generation==127&&next.hp==65&&next.max_hp==32&&pd_max_hp(&next)==65&&next.shortcuts[0]==10&&next.effects[2].value==4);
  /* CRC-valid malformed fields, invalid effective totals and out-of-range HP fail atomically. */
- size_t start=size-69;const unsigned offsets[]={0,1,3,4};const unsigned corrupt[]={9,2,255,2};
+ size_t start=size-134;const unsigned offsets[]={0,1,3,4};const unsigned corrupt[]={9,2,255,2};
  for(unsigned i=0;i<4;i++){pd_encode(&s,127,data);data[start+offsets[i]]=corrupt[i];crc(data,size);before=next;generation=99;assert(!pd_decode(data,size,&next,&generation)&&generation==99&&!memcmp(&next,&before,sizeof next));}
  pd_encode(&s,127,data);data[57]=231;data[58]=3;crc(data,size);assert(!pd_decode(data,size,&next,&generation));
  pd_demo(&s);s.effect_count=1;s.effects[0]=(pd_effect){.target=PD_EFFECT_ARMOR,.value=-20,.active=true};pd_encode(&s,1,data);size=pd_encoded_size(&s);assert(!pd_decode(data,size,&next,&generation));
- printf("Effects: %u independent base/delta cases, atomic limits, caps without healing, item/hit-die/rest integration, death guards, annotation separation, 8 effects and strict PDD12 roundtrip/corruption passed\n",comparisons);
+ printf("Effects: %u independent base/delta cases, atomic limits, caps without healing, item/hit-die/rest integration, death guards, annotation separation, 8 effects and strict PDD13 roundtrip/corruption passed\n",comparisons);
 }

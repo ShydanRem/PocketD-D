@@ -242,3 +242,17 @@ indotto dalla perdita di concentrazione; il delta PF del riposo è con segno.
 PDD12 (PDDC) aggiunge otto byte prima del CRC, massimo 74222; PDD1–PDD11
 letti senza vincoli e senza scritture al boot. USB v7/backup PC v10 invariati.
 [Uso, vincoli e limiti](EFFETTI-CONCENTRAZIONE.md).
+
+
+Incremento 0.31: pd_defences conserva 13 extra temporanei, ciascuno con flags,
+active/timed, rounds e concentrazione facoltativa. pd_defence_base_flags conserva
+la lettura delle sole basi; pd_defence_flags restituisce base OR extra attivo,
+senza marcare un profilo sconosciuto come configurato. L'editor inizializza la
+base dalla prima funzione, evitando di rendere permanenti i contributi temporanei.
+pd_round_advance valida e avanza prima gli effetti numerici; solo in caso valido
+avanza le difese, senza ulteriori punti di fallimento. Un unico candidato, output
+con maschere separate e nessuna copia di pd_state nello stack. Fine concentrazione
+scollega/disattiva anche tutti gli extra associati. Il colpo usa la fotografia
+delle difese precedente a questa fine. PDD13 aggiunge 65 byte prima del CRC,
+massimo 74287; PDD1–PDD12 letti senza extra e senza scritture al boot. USB v7 e
+backup PC v10 invariati. [Uso e limiti](DIFESE-TEMPORANEE.md).
