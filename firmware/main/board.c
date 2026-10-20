@@ -29,6 +29,7 @@ static int pwr_level=-1;
 static int64_t buttons_read_at=-100;
 static esp_err_t expander_read(uint8_t reg,uint8_t *value) {return i2c_master_transmit_receive(expander,&reg,1,value,1,5);}
 
+static pd_screen *screen_control;
 static bool transfer_pending;
 static const co5300_lcd_init_cmd_t commands[]={
     {0xFE,(uint8_t[]){0x20},1,0}, {0x19,(uint8_t[]){0x10},1,0}, {0x1C,(uint8_t[]){0xA0},1,0},
@@ -55,10 +56,12 @@ static void round_area(lv_event_t *e) {
 static void read_touch(lv_indev_t *indev,lv_indev_data_t *data) {
     esp_lcd_touch_point_data_t point={0}; uint8_t count=0;
     data->state=LV_INDEV_STATE_RELEASED;
-    if (esp_lcd_touch_read_data(touch)!=ESP_OK) return;
-    if (esp_lcd_touch_get_data(touch,&point,&count,1)==ESP_OK && count && point.x<RES && point.y<RES) {
-        data->state=LV_INDEV_STATE_PRESSED; data->point.x=point.x; data->point.y=point.y;
-    }
+    if (esp_lcd_touch_read_data(touch)!=ESP_OK){if(screen_control)pd_screen_touch(screen_control,false,false,lv_tick_get());return;}
+    bool valid=esp_lcd_touch_get_data(touch,&point,&count,1)==ESP_OK;
+    bool pressed=valid&&count;
+    bool allow=screen_control?pd_screen_touch(screen_control,valid,pressed,lv_tick_get()):pressed;
+    if(allow&&point.x<RES&&point.y<RES){data->state=LV_INDEV_STATE_PRESSED;data->point.x=point.x;data->point.y=point.y;}
+
 }
 void pd_board_init(void) {
     /* RF stays off. SAR-ADC entropy source remains enabled for esp_random().
@@ -125,4 +128,12 @@ void pd_board_buttons(int levels[2]) {
         pwr_level=pwr_ready&&expander_read(0,&raw)==ESP_OK?((raw^pwr_polarity)&0x10?1:0):-1;
     }
     levels[0]=pwr_level;levels[1]=gpio_get_level(GPIO_NUM_0)==0;
+}
+
+void pd_board_screen(pd_screen *controller){screen_control=controller;}
+bool pd_board_brightness(unsigned percent,void *unused){
+    (void)unused;if(percent<10||percent>100)return false;
+    /* Drain the outstanding DMA transfer before sending a control command. */
+    flush_wait(NULL);
+    return esp_lcd_panel_co5300_set_brightness(panel,percent)==ESP_OK;
 }

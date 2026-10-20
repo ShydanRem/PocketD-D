@@ -179,3 +179,12 @@ PSRAM. I tentativi di salvataggio ripetuti riusano il risultato estratto.
 La scorciatoia 8 è Stato. 16013 confronti aggiuntivi attraversano il parser
 reale; fixture PDD6 generato dall'encoder `da7b8e2` prima della modifica.
 [Schema, uso e limiti](STATO-CONDIZIONI-MORTE.md).
+
+
+Incremento 0.25: core/screen.c separa tempo d'inattività, quarantena degli input
+e applicazione/riprova della luminosità. Il read callback touch della board usa
+lo stesso controller del ciclo principale: nessun input di risveglio raggiunge
+LVGL prima del rilascio. screen_service esercita tasti, blocchi e driver nel task
+proprietario. Il setter usa l'API CO5300 pubblica dopo il drain DMA. PDD8 aggiunge
+due byte locali prima del CRC; USB v7 invariato, prefs conservate da import/undo.
+Fixture PDD7 generato dall'encoder a39413c. [Dettagli](SCHERMO-IMPOSTAZIONI.md).

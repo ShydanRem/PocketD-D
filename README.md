@@ -2,11 +2,12 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.24:** registro morte con d20 base animato, stabilizzazione e correzioni confermate; 30 condizioni annotate e Avvelenato come effetto separato. Riposi breve/lungo con anteprima e conferma, dadi vita per classe con cure animate, recupero lungo manuale/2014/2024 e scorciatoia Riposi. Magie/capacità sul dispositivo (120 voci), slot ordinari/patto, utilizzi e concentrazione con conferma. Tasti PWR/BOOT configurabili, con PWR lungo riservato all’alimentazione. Testi oltre 500 caratteri dichiarati come estratti. Inventario fino a 60 voci, armi scegliibili, attacchi/danni animati e critici fino a 18 dadi sul dispositivo. Cure e consumabili con conferma, salvataggio congiunto di PF/quantità e annullamento. Abilità e salvezze con competenza, maestria, mezza competenza, extra e dettaglio dei bonus. Le prove da verificare restano bloccate; le vecchie copie mantengono le prove di caratteristica e richiedono una nuova esportazione per competenze, inventario e magie mancanti. Avatar personale animato con 81 combinazioni, PF/annulla, contatori, dadi poliedrici e salvataggio offline. Supporto PC per importazione Beyond, configurazione, backup ed esportazione USB con anteprima e conferma sul display. Il firmware non è ancora collaudato sulla scheda fisica.
+**Stato v0.25:** luminosità locale, attenuazione per inattività e risveglio con primo gesto assorbito; nuova scorciatoia Schermo. Registro morte con d20 base animato, stabilizzazione e correzioni confermate; 30 condizioni annotate e Avvelenato come effetto separato. Riposi breve/lungo con anteprima e conferma, dadi vita per classe con cure animate, recupero lungo manuale/2014/2024 e scorciatoia Riposi. Magie/capacità sul dispositivo (120 voci), slot ordinari/patto, utilizzi e concentrazione con conferma. Tasti PWR/BOOT configurabili, con PWR lungo riservato all’alimentazione. Testi oltre 500 caratteri dichiarati come estratti. Inventario fino a 60 voci, armi scegliibili, attacchi/danni animati e critici fino a 18 dadi sul dispositivo. Cure e consumabili con conferma, salvataggio congiunto di PF/quantità e annullamento. Abilità e salvezze con competenza, maestria, mezza competenza, extra e dettaglio dei bonus. Le prove da verificare restano bloccate; le vecchie copie mantengono le prove di caratteristica e richiedono una nuova esportazione per competenze, inventario e magie mancanti. Avatar personale animato con 81 combinazioni, PF/annulla, contatori, dadi poliedrici e salvataggio offline. Supporto PC per importazione Beyond, configurazione, backup ed esportazione USB con anteprima e conferma sul display. Il firmware non è ancora collaudato sulla scheda fisica.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
 - [Direzione visiva: pixel art moderna e anteprime del firmware](docs/DIREZIONE-VISIVA.md)
+- [Schermo: luminosità, inattività, risveglio e limiti energetici](docs/SCHERMO-IMPOSTAZIONI.md)
 - [Stato, condizioni e morte: uso, regole base e limiti](docs/STATO-CONDIZIONI-MORTE.md)
 - [Riposi e dadi vita: uso, recuperi, compatibilità e limiti](docs/RIPOSI-RECUPERI.md)
 - [Magie, capacità e tasti configurabili: uso, memoria e limiti](docs/MAGIE-TASTI.md)
@@ -254,3 +255,13 @@ PDD7, lettura PDD1–PDD6 e layout flash invariato. Verificati 138 test JS, 3775
 confronti PC/USB/C totali, LVGL, Chromium su raccolte effimere, sanitizzatori e
 build ESP32-S3. Nessuna nuova lettura Beyond, raccolta personale modificata o
 prova fisica. [Uso e limiti](docs/STATO-CONDIZIONI-MORTE.md).
+
+
+## Incremento 0.25 — impostazioni dello schermo
+
+Eroe → Aspetto → Schermo configura luminosità 10–100% e attenuazione mai/30/60/120
+secondi. Primo gesto di risveglio assorbito, tasti configurabili, conferme e dadi
+protetti. Preferenze conservate da import e annullamento; PDD8 con lettura dei
+formati precedenti, USB v7 e layout flash invariati. Il driver CO5300 applica
+la luminosità, senza scritture PMIC. Non è ancora sospensione né una prova di
+autonomia. [Uso e verifiche](docs/SCHERMO-IMPOSTAZIONI.md).

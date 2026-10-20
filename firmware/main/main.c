@@ -30,7 +30,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS } page_t;
 PD_EXT static pd_state state,previous,pending,scratch;
 static bool undo_available,import_pending,has_roll;
 static pd_roll result;
@@ -66,9 +66,10 @@ static pd_strike strike;
 static bool strike_ready,damage_used;
 static pd_pool damage_result;
 static pd_buttons physical_keys;
+static pd_screen display_screen;
 static unsigned magic_filter=2,magic_page,power_index,cast_level,text_page,slot_index;
 static bool cast_pact,slot_pact,stop_rage;
-static const char *const shortcut_names[]={"Spento","Eroe","Scheda","Dadi","Zaino","Magie","Lancia","Riposi","Stato"};
+static const char *const shortcut_names[]={"Spento","Eroe","Scheda","Dadi","Zaino","Magie","Lancia","Riposi","Stato","Schermo"};
 static void shortcut(unsigned gesture);
 static bool can_use_power(void);
 static pd_rest_plan rest_plan;
@@ -194,6 +195,7 @@ static void act(intptr_t action) {
     if(page==HIT_CONFIRM&&action!=910&&action!=914)return;
     /* Disabled controls also reject queued/synthetic events while dice are in flight. */
     if (dice_animation.active && action!=13 && action!=16) return;
+    pd_screen_activity(&display_screen,lv_tick_get());
     #define next scratch
     next=state;
     if (action>=100 && action<104) { page=action-100;if(combat_roll>=4)invalidate_strike();rest_active=false;dice_setup=false;die_picker=false; }
@@ -319,8 +321,17 @@ static void act(intptr_t action) {
         apply(&next);page=MAGIC_STATUS;
     }
     else if(action>=860&&action<=862) {
-        unsigned i=action-860;next.shortcuts[i]=(state.shortcuts[i]+1)%9;
+        unsigned i=action-860;next.shortcuts[i]=(state.shortcuts[i]+1)%10;
         if(pd_storage_save(&next)){state=next;memcpy(previous.shortcuts,next.shortcuts,3);}
+    }
+    else if(action==1600)page=DEVICE_SETTINGS;
+    else if(action==1601||action==1602||action==1603){
+        if(action==1601&&next.brightness>10)next.brightness=next.brightness>20?next.brightness-10:10;
+        if(action==1602&&next.brightness<100)next.brightness=next.brightness<90?next.brightness+10:100;
+        if(action==1603)next.dim_timeout=(next.dim_timeout+1)%4;
+        if(memcmp(&next,&state,sizeof state)&&pd_storage_save(&next)){
+            state=next;previous.brightness=state.brightness;previous.dim_timeout=state.dim_timeout;
+        }
     }
     else if(action==1500)page=STATUS_HOME;
     else if(action==1501)page=DEATH_VIEW;
@@ -801,6 +812,15 @@ static void render_rest(void) {
     }
 }
 
+static void render_settings(void){
+    char text[120];label("Schermo",83,111,300,true);
+    snprintf(text,sizeof text,"Luminosita %u%%",state.brightness);label(text,83,155,300,false);
+    button("-10",83,193,144,44,1601,state.brightness>10);button("+10",239,193,144,44,1602,state.brightness<100);
+    snprintf(text,sizeof text,"Attenua: %s >",(const char *const[]){"mai","30 sec","60 sec","120 sec"}[state.dim_timeout]);button(text,83,251,300,44,1603,true);
+    small_label(display_screen.failed?"Errore comando luminosita":"Attenuato al 10%; primo input riattiva",83,309,300,display_screen.failed?PD_DANGER:PD_GOLD);
+    button("Indietro",83,359,144,48,50,true);button("Tasti",239,359,144,48,850,true);
+}
+
 static void render_status(void) {
     char text[180];
     if(page==STATUS_HOME){
@@ -898,6 +918,7 @@ static void render(void) {
         button("Annulla",83,303,144,54,31,true); button("Conferma",239,303,144,54,30,true);
         return;
     }
+    if(page==DEVICE_SETTINGS){render_settings();return;}
     if(page>=STATUS_HOME){render_status();return;}
     if(page>=REST_HOME){render_rest();return;}
     if(page==MAGIC_LIST){render_magic_list();return;}
@@ -927,7 +948,7 @@ static void render(void) {
                  (const char *const[]){"corti","lunghi","rasati"}[state.avatar.style]);
         small_label(text,83,268,300,PD_GOLD);
         button(state.idle_animation?"Animazione: si":"Animazione: no",83,299,300,48,51,true);
-        button("Indietro",83,359,144,48,52,true);button("Tasti",239,359,144,48,850,true);return;
+        button("Indietro",83,359,92,48,52,true);lv_obj_t *settings=button("Schermo",187,359,92,48,1600,true);lv_obj_set_style_text_font(settings,&lv_font_montserrat_16,0);button("Tasti",291,359,92,48,850,true);return;
     }
     if (page==HERO) {
         label(state.name,83,101,300,true);
@@ -1042,6 +1063,7 @@ static void dice_frame(lv_timer_t *timer) {
 }
 static void avatar_frame(lv_timer_t *timer) {
     (void)timer;
+    if(display_screen.dimmed)return;
     unsigned pose=pd_avatar_pose(lv_tick_get()-avatar_started);
     if(pose==avatar_phase)return;
     avatar_phase=pose;
@@ -1055,12 +1077,21 @@ static void shortcut(unsigned gesture) {
     if(dice_animation.active){if(binding==6&&page==DICE)act(16);return;}
     if(binding==6){act(page==DICE?13:14);return;}
     if(binding==1)act(100);else if(binding==2)act(101);else if(binding==3)act(14);
-    else if(binding==4)act(80);else if(binding==5)act(800);else if(binding==7)act(900);else if(binding==8)act(1500);
+    else if(binding==4)act(80);else if(binding==5)act(800);else if(binding==7)act(900);else if(binding==8)act(1500);else if(binding==9)act(1600);
+}
+static void screen_service(int pwr,int boot){
+    bool enabled=pd_screen_keys(&display_screen,pwr,boot,lv_tick_get())&&!import_pending&&!confirmation_open();
+    unsigned gestures=pd_buttons_sample(&physical_keys,pwr,boot,lv_tick_get(),enabled);
+    for(unsigned i=0;i<3;i++)if(gestures&(1u<<i))shortcut(i);
+    bool failed=display_screen.failed;
+    pd_screen_step(&display_screen,state.brightness,state.dim_timeout,import_pending||confirmation_open()||dice_animation.active,lv_tick_get(),pd_board_brightness,NULL);
+    if(failed!=display_screen.failed&&page==DEVICE_SETTINGS)render();
 }
 static bool stage_import(const pd_state *candidate) {
     if(import_pending||confirmation_open()) { reply("PDD ERROR busy\n");return false; }
     if(dice_animation.active) { pd_dice_finish(&dice_animation);has_roll=true; }
-    pending=*candidate;pending.idle_animation=state.idle_animation;memcpy(pending.shortcuts,state.shortcuts,3);import_pending=true;
+    pd_screen_activity(&display_screen,lv_tick_get());
+    pending=*candidate;pending.brightness=state.brightness;pending.dim_timeout=state.dim_timeout;pending.idle_animation=state.idle_animation;memcpy(pending.shortcuts,state.shortcuts,3);import_pending=true;
 #ifndef PD_UI_TEST
     import_started=xTaskGetTickCount();
 #endif
@@ -1094,7 +1125,9 @@ static void usb_task(void *unused) {
 }
 void app_main(void) {
     pd_demo(&state);pd_storage_load(&state);
-    pd_board_init();
+    pd_board_screen(&display_screen);pd_board_init();
+    pd_screen_activity(&display_screen,lv_tick_get());
+    pd_screen_step(&display_screen,state.brightness,state.dim_timeout,true,lv_tick_get(),pd_board_brightness,NULL);
     usb_serial_jtag_driver_config_t usb=USB_SERIAL_JTAG_DRIVER_CONFIG_DEFAULT();
     usb.rx_buffer_size=4096;usb.tx_buffer_size=1024;
     ESP_ERROR_CHECK(usb_serial_jtag_driver_install(&usb));
@@ -1109,9 +1142,7 @@ void app_main(void) {
         }
         pd_board_tick();
         int levels[2];pd_board_buttons(levels);
-        bool enabled=!import_pending&&!confirmation_open();
-        unsigned gestures=pd_buttons_sample(&physical_keys,levels[0],levels[1],lv_tick_get(),enabled);
-        for(unsigned i=0;i<3;i++)if(gestures&(1u<<i))shortcut(i);
+        screen_service(levels[0],levels[1]);
         vTaskDelay(pdMS_TO_TICKS(5));
     }
 }

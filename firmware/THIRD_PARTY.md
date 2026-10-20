@@ -46,3 +46,8 @@ rules catalogue, runtime service or firmware dependency.
 The v0.24 status/death-save logic, condition-note views and fixtures are original
 PocketD-D code. Common condition names are labels only; no external rules text,
 character JSON, artwork or new runtime dependency is bundled.
+
+The v0.25 screen controller and input quarantine are original PocketD-D code.
+Brightness uses the public esp_lcd_panel_co5300_set_brightness API in the pinned
+Espressif component; its SPI implementation handles QSPI and DCS 0x51. No new
+PMIC code, dependencies or external artwork is introduced.

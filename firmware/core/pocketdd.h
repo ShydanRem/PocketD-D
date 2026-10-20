@@ -6,7 +6,7 @@
 #define PD_RESOURCES 8
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
-#define PD_RECORD_SIZE 74155
+#define PD_RECORD_SIZE 74157
 #define PD_POWERS 120
 #define PD_POWER_TEXT_BYTES 501
 #define PD_ITEMS 60
@@ -66,6 +66,7 @@ typedef struct {
     pd_magic magic;
     pd_recovery recovery;
     pd_status status;
+    uint8_t brightness,dim_timeout; /* Device-local: 10..100%, off/30/60/120s. */
     uint8_t shortcuts[3]; /* PWR short, BOOT short, BOOT long; device-local. */
 } pd_state;
 typedef struct { uint8_t dice[2], count, natural; int total, bonus; } pd_roll;

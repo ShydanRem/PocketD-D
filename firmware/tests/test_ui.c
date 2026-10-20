@@ -7,7 +7,9 @@ static void *ui_malloc(size_t size);
 #undef lv_malloc
 #include <stdlib.h>
 #include <math.h>
-static bool fail_save,fail_canvas;
+static bool fail_save,fail_canvas,fail_brightness;
+static unsigned brightness_calls,brightness_last;
+bool pd_board_brightness(unsigned percent,void *unused){(void)unused;brightness_calls++;brightness_last=percent;return !fail_brightness;}
 static void *ui_malloc(size_t size) { return fail_canvas?NULL:lv_malloc(size); }
 static unsigned random_calls,save_calls;
 static uint32_t random_values[2]={9,9};
@@ -402,5 +404,24 @@ int main(void) {
     state.status.count=30;for(unsigned i=0;i<30;i++){memset(state.status.conditions[i].name,'W',60);state.status.conditions[i].name[60]=0;state.status.conditions[i].level=i%7;}
     page=CONDITION_LIST;condition_page=9;render();bounds();screenshot("condition-last.ppm");tap(210,302);assert(condition_index==29);screenshot("condition-long.ppm");
     page=DEATH_VIEW;state.status.successes=3;state.status.failures=3;render();bounds();calls=random_calls;act(1510);assert(page==DEATH_VIEW&&random_calls==calls); /* Imported conflicts require a correction. */
-    puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves and guarded physical buttons passed");
+    /* Device-local display prefs, real main-loop policy and swallowed wake gestures. */
+    pd_demo(&state);display_screen=(pd_screen){0};physical_keys=(pd_buttons){0};combat_roll=0;has_roll=false;page=HERO;render();
+    click("-1 PF");click("Aspetto");click("Schermo");assert(page==DEVICE_SETTINGS);screenshot("screen-settings.ppm");
+    calls=random_calls;click("+10");click("+10");click("Attenua: mai >");click("Attenua: 30 sec >");assert(state.brightness==70&&state.dim_timeout==2&&random_calls==calls);
+    static pd_state prefs_before;prefs_before=state;fail_save=true;click("+10");assert(!memcmp(&state,&prefs_before,sizeof state));fail_save=false;
+    click("Indietro");click("Indietro");click("Annulla");assert(state.hp==24&&state.brightness==70&&state.dim_timeout==2);
+    assert(stage_import(&imported_magic)&&pending.brightness==70&&pending.dim_timeout==2);click("Annulla");assert(state.brightness==70&&state.dim_timeout==2);
+    state.dim_timeout=1;state.shortcuts[1]=1;page=DEVICE_SETTINGS;pd_screen_activity(&display_screen,lv_tick_get());render();screen_service(-1,0);assert(brightness_last==70);
+    lv_tick_inc(29999);screen_service(-1,0);assert(!display_screen.dimmed);lv_tick_inc(1);screen_service(-1,0);assert(display_screen.dimmed&&brightness_last==10);
+    calls=random_calls;screen_service(-1,1);assert(!display_screen.dimmed&&page==DEVICE_SETTINGS&&brightness_last==70&&random_calls==calls);
+    lv_tick_inc(100);screen_service(-1,1);screen_service(-1,0);lv_tick_inc(31);screen_service(-1,0);lv_tick_inc(31);screen_service(-1,0);
+    screen_service(-1,1);lv_tick_inc(31);screen_service(-1,1);screen_service(-1,0);lv_tick_inc(31);screen_service(-1,0);assert(page==HERO);
+    lv_tick_inc(30000);screen_service(-1,0);assert(display_screen.dimmed);assert(!pd_screen_touch(&display_screen,true,true,lv_tick_get()));screen_service(-1,0);assert(!display_screen.dimmed);
+    assert(!pd_screen_touch(&display_screen,true,true,lv_tick_get()));pd_screen_touch(&display_screen,true,false,lv_tick_get());assert(pd_screen_touch(&display_screen,true,true,lv_tick_get()));
+    pd_screen_touch(&display_screen,true,false,lv_tick_get());act(14);act(13);lv_tick_inc(60000);screen_service(-1,0);assert(!display_screen.dimmed&&dice_animation.active);act(16);
+    act(1504);assert(page==STATUS_CONFIRM);lv_tick_inc(60000);screen_service(-1,0);assert(!display_screen.dimmed);act(1506);
+    page=DEVICE_SETTINGS;state.brightness=80;fail_brightness=true;screen_service(-1,0);assert(display_screen.failed&&display_screen.applied==70);screenshot("screen-error.ppm");
+    unsigned attempts=brightness_calls;screen_service(-1,0);assert(brightness_calls==attempts);fail_brightness=false;lv_tick_inc(1000);screen_service(-1,0);assert(!display_screen.failed&&display_screen.applied==80);
+    state.shortcuts[0]=8;act(850);click("PWR breve: Stato");assert(state.shortcuts[0]==9);shortcut(0);assert(page==DEVICE_SETTINGS);screenshot("screen-configured.ppm");
+    puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy and guarded physical buttons passed");
 }

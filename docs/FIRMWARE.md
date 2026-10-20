@@ -1,4 +1,4 @@
-# Firmware PocketD-D 0.24 — stato, condizioni e morte
+# Firmware PocketD-D 0.25 — schermo e impostazioni locali
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
@@ -52,6 +52,10 @@ La v0.24 aggiunge [stato, condizioni e registro morte](STATO-CONDIZIONI-MORTE.md
 30 note, Avvelenato separato, d20 base animato, stabilizzazione e correzioni
 confermate. Stato è assegnabile ai tasti. USB v7 e PDD7; layout invariato.
 
+La v0.25 aggiunge [impostazioni schermo](SCHERMO-IMPOSTAZIONI.md): luminosità,
+attenuazione per inattività e primo input di risveglio assorbito. PDD8; copie
+USB v7 e layout invariati. Non è sospensione o telemetria batteria.
+
 Primo percorso: avvio con Elian originale o copia precedentemente salvata →
 Scheda → caratteristica → d20 → risultato → Eroe → PF ±1 → annulla →
 salvataggio locale. Anche PF temporanei e fino a otto contatori manuali.
@@ -94,7 +98,8 @@ percorso display/touch dell'esempio ufficiale, che non riprogramma il PMIC.
 **Avvio a batteria, alimentazioni, orientamento touch e luminosità devono ancora
 essere verificati sulla scheda reale.** Non sono implementati telemetria
 batteria, sospensione, spegnimento controllato o stime d'autonomia. Luminosità
-iniziale circa 50%, senza valori di batteria inventati. Audio, SD, RTC e IMU
+iniziale 50%, configurabile da Schermo. Attenuazione per inattività disponibile;
+nessun valore di batteria inventato. Audio, SD, RTC e IMU
 non vengono avviati. Nessun GPIO riutilizzato per periferiche esterne.
 
 ## Compilazione
@@ -207,8 +212,8 @@ reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
 ## Salvataggio e dadi
 
 NVS nel namespace `pocketdd`, nuova partizione `pdd_state`, due chiavi alternate
-`state_a`/`state_b`. Record PDD7 da **7915 + 552 × numero voci** byte, massimo
-74155. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
+`state_a`/`state_b`. Record PDD8 da **7917 + 552 × numero voci** byte, massimo
+74157. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
 visibile. Nessun dump di struct, erase o fallback distruttivo. Errori I/O o
 allocazioni insufficienti bloccano scritture; CRC e versioni future conservati.
 
@@ -216,9 +221,10 @@ Se la nuova area è vuota, legge PDD1/PDD2 da 384 byte, PDD3 da 512 o PDD4 da
 5184 dalla vecchia `pdd_nvs`, aperta in sola lettura. Nessun record vecchio viene
 riscritto al boot o al primo salvataggio nuovo. Magie assenti restano dichiarate
 non importate. I record PDD5 della v0.22 sono leggibili dalla nuova partizione;
-i record PDD6 sono leggibili senza creare registri morte. Le nuove scritture
-PDD7 richiedono firmware v0.24 o successivo:
-[compatibilità e downgrade](STATO-CONDIZIONI-MORTE.md).
+i record PDD6 sono leggibili senza creare registri morte. PDD7 mantiene stato
+e contatori; tutti i vecchi record ricevono 50%/mai senza riscrittura al boot. Le nuove scritture
+PDD8 richiedono firmware v0.25 o successivo:
+[compatibilità e downgrade](SCHERMO-IMPOSTAZIONI.md).
 Il nuovo uploader supporta USB v1–v7. Preferenze avatar/tasti
 locali conservate durante l'importazione. [Dettagli](MAGIE-TASTI.md).
 
@@ -410,3 +416,17 @@ fisica o lettura personale Beyond in questo incremento.
 
 Build v0.24: **846.944 byte**; partizione app da 4 MiB **80% libera**;
 layout v0.22/v0.23 conservato.
+
+
+## Verifiche v0.25 — schermo e risveglio
+
+138 test JS e 37751 confronti PC/USB/C mantenuti. Controller C e ciclo principale
+esercitati su host per scadenze/wrap, contatti mantenuti, risveglio, entrambe le
+sorgenti di input, conferme/import/dadi, errore di comando e riprova. PDD8:
+preferenze persistite, valori malformati rifiutati e fixture PDD7 indipendente.
+UI LVGL, errori di salvataggio, import e annullamento verificati. Sanitizzatori
+e build ESP32-S3; nessuna prova fisica o nuova lettura Beyond.
+[Uso, compatibilità e limiti energia](SCHERMO-IMPOSTAZIONI.md).
+
+Build v0.25: **849024 byte**, partizione app da 4 MiB **80% libera**;
+layout flash invariato.

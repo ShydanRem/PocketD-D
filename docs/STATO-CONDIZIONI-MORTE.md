@@ -1,5 +1,8 @@
 # Stato, condizioni e salvezze contro morte — v0.24
 
+> Documento della v0.24. La v0.25 aggiunge [Schermo](SCHERMO-IMPOSTAZIONI.md),
+> preferenze locali e PDD8; USB v7 e regole di questo blocco rimangono invariati.
+
 Questo blocco porta sul dispositivo le annotazioni delle condizioni e il registro
 morte del modello PC, con un d20 base animato e correzioni esplicite. Tutto
 funziona offline; il PC rimane lo strumento di importazione, configurazione e

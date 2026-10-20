@@ -188,7 +188,7 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
     while (end<json+size && (*end==' ' || *end=='\n' || *end=='\r' || *end=='\t')) end++;
     bool ok=false;pd_state *allocated=calloc(1,sizeof *allocated);if(!allocated){cJSON_Delete(root);return false;}
     #define candidate (*allocated)
-    candidate.idle_animation=true;candidate.equipped=PD_NO_WEAPON;
+    candidate.brightness=50;candidate.idle_animation=true;candidate.equipped=PD_NO_WEAPON;
     candidate.shortcuts[0]=1;candidate.shortcuts[1]=3;candidate.shortcuts[2]=5;
     const char *const fields[]={"format","version","name","level","hp","maxHp","tempHp","armorClass","abilities","resources","avatar","training","inventory","magic","recovery","status"};
     const char *const abilities[]={"FOR","DES","COS","INT","SAG","CAR"};

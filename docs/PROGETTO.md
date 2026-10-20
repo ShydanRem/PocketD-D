@@ -56,6 +56,22 @@ Non fanno parte di questo traguardo: importazione Beyond, editor completo, incan
 
 L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco non impedisce le altre fasi. L'ordine delle fasi 0 e 1 può sovrapporsi se l'hardware non è immediatamente disponibile.
 
+## Punto attuale — v0.25
+
+| Blocco | Stato software | Cosa manca |
+| --- | --- | --- |
+| Scheda individuale offline | PF/temporanei, prove, abilità/salvezze, zaino, armi, magie, risorse, riposi e dadi vita nel firmware | Monete, storico persistente, effetti completi e regole speciali; sessione reale |
+| Stato e morte | Note delle condizioni, Avvelenato separato, d20 morte base e correzioni | Effetti delle altre condizioni, eccezioni e morte istantanea |
+| Grafica e comandi | Tema pixel art, avatar 81 combinazioni, dadi animati, PWR/BOOT configurabili | Leggibilità e precisione touch sulla scheda |
+| Impostazioni schermo | Luminosità, inattività e risveglio protetto nella v0.25 | Consumi misurati, sospensione, batteria e alimentazione |
+| Preparazione PC | Importazione Beyond, raccolta, configurazione, backup PC, copia USB con conferma | Trasferimento USB fisico e backup dei progressi aggiornati dal dispositivo al PC |
+| Party e griglia | Prototipi nel browser | Trasporto e interfaccia sul dispositivo |
+
+Le fasi hardware 0 e 2 restano aperte. Le funzioni individuali delle fasi 3–4
+sono portate nel firmware, ma i criteri di completamento richiedono ancora una
+sessione fisica, trasferimento/ripristino e misure. Non sono percentuali di
+completamento né una dichiarazione di collaudo.
+
 ## Priorità confermata: dispositivo prima del PC
 
 Il dispositivo è il prodotto. Il PC è per importazione, configurazione,
@@ -133,8 +149,10 @@ L'incremento 0.11 rivede la presentazione fantasy, le icone e i comandi del disp
 
 L'incremento 0.12 anticipa le fasi 5 e 6 con un trasporto browser sostituibile. Il coordinatore conserva lo stato autorevole del party; ogni finestra mantiene la propria identità e riprende lo snapshot corrente dopo un'interruzione. I dati del party sono separati dalla raccolta personale. La prova con più finestre non completa le fasi hardware o la comunicazione tra dispositivi. Uso e limiti sono descritti in [PARTY.md](PARTY.md).
 
-Ordine dei prossimi incrementi: impostazioni del dispositivo e gestione dello
-schermo/energia, poi collaudo fisico. Riposi/dadi vita sono portati nella v0.23;
+Ordine dei prossimi incrementi: backup/ripristino dello stato aggiornato del
+dispositivo verso PC, poi collaudo fisico di uso/trasferimento e gestione
+energetica. Impostazioni schermo e attenuazione sono portate nella v0.25;
+sospensione e autonomia restano aperte. Riposi/dadi vita sono portati nella v0.23;
 registro morte base e note delle condizioni nella v0.24. Gli effetti completi
 rimangono un lavoro distinto con regole esplicite. Grafica
 e tasti accompagnano ogni vista, mantenendo le conferme touch. Importazione
@@ -154,3 +172,11 @@ consultabili/modificabili; Avvelenato conserva un comando meccanico separato,
 senza far passare la visualizzazione di un nome per l'applicazione delle regole.
 La scorciatoia Stato si aggiunge alle assegnazioni fisiche esistenti.
 [Uso e limiti](STATO-CONDIZIONI-MORTE.md).
+
+
+La v0.25 aggiunge impostazioni locali e prima gestione dell'inattività del
+pannello. Non completa la fase hardware/energia: niente percentuali batteria
+inventate o promesse d'autonomia. Il passo software seguente è poter conservare
+sul PC anche i progressi fatti sul dispositivo, senza sovrascrivere in silenzio
+la raccolta originale. Importazione autonoma e comunicazione fra dispositivi
+rimangono successivi. [Dettagli](SCHERMO-IMPOSTAZIONI.md).
