@@ -1,8 +1,9 @@
 # Magie, capacità e tasti sul dispositivo — v0.22
 
-> Documento dell’incremento v0.22. Nella versione corrente v0.23 sono disponibili
+> Documento dell’incremento v0.22. Con la v0.23 sono disponibili
 > anche [riposi e dadi vita](RIPOSI-RECUPERI.md), USB v6/PDD6 e la scorciatoia
-> Riposi. I limiti e i formati v0.22 riportati sotto sono storici.
+> Riposi. La v0.24 aggiunge [Stato e registro morte](STATO-CONDIZIONI-MORTE.md),
+> USB v7/PDD7 e la scorciatoia Stato. I limiti e i formati v0.22 riportati sotto sono storici.
 
 Questo incremento porta gestione e consultazione delle risorse magiche nel
 firmware offline. Il PC prepara importazione/configurazione; non serve al tavolo.

@@ -10,8 +10,9 @@
 #include "fixtures/state-v3.h"
 #include "fixtures/state-v4.h"
 #include "fixtures/state-v5.h"
+#include "fixtures/state-v6.h"
 static void record_crc(uint8_t *record) {
-    size_t size=6050; /* No powers: PDD6 fixed prefix, recovery and CRC. */
+    size_t size=7915; /* No powers: PDD7 prefix, recovery, status and CRC. */
     uint32_t crc=pd_crc32(record,size-4);
     for(int i=0;i<4;i++)record[size-4+i]=crc>>(8*i);
 }
@@ -46,6 +47,7 @@ int main(int argc,char **argv) {
     assert(pd_decode(legacy_v3,sizeof legacy_v3,&out,&gen)&&gen==43&&out.training.ranks[0]==2&&out.training.poisoned&&!out.inventory_available&&out.equipped==PD_NO_WEAPON);
     assert(pd_decode(legacy_v4,sizeof legacy_v4,&out,&gen)&&gen==44&&out.inventory_available&&out.item_count==3&&!out.magic.available&&out.shortcuts[0]==1);
     assert(pd_decode(golden_v5,sizeof golden_v5,&out,&gen)&&gen==123&&out.magic.count==2&&out.magic.concentration==1&&out.magic.powers[1].remaining==1&&!out.recovery.available&&out.shortcuts[0]==4&&out.shortcuts[1]==6&&!out.shortcuts[2]);
+    assert(pd_decode(golden_v6,sizeof golden_v6,&out,&gen)&&gen==124&&out.hp==9&&out.recovery.count==2&&out.recovery.pools[0].used==2&&out.shortcuts[0]==7&&!out.status.available);
     pd_demo(&s);s.avatar=(pd_avatar){2,1,2,1};s.idle_animation=false;
     for(int i=0;i<PD_SKILLS;i++) { s.training.ranks[i]=i%3;s.training.skill_bonus[i]=i-8; }
     for(int i=0;i<6;i++) { s.training.save_bonus[i]=i-2;s.training.check_bonus[i]=3-i; }
@@ -79,7 +81,7 @@ int main(int argc,char **argv) {
         assert(!pd_parse_packet(json,n-1,&out));
         cJSON *base=cJSON_ParseWithLength(json,n),*v;assert(base);
         const char *numeric_keys[]={"version","level","hp","maxHp","tempHp","armorClass"};
-        double bad[]={7,21,33,0,-1,41};
+        double bad[]={8,21,33,0,-1,41};
         for (int i=0;i<6;i++) {
             v=cJSON_Duplicate(base,true);cJSON_ReplaceItemInObjectCaseSensitive(v,numeric_keys[i],cJSON_CreateNumber(bad[i]));reject(v);
         }
@@ -92,12 +94,12 @@ int main(int argc,char **argv) {
         }
         v=cJSON_Duplicate(base,true);cJSON_AddNumberToObject(cJSON_GetObjectItemCaseSensitive(v,"avatar"),"skin",0);reject(v);
         v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"avatar");reject(v);
-        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),1);reject(v);
-        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),1);
+        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),1);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");reject(v);
+        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),1);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");
         cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");cJSON_DeleteItemFromObjectCaseSensitive(v,"magic");cJSON_DeleteItemFromObjectCaseSensitive(v,"inventory");cJSON_DeleteItemFromObjectCaseSensitive(v,"training");cJSON_DeleteItemFromObjectCaseSensitive(v,"avatar");char *old=cJSON_PrintUnformatted(v);
         assert(pd_parse_packet(old,strlen(old),&out)&&out.avatar.skin==0&&out.idle_animation&&!out.training.available);
         cJSON_free(old);cJSON_Delete(v);
-        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),2);cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");
+        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),2);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");
         cJSON_DeleteItemFromObjectCaseSensitive(v,"magic");cJSON_DeleteItemFromObjectCaseSensitive(v,"inventory");cJSON_DeleteItemFromObjectCaseSensitive(v,"training");old=cJSON_PrintUnformatted(v);
         assert(pd_parse_packet(old,strlen(old),&out)&&out.avatar.skin==2&&!out.training.available);cJSON_free(old);cJSON_Delete(v);
         v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"training");reject(v);
@@ -132,7 +134,7 @@ int main(int argc,char **argv) {
         v=cJSON_Duplicate(base,true);inv=cJSON_GetObjectItemCaseSensitive(v,"inventory");
         cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetObjectItemCaseSensitive(inv,"combat"),"raging",cJSON_CreateNumber(1));reject(v);
         /* v3 USB keeps training but must never fabricate an inventory. */
-        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),3);cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");
+        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),3);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");
         cJSON_DeleteItemFromObjectCaseSensitive(v,"magic");cJSON_DeleteItemFromObjectCaseSensitive(v,"inventory");old=cJSON_PrintUnformatted(v);
         assert(pd_parse_packet(old,strlen(old),&out)&&out.training.available&&!out.inventory_available&&out.equipped==PD_NO_WEAPON);cJSON_free(old);cJSON_Delete(v);
         v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"magic");reject(v);
@@ -143,9 +145,9 @@ int main(int argc,char **argv) {
         cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetArrayItem(cJSON_GetObjectItemCaseSensitive(magic,"slots"),0),"current",cJSON_CreateNumber(10));reject(v);
         v=cJSON_Duplicate(base,true);magic=cJSON_GetObjectItemCaseSensitive(v,"magic");
         cJSON_AddItemToArray(cJSON_GetObjectItemCaseSensitive(magic,"powers"),cJSON_CreateObject());reject(v);
-        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),4);cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");cJSON_DeleteItemFromObjectCaseSensitive(v,"magic");old=cJSON_PrintUnformatted(v);
+        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),4);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");cJSON_DeleteItemFromObjectCaseSensitive(v,"magic");old=cJSON_PrintUnformatted(v);
         assert(pd_parse_packet(old,strlen(old),&out)&&out.inventory_available&&!out.magic.available&&out.shortcuts[1]==3);cJSON_free(old);cJSON_Delete(v);
-        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),5);cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");old=cJSON_PrintUnformatted(v);
+        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),5);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");old=cJSON_PrintUnformatted(v);
         assert(pd_parse_packet(old,strlen(old),&out)&&out.magic.available&&!out.recovery.available);cJSON_free(old);cJSON_Delete(v);
         v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");reject(v);
         v=cJSON_Duplicate(base,true);cJSON_AddBoolToObject(cJSON_GetObjectItemCaseSensitive(v,"recovery"),"available",true);reject(v);
@@ -157,6 +159,16 @@ int main(int argc,char **argv) {
             cJSON *h=cJSON_Parse("{\"name\":\"Classe\",\"die\":8,\"maximum\":3,\"used\":1}");assert(h);
             cJSON_ReplaceItemInObjectCaseSensitive(h,hit_keys[i],cJSON_CreateNumber(hit_bad[i]));cJSON_AddItemToArray(cJSON_GetObjectItemCaseSensitive(rec,"pools"),h);reject(v);
         }
+        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),6);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");old=cJSON_PrintUnformatted(v);
+        assert(pd_parse_packet(old,strlen(old),&out)&&!out.status.available);cJSON_free(old);cJSON_Delete(v);
+        v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");reject(v);
+        const char *status_keys[]={"successes","failures","stabilized","available"};
+        for(unsigned i=0;i<4;i++) {v=cJSON_Duplicate(base,true);cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetObjectItemCaseSensitive(v,"status"),status_keys[i],cJSON_CreateNumber(i<2?4:1));reject(v);}
+        v=cJSON_Duplicate(base,true);cJSON_AddBoolToObject(cJSON_GetObjectItemCaseSensitive(v,"status"),"available",true);reject(v);
+        v=cJSON_Duplicate(base,true);cJSON *stat=cJSON_GetObjectItemCaseSensitive(v,"status");
+        cJSON_ReplaceItemInObjectCaseSensitive(stat,"successes",cJSON_CreateNumber(1));reject(v); /* unavailable with data */
+        v=cJSON_Duplicate(base,true);stat=cJSON_GetObjectItemCaseSensitive(v,"status");cJSON_ReplaceItemInObjectCaseSensitive(stat,"available",cJSON_CreateBool(true));
+        cJSON *condition=cJSON_Parse("{\"name\":\"Nota\",\"level\":7}");cJSON_AddItemToArray(cJSON_GetObjectItemCaseSensitive(stat,"conditions"),condition);reject(v);
         /* Full boundary values remain representable, including all eight counters. */
         v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"maxHp"),999);
         cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"hp"),999);
@@ -168,6 +180,6 @@ int main(int argc,char **argv) {
     }
     const char *invalid[]={"{}","[]","null","{\"format\":\"pocketdd-device\",\"version\":1}","{", "{\"x\":\"\\u0000\"}","1e999"};
     for(size_t i=0;i<sizeof invalid/sizeof invalid[0];i++) assert(!pd_parse_packet(invalid[i],strlen(invalid[i]),&out));
-    puts("C core: HP/temp, counters, d20, CRC/corruption/wrap, golden v1..v5 migration, PDD6 persistence and strict USB v1..v6 passed");
+    puts("C core: HP/temp, counters, d20, CRC/corruption/wrap, golden v1..v6 migration, PDD7 persistence and strict USB v1..v7 passed");
     return 0;
 }

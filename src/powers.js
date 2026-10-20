@@ -60,6 +60,7 @@ export function usePower(state,id,slotLevel=0){
   if(power.type==='feature'){
     if(power.passive)throw new Error('Capacità informativa: effetto da risolvere al tavolo');
     if(power.remaining<1)throw new Error('Utilizzi esauriti');
+    if(power.effect==='relentless-endurance'&&state.hp===0&&state.extended?.deathSaves.failures===3)throw new Error('Tre fallimenti: correzione DM necessaria');
     if(power.effect==='relentless-endurance'&&state.hp!==0)throw new Error('Usa questa capacità soltanto a zero PF, dopo verifica col DM');
     let next={...state,powers:state.powers.map(p=>p.id===id?{...p,remaining:p.remaining-1}:p)};
     if(power.effect==='rage'){
@@ -86,6 +87,7 @@ export function usePower(state,id,slotLevel=0){
 }
 export function rest(state,kind){
   if(!['short','long'].includes(kind))throw new Error('Riposo non valido');
+  if(kind==='long'&&state.hp===0&&state.extended?.deathSaves.failures===3)throw new Error('Tre fallimenti: correzione DM prima del riposo lungo');
   const recover=r=>r&&(r.recovery===kind||(kind==='long'&&r.recovery==='short'))?{...r,remaining:r.maxUses}:r;
   return {...state,hp:kind==='long'?state.maxHp:state.hp,resolve:kind==='long'&&!state.importInfo?1:state.resolve,concentration:kind==='long'?null:state.concentration,
     slots:kind==='long'?state.slots.map(s=>({...s,current:s.max})):state.slots,

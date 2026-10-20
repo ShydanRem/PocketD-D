@@ -11,6 +11,7 @@ unsigned pd_hit_budget(const pd_state *s,unsigned policy) {
 }
 bool pd_rest_apply(pd_state *s,const pd_rest_plan *plan) {
     if(!s||!plan||!pd_valid(s)||plan->policy>PD_HD_2024||(!plan->long_rest&&plan->policy!=PD_HD_MANUAL))return false;
+    if(plan->long_rest&&!s->hp&&s->status.available&&s->status.failures==3)return false;
     unsigned regain=0;
     for(unsigned i=0;i<PD_HIT_POOLS;i++) {
         unsigned selected=plan->regain[i];
@@ -18,7 +19,7 @@ bool pd_rest_apply(pd_state *s,const pd_rest_plan *plan) {
         regain+=selected;
     }
     if(regain>pd_hit_budget(s,plan->policy))return false;
-    if(plan->long_rest){s->hp=s->max_hp;s->temp_hp=0;s->magic.concentration=0;}
+    if(plan->long_rest){pd_hp(s,s->max_hp);s->temp_hp=0;s->magic.concentration=0;s->status.successes=0;s->status.failures=0;s->status.stabilized=false;}
     pd_end_rage(s);s->combat.power_attack=false;
     if(s->magic.available) {
         for(unsigned i=0;i<9;i++) {

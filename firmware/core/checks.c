@@ -24,6 +24,6 @@ int pd_check_mode(const pd_state *s,pd_check_kind kind,unsigned index,int reques
     if(!pd_describe_check(s,kind,index,&r))return 0;
     bool automatic=s->training.available&&!ignore_effects;
     bool advantage=requested>0||(automatic&&s->training.strength_advantage&&r.ability==0);
-    bool disadvantage=requested<0||(automatic&&s->training.poisoned&&kind!=PD_SAVE);
+    bool disadvantage=requested<0||(!ignore_effects&&s->training.poisoned&&kind!=PD_SAVE);
     return advantage==disadvantage?0:advantage?1:-1;
 }

@@ -1,5 +1,9 @@
 # Riposi e dadi vita sul dispositivo — v0.23
 
+> Documento dell’incremento v0.23. La v0.24 aggiunge
+> [registro morte e condizioni](STATO-CONDIZIONI-MORTE.md), USB v7/PDD7 e il
+> blocco del lungo a tre fallimenti/zero PF. Le omissioni v0.23 sotto sono storiche.
+
 Il dispositivo gestisce riposi e cure con dadi vita offline. Il PC prepara e
 trasferisce la scheda; Foundry, un server e Beyond non servono durante il gioco.
 Questo incremento usa esclusivamente personaggi sintetici per le verifiche:

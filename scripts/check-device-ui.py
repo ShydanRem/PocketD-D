@@ -22,11 +22,17 @@ with sync_playwright() as p:
       const {parseLibrary,serializeLibrary,updateCharacter,activeCharacter}=await import('/src/library.js');
       const {emptyExtended}=await import('/src/extended.js');
       const lib=parseLibrary(localStorage.getItem('pocketdd-library-v1')),state=activeCharacter(lib);
-      state.extended=emptyExtended();state.extended.hitDice=[{name:'Classe sonda',die:8,max:3,used:1}];state.slots[0]={max:3,current:2};state.extended.pactSlots[0]={max:1,current:1};
+      state.extended=emptyExtended();state.extended.conditions=[{name:'Nota sonda',level:2}];state.extended.deathSaves={successes:1,failures:2,stabilized:false};state.extended.hitDice=[{name:'Classe sonda',die:8,max:3,used:1}];state.slots[0]={max:3,current:2};state.extended.pactSlots[0]={max:1,current:1};
       state.powers=[{id:'qa-spell',name:'Magia sonda',type:'spell',description:'Descrizione sintetica. '.repeat(40),level:1,concentration:true,castingAbility:'INT',attackModifier:0,saveModifier:0,prepared:true,usesSpellSlot:true}];
       localStorage.setItem('pocketdd-library-v1',serializeLibrary(updateCharacter(lib,state)));
     }""")
     page.reload(wait_until='networkidle')
+    page.locator('[data-action="extended-state"]').click()
+    assert not page.locator('[name="poisoned-effect"]').is_checked()
+    page.locator('[name="conditions"]').fill('Poisoned | 2')
+    page.locator('dialog button[type="submit"]').click()
+    # Editing annotations must not silently toggle the mechanical effect.
+    assert not page.locator('[data-action="condition"]').get_attribute('aria-pressed')=='true'
     before=page.evaluate('localStorage.getItem("pocketdd-library-v1")')
     page.locator('[data-action="device-export"]').click()
     dialog=page.locator('dialog')
@@ -47,6 +53,9 @@ with sync_playwright() as p:
     assert 'Estratto 500 caratteri' in dialog.locator('[data-device-magic]').inner_text()
     dialog.locator('[data-device-recovery] summary').click()
     assert 'Classe sonda: 2/3 d8' in dialog.locator('[data-device-recovery]').inner_text()
+    dialog.locator('[data-device-status] summary').click()
+    assert '1/3 riuscite, 2/3 fallite' in dialog.locator('[data-device-status]').inner_text()
+    assert 'Poisoned · livello 2' in dialog.locator('[data-device-status]').inner_text()
     with page.expect_download() as info:
         page.locator('[data-device-download]').click()
     download=info.value
@@ -54,7 +63,7 @@ with sync_playwright() as p:
     assert download.suggested_filename=='pocketdd-device.json'
     assert packet['hp']==23 and packet['abilities']['DES']==16 and packet['armorClass']==16
     assert packet['resources']==[{'name':'Slancio','current':1,'maximum':1}]
-    assert packet['format']=='pocketdd-device' and packet['version']==6
+    assert packet['format']=='pocketdd-device' and packet['version']==7
     assert packet['training']['skillRanks']['perception']==0
     assert packet['avatar']=={'skin':1,'hair':1,'cloak':1,'style':1}
     assert len(packet['inventory']['items'])==3 and packet['inventory']['items'][0]['kind']==3 and 'importInfo' not in packet
@@ -63,6 +72,7 @@ with sync_playwright() as p:
     assert packet['magic']['pact'][0]=={'current':1,'maximum':1}
     assert packet['magic']['powers'][0]['flags']&32 and len(packet['magic']['powers'][0]['description'])==500
     assert packet['recovery']=={'available':True,'pools':[{'name':'Classe sonda','die':8,'maximum':3,'used':1}]}
+    assert packet['status']=={'available':True,'successes':1,'failures':2,'stabilized':False,'conditions':[{'name':'Poisoned','level':2}]}
     assert not errors, errors
     browser.close()
 print('PC support: preview, omissions, download, unchanged collection passed (synthetic demo)')

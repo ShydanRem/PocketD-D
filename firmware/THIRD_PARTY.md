@@ -42,3 +42,7 @@ and preserves the other expander direction/output/polarity bits.
 The v0.23 rest/hit-die implementation, views and test fixtures are PocketD-D
 code. It reuses the original pixel dice renderer and adds no external artwork,
 rules catalogue, runtime service or firmware dependency.
+
+The v0.24 status/death-save logic, condition-note views and fixtures are original
+PocketD-D code. Common condition names are labels only; no external rules text,
+character JSON, artwork or new runtime dependency is bundled.

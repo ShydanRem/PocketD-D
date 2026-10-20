@@ -31,9 +31,10 @@ export function setCombatOption(state,key,value){
 
 export function adjustHeroHp(state,delta){
   if(!Number.isInteger(delta))throw new Error('Variazione PF non valida');
+  if(delta>0&&state.hp===0&&state.extended?.deathSaves.failures===3)return state;
   const absorbed=delta<0?Math.min(state.extended?.tempHp??0,-delta):0;
   const hp=Math.max(0,Math.min(state.maxHp,state.hp+delta+absorbed));
   if(!state.extended)return {...state,hp,concentration:hp===0?null:state.concentration};
-  const extended={...state.extended,tempHp:state.extended.tempHp-absorbed,combat:{...state.extended.combat,raging:hp===0?false:state.extended.combat.raging},deathSaves:hp>0&&state.hp===0?{successes:0,failures:0,stabilized:false}:state.extended.deathSaves};
+  const extended={...state.extended,tempHp:state.extended.tempHp-absorbed,combat:{...state.extended.combat,raging:hp===0?false:state.extended.combat.raging},deathSaves:((hp>0&&state.hp===0)||(state.hp>0&&hp===0))?{successes:0,failures:0,stabilized:false}:state.extended.deathSaves};
   return {...state,hp,extended,concentration:hp===0?null:state.concentration};
 }

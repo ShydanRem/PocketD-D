@@ -253,7 +253,7 @@ int main(void) {
     click("Salv. DES +7 >");screenshot("save-detail.ppm");click("Indietro");
     click("Scheda");click("FOR\n+2");click("Lancia");assert(result.count==2&&result.bonus==2);click("Accelera");
     assert(save_calls==check_saves&&!memcmp(&state,&trained,sizeof state));
-    state.training.available=false;page=SHEET;sheet_tab=1;render();bounds();screenshot("skills-legacy.ppm");
+    state.training=(pd_training){0};page=SHEET;sheet_tab=1;render();bounds();screenshot("skills-legacy.ppm");
     click("Caratt.");click("DES 16\n+3");click("Lancia");assert(result.count==1&&result.bonus==3);click("Accelera");
     /* Device inventory: atomic consumables, attack -> critical -> one damage roll. */
     pd_demo(&state);combat_roll=0;has_roll=false;page=RESOURCES;inventory_page=0;render();bounds();
@@ -374,5 +374,33 @@ int main(void) {
     state.recovery.available=false;state.recovery.count=0;click("Riposo breve");click("Conferma");screenshot("rest-legacy.ppm");click("Fine");
     state.recovery=(pd_recovery){.available=true,.count=20};for(unsigned i=0;i<20;i++)state.recovery.pools[i]=(pd_hit_die){.name="Classe",.die=12,.maximum=20,.used=i};
     memset(state.recovery.pools[19].name,'W',40);state.recovery.pools[19].name[40]=0;state.hp=20;rest_active=true;hit_index=19;page=HIT_DICE;render();bounds();screenshot("hit-last.ppm");
-    puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback and guarded physical buttons passed");
+    /* State notes, independent poison flag and committed death-save animations. */
+    pd_demo(&state);state.hp=0;state.temp_hp=4;combat_roll=0;has_roll=false;undo_available=false;rest_active=false;
+    state.status=(pd_status){.available=true,.count=3,.successes=1,.failures=1,.conditions={{.name="Poisoned",.level=0},{.name="Spossatezza",.level=1},{.name="Nota del DM",.level=2}}};state.training.poisoned=true;state.shortcuts[1]=6;
+    page=RESOURCES;render();bounds();click("Stato");assert(page==STATUS_HOME);screenshot("status-home.ppm");
+    static pd_state before_status;before_status=state;calls=random_calls;unsigned status_saves=save_calls;
+    click("Avvelenato: si");screenshot("status-poison.ppm");assert(page==STATUS_CONFIRM&&!memcmp(&state,&before_status,sizeof state));shortcut(0);act(100);assert(page==STATUS_CONFIRM&&!stage_import(&imported_magic));
+    click("Indietro");assert(!memcmp(&state,&before_status,sizeof state)&&random_calls==calls&&save_calls==status_saves);click("Avvelenato: si");click("Conferma");assert(!state.training.poisoned&&state.status.count==3);
+    click("Condizioni: 3 note");screenshot("conditions.ppm");click("Poisoned");screenshot("condition-detail.ppm");
+    click("+1");assert(page==STATUS_CONFIRM&&state.status.conditions[0].level==0);click("Indietro");assert(state.status.conditions[0].level==0);
+    click("+1");before_status=state;fail_save=true;click("Conferma");assert(!memcmp(&state,&before_status,sizeof state)&&page==STATUS_CONFIRM);fail_save=false;click("Conferma");assert(state.status.conditions[0].level==1&&!state.training.poisoned);
+    click("Rimuovi nota");click("Conferma");assert(state.status.count==2&&!strcmp(state.status.conditions[0].name,"Spossatezza")&&!state.training.poisoned);
+    click("Aggiungi");screenshot("condition-picker.ppm");click(">");click("Spaventato");click("Conferma");assert(state.status.count==3&&!strcmp(state.status.conditions[2].name,"Spaventato"));
+    click("Indietro");click("Salvezze contro morte");screenshot("death-tracker.ppm");
+    state.training.poisoned=true;before_status=state;calls=random_calls;status_saves=save_calls;click("Lancia d20 base");screenshot("death-confirm.ppm");assert(page==STATUS_CONFIRM&&save_calls==status_saves&&random_calls==calls);
+    shortcut(1);assert(page==STATUS_CONFIRM);click("Indietro");assert(!memcmp(&state,&before_status,sizeof state));click("Lancia d20 base");random_values[0]=random_values[1]=9;
+    fail_save=true;click("Conferma");assert(status_rolled&&random_calls==calls+1&&page==STATUS_CONFIRM&&!memcmp(&state,&before_status,sizeof state));click("Conferma");assert(random_calls==calls+1);
+    fail_save=false;click("Conferma");assert(page==DICE&&combat_roll==5&&result.count==1&&!result.bonus&&state.status.successes==2&&state.status.failures==1&&random_calls==calls+1);
+    calls=random_calls;shortcut(1);assert(!dice_animation.active&&random_calls==calls);bounds();screenshot("death-result.ppm");act(13);assert(random_calls==calls&&state.status.successes==2);
+    click("Stato");click("Correggi / stabilizza");screenshot("death-edit.ppm");click("Riuscita +");click("Conferma");assert(state.status.stabilized&&!state.status.successes&&!state.status.failures&&state.hp==0);screenshot("death-stable.ppm");act(1510);assert(page==DEATH_VIEW&&random_calls==calls);
+    click("Correggi / stabilizza");click("Critico +2");click("Conferma");assert(!state.status.stabilized&&state.status.failures==2);
+    click("Lancia d20 base");random_values[0]=random_values[1]=0;click("Conferma");click("Accelera");assert(state.status.failures==3&&!state.hp);screenshot("death-three.ppm");click("Fine");
+    before_status=state;status_saves=save_calls;act(2);assert(!memcmp(&state,&before_status,sizeof state)&&save_calls==status_saves);click("Usi");click("Riposi");act(903);assert(page==REST_HOME);click("Usi");click("Zaino");click("Pozione  x2");calls=random_calls;act(88);assert(page==ITEM_DETAIL&&random_calls==calls&&state.items[1].quantity==2);
+    act(1501);click("Correggi / stabilizza");click("Fallita -");click("Conferma");assert(state.status.failures==2);click("Lancia d20 base");random_values[0]=random_values[1]=19;click("Conferma");click("Accelera");assert(state.hp==1&&!state.status.failures&&!state.status.successes);screenshot("death-twenty.ppm");
+    click("Eroe");click("Annulla");assert(!state.hp&&state.status.failures==2);state.shortcuts[0]=7;act(850);click("PWR breve: Riposi");assert(state.shortcuts[0]==8);shortcut(0);assert(page==STATUS_HOME);before_status=state;assert(stage_import(&imported_magic)&&pending.shortcuts[0]==8);click("Annulla");assert(!memcmp(&state,&before_status,sizeof state));
+    state.status=(pd_status){0};page=DEATH_VIEW;render();bounds();screenshot("death-legacy.ppm");click("Avvia registro");before_status=state;click("Indietro");assert(!state.status.available&&!memcmp(&state,&before_status,sizeof state));click("Avvia registro");click("Conferma");assert(state.status.available&&!state.status.failures&&!state.status.successes);
+    state.status.count=30;for(unsigned i=0;i<30;i++){memset(state.status.conditions[i].name,'W',60);state.status.conditions[i].name[60]=0;state.status.conditions[i].level=i%7;}
+    page=CONDITION_LIST;condition_page=9;render();bounds();screenshot("condition-last.ppm");tap(210,302);assert(condition_index==29);screenshot("condition-long.ppm");
+    page=DEATH_VIEW;state.status.successes=3;state.status.failures=3;render();bounds();calls=random_calls;act(1510);assert(page==DEATH_VIEW&&random_calls==calls); /* Imported conflicts require a correction. */
+    puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves and guarded physical buttons passed");
 }

@@ -165,3 +165,17 @@ e poi animata; un tentativo ripetuto nella stessa finestra non rilancia.
 La nuova scorciatoia locale 7 apre Riposi, senza autorizzare conferme fisiche.
 Fixture PDD5 generato dall'encoder `a6c525f`, migrazione senza scritture al boot,
 CRC/allocazioni/versioni future verificati. [Dettagli](RIPOSI-RECUPERI.md).
+
+
+Incremento 0.24: `core/status.c` gestisce contatori, d20 morte base e annotazioni;
+`src/status.js` fornisce il riferimento deterministico. `pd_hp`, cure, capacità
+e recuperi proteggono il caso tre fallimenti a zero PF. Le condizioni non sono
+un motore di effetti: il flag Avvelenato è indipendente e l'editor PC lo espone
+separatamente. `status.available` indica il registro morte; aggiungere note
+locali non lo inizializza. USB v7/PDD7 aggiungono 1865 byte prima del CRC, senza
+cambiare partizioni o backup PC. Il candidato della conferma è condiviso fra
+cura con dado vita e tiro morte, con mutua esclusione dei dialoghi; rimane in
+PSRAM. I tentativi di salvataggio ripetuti riusano il risultato estratto.
+La scorciatoia 8 è Stato. 16013 confronti aggiuntivi attraversano il parser
+reale; fixture PDD6 generato dall'encoder `da7b8e2` prima della modifica.
+[Schema, uso e limiti](STATO-CONDIZIONI-MORTE.md).

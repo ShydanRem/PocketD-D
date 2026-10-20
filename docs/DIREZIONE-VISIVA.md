@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.23
+# Direzione visiva del dispositivo — v0.24
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -151,3 +151,10 @@ valori recuperati in menta/oro, anteprima compatta prima della conferma e
 pulsanti di almeno 44 px. Le cure riusano i dadi pixel art, mostrando faccia,
 cura calcolata e PF effettivi. `rest-preview.png` raccoglie quattro catture del
 firmware LVGL su host. Nessun nuovo asset esterno o mockup sostitutivo del codice.
+
+La v0.24 aggiunge Stato, liste di condizioni e registro morte con la stessa
+palette. Riuscite/fallite e stabilizzazione sono leggibili prima del tiro;
+il d20 morte riusa l'animazione pixel art e conserva la distinzione fra faccia
+e modifica salvata. Nomi delle note su più righe nel dettaglio, pulsanti di
+almeno 44 px e tasti fisici protetti nelle conferme. `status-preview.png` viene
+dal firmware LVGL su host; non è un mockup o una prova del pannello fisico.

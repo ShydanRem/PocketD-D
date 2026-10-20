@@ -50,11 +50,15 @@ bool pd_valid(const pd_state *s) {
         const pd_hit_die *v=&s->recovery.pools[i];
         if(!text(v->name,sizeof v->name)||!(v->die==6||v->die==8||v->die==10||v->die==12)||!v->maximum||v->maximum>20||v->used>v->maximum)return false;
     }
-    return pd_magic_valid(s)&&s->shortcuts[0]<=7&&s->shortcuts[1]<=7&&s->shortcuts[2]<=7;
+    if(s->status.count>PD_CONDITIONS||s->status.successes>3||s->status.failures>3||(!s->status.available&&(s->status.successes||s->status.failures||s->status.stabilized)))return false;
+    for(unsigned i=0;i<s->status.count;i++)if(!text(s->status.conditions[i].name,61)||s->status.conditions[i].level>6)return false;
+    return pd_magic_valid(s)&&s->shortcuts[0]<=8&&s->shortcuts[1]<=8&&s->shortcuts[2]<=8;
 }
 int pd_modifier(int score) { return score / 2 - 5; }
 void pd_hp(pd_state *s, int delta) {
     /* Damage consumes temporary HP first. Healing never creates temporary HP. */
+    if(delta>0&&!s->hp&&s->status.available&&s->status.failures==3)return;
+    unsigned old=s->hp;
     int64_t amount = delta;
     if (amount < 0) {
         int64_t absorbed = -amount < s->temp_hp ? -amount : s->temp_hp;
@@ -62,6 +66,7 @@ void pd_hp(pd_state *s, int delta) {
     }
     amount += s->hp;
     s->hp = amount < 0 ? 0 : amount > s->max_hp ? s->max_hp : amount;
+    if(s->status.available&&((old&&!s->hp)||(!old&&s->hp))){s->status.successes=0;s->status.failures=0;s->status.stabilized=false;}
     if(!s->hp) {s->magic.concentration=0;s->combat.raging=false;if(s->magic.available)s->training.strength_advantage=false;}
 }
 bool pd_resource_change(pd_state *s, unsigned index, int delta) {
@@ -97,10 +102,10 @@ static void put16(uint8_t **p, unsigned n) { *(*p)++=n; *(*p)++=n>>8; }
 static unsigned get16(const uint8_t **p) { unsigned n=(*p)[0]|((*p)[1]<<8); *p+=2; return n; }
 static void put32(uint8_t *p, uint32_t n) { for (int i=0;i<4;i++) p[i]=n>>(8*i); }
 static uint32_t get32(const uint8_t *p) { return (uint32_t)p[0]|((uint32_t)p[1]<<8)|((uint32_t)p[2]<<16)|((uint32_t)p[3]<<24); }
-size_t pd_encoded_size(const pd_state *s){return 6050u+552u*s->magic.count;}
+size_t pd_encoded_size(const pd_state *s){return 7915u+552u*s->magic.count;}
 size_t pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
     memset(out, 0, pd_encoded_size(s));
-    memcpy(out, "PDD6", 4); put32(out+4,gen);
+    memcpy(out, "PDD7", 4); put32(out+4,gen);
     uint8_t *p=out+8;
     memcpy(p,s->name,PD_NAME_BYTES); p+=PD_NAME_BYTES;
     put16(&p,s->hp); put16(&p,s->max_hp); put16(&p,s->temp_hp);
@@ -140,6 +145,8 @@ size_t pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
     for(unsigned i=0;i<PD_HIT_POOLS;i++) {
         const pd_hit_die *v=&s->recovery.pools[i];memcpy(p,v->name,41);p+=41;*p++=v->die;*p++=v->maximum;*p++=v->used;
     }
+    *p++=s->status.available;*p++=s->status.count;*p++=s->status.successes;*p++=s->status.failures;*p++=s->status.stabilized;
+    for(unsigned i=0;i<PD_CONDITIONS;i++){memcpy(p,s->status.conditions[i].name,61);p+=61;*p++=s->status.conditions[i].level;}
     size_t size=pd_encoded_size(s);put32(out+size-4,pd_crc32(out,size-4));return size;
 }
 bool pd_record_known(const uint8_t *data,size_t size) {
@@ -148,7 +155,8 @@ bool pd_record_known(const uint8_t *data,size_t size) {
     if(size==512&&!memcmp(data,"PDD3",4))return true;
     if(size==5184&&!memcmp(data,"PDD4",4))return true;
     if(size>=5168&&size<=71408&&!memcmp(data,"PDD5",4)&&data[5123]<=PD_POWERS)return size==5168u+552u*data[5123];
-    return size>=6050&&size<=PD_RECORD_SIZE&&!memcmp(data,"PDD6",4)&&data[5123]<=PD_POWERS&&size==6050u+552u*data[5123];
+    if(size>=6050&&size<=72290&&!memcmp(data,"PDD6",4)&&data[5123]<=PD_POWERS)return size==6050u+552u*data[5123];
+    return size>=7915&&size<=PD_RECORD_SIZE&&!memcmp(data,"PDD7",4)&&data[5123]<=PD_POWERS&&size==7915u+552u*data[5123];
 }
 static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint32_t *gen) {
     if (!pd_record_known(data,size) ||
@@ -181,7 +189,7 @@ static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint
         for(int i=0;i<6;i++) { if(*p>60)goto invalid;t->save_bonus[i]=(int)*p++-30; }
         for(int i=0;i<6;i++) { if(*p>60)goto invalid;t->check_bonus[i]=(int)*p++-30; }
     }
-    if(!memcmp(data,"PDD4",4)||!memcmp(data,"PDD5",4)||!memcmp(data,"PDD6",4)) {
+    if(!memcmp(data,"PDD4",4)||!memcmp(data,"PDD5",4)||!memcmp(data,"PDD6",4)||!memcmp(data,"PDD7",4)) {
         if(p[0]>1||p[5]>1||p[6]>1||p[7]>1)goto invalid;
         candidate.inventory_available=*p++;candidate.item_count=*p++;candidate.equipped=*p++;
         candidate.combat.rage_bonus=*p++;candidate.combat.critical_dice=*p++;candidate.combat.raging=*p++;candidate.combat.power_attack=*p++;candidate.combat.thrown=*p++;
@@ -192,7 +200,7 @@ static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint
             v->attack_modifier=(int)*p++-10;v->damage_modifier=(int)*p++-10;v->healing_modifier=*p++;
         }
     }
-    if(!memcmp(data,"PDD5",4)||!memcmp(data,"PDD6",4)) {
+    if(!memcmp(data,"PDD5",4)||!memcmp(data,"PDD6",4)||!memcmp(data,"PDD7",4)) {
         pd_magic *m=&candidate.magic;if(*p>1)goto invalid;m->available=*p++;m->count=*p++;m->concentration=*p++;
         for(int i=0;i<9;i++){m->slots[i].current=*p++;m->slots[i].maximum=*p++;m->pact[i].current=*p++;m->pact[i].maximum=*p++;}
         memcpy(candidate.shortcuts,p,3);p+=3;
@@ -203,12 +211,17 @@ static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint
             v->attack_modifier=(int)*p++-15;v->save_modifier=(int)*p++-15;
         }
     }
-    if(!memcmp(data,"PDD6",4)) {
+    if(!memcmp(data,"PDD6",4)||!memcmp(data,"PDD7",4)) {
         if(*p>1)goto invalid;
         candidate.recovery.available=*p++;candidate.recovery.count=*p++;
         for(unsigned i=0;i<PD_HIT_POOLS;i++) {
             pd_hit_die *v=&candidate.recovery.pools[i];memcpy(v->name,p,41);p+=41;v->die=*p++;v->maximum=*p++;v->used=*p++;
         }
+    }
+    if(!memcmp(data,"PDD7",4)) {
+        if(p[0]>1||p[4]>1)goto invalid;
+        candidate.status.available=*p++;candidate.status.count=*p++;candidate.status.successes=*p++;candidate.status.failures=*p++;candidate.status.stabilized=*p++;
+        for(unsigned i=0;i<PD_CONDITIONS;i++){memcpy(candidate.status.conditions[i].name,p,61);p+=61;candidate.status.conditions[i].level=*p++;}
     }
     if (!pd_valid(&candidate)) goto invalid;
     *gen=get32(data+4);return true;

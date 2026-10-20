@@ -120,6 +120,7 @@ export function weaponDamage(combat,random) {
 export function useItem(state,id,random) {
   const item=state.inventory.find(entry=>entry.id===id);
   if(!item||!['consumable','healing'].includes(item.type)||item.quantity===0)throw new Error('Oggetto non utilizzabile');
+  if(item.type==='healing'&&state.hp===0&&state.extended?.deathSaves.failures===3)throw new Error('Tre fallimenti: correzione DM prima di curare');
   if(item.type==='healing'&&state.hp===state.maxHp)return {state,healing:null,gained:0};
   const healing=item.type==='healing'?Array.from({length:item.diceCount},()=>rollDie(item.dieSides,random)).reduce((a,b)=>a+b,item.healingModifier):null;
   const next=adjustQuantity(state,id,-1);

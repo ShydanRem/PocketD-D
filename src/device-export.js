@@ -6,9 +6,9 @@ export function projectDevice(input){
   const s=parseBackup(serialize(input));
   const warnings=[
     'Firmware iniziale: una sola scheda attiva. La conferma sul display sostituisce la copia sul dispositivo; la raccolta PC resta conservata.',
-    'Trasferisce nome, livello, aspetto dell’avatar, PF, PF temporanei, CA, caratteristiche, abilità, salvezze, inventario (60 voci), attacchi, magie/capacità, dadi vita e fino a 8 contatori manuali. Non trasferisce la risposta originale di Beyond.',
+    'Trasferisce nome, livello, aspetto dell’avatar, PF, PF temporanei, CA, caratteristiche, abilità, salvezze, inventario (60 voci), attacchi, magie/capacità, dadi vita, condizioni e contatori morte e fino a 8 contatori manuali. Non trasferisce la risposta originale di Beyond.',
     'Avatar originale: carnagione, colore/taglio dei capelli e mantello scelti sul PC. Non rappresenta equipaggiamento o immagini di Beyond. Animazione disattivabile dal dispositivo in Aspetto.',
-    'Non disponibili sul dispositivo: gestione completa di condizioni/effetti, tiri salvezza contro morte, monete, mappa, party e storico.',
+    'Non disponibili sul dispositivo: gestione completa degli effetti delle condizioni, monete, mappa, party e storico.',
     'Prove con competenze, maestrie, bonus extra e mezza competenza riconosciuti dal PC. Le prove da verificare restano bloccate; per eccezioni del DM è disponibile il dado libero.',
     'Avvelenato e vantaggio FOR da Ira sono fotografati al trasferimento. Ira riconosciuta attivabile dalla capacità; altre condizioni e durate restano manuali. Effetti PC disattivabili per il singolo tiro; altri effetti restano da gestire con il DM.',
     'CA fotografata al momento dell’esportazione; non ricalcolata cambiando equipaggiamento. I contatori non applicano recuperi o effetti automatici.',
@@ -47,10 +47,14 @@ export function projectDevice(input){
   const recovery={available:Boolean(s.extended),pools:(s.extended?.hitDice??[]).map(h=>({name:h.name.trim()?ascii(h.name,40):'Classe senza nome',die:h.die,maximum:h.max,used:h.used}))};
   warnings.push('Riposi con anteprima e conferma: patto e risorse con recupero breve/lungo riconosciuto. Dadi vita importati senza inventare riserve; recupero lungo 2014, 2024 o manuale scelto sul dispositivo. Requisiti, eccezioni e condizioni da verificare con il DM. Contatori generici manuali.');
   warnings.push('Dadi vita: nomi ASCII fino a 40 caratteri, d6/d8/d10/d12 e utilizzi per classe. Spesa singola durante il riposo breve con cura base dado + COS, minimo zero; bonus speciali e regole opzionali manuali. Tasti configurabili; la copia conserva le preferenze locali.');
-  const packet={format:'pocketdd-device',version:6,name:ascii(s.name,48),level:integer(s.level,1,20,'Livello'),hp:integer(s.hp,0,999,'PF'),
+  const status={available:Boolean(s.extended),successes:s.extended?.deathSaves.successes??0,failures:s.extended?.deathSaves.failures??0,stabilized:s.extended?.deathSaves.stabilized??false,
+    conditions:(s.extended?.conditions??[]).map(c=>({name:ascii(c.name,60),level:c.level}))};
+  warnings.push('Stato: fino a 30 condizioni come annotazioni con livello 0–6; nessun effetto dedotto dal nome. Avvelenato è un effetto separato e configurabile sul dispositivo. Rimuovere una nota non disattiva effetti.');
+  warnings.push('Morte: contatori trasferiti esattamente; d20 base senza bonus, vantaggi o talenti, con conferma e correzioni DM. Tre fallimenti a zero PF bloccano cure ordinarie e riposo lungo fino a correzione esplicita. Nessuna morte istantanea o gestione automatica dei danni a zero PF.');
+  const packet={format:'pocketdd-device',version:7,name:ascii(s.name,48),level:integer(s.level,1,20,'Livello'),hp:integer(s.hp,0,999,'PF'),
     maxHp:integer(s.maxHp,1,999,'PF massimi'),tempHp:integer(s.extended?.tempHp??0,0,999,'PF temporanei'),armorClass:integer(s.armorClass,1,40,'CA'),
     avatar:Object.fromEntries(['skin','hair','cloak','style'].map(k=>[k,integer(s.avatar[k],0,2,k)])),
-    training,inventory,magic,recovery,
+    training,inventory,magic,recovery,status,
     abilities:Object.fromEntries(abilityKeys.map(k=>[k,integer(s.abilities[k],1,30,k)])),
     resources:counters.slice(0,DEVICE_MAX_RESOURCES).map(r=>({name:ascii(r.name,32),current:integer(r.current,0,999,r.name),maximum:integer(r.maximum,1,999,r.name)}))};
   if(serializeDevice(packet).length>262144)throw new Error('Copia oltre 262144 byte: nessun inventario troncato.');

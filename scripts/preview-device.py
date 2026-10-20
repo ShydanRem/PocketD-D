@@ -66,3 +66,12 @@ if all((base/(name+'.ppm')).is_file() for name in rests):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(rests):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'rest-preview.png');print(base/'rest-preview.png')
+
+status=['status-home','conditions','death-tracker','death-twenty']
+for name in status+['status-poison','condition-detail','condition-picker','death-confirm','death-result','death-edit','death-stable','death-three','death-legacy','condition-last','condition-long']:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in status):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(status):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'status-preview.png');print(base/'status-preview.png')
