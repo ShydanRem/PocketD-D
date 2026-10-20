@@ -98,3 +98,7 @@ v0.33 `7cc17f8`; non contiene dati Beyond o informazioni personali.
 
 La v0.35 aggiunge codice, test e interfaccia originali per riduzioni esplicite
 prima/dopo e conto del colpo. Nessun nuovo asset esterno o dato personale.
+
+La v0.36 aggiunge codice/UI e test originali per profili di riduzione. Fixture
+PDD15 sintetica dell'encoder v0.35 `c99bdf0`, senza dati Beyond o informazioni
+personali. Nessun nuovo asset esterno.

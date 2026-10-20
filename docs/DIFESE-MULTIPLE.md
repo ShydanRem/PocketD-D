@@ -1,5 +1,8 @@
 # Tre extra difensivi indipendenti — v0.34
 
+> Aggiornamento v0.36: [profili persistenti di riduzione e budget per colpo](PROFILI-RIDUZIONE.md).
+> PDD16 con lettura PDD1–PDD15; i valori manuali del colpo restano solo RAM.
+
 > Aggiornamento v0.35: [riduzioni esplicite prima/dopo e conto del colpo](RIDUZIONI-DANNI.md).
 > PDD15/USB v7/layout invariati; le regole automatiche di riduzione restano successive.
 

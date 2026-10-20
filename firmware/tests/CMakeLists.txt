@@ -64,3 +64,6 @@ target_include_directories(multiple-defences PRIVATE ../core)
 
 add_executable(reductions test_reductions.c ../core/damage.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
 target_include_directories(reductions PRIVATE ../core)
+
+add_executable(reduction-profiles test_reduction_profiles.c ../core/damage.c ../core/rest.c ../core/dice_pool.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
+target_include_directories(reduction-profiles PRIVATE ../core)

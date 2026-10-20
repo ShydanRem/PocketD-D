@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.35
+# Direzione visiva del dispositivo — v0.36
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -246,3 +246,10 @@ intero colpo, quantità scelta ed eccedenza ignorata. Tipi → Conto mostra cinq
 passaggi fino al danno effettivo, preservati nel risultato. Anteprima host:
 `firmware/tests/out/ui-build/reductions-preview.png`; leggibilità fisica ancora
 da verificare sulla scheda.
+
+
+La v0.36 distingue configurazione salvata e profilo scelto nella bozza del colpo.
+Budget e somma assegnata sono visibili; i requisiti completi si confrontano prima
+della conferma. Conto → Profilo conserva il dettaglio all'impatto. Anteprima
+host: `firmware/tests/out/ui-build/reduction-profiles-preview.png`; la cattura
+non prova la leggibilità sul display fisico.

@@ -1,11 +1,11 @@
-# Firmware PocketD-D 0.35 — riduzioni esplicite del colpo
+# Firmware PocketD-D 0.36 — profili locali di riduzione
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
-[Novità v0.35: riduzioni prima/dopo e conto completo](RIDUZIONI-DANNI.md).
-PDD15, USB v7/layout invariati e lettura dei salvataggi precedenti.
+[Novità v0.36: profili persistenti e budget condiviso](PROFILI-RIDUZIONE.md).
+PDD16, USB v7/layout invariati e lettura dei salvataggi precedenti.
 
 ## Stato e perimetro
 
@@ -233,8 +233,8 @@ reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
 ## Salvataggio e dadi
 
 NVS nel namespace `pocketdd`, nuova partizione `pdd_state`, due chiavi alternate
-`state_a`/`state_b`. Record PDD15 (tag `PDDF`) da **8333 + 552 × numero voci** byte, massimo
-74573. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
+`state_a`/`state_b`. Record PDD16 (tag `PDDG`) da **8363 + 552 × numero voci** byte, massimo
+74603. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
 visibile. Nessun dump di struct, erase o fallback distruttivo. Errori I/O o
 allocazioni insufficienti bloccano scritture; CRC e versioni future conservati.
 
@@ -255,8 +255,9 @@ PDD13 conserva gli extra; le copie precedenti a PDD14 mantengono Sempre per
 ogni proprietà. Al payload si aggiungono 78 byte di selettori base/extra, prima
 del CRC. PDD15 aggiunge altri 208 byte per due extra indipendenti in più per
 tipo; le copie precedenti mantengono il primo extra e iniziano gli altri vuoti.
-Le nuove scritture PDD15 richiedono firmware v0.34 o successivo:
-[compatibilità e downgrade](DIFESE-MULTIPLE.md).
+PDD16 aggiunge 30 byte per tre profili di riduzione; copie precedenti con
+profili vuoti, senza perdere gli extra. Le nuove scritture richiedono firmware
+v0.36 o successivo: [compatibilità e downgrade](PROFILI-RIDUZIONE.md).
 Il nuovo uploader supporta USB v1–v7. Preferenze avatar/tasti
 locali conservate durante l'importazione. [Dettagli](MAGIE-TASTI.md).
 
@@ -662,3 +663,33 @@ Firmware v0.35: **882288 byte**, partizione app 4 MiB **79% libera**;
 ESP-IDF 5.5.5/LVGL 9.4.0. PDD15/USB v7/layout invariati, quantità del colpo solo
 RAM. Nessun flash/collaudo fisico, nuova lettura Beyond o modifica della raccolta
 personale. [Uso e limiti](RIDUZIONI-DANNI.md).
+
+
+## Verifiche v0.36 — profili persistenti di riduzione
+
+176904 combinazioni indipendenti di slot/tipo/regola/fonte parziale/fase/attivo/
+inclusione, 2178 assegnazioni del budget e 1440 permutazioni nelle due fasi.
+Parti ammesse, intero colpo Dopo, manuali precedenti al profilo, budget condiviso,
+clamp, rifiuti prima del RNG, uno snapshot all'impatto e candidato fissato;
+scadenze, rilancio/Ira/zero PF/riposo/fallimento, vincoli inattivi, round numerico
+respinto atomicamente, 42 timer e massimo 50 effetti/difese collegati.
+Record massimo, tutti i 30 byte aggiunti corrotti con CRC valido, fixture
+PDD1–PDD15 e controller NVS senza scritture al boot e banca originale conservata.
+UI LVGL di configurazione completa e confronti, invalidi/testi lunghi/limiti,
+selezione interna/esterna con annullamento, budget/esclusioni/fonte, errore/retry,
+conto originario, round/scadenza, import con soli profili locali, tre gesti
+protetti e 14 pagine dei 42 timer. Controlli ≥44 px nel cerchio e nessuna
+sovrapposizione fra testi/controlli.
+
+Suite firmware e regressioni complete passate, inclusi 37751 confronti PC→USB→C,
+66560 riduzioni/95728 suddivisioni/720 permutazioni, 404352 condizioni,
+212992 extra/83349 fonti, 494312 misti/19968 suddivisioni, 139904 danni,
+78840 salvezze, 4608 vincoli, 32032 difese/64350 avanzamenti, 17266 effetti e
+40648 durate. ASan/UBSan su profili/riduzioni, extra/condizioni/misti, danni/COS/
+vincoli/difese, effetti/durate, magie/riposi/stato, allocazioni, core/parser,
+NVS e UI; leak detector disattivato. 138 test JS e build PC passati.
+
+Firmware v0.36: **891008 byte**, partizione app 4 MiB **79% libera**;
+ESP-IDF 5.5.5/LVGL 9.4.0. PDD16, USB v7/layout invariati. Nessun flash/collaudo
+fisico, lettura Beyond o modifica della raccolta personale.
+[Uso e limiti](PROFILI-RIDUZIONE.md).

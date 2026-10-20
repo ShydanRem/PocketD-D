@@ -56,13 +56,13 @@ Non fanno parte di questo traguardo: importazione Beyond, editor completo, incan
 
 L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco non impedisce le altre fasi. L'ordine delle fasi 0 e 1 può sovrapporsi se l'hardware non è immediatamente disponibile.
 
-## Punto attuale — v0.35
+## Punto attuale — v0.36
 
 | Blocco | Stato software | Cosa manca |
 | --- | --- | --- |
 | Scheda individuale offline | PF/temporanei, prove, abilità/salvezze, zaino, armi, magie, risorse, riposi e dadi vita nel firmware | Monete, storico persistente, effetti completi e regole speciali; sessione reale |
 | Effetti numerici | Otto modificatori CA/PF massimi, basi separate, cure integrate, durate manuali/a round e vincolo esplicito alla concentrazione con fine congiunta | Altre durate/regole, proprietà speciali e ricalcolo da equipaggiamento |
-| Danni e difese | Profili manuali per 13 tipi, base/tre extra separati, durate/vincoli e scadenze comuni, PF/temporanei, salvezza COS, sei componenti per colpo, fonte esplicita e riduzioni manuali prima/dopo con conto completo | Condizioni arbitrarie, più di tre extra per tipo, riduzioni automatiche di talenti/oggetti, eccezioni alle salvezze e casi morte bloccati |
+| Danni e difese | Profili manuali per 13 tipi, base/tre extra separati, durate/vincoli e scadenze comuni, PF/temporanei, salvezza COS, sei componenti per colpo, fonte esplicita e riduzioni manuali prima/dopo, tre profili locali con budget e conto completo | Condizioni arbitrarie, più di tre extra per tipo, catalogo/requisiti/costi automatici delle riduzioni, eccezioni alle salvezze e casi morte bloccati |
 | Stato e morte | Note delle condizioni, Avvelenato separato, d20 morte base e correzioni | Effetti delle altre condizioni, eccezioni e morte istantanea |
 | Grafica e comandi | Tema pixel art, avatar 81 combinazioni, dadi animati, PWR/BOOT configurabili | Leggibilità e precisione touch sulla scheda |
 | Impostazioni schermo | Luminosità, inattività e risveglio protetto nella v0.25 | Consumi misurati, sospensione, batteria e alimentazione |
@@ -166,7 +166,8 @@ Il percorso principale rimane articolato nei quattro blocchi concordati:
    compone fino a sei componenti per colpo con raggruppamento e un solo esito.
    La v0.33 aggiunge condizioni difensive e fonte esplicita per componente.
    La v0.34 porta a tre gli extra indipendenti per tipo; la v0.35 aggiunge
-   riduzioni manuali prima/dopo e conto completo del colpo. Seguono
+   riduzioni manuali prima/dopo e conto completo del colpo. La v0.36 aggiunge
+   tre profili persistenti con budget, regole, durate e vincoli. Seguono
    condizioni arbitrarie, proprietà speciali e
    durate di turno/minuti. Nessuna
    regola dedotta dai nomi delle note.
@@ -282,3 +283,12 @@ PDD15/USB v7/layout invariati. Restano applicabilità automatica, budget e costi
 di riduzioni da talenti/oggetti, condizioni arbitrarie, altre durate e ricalcolo
 da equipaggiamento; il blocco fisico resta aperto.
 [Dettagli](RIDUZIONI-DANNI.md).
+
+
+La v0.36 copre tre profili di riduzione locali persistenti, un budget condiviso
+per colpo e scelta esplicita; condizioni/tipi, durate e vincoli verificati, con
+snapshot del conto e round fino a 42 timer difensivi. PDD16 conserva PDD1–PDD15
+senza scritture al boot. Restano cataloghi/requisiti/costi di capacità reali,
+reazioni, cumulo di profili, condizioni arbitrarie, altre durate e ricalcolo
+da equipaggiamento; il blocco fisico resta aperto.
+[Dettagli](PROFILI-RIDUZIONE.md).

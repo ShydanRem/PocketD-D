@@ -18,12 +18,16 @@ typedef struct { unsigned type,amount; } pd_damage_component;
    flags before rounding, then subtract the final reduction once (floor 0). */
 typedef struct { unsigned count,concentration; pd_damage_component components[PD_DAMAGE_COMPONENTS]; pd_damage_context contexts[PD_DAMAGE_COMPONENTS];
     unsigned reductions[PD_DAMAGE_COMPONENTS],reduction_after; /* Explicit per-part before defences, then once per impact; each 0..9999. */
+    unsigned profile,allocation[PD_DAMAGE_COMPONENTS]; /* 0:none, otherwise index+1. One shared pre-defence budget, or one final budget. */
 } pd_damage_event;
 typedef struct { unsigned type,amount,adjusted,flags,reduction; /* Actual pre-defence subtraction, before grouping/rounding. */ bool configured; uint8_t unresolved; /* Property bits not decided by the known source facts. */ } pd_damage_group;
 typedef struct {
     pd_damage_summary total; /* flags meaningful only when there is one group. */
     unsigned raw,count;
     unsigned requested_before,requested_after,reduction_before,reduction_after,mitigated; /* mitigated: sum after defences, before final reduction. */
+    unsigned profile,profile_count,profile_requested,profile_applied,profile_rows[PD_DAMAGE_COMPONENTS],profile_used[PD_DAMAGE_COMPONENTS]; /* Used/applied are zero when total.configured is false. */
+    pd_reduction_profile profile_snapshot;
+    uint8_t profile_ineligible; bool profile_unavailable,profile_budget; /* These block total.configured. */
     uint16_t missing; /* Unconfigured damage-type bits. */
     uint8_t context_missing,needed[PD_DAMAGE_COMPONENTS]; /* Row bits, then needed trait bits per row. */
     pd_damage_group groups[PD_DAMAGE_COMPONENTS]; /* Sorted by type, effective flags and unresolved properties. */

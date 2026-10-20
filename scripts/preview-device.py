@@ -179,3 +179,13 @@ if all((base/(name+'.ppm')).is_file() for name in reductions):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(reductions):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'reductions-preview.png');print(base/'reductions-preview.png')
+
+# Persistent reduction profiles, explicit shared budgets and impact-time snapshots.
+profiles=['profile-details','profile-allocation','profile-before-math','profile-impact']
+for name in profiles+['profile-math','profile-list','profile-view','profile-confirm','profile-rule','profile-duration','profile-excluded','profile-snapshot','profile-round','profile-expiry','profile-after','profile-import','profile-last-round','profile-invalid','profile-long']:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in profiles):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(profiles):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'reduction-profiles-preview.png');print(base/'reduction-profiles-preview.png')

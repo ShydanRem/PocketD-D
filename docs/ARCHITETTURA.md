@@ -309,3 +309,19 @@ e report si congelano insieme al dado sul retry. Editor generale e di parte
 mantengono bozze separate; rimozione/promozione muove riduzione e fonte insieme
 alla riga. Nessun campo nello stato persistente, PDD15/USB v7 invariati.
 [Dettagli](RIDUZIONI-DANNI.md).
+
+
+## Profili locali di riduzione — v0.36
+
+Tre definizioni nello stato, 10 byte ciascuna serializzati esplicitamente; scelta
+e vettore di assegnazioni restano nell'evento RAM. Preview con budget condiviso,
+condizioni risolte su completamenti compatibili dei fatti della fonte e maschera
+di tipi. Prima verifica le righe assegnate; Dopo richiede tutte le righe ammesse.
+Manuali precedono il profilo nella rispettiva fase; nessuna allocazione automatica
+né duplicazione per gruppo. Errori di budget/attivazione/esclusione bloccano il
+totale prima del RNG. Report con definizione all'impatto, richieste e sottrazioni
+per riga congelato con il candidato. Definizione, selezione esterna e assegnazione
+interna hanno conferme distinte. Vincoli e round includono i bit 39–41 dei tre
+profili, dopo i 39 extra; tutte le scadenze dipendono dalla validazione numerica
+atomica. PDD16 legge PDD1–PDD15 senza scritture al boot.
+[Dettagli](PROFILI-RIDUZIONE.md).

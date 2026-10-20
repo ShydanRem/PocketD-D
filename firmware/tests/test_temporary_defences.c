@@ -74,12 +74,12 @@ int main(void){
  before=s;for(unsigned i=0;i<sizeof bad/sizeof bad[0];i++)assert(!pd_defence_temporary_set(&s,0,bad[i])&&!memcmp(&s,&before,sizeof s));
  assert(!pd_defence_temporary_set(&s,13,(pd_defence_temporary){0})&&!pd_round_advance(NULL,&round)&&!pd_round_advance(&s,NULL));
  s.defences.temporary[0]=(pd_defence_temporary){.flags=1,.active=true,.timed=true};calls=0;assert(!pd_concentration_roll(&s,&(pd_damage_plan){.amount=5},0,0,rng,NULL,&next,&roll,&damage,false)&&!calls);
- /* Maximum-size PDD15 and every new field: CRC-valid malformed bytes reject. */
+ /* Maximum-size PDD16 and every new field: CRC-valid malformed bytes reject. */
  setup(&s);s.magic.count=PD_POWERS;for(unsigned i=2;i<PD_POWERS;i++)s.magic.powers[i]=(pd_power){.name="Magia",.flags=PD_PREPARED};
  for(unsigned i=0;i<13;i++)assert(pd_defence_temporary_set(&s,i,(pd_defence_temporary){.flags=1+i%7,.active=i%2,.timed=true,.rounds=99,.concentration=1}));
  static uint8_t data[PD_RECORD_SIZE];size_t n=pd_encode(&s,135,data);uint32_t gen;
- assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDF",4)&&pd_decode(data,n,&decoded,&gen)&&gen==135);
+ assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDG",4)&&pd_decode(data,n,&decoded,&gen)&&gen==135);
  for(unsigned i=0;i<13;i++)assert(decoded.defences.temporary[i].flags==1+i%7&&decoded.defences.temporary[i].rounds==99&&decoded.defences.temporary[i].concentration==1&&decoded.defences.temporary[i].active==i%2);
- const unsigned invalid[]={8,2,2,100,2};for(unsigned type=0;type<13;type++)for(unsigned field=0;field<5;field++){pd_encode(&s,135,data);data[n-355+5*type+field]=invalid[field];crc(data,n);before=decoded;gen=17;assert(!pd_decode(data,n,&decoded,&gen)&&gen==17&&!memcmp(&decoded,&before,sizeof decoded));}
- printf("Temporary defences: %u independent flag/type/damage cases, %u timer ticks, unified atomic expiry, concentration transitions, impact snapshot, unknown bases, strict PDD15 and corrupt fields passed\n",cases,ticks);
+ const unsigned invalid[]={8,2,2,100,2};for(unsigned type=0;type<13;type++)for(unsigned field=0;field<5;field++){pd_encode(&s,135,data);data[n-385+5*type+field]=invalid[field];crc(data,n);before=decoded;gen=17;assert(!pd_decode(data,n,&decoded,&gen)&&gen==17&&!memcmp(&decoded,&before,sizeof decoded));}
+ printf("Temporary defences: %u independent flag/type/damage cases, %u timer ticks, unified atomic expiry, concentration transitions, impact snapshot, unknown bases, strict PDD16 and corrupt fields passed\n",cases,ticks);
 }

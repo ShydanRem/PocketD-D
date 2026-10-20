@@ -1,5 +1,8 @@
 # Riduzioni esplicite dei danni — v0.35
 
+> Aggiornamento v0.36: [profili persistenti di riduzione e budget per colpo](PROFILI-RIDUZIONE.md).
+> PDD16 con lettura PDD1–PDD15; i valori manuali del colpo restano solo RAM.
+
 Il dispositivo permette di sottrarre quantità esplicite al colpo, distinguendo
 **prima delle difese della parte** e **dopo le difese dell'intero colpo**. Sono
 valori manuali del colpo corrente: non sono capacità permanenti del personaggio
