@@ -9,18 +9,22 @@ typedef struct {
     bool configured,allowed,at_zero,massive,needs_concentration,ends_concentration;
 } pd_damage_summary;
 #define PD_DAMAGE_COMPONENTS 6
+enum { PD_SOURCE_MAGICAL=1,PD_SOURCE_ATTACK=2,PD_SOURCE_SILVERED=4,PD_SOURCE_ADAMANTINE=8 };
+/* Unknown is distinct from false; values must be a subset of known. */
+typedef struct { uint8_t known,values; } pd_damage_context;
 typedef struct { unsigned type,amount; } pd_damage_component;
 /* One source/impact, not a sequence of separate hits. Count 1..6, amount 0..9999.
-   Same-type components are summed before defences; order does not affect rounding. */
-typedef struct { unsigned count,concentration; pd_damage_component components[PD_DAMAGE_COMPONENTS]; } pd_damage_event;
-typedef struct { unsigned type,amount,adjusted,flags; bool configured; } pd_damage_group;
+   Same type + resolved defensive flags are summed before rounding. */
+typedef struct { unsigned count,concentration; pd_damage_component components[PD_DAMAGE_COMPONENTS]; pd_damage_context contexts[PD_DAMAGE_COMPONENTS]; } pd_damage_event;
+typedef struct { unsigned type,amount,adjusted,flags; bool configured; uint8_t unresolved; /* Property bits not decided by the known source facts. */ } pd_damage_group;
 typedef struct {
-    pd_damage_summary total; /* flags meaningful only for a single grouped type. */
+    pd_damage_summary total; /* flags meaningful only when there is one group. */
     unsigned raw,count;
-    uint16_t missing;
-    pd_damage_group groups[PD_DAMAGE_COMPONENTS]; /* Unique types, ascending order. */
+    uint16_t missing; /* Unconfigured damage-type bits. */
+    uint8_t context_missing,needed[PD_DAMAGE_COMPONENTS]; /* Row bits, then needed trait bits per row. */
+    pd_damage_group groups[PD_DAMAGE_COMPONENTS]; /* Sorted by type, effective flags and unresolved properties. */
 } pd_damage_event_summary;
-/* Any unknown profile blocks the whole event, even for zero raw damage. In that
+/* Any unknown profile or relevant source fact blocks the whole event, even for zero raw damage. In that
    case total HP/temp stay unchanged and total.adjusted is not a partial sum. */
 bool pd_damage_event_preview(const pd_state *state,const pd_damage_event *event,pd_damage_event_summary *out);
 bool pd_damage_event_apply(pd_state *state,const pd_damage_event *event,pd_damage_event_summary *out);

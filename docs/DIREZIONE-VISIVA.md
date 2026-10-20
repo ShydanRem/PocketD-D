@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.32
+# Direzione visiva del dispositivo — v0.33
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -223,3 +223,12 @@ concentrazione. Il pulsante Tipi resta visibile senza comprimere i tre comandi
 inferiori della verifica COS. `mixed-damage-preview.png` e i dettagli sono
 render reali LVGL su host; nessuna cattura hardware o asset esterno.
 [Uso](DANNI-MISTI.md).
+
+
+La v0.33 aggiunge Regole nei profili base/extra, proprietà separate e anteprima
+del requisito completo prima/dopo. Fonte usa quattro scelte sì/no/? per la
+componente; i dati non risolti non sono presentati come no. Tipi distingue
+profili risolti di uno stesso tipo; il risultato mantiene i valori all'impatto.
+Le descrizioni lunghe vanno a capo, senza comprimere i pulsanti ≥44 px nel cerchio.
+`conditional-defences-preview.png` e le viste allegate sono render LVGL su host,
+non fotografie hardware. [Uso](DIFESE-CONDIZIONALI.md).

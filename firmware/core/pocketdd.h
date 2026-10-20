@@ -6,7 +6,7 @@
 #define PD_RESOURCES 8
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
-#define PD_RECORD_SIZE 74287
+#define PD_RECORD_SIZE 74365
 #define PD_POWERS 120
 #define PD_POWER_TEXT_BYTES 501
 #define PD_ITEMS 60
@@ -57,11 +57,14 @@ enum { PD_EFFECT_ARMOR,PD_EFFECT_MAX_HP };
 typedef struct { uint8_t target; int16_t value; bool active,timed; uint8_t rounds,concentration; /* 0 or current magic index + 1; cleared on end/recast. */ } pd_effect;
 #define PD_DAMAGE_TYPES 13
 enum { PD_RESISTANCE=1,PD_VULNERABILITY=2,PD_IMMUNITY=4 };
+enum { PD_RULE_ALWAYS,PD_RULE_MAGICAL,PD_RULE_NONMAGICAL,PD_RULE_NONMAGICAL_ATTACK,
+    PD_RULE_NON_SILVERED_ATTACK,PD_RULE_NON_ADAMANTINE_ATTACK,PD_RULE_NEITHER_ATTACK,PD_RULE_COUNT };
 /* One additional grant per damage type. Equal flags do not stack; the base stays separate. */
-typedef struct { uint8_t flags; bool active,timed; uint8_t rounds,concentration; } pd_defence_temporary;
+typedef struct { uint8_t flags; bool active,timed; uint8_t rounds,concentration,conditions[3]; } pd_defence_temporary;
 typedef struct {
     uint16_t configured,resistance,vulnerability,immunity;
     pd_defence_temporary temporary[PD_DAMAGE_TYPES];
+    uint8_t conditions[PD_DAMAGE_TYPES][3];
 } pd_defences;
 typedef struct { uint8_t effects_advanced,effects_expired; uint16_t defences_advanced,defences_expired; } pd_round_summary;
 typedef struct {
@@ -110,8 +113,10 @@ bool pd_effect_advance(pd_state *state,uint8_t *advanced,uint8_t *expired);
    A rejected numeric expiry leaves all timers and output unchanged. */
 bool pd_round_advance(pd_state *state,pd_round_summary *summary);
 unsigned pd_defence_base_flags(const pd_state *state,unsigned type);
-/* Effective flags: base OR active additional grant. Unknown bases remain unknown. */
+/* Only explicit ALWAYS grants; conditional profiles need impact evaluation. */
 unsigned pd_defence_flags(const pd_state *state,unsigned type);
+bool pd_defence_conditional(const pd_state *state,unsigned type);
+bool pd_defence_rule_set(pd_state *state,unsigned type,bool temporary,unsigned property,unsigned condition);
 bool pd_defence_set(pd_state *state,unsigned type,bool configured,unsigned flags);
 bool pd_defence_temporary_set(pd_state *state,unsigned type,pd_defence_temporary defence);
 int pd_modifier(int score);

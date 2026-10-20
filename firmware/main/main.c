@@ -31,7 +31,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT } page_t;
 PD_EXT static pd_state state,previous,pending,scratch;
 static bool undo_available,import_pending,has_roll;
 static pd_roll result;
@@ -80,15 +80,18 @@ static bool rest_active,hit_rolled;
 PD_EXT static pd_state hit_candidate;
 static pd_pool hit_result;
 static unsigned hit_gained;
-static bool confirmation_open(void){return page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES;}
+static bool confirmation_open(void){return page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT;}
 static pd_damage_plan damage_plan; /* First component + explicit concentration choice. */
 static pd_damage_component damage_extra[PD_DAMAGE_COMPONENTS-1],damage_part_draft;
+static pd_damage_context damage_context,damage_extra_context[PD_DAMAGE_COMPONENTS-1],damage_part_context,source_context_draft;
+static page_t source_context_return,rule_review_return;
 static unsigned damage_extra_count,damage_part_index,damage_part_page,damage_type_page,incoming_components;
 static page_t damage_confirm_return,damage_details_return;
 static pd_damage_event_summary incoming_event,concentration_event_report,damage_details;
 static pd_damage_event current_damage_event(void){
     pd_damage_event event={.count=damage_extra_count+1,.concentration=damage_plan.concentration,.components={{damage_plan.type,damage_plan.amount}}};
-    for(unsigned i=0;i<damage_extra_count;i++){event.components[i+1]=damage_extra[i];}
+    event.contexts[0]=damage_context;
+    for(unsigned i=0;i<damage_extra_count;i++){event.components[i+1]=damage_extra[i];event.contexts[i+1]=damage_extra_context[i];}
     return event;
 }
 static bool current_concentration_info(int mode,int extra,pd_check_info *info,pd_damage_summary *summary,bool cap30){
@@ -102,15 +105,25 @@ static pd_roll concentration_result;
 static int concentration_mode,concentration_extra;
 static bool concentration_rolled,concentration_cap30;
 static unsigned damage_hp_before,damage_temp_before,defence_index,defence_page,defence_flags;
-static bool defence_configured;
+static bool defence_configured,defence_rule_temporary,rule_review_temporary;
+static uint8_t defence_conditions[3];
+static unsigned defence_rule_property,rule_review_property;
+static const char *const rule_names[]={"Sempre","Magico","Non magico","Att. non magico","Non argentato","Non adamantio","Nessuno dei due"};
+static const char *const rule_descriptions[]={"Ogni fonte","Danno magico","Danno non magico","Attacco non magico","Attacco non magico, non argentato","Attacco non magico, non in adamantio","Attacco non magico, non argentato e non in adamantio"};
+static const char *const defence_property_names[]={"Resistenza","Vulnerabilita","Immunita"};
 static page_t defence_return_page,defence_confirm_return,round_return_page;
 static pd_defence_temporary defence_temporary_draft;
 static unsigned round_defence_page;
 static const char *defence_caption(bool configured,unsigned flags);
+static const char *defence_profile(const pd_state *s,unsigned type);
 static bool local_defences(void){if(state.defences.configured)return true;for(unsigned i=0;i<PD_DAMAGE_TYPES;i++){const pd_defence_temporary *d=&state.defences.temporary[i];if(d->flags||d->active||d->timed||d->rounds||d->concentration)return true;}return false;}
 static unsigned bit_count(unsigned mask){unsigned count=0;while(mask){count+=mask&1u;mask>>=1;}return count;}
-static bool preview_defence(pd_state *next){*next=state;return pd_defence_set(next,defence_index,defence_configured,defence_flags)&&pd_defence_temporary_set(next,defence_index,defence_temporary_draft);}
-static void edit_defence(unsigned type,page_t return_page){defence_index=type;defence_flags=pd_defence_base_flags(&state,type);defence_temporary_draft=state.defences.temporary[type];defence_confirm_return=DEFENCE_EDIT;defence_configured=(state.defences.configured&(1u<<type))!=0;defence_return_page=return_page;page=DEFENCE_EDIT;}
+static bool preview_defence(pd_state *next){
+    *next=state;if(!pd_defence_set(next,defence_index,defence_configured,defence_flags)||!pd_defence_temporary_set(next,defence_index,defence_temporary_draft))return false;
+    for(unsigned i=0;i<3;i++)if(!pd_defence_rule_set(next,defence_index,false,i,defence_conditions[i]))return false;
+    return true;
+}
+static void edit_defence(unsigned type,page_t return_page){defence_index=type;defence_flags=pd_defence_base_flags(&state,type);memcpy(defence_conditions,state.defences.conditions[type],3);defence_temporary_draft=state.defences.temporary[type];defence_confirm_return=DEFENCE_EDIT;defence_configured=(state.defences.configured&(1u<<type))!=0;defence_return_page=return_page;page=DEFENCE_EDIT;}
 static unsigned effect_index,effect_page;
 static pd_effect effect_draft;
 static bool effect_removing;
@@ -230,8 +243,10 @@ static void act(intptr_t action) {
     if(import_pending&&action!=30&&action!=31)return;
     if(page==MAGIC_STOP&&action!=852&&action!=853)return;
     if(page==MAGIC_CONFIRM&&action!=832&&action!=833)return;
-    if(page==DEFENCE_CONFIRM&&action!=1816&&action!=1817)return;
-    if(page==DAMAGE_CONFIRM&&action!=1804&&action!=1805&&action!=1806&&action!=1807&&action!=1860&&action!=1930)return;
+    if(page==DEFENCE_CONFIRM&&action!=1816&&action!=1817&&action!=2010)return;
+    if(page==DEFENCE_RULE_REVIEW&&action!=1817&&(action<2011||action>2014))return;
+    if(page==DAMAGE_CONTEXT&&(action<2022||action>2027))return;
+    if(page==DAMAGE_CONFIRM&&action!=1804&&action!=1805&&action!=1806&&action!=1807&&action!=1860&&action!=1930&&action!=2021)return;
     if(page==DAMAGE_TYPES&&(action<1931||action>1933))return;
     if(page==CONCENTRATION_SETUP&&(action<1861||action>1866||(concentration_rolled&&action!=1865)))return;
     if(page==EFFECT_CONFIRM&&action!=1708&&action!=1709)return;
@@ -372,7 +387,7 @@ static void act(intptr_t action) {
         if(pd_storage_save(&next)){state=next;memcpy(previous.shortcuts,next.shortcuts,3);}
     }
     else if(action==1600)page=DEVICE_SETTINGS;
-    else if(action==1800){damage_plan=(pd_damage_plan){.amount=1};damage_extra_count=0;damage_part_page=0;page=DAMAGE_HOME;}
+    else if(action==1800){damage_plan=(pd_damage_plan){.amount=1};damage_extra_count=0;damage_context=(pd_damage_context){0};memset(damage_extra_context,0,sizeof damage_extra_context);damage_part_page=0;page=DAMAGE_HOME;}
     else if(action==1801&&page==DAMAGE_HOME){damage_plan.type=(damage_plan.type+1)%PD_DAMAGE_TYPES;damage_plan.concentration=0;}
     else if(action==1802&&page==DAMAGE_HOME){defence_page=damage_plan.type/3;page=DEFENCE_LIST;}
     else if(action==1803&&(page==DAMAGE_HOME||page==DAMAGE_PARTS)){damage_plan.concentration=0;damage_confirm_return=page;page=DAMAGE_CONFIRM;}
@@ -391,7 +406,7 @@ static void act(intptr_t action) {
         unsigned type=damage_plan.type;if(r.missing)for(unsigned i=0;i<PD_DAMAGE_TYPES;i++)if(r.missing&(1u<<i)){type=i;break;}
         edit_defence(type,damage_extra_count?DAMAGE_CONFIRM:DAMAGE_HOME);
     }
-    else if(action==1808&&page==DAMAGE_RESULT){damage_plan.amount=1;damage_plan.concentration=0;damage_extra_count=0;damage_part_page=0;page=DAMAGE_HOME;}
+    else if(action==1808&&page==DAMAGE_RESULT){damage_plan.amount=1;damage_plan.concentration=0;damage_extra_count=0;damage_context=(pd_damage_context){0};memset(damage_extra_context,0,sizeof damage_extra_context);damage_part_page=0;page=DAMAGE_HOME;}
     else if(action==1809&&page==DICE&&combat_roll==6){page=DAMAGE_RESULT;}
     else if(action==1860&&page==DAMAGE_CONFIRM){
         pd_check_info info;pd_damage_summary summary;
@@ -419,25 +434,26 @@ static void act(intptr_t action) {
     else if(action==1900&&page==DAMAGE_HOME){damage_part_page=0;page=DAMAGE_PARTS;}
     else if(action==1901&&page==DAMAGE_PARTS&&damage_extra_count+1<PD_DAMAGE_COMPONENTS){
         damage_part_index=damage_extra_count+1;pd_damage_event event=current_damage_event();unsigned used=0;for(unsigned i=0;i<event.count;i++)used|=1u<<event.components[i].type;
-        unsigned type=0;while(used&(1u<<type))type++;damage_part_draft=(pd_damage_component){type,1};page=DAMAGE_PART_EDIT;
+        unsigned type=0;while(used&(1u<<type))type++;damage_part_draft=(pd_damage_component){type,1};damage_part_context=(pd_damage_context){0};page=DAMAGE_PART_EDIT;
     }
     else if(action==1902&&page==DAMAGE_PARTS&&damage_part_page)damage_part_page--;
     else if(action==1903&&page==DAMAGE_PARTS&&(damage_part_page+1)*3<damage_extra_count+1)damage_part_page++;
     else if(action==1904&&page==DAMAGE_PARTS)page=DAMAGE_HOME;
-    else if(action>=1910&&action<1910+PD_DAMAGE_COMPONENTS&&page==DAMAGE_PARTS&&action-1910<damage_extra_count+1){damage_part_index=action-1910;damage_part_draft=damage_part_index?damage_extra[damage_part_index-1]:(pd_damage_component){damage_plan.type,damage_plan.amount};page=DAMAGE_PART_EDIT;}
+    else if(action>=1910&&action<1910+PD_DAMAGE_COMPONENTS&&page==DAMAGE_PARTS&&action-1910<damage_extra_count+1){damage_part_index=action-1910;damage_part_draft=damage_part_index?damage_extra[damage_part_index-1]:(pd_damage_component){damage_plan.type,damage_plan.amount};damage_part_context=damage_part_index?damage_extra_context[damage_part_index-1]:damage_context;page=DAMAGE_PART_EDIT;}
     else if(action==1920&&page==DAMAGE_PART_EDIT)damage_part_draft.type=(damage_part_draft.type+1)%PD_DAMAGE_TYPES;
     else if(action>=1921&&action<=1924&&page==DAMAGE_PART_EDIT){int amount=(int)damage_part_draft.amount+(const int[]){-10,-1,1,10}[action-1921];damage_part_draft.amount=amount<1?1:amount>9999?9999:amount;}
     else if(action==1925&&page==DAMAGE_PART_EDIT){
-        if(!damage_part_index){damage_plan.type=damage_part_draft.type;damage_plan.amount=damage_part_draft.amount;}
-        else if(damage_part_index<=damage_extra_count+1&&damage_part_index<PD_DAMAGE_COMPONENTS){damage_extra[damage_part_index-1]=damage_part_draft;if(damage_part_index==damage_extra_count+1)damage_extra_count++;}
+        if(!damage_part_index){damage_plan.type=damage_part_draft.type;damage_plan.amount=damage_part_draft.amount;damage_context=damage_part_context;}
+        else if(damage_part_index<=damage_extra_count+1&&damage_part_index<PD_DAMAGE_COMPONENTS){damage_extra[damage_part_index-1]=damage_part_draft;damage_extra_context[damage_part_index-1]=damage_part_context;if(damage_part_index==damage_extra_count+1)damage_extra_count++;}
         else return;
         damage_plan.concentration=0;damage_part_page=damage_part_index/3;page=DAMAGE_PARTS;
     }
     else if(action==1926&&page==DAMAGE_PART_EDIT)page=DAMAGE_PARTS;
     else if(action==1927&&page==DAMAGE_PART_EDIT&&damage_extra_count&&damage_part_index<=damage_extra_count){
         unsigned remove=damage_part_index?damage_part_index-1:0;
-        if(!damage_part_index){damage_plan.type=damage_extra[0].type;damage_plan.amount=damage_extra[0].amount;}
-        memmove(damage_extra+remove,damage_extra+remove+1,(damage_extra_count-remove-1)*sizeof *damage_extra);memset(&damage_extra[--damage_extra_count],0,sizeof *damage_extra);
+        if(!damage_part_index){damage_plan.type=damage_extra[0].type;damage_plan.amount=damage_extra[0].amount;damage_context=damage_extra_context[0];}
+        memmove(damage_extra_context+remove,damage_extra_context+remove+1,(damage_extra_count-remove-1)*sizeof *damage_extra_context);
+        memmove(damage_extra+remove,damage_extra+remove+1,(damage_extra_count-remove-1)*sizeof *damage_extra);memset(&damage_extra[--damage_extra_count],0,sizeof *damage_extra);memset(&damage_extra_context[damage_extra_count],0,sizeof *damage_extra_context);
         damage_plan.concentration=0;page=DAMAGE_PARTS;
     }
     else if(action==1928&&page==DAMAGE_PART_EDIT)edit_defence(damage_part_draft.type,DAMAGE_PART_EDIT);
@@ -450,20 +466,46 @@ static void act(intptr_t action) {
     else if(action==1931&&page==DAMAGE_TYPES)page=damage_details_return;
     else if(action==1932&&page==DAMAGE_TYPES&&damage_type_page)damage_type_page--;
     else if(action==1933&&page==DAMAGE_TYPES&&(damage_type_page+1)*3<damage_details.count)damage_type_page++;
+    else if(action==2020&&page==DAMAGE_PART_EDIT){source_context_draft=damage_part_context;source_context_return=DAMAGE_PART_EDIT;page=DAMAGE_CONTEXT;}
+    else if(action==2021&&page==DAMAGE_CONFIRM){
+        pd_damage_event event=current_damage_event();pd_damage_event_summary report;if(!pd_damage_event_preview(&state,&event,&report)||!report.context_missing)return;
+        damage_part_index=0;while(!(report.context_missing&(1u<<damage_part_index)))damage_part_index++;
+        damage_part_draft=event.components[damage_part_index];damage_part_context=event.contexts[damage_part_index];source_context_draft=damage_part_context;source_context_return=DAMAGE_CONFIRM;page=DAMAGE_CONTEXT;
+    }
+    else if(action==2022&&page==DAMAGE_CONTEXT)page=source_context_return;
+    else if(action==2023&&page==DAMAGE_CONTEXT){
+        damage_part_context=source_context_draft;
+        if(source_context_return==DAMAGE_CONFIRM){if(!damage_part_index)damage_context=damage_part_context;else damage_extra_context[damage_part_index-1]=damage_part_context;damage_plan.concentration=0;}
+        page=source_context_return;
+    }
+    else if(action>=2024&&action<=2027&&page==DAMAGE_CONTEXT){unsigned bit=1u<<(action-2024);if(!(source_context_draft.known&bit)){source_context_draft.known|=bit;source_context_draft.values&=~bit;}else if(!(source_context_draft.values&bit))source_context_draft.values|=bit;else{source_context_draft.known&=~bit;source_context_draft.values&=~bit;}}
+    else if((action==2000&&page==DEFENCE_EDIT)||(action==2001&&page==DEFENCE_TEMPORARY)){
+        defence_rule_temporary=action==2001;unsigned flags=defence_rule_temporary?defence_temporary_draft.flags:defence_flags;defence_rule_property=0;
+        for(unsigned i=0;i<3;i++){if(flags&(1u<<i)){defence_rule_property=i;break;}}
+        page=DEFENCE_RULE;
+    }
+    else if(action==2002&&page==DEFENCE_RULE)page=defence_rule_temporary?DEFENCE_TEMPORARY:DEFENCE_EDIT;
+    else if(action>=2006&&action<=2008&&page==DEFENCE_RULE){unsigned flags=defence_rule_temporary?defence_temporary_draft.flags:defence_flags;if(flags&(1u<<(action-2006)))defence_rule_property=action-2006;}
+    else if(action==2004&&page==DEFENCE_RULE){unsigned flags=defence_rule_temporary?defence_temporary_draft.flags:defence_flags;uint8_t *rules=defence_rule_temporary?defence_temporary_draft.conditions:defence_conditions;if(flags&(1u<<defence_rule_property))rules[defence_rule_property]=(rules[defence_rule_property]+1)%PD_RULE_COUNT;}
+    else if(action==2005&&page==DEFENCE_RULE){defence_confirm_return=DEFENCE_RULE;rule_review_return=DEFENCE_RULE;rule_review_temporary=defence_rule_temporary;rule_review_property=defence_rule_property;page=DEFENCE_RULE_REVIEW;}
+    else if(action==2010&&page==DEFENCE_CONFIRM){rule_review_temporary=false;rule_review_property=0;rule_review_return=DEFENCE_CONFIRM;page=DEFENCE_RULE_REVIEW;}
+    else if((action==2011||action==2012)&&page==DEFENCE_RULE_REVIEW)rule_review_temporary=action==2012;
+    else if(action==2013&&page==DEFENCE_RULE_REVIEW)rule_review_property=(rule_review_property+1)%3;
+    else if(action==2014&&page==DEFENCE_RULE_REVIEW)page=rule_review_return;
     else if(action>=1810&&action<=1813&&page==DEFENCE_EDIT){
-        if(action==1813){defence_configured=!defence_configured;if(!defence_configured)defence_flags=0;}
-        else {defence_flags^=1u<<(action-1810);defence_configured=true;}
+        if(action==1813){defence_configured=!defence_configured;if(!defence_configured){defence_flags=0;memset(defence_conditions,0,3);}}
+        else {defence_flags^=1u<<(action-1810);if(!(defence_flags&(1u<<(action-1810))))defence_conditions[action-1810]=0;defence_configured=true;}
     }
     else if(action==1814&&page==DEFENCE_EDIT)page=defence_return_page;
     else if(action==1815&&page==DEFENCE_EDIT){defence_confirm_return=DEFENCE_EDIT;page=DEFENCE_CONFIRM;}
     else if(action==1816&&page==DEFENCE_CONFIRM)page=defence_confirm_return;
-    else if(action==1817&&page==DEFENCE_CONFIRM){
+    else if(action==1817&&(page==DEFENCE_CONFIRM||page==DEFENCE_RULE_REVIEW)){
         if(!preview_defence(&next))return;
         bool changed=memcmp(&next,&state,sizeof state)!=0;
         if(!changed||pd_storage_save(&next)){if(changed){previous=state;undo_available=true;state=next;invalidate_strike();}damage_plan.concentration=0;page=defence_return_page;}
     }
     else if(action==1870&&page==DEFENCE_EDIT)page=DEFENCE_TEMPORARY;
-    else if(action>=1871&&action<=1874&&page==DEFENCE_TEMPORARY){if(action==1874)defence_temporary_draft.active=!defence_temporary_draft.active;else defence_temporary_draft.flags^=1u<<(action-1871);}
+    else if(action>=1871&&action<=1874&&page==DEFENCE_TEMPORARY){if(action==1874)defence_temporary_draft.active=!defence_temporary_draft.active;else{defence_temporary_draft.flags^=1u<<(action-1871);if(!(defence_temporary_draft.flags&(1u<<(action-1871))))defence_temporary_draft.conditions[action-1871]=0;}}
     else if(action==1875&&page==DEFENCE_TEMPORARY)page=DEFENCE_EDIT;
     else if(action==1876&&page==DEFENCE_TEMPORARY)page=DEFENCE_DURATION;
     else if(action==1877&&page==DEFENCE_DURATION){defence_temporary_draft.timed=!defence_temporary_draft.timed;defence_temporary_draft.rounds=defence_temporary_draft.timed?1:0;}
@@ -1187,13 +1229,14 @@ static void render_effects(void) {
             unsigned at=round_defence_page*3+row;if(at>=count)break;unsigned i=types[at];
             const pd_defence_temporary *a=&state.defences.temporary[i],*b=&scratch.defences.temporary[i];
             if(valid&&(r.defences_advanced&(1u<<i)))snprintf(text,sizeof text,"%s: %u -> %u round",pd_damage_name(i),a->rounds,b->rounds);else snprintf(text,sizeof text,"%s: invariata",pd_damage_name(i));label(text,83,159+row*56,300,false);
-            snprintf(text,sizeof text,"%s -> %s",defence_caption((state.defences.configured&(1u<<i))!=0,pd_defence_flags(&state,i)),defence_caption((scratch.defences.configured&(1u<<i))!=0,pd_defence_flags(&scratch,i)));small_label(text,83,187+row*56,300,PD_MINT);
+            snprintf(text,sizeof text,"%s -> %s",defence_profile(&state,i),defence_profile(&scratch,i));small_label(text,83,187+row*56,300,PD_MINT);
         }
         button("<",83,359,60,48,1745,round_defence_page>0);button("Riepilogo",155,359,156,48,1744,true);button(">",323,359,60,48,1746,round_defence_page+1<pages);
     }
 }
 
 static const char *defence_caption(bool configured,unsigned flags){return !configured?"da configurare":(flags&PD_IMMUNITY)?"immunita":flags==3?"resist. + vulner.":(flags&PD_RESISTANCE)?"resistenza":(flags&PD_VULNERABILITY)?"vulnerabilita":"normale";}
+static const char *defence_profile(const pd_state *s,unsigned type){return !(s->defences.configured&(1u<<type))?"da configurare":pd_defence_conditional(s,type)?"condizionale":defence_caption(true,pd_defence_flags(s,type));}
 static void render_damage(void) {
     char text[180];
     if(page==DAMAGE_HOME){
@@ -1210,34 +1253,34 @@ static void render_damage(void) {
     } else if(page==DAMAGE_PART_EDIT){
         snprintf(text,sizeof text,"Componente %u",damage_part_index+1);label(text,83,111,300,true);snprintf(text,sizeof text,"Tipo: %s >",pd_damage_name(damage_part_draft.type));button(text,83,157,300,44,1920,true);
         snprintf(text,sizeof text,"%u danni",damage_part_draft.amount);label(text,83,215,300,true);const char *names[]={"-10","-1","+1","+10"};for(unsigned i=0;i<4;i++)button(names[i],83+i*78,251,66,44,1921+i,i<2?damage_part_draft.amount>1:damage_part_draft.amount<9999);
-        button("Rimuovi",83,305,144,44,1927,damage_extra_count&&damage_part_index<=damage_extra_count);button("Difese",239,305,144,44,1928,true);
+        const char *actions[]={"Rimuovi","Fonte","Difese"};const unsigned codes[]={1927,2020,1928};for(unsigned i=0;i<3;i++){lv_obj_t *b=button(actions[i],83+i*104,305,92,44,codes[i],i|| (damage_extra_count&&damage_part_index<=damage_extra_count));lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
         button("Indietro",83,359,144,48,1926,true);button("Usa parte",239,359,144,48,1925,true);
     } else if(page==DAMAGE_TYPES){
         unsigned pages=(damage_details.count+2)/3;if(!pages)pages=1;if(damage_type_page>=pages)damage_type_page=pages-1;
-        label("Tipi del colpo",83,99,300,true);snprintf(text,sizeof text,"%u tipi | pagina %u/%u",damage_details.count,damage_type_page+1,pages);small_label(text,83,133,300,PD_GOLD);
-        for(unsigned row=0;row<3;row++){unsigned i=damage_type_page*3+row;if(i>=damage_details.count)break;const pd_damage_group *g=&damage_details.groups[i];snprintf(text,sizeof text,"%s | %s",pd_damage_name(g->type),defence_caption(g->configured,g->flags));small_label(text,83,159+row*56,300,g->configured?PD_GOLD:PD_DANGER);if(g->configured)snprintf(text,sizeof text,"%u -> %u",g->amount,g->adjusted);else snprintf(text,sizeof text,"%u -> ?",g->amount);label(text,83,183+row*56,300,false);}
-        small_label("Stesso tipo: somma, poi difese",83,333,300,PD_MUTED);button("<",83,359,60,48,1932,damage_type_page>0);button("Riepilogo",155,359,156,48,1931,true);button(">",323,359,60,48,1933,damage_type_page+1<pages);
+        label("Tipi del colpo",83,99,300,true);snprintf(text,sizeof text,"%u gruppi | pagina %u/%u",damage_details.count,damage_type_page+1,pages);small_label(text,83,133,300,PD_GOLD);
+        for(unsigned row=0;row<3;row++){unsigned i=damage_type_page*3+row;if(i>=damage_details.count)break;const pd_damage_group *g=&damage_details.groups[i];snprintf(text,sizeof text,"%s | %s",pd_damage_name(g->type),g->configured&&g->unresolved?"fonte da verificare":defence_caption(g->configured,g->flags));small_label(text,83,159+row*56,300,g->configured?PD_GOLD:PD_DANGER);if(g->configured&&!g->unresolved)snprintf(text,sizeof text,"%u -> %u",g->amount,g->adjusted);else snprintf(text,sizeof text,"%u -> ?",g->amount);label(text,83,183+row*56,300,false);}
+        small_label("Stesso tipo e difese: somma prima",83,333,300,PD_MUTED);button("<",83,359,60,48,1932,damage_type_page>0);button("Riepilogo",155,359,156,48,1931,true);button(">",323,359,60,48,1933,damage_type_page+1<pages);
     } else if(page==DEFENCE_LIST){
         unsigned pages=(PD_DAMAGE_TYPES+2)/3;if(defence_page>=pages)defence_page=pages-1;
         snprintf(text,sizeof text,"Difese manuali %u/%u",defence_page+1,pages);label(text,83,99,300,true);small_label("Non dedotte da Beyond o dal testo",83,133,300,PD_GOLD);
         for(unsigned row=0;row<3;row++){
             unsigned i=defence_page*3+row;if(i>=PD_DAMAGE_TYPES)break;
-            snprintf(text,sizeof text,"%s | %s",pd_damage_name(i),defence_caption((state.defences.configured&(1u<<i))!=0,pd_defence_flags(&state,i)));
+            snprintf(text,sizeof text,"%s | %s",pd_damage_name(i),defence_profile(&state,i));
             if(state.defences.temporary[i].active)strcat(text," +T");
             lv_obj_t *b=button(text,83,159+row*48,300,44,1820+i,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
         }
         button("<",83,305,60,44,1850,defence_page>0);button("1 round",155,305,156,44,1740,timed_effects());button(">",323,305,60,44,1851,defence_page+1<pages);
         button("Indietro",83,359,300,48,1852,true);
     } else if(page==DEFENCE_EDIT){
-        label(pd_damage_name(defence_index),83,103,300,true);small_label("Profilo base; difesa a tempo separata",83,135,300,PD_GOLD);
+        label(pd_damage_name(defence_index),83,111,204,false);lv_obj_t *rule=button("Regole",299,99,84,44,2000,true);lv_obj_set_style_text_font(rule,&lv_font_montserrat_16,0);small_label("Profilo base; difesa a tempo separata",83,149,300,PD_GOLD);
         const char *names[]={"Resistenza","Vulnerabilita","Immunita","Configurato"};
-        for(unsigned i=0;i<4;i++){snprintf(text,sizeof text,"%s: %s",names[i],(i==3?defence_configured:(defence_flags&(1u<<i))!=0)?"si":"no");button(text,83,159+i*48,300,44,1810+i,true);}
+        for(unsigned i=0;i<4;i++){snprintf(text,sizeof text,"%s: %s",names[i],(i==3?defence_configured:(defence_flags&(1u<<i))!=0)?"si":"no");button(text,83,173+i*46,300,44,1810+i,true);}
         const char *actions[]={"Indietro","A tempo","Anteprima"};const unsigned codes[]={1814,1870,1815};
         for(unsigned i=0;i<3;i++){lv_obj_t *b=button(actions[i],83+i*104,359,92,48,codes[i],true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
     } else if(page==DEFENCE_TEMPORARY){
-        label("Difesa temporanea",83,103,300,true);small_label(pd_damage_name(defence_index),83,135,300,PD_GOLD);
+        label("Extra difesa",83,111,204,false);lv_obj_t *rule=button("Regole",299,99,84,44,2001,true);lv_obj_set_style_text_font(rule,&lv_font_montserrat_16,0);small_label(pd_damage_name(defence_index),83,149,300,PD_GOLD);
         const char *names[]={"Resistenza","Vulnerabilita","Immunita","Attiva"};
-        for(unsigned i=0;i<4;i++){snprintf(text,sizeof text,"%s: %s",names[i],(i==3?defence_temporary_draft.active:(defence_temporary_draft.flags&(1u<<i))!=0)?"si":"no");button(text,83,159+i*48,300,44,1871+i,true);}
+        for(unsigned i=0;i<4;i++){snprintf(text,sizeof text,"%s: %s",names[i],(i==3?defence_temporary_draft.active:(defence_temporary_draft.flags&(1u<<i))!=0)?"si":"no");button(text,83,173+i*46,300,44,1871+i,true);}
         const char *actions[]={"Base","Durata","Anteprima"};const unsigned codes[]={1875,1876,1887};
         for(unsigned i=0;i<3;i++){lv_obj_t *b=button(actions[i],83+i*104,359,92,48,codes[i],true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
     } else if(page==DEFENCE_DURATION){
@@ -1255,9 +1298,9 @@ static void render_damage(void) {
         small_label("Nessuna riattivazione automatica",83,311,300,PD_MUTED);small_label("Non deduce condizioni dal testo",83,335,300,PD_MUTED);
         button("Indietro",83,359,144,48,1885,true);button("Anteprima",239,359,144,48,1887,true);
     } else if(page==DEFENCE_CONFIRM){
-        bool valid=preview_defence(&scratch);label(pd_damage_name(defence_index),83,103,300,true);
+        bool valid=preview_defence(&scratch);bool conditional=false;for(unsigned i=0;i<3;i++)conditional|=defence_conditions[i]||defence_temporary_draft.conditions[i];snprintf(text,sizeof text,"%s%s",pd_damage_name(defence_index),conditional?" | cond.":"");label(text,83,111,204,false);lv_obj_t *rule=button("Regole",299,99,84,44,2010,true);lv_obj_set_style_text_font(rule,&lv_font_montserrat_16,0);
         if(valid){
-            unsigned old=pd_defence_flags(&state,defence_index),updated=pd_defence_flags(&scratch,defence_index);const char *names[]={"Resistenza","Vulnerabilita","Immunita"};
+            unsigned old=pd_defence_base_flags(&state,defence_index)|(state.defences.temporary[defence_index].active?state.defences.temporary[defence_index].flags:0),updated=defence_flags|(defence_temporary_draft.active?defence_temporary_draft.flags:0);const char *names[]={"Resistenza","Vulnerabilita","Immunita"};
             for(unsigned i=0;i<3;i++){
                 snprintf(text,sizeof text,"%s: %s -> %s",names[i],old&(1u<<i)?"si":"no",updated&(1u<<i)?"si":"no");label(text,83,151+i*52,300,false);
                 snprintf(text,sizeof text,"Base %s -> %s | extra %s -> %s",pd_defence_base_flags(&state,defence_index)&(1u<<i)?"si":"no",defence_flags&(1u<<i)?"si":"no",state.defences.temporary[defence_index].flags&(1u<<i)?"si":"no",defence_temporary_draft.flags&(1u<<i)?"si":"no");small_label(text,83,177+i*52,300,PD_MUTED);
@@ -1268,11 +1311,30 @@ static void render_damage(void) {
             label("Difesa da verificare",83,203,300,false);small_label("Attiva: scegli almeno una difesa",83,251,300,PD_DANGER);small_label("A round: serve durata positiva",83,281,300,PD_DANGER);small_label("Vincolo: magia concentrata attuale",83,311,300,PD_MUTED);
         }
         button("Indietro",83,359,144,48,1816,true);button("Conferma",239,359,144,48,1817,valid);
+    } else if(page==DEFENCE_RULE){
+        label(defence_rule_temporary?"Regole dell'extra":"Regole della base",83,111,300,true);unsigned flags=defence_rule_temporary?defence_temporary_draft.flags:defence_flags;const uint8_t *rules=defence_rule_temporary?defence_temporary_draft.conditions:defence_conditions;
+        const char *names[]={"Resist.","Vulner.","Immune"};for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names[i],83+i*104,157,92,44,2006+i,flags&(1u<<i));lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
+        label(defence_property_names[defence_rule_property],83,215,300,true);unsigned selected=rules[defence_rule_property];snprintf(text,sizeof text,"Condizione: %s >",rule_names[selected]);lv_obj_t *b=button(text,83,257,300,44,2004,flags&(1u<<defence_rule_property));lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
+        small_label(!(flags&(1u<<defence_rule_property))?"Difesa non selezionata":selected>=3?"Solo attacchi non magici":rule_descriptions[selected],83,313,300,PD_GOLD);
+        small_label(!(flags&(1u<<defence_rule_property))?"Torna e abilita la proprieta":selected==4?"Con arma non argentata":selected==5?"Con arma non in adamantio":selected==6?"Non argentati e non in adamantio":"Nessuna origine dedotta dal nome",83,335,300,PD_MUTED);
+        button("Indietro",83,359,144,48,2002,true);button("Anteprima",239,359,144,48,2005,true);
+    } else if(page==DEFENCE_RULE_REVIEW){
+        bool valid=preview_defence(&scratch);label(rule_review_temporary?"Regole dell'extra":"Regole della base",83,111,300,true);button("Base",83,157,144,44,2011,true);button("Extra",239,157,144,44,2012,true);
+        snprintf(text,sizeof text,"%s >",defence_property_names[rule_review_property]);button(text,83,211,300,44,2013,true);
+        unsigned old_flags=rule_review_temporary?state.defences.temporary[defence_index].flags:pd_defence_base_flags(&state,defence_index),new_flags=rule_review_temporary?defence_temporary_draft.flags:defence_flags;
+        unsigned old_rule=rule_review_temporary?state.defences.temporary[defence_index].conditions[rule_review_property]:state.defences.conditions[defence_index][rule_review_property],new_rule=rule_review_temporary?defence_temporary_draft.conditions[rule_review_property]:defence_conditions[rule_review_property];
+        snprintf(text,sizeof text,"Prima: %s",old_flags&(1u<<rule_review_property)?rule_descriptions[old_rule]:"assente");lv_obj_t *a=small_label(text,83,263,300,PD_MUTED);lv_label_set_long_mode(a,LV_LABEL_LONG_WRAP);lv_obj_set_height(a,38);
+        snprintf(text,sizeof text,"Dopo: %s",new_flags&(1u<<rule_review_property)?rule_descriptions[new_rule]:"assente");a=small_label(text,83,307,300,PD_GOLD);lv_label_set_long_mode(a,LV_LABEL_LONG_WRAP);lv_obj_set_height(a,38);
+        button("Indietro",83,359,144,48,2014,true);button("Conferma",239,359,144,48,1817,valid);
+    } else if(page==DAMAGE_CONTEXT){
+        label("Fonte del danno",83,103,300,true);snprintf(text,sizeof text,"Parte %u | ? = da verificare",damage_part_index+1);small_label(text,83,135,300,PD_GOLD);
+        const char *names[]={"Magico","Attacco","Argentato","Adamantio"};for(unsigned i=0;i<4;i++){unsigned bit=1u<<i;snprintf(text,sizeof text,"%s: %s",names[i],!(source_context_draft.known&bit)?"?":source_context_draft.values&bit?"si":"no");button(text,83,159+i*48,300,44,2024+i,true);}
+        button("Indietro",83,359,144,48,2022,true);button("Usa fonte",239,359,144,48,2023,true);
     } else if(page==DAMAGE_CONFIRM){
         pd_damage_event event=current_damage_event();pd_damage_event_summary report;if(!pd_damage_event_preview(&state,&event,&report))return;pd_damage_summary r=report.total;
-        if(damage_extra_count){label("Conferma colpo",83,111,228,false);lv_obj_t *b=button("Tipi",323,99,60,44,1930,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);snprintf(text,sizeof text,"%u componenti | %u tipi",event.count,report.count);small_label(text,83,149,300,PD_GOLD);}
+        if(damage_extra_count){label("Conferma colpo",83,111,228,false);lv_obj_t *b=button("Tipi",323,99,60,44,1930,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);snprintf(text,sizeof text,"%u parti | %u gruppi",event.count,report.count);small_label(text,83,149,300,PD_GOLD);}
         else{label("Confermare i danni?",83,103,300,true);snprintf(text,sizeof text,"%s | %s",pd_damage_name(damage_plan.type),defence_caption(r.configured,r.flags));small_label(text,83,137,300,PD_GOLD);}
-        if(!r.configured){label("Difesa da configurare",83,203,300,false);small_label("Il profilo non arriva da Beyond",83,249,300,PD_GOLD);button("Configura difesa",83,303,300,44,1807,true);}
+        if(!r.configured){label(report.missing?"Difesa da configurare":"Fonte da verificare",83,203,300,false);small_label(report.missing?"Il profilo non arriva da Beyond":"Dichiara magico, attacco e materiali",83,249,300,PD_GOLD);button(report.missing?"Configura difesa":"Dichiara fonte",83,303,300,44,report.missing?1807:2021,true);}
         else {
             snprintf(text,sizeof text,"Danni %u -> %u",report.raw,r.adjusted);label(text,83,171,300,false);
             snprintf(text,sizeof text,"Temporanei %u -> %u",state.temp_hp,r.temp_after);label(text,83,207,300,false);

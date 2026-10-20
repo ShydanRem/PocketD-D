@@ -1,5 +1,8 @@
 # Danni misti di un solo colpo — v0.32
 
+> Aggiornamento v0.33: [condizioni difensive e fonte esplicita](DIFESE-CONDIZIONALI.md),
+> raggruppamento per applicabilità e PDD14. Le omissioni/formati sotto sono storici.
+
 Il dispositivo può preparare **da una a sei componenti dello stesso colpo**,
 raggrupparle per tipo e applicare una sola modifica a temporanei, PF e
 concentrazione. Funziona offline, senza Foundry e senza PC al tavolo.

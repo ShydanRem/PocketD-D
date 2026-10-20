@@ -149,3 +149,13 @@ if all((base/(name+'.ppm')).is_file() for name in mixed):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(mixed):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'mixed-damage-preview.png');print(base/'mixed-damage-preview.png')
+
+# Explicit defence predicates and partial source facts; host firmware renders.
+conditional=['conditional-rule','conditional-review','conditional-source','conditional-groups']
+for name in conditional+['conditional-list','conditional-unknown','conditional-source-unknown','conditional-source-silver','conditional-excluded','conditional-applied','conditional-snapshot','conditional-extra','conditional-confirm','conditional-review-extra','conditional-expiry','conditional-long','conditional-import']:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in conditional):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(conditional):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'conditional-defences-preview.png');print(base/'conditional-defences-preview.png')

@@ -17,8 +17,9 @@
 #include "fixtures/state-v10.h"
 #include "fixtures/state-v11.h"
 #include "fixtures/state-v12.h"
+#include "fixtures/state-v13.h"
 static void record_crc(uint8_t *record) {
-    size_t size=8047; /* No powers: PDD13 prefix, recovery, status and CRC. */
+    size_t size=8125; /* No powers: PDD14 prefix, recovery, status and CRC. */
     uint32_t crc=pd_crc32(record,size-4);
     for(int i=0;i<4;i++)record[size-4+i]=crc>>(8*i);
 }
@@ -61,6 +62,8 @@ int main(int argc,char **argv) {
     assert(pd_decode(golden_v11,sizeof golden_v11,&out,&gen)&&gen==132&&out.hp==41&&out.magic.concentration==1&&out.effects[0].rounds==3&&out.effects[1].active&&!out.effects[0].concentration&&!out.effects[1].concentration&&out.training.save_bonus[2]==3&&out.defences.resistance==32&&out.defences.immunity==4);
     assert(pd_decode(golden_v12,sizeof golden_v12,&out,&gen)&&gen==134&&out.hp==41&&out.magic.concentration==1&&out.effects[0].concentration==1&&out.effects[1].concentration==1&&out.effects[0].rounds==3&&out.defences.immunity==4);
     for(unsigned i=0;i<PD_DAMAGE_TYPES;i++)assert(!out.defences.temporary[i].flags&&!out.defences.temporary[i].active&&!out.defences.temporary[i].timed&&!out.defences.temporary[i].rounds&&!out.defences.temporary[i].concentration);
+    assert(pd_decode(golden_v13,sizeof golden_v13,&out,&gen)&&gen==137&&out.hp==41&&out.effects[0].concentration==1&&out.defences.temporary[5].concentration==1&&out.defences.temporary[5].rounds==3&&pd_defence_flags(&out,5)==5);
+    for(unsigned i=0;i<PD_DAMAGE_TYPES;i++)for(unsigned j=0;j<3;j++)assert(!out.defences.conditions[i][j]&&!out.defences.temporary[i].conditions[j]);
     pd_demo(&s);s.avatar=(pd_avatar){2,1,2,1};s.idle_animation=false;s.brightness=90;s.dim_timeout=2;
     for(int i=0;i<PD_SKILLS;i++) { s.training.ranks[i]=i%3;s.training.skill_bonus[i]=i-8; }
     for(int i=0;i<6;i++) { s.training.save_bonus[i]=i-2;s.training.check_bonus[i]=3-i; }
@@ -72,9 +75,9 @@ int main(int argc,char **argv) {
     assert(pd_select(legacy_v1,sizeof legacy_v1,b,record_size,&out,&gen)==1&&gen==42);
     b[368]=3;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
     pd_encode(&s,42,b);b[372]=2;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
-    pd_encode(&s,42,b);b[record_size-63]=9;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
-    pd_encode(&s,42,b);b[record_size-63]=101;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
-    pd_encode(&s,42,b);b[record_size-62]=4;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
+    pd_encode(&s,42,b);b[record_size-214]=9;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
+    pd_encode(&s,42,b);b[record_size-214]=101;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
+    pd_encode(&s,42,b);b[record_size-213]=4;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
     pd_demo(&s);pd_encode(&s,41,a);s.hp=7;pd_encode(&s,42,b);
     assert(pd_select(a,record_size,b,record_size,&out,&gen)==1&&out.hp==7&&gen==42);
     /* Every header/CRC bit and distributed payload corruption falls back to older bank. */
@@ -196,6 +199,6 @@ int main(int argc,char **argv) {
     }
     const char *invalid[]={"{}","[]","null","{\"format\":\"pocketdd-device\",\"version\":1}","{", "{\"x\":\"\\u0000\"}","1e999"};
     for(size_t i=0;i<sizeof invalid/sizeof invalid[0];i++) assert(!pd_parse_packet(invalid[i],strlen(invalid[i]),&out));
-    puts("C core: HP/temp, counters, d20, CRC/corruption/wrap, golden v1..v12 migration, PDD13 persistence and strict USB v1..v7 passed");
+    puts("C core: HP/temp, counters, d20, CRC/corruption/wrap, golden v1..v13 migration, PDD14 persistence and strict USB v1..v7 passed");
     return 0;
 }

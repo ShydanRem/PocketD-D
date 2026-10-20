@@ -86,3 +86,8 @@ private character data, credentials, runtime service or dependency is bundled.
 The v0.32 mixed-impact grouping, component editor and synthetic tests are
 original PocketD-D code. No new rules catalogue, private character data,
 external artwork, credential, runtime service or dependency is introduced.
+
+
+The v0.33 bounded defence predicates, explicit source-fact editor and synthetic
+PDD13 migration fixture are original PocketD-D work. No rules catalogue,
+private character JSON, credential, external artwork or dependency is introduced.

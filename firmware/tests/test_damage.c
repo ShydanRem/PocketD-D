@@ -57,14 +57,14 @@ int main(void){
  plan=(pd_damage_plan){.type=13};assert(!pd_damage_preview(&s,&plan,&r));plan=(pd_damage_plan){.concentration=3};assert(!pd_damage_preview(&s,&plan,&r));
  plan=(pd_damage_plan){.amount=UINT_MAX};assert(!pd_damage_preview(&s,&plan,&r));assert(!pd_damage_preview(NULL,&plan,&r)&&!pd_damage_preview(&s,NULL,&r)&&!pd_damage_preview(&s,&plan,NULL));
  assert(!pd_damage_name(13)&&!pd_damage_name(UINT_MAX)&&!strcmp(pd_damage_name(12),"Tuono"));
- /* Full profile and largest PDD13 record roundtrip, including unknown vs normal. */
+ /* Full profile and largest PDD14 record roundtrip, including unknown vs normal. */
  pd_demo(&s);for(unsigned i=0;i<PD_DAMAGE_TYPES;i++)assert(pd_defence_set(&s,i,true,i%8));
  s.magic.count=PD_POWERS;for(unsigned i=0;i<PD_POWERS;i++)s.magic.powers[i]=(pd_power){.name="Magia",.flags=PD_PREPARED};s.shortcuts[0]=12;
  static uint8_t data[PD_RECORD_SIZE];size_t n=pd_encode(&s,131,data);uint32_t gen;
- assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDD",4)&&pd_decode(data,n,&next,&gen)&&gen==131&&next.defences.configured==8191&&next.shortcuts[0]==12);
+ assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDE",4)&&pd_decode(data,n,&next,&gen)&&gen==131&&next.defences.configured==8191&&next.shortcuts[0]==12);
  for(unsigned i=0;i<PD_DAMAGE_TYPES;i++)assert(pd_defence_flags(&next,i)==i%8);
- size_t start=n-85;const unsigned offsets[]={1,3,5,7};
+ size_t start=n-163;const unsigned offsets[]={1,3,5,7};
  for(unsigned i=0;i<4;i++){pd_encode(&s,131,data);data[start+offsets[i]]|=0x80;crc(data,n);before=next;gen=99;assert(!pd_decode(data,n,&next,&gen)&&gen==99&&!memcmp(&next,&before,sizeof next));}
  pd_encode(&s,131,data);data[start]=0;data[start+1]=0;crc(data,n);assert(!pd_decode(data,n,&next,&gen));
- printf("Damage: %u independent typed/flag/amount/HP/temp cases, explicit configuration, rounding, immunity, concentration decisions, death/massive guards, atomic rejection and PDD13 persistence passed\n",cases);
+ printf("Damage: %u independent typed/flag/amount/HP/temp cases, explicit configuration, rounding, immunity, concentration decisions, death/massive guards, atomic rejection and PDD14 persistence passed\n",cases);
 }

@@ -268,3 +268,16 @@ sono wrapper dello stesso motore. Candidati e dettaglio restano fissi insieme
 al dado sul retry; il risultato non usa i profili successivi alla fine dei vincoli.
 PDD13/USB v7/backup PC v10 invariati; composizione e dettaglio solo RAM.
 [Uso e perimetro](DANNI-MISTI.md).
+
+
+Incremento 0.33: 78 selettori persistenti, uno per proprietà base/extra e tipo;
+validità vincolata alla presenza del flag. pd_defence_flags espone i soli grant
+Sempre; la risoluzione dell'impatto considera i 16 contesti completi compatibili
+con i fatti noti, unisce le due fonti per proprietà e richiede solo fatti che
+possono ancora cambiarla. Immunità certa elimina incertezze irrilevanti su R/V.
+L'evento contiene contesti paralleli alle sei componenti; la preview espone
+maschere distinte di profili mancanti, righe/fatti necessari e proprietà non
+risolte. Raggruppamento canonico per tipo/flags applicati, con separazione delle
+applicabilità diverse. Candidato e gruppi restano fissi sul retry. PDD14 aggiunge
+78 byte, massimo 74365, e legge PDD1–PDD13 con Sempre senza scritture al boot.
+Fonte solo RAM, USB v7/backup PC v10/layout invariati. [Dettagli](DIFESE-CONDIZIONALI.md).

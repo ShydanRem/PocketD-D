@@ -55,3 +55,6 @@ target_include_directories(temporary-defences PRIVATE ../core)
 
 add_executable(mixed-damage test_mixed_damage.c ../core/damage.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
 target_include_directories(mixed-damage PRIVATE ../core)
+
+add_executable(conditional-defences test_conditional_defences.c ../core/damage.c ../core/rest.c ../core/dice_pool.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
+target_include_directories(conditional-defences PRIVATE ../core)

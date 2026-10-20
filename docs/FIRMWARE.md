@@ -1,11 +1,11 @@
-# Firmware PocketD-D 0.32 — danni misti
+# Firmware PocketD-D 0.33 — difese condizionali
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
-[Novità v0.32: componenti di un solo colpo e totale congiunto](DANNI-MISTI.md).
-PDD13/USB v7/layout invariati e lettura dei salvataggi precedenti.
+[Novità v0.33: regole difensive e fonte esplicita](DIFESE-CONDIZIONALI.md).
+PDD14, USB v7/layout invariati e lettura dei salvataggi precedenti.
 
 ## Stato e perimetro
 
@@ -233,8 +233,8 @@ reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
 ## Salvataggio e dadi
 
 NVS nel namespace `pocketdd`, nuova partizione `pdd_state`, due chiavi alternate
-`state_a`/`state_b`. Record PDD13 (tag `PDDD`) da **8047 + 552 × numero voci** byte, massimo
-74287. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
+`state_a`/`state_b`. Record PDD14 (tag `PDDE`) da **8125 + 552 × numero voci** byte, massimo
+74365. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
 visibile. Nessun dump di struct, erase o fallback distruttivo. Errori I/O o
 allocazioni insufficienti bloccano scritture; CRC e versioni future conservati.
 
@@ -251,8 +251,10 @@ le copie precedenti a PDD12 iniziano con effetti senza vincoli alla concentrazio
 PDD12 conserva i vincoli numerici; le copie precedenti a PDD13 iniziano senza
 extra temporanei alle difese. Dopo gli otto riferimenti numerici si aggiungono
 65 byte (proprietà/attivazione/timer/round/vincolo per 13 tipi), prima del CRC.
-Le nuove scritture PDD13 richiedono firmware v0.31 o successivo:
-[compatibilità e downgrade](DIFESE-TEMPORANEE.md).
+PDD13 conserva gli extra; le copie precedenti a PDD14 mantengono Sempre per
+ogni proprietà. Al payload si aggiungono 78 byte di selettori base/extra, prima
+del CRC. Le nuove scritture PDD14 richiedono firmware v0.33 o successivo:
+[compatibilità e downgrade](DIFESE-CONDIZIONALI.md).
 Il nuovo uploader supporta USB v1–v7. Preferenze avatar/tasti
 locali conservate durante l'importazione. [Dettagli](MAGIE-TASTI.md).
 
@@ -586,3 +588,26 @@ ESP-IDF 5.5.5/LVGL 9.4.0. PDD13/USB v7/layout invariati: righe e dettaglio sono
 solo in RAM, nessuna nuova migrazione o grande stato sullo stack. Nessun flash,
 collaudo fisico, nuova lettura Beyond o modifica della raccolta personale.
 [Uso e limiti](DANNI-MISTI.md).
+
+
+## Verifiche v0.33 — condizioni difensive
+
+404352 casi indipendenti di tipo/proprietà/regole base-extra/attivazione e tutte
+le 81 fonti parziali, confrontati con la valutazione booleana delle descrizioni
+complete. Fatti irrilevanti, fonti complementari, immunità certa, gruppi dello
+stesso tipo con applicabilità diversa, rifiuti prima del RNG, vincoli/timer e
+snapshot del colpo. Fixture sintetica PDD13 dell'encoder v0.32 `7ed65df`,
+lettura PDD1–PDD13 senza scritture al boot e banca originale conservata; 78
+selettori corrotti con CRC valido e campi attaccati a proprietà assenti.
+UI LVGL di base/extra, regole complete prima/dopo, Fonte con sì/no/?, cancel,
+profili necessari, gruppi, errore e tiro fissato, annullamento, import e testi
+lunghi. Regressioni 138 JS/build PC, 37751 confronti PC→USB→C, 494312 misti,
+19968 suddivisioni/720 permutazioni, 139904 danni, 78840 salvezze, 4608 vincoli,
+32032 difese/64350 avanzamenti, 17266 effetti e 40648 durate. ASan/UBSan su
+condizioni/misti/danni/concentrazione/vincoli/difese, effetti/durate,
+magie/riposi/stato, core/parser, NVS, allocazioni e UI; leak detector disattivato.
+
+Build v0.33: **877408 byte**, partizione app da 4 MiB **79% libera**;
+ESP-IDF 5.5.5/LVGL 9.4.0. PDD14, USB v7/layout invariati. Nessun flash,
+collaudo fisico, nuova lettura Beyond o modifica della raccolta personale.
+[Uso e limiti](DIFESE-CONDIZIONALI.md).

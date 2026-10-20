@@ -9,24 +9,52 @@ static unsigned adjusted(unsigned amount,unsigned flags) {
     if(flags&PD_VULNERABILITY)amount*=2;
     return amount;
 }
+/* Evaluate the 16 possible source descriptions compatible with known facts.
+   This also resolves complementary grants (magical OR nonmagical) without
+   asking for a fact that cannot change the applied property. */
+static bool rule_applies(unsigned rule,unsigned values) {
+    static const unsigned masks[]={0,1,1,3,7,11,15},wanted[]={0,1,0,2,2,2,2};
+    return (values&masks[rule])==wanted[rule];
+}
+static void resolve(const pd_state *s,unsigned type,pd_damage_context context,unsigned *flags,unsigned *unresolved,unsigned *needed) {
+    *flags=*unresolved=*needed=0;
+    if(!pd_defence_conditional(s,type)){*flags=pd_defence_flags(s,type);return;}
+    unsigned base=pd_defence_base_flags(s,type),possible=0,truth[3]={0};const pd_defence_temporary *d=&s->defences.temporary[type];
+    for(unsigned values=0;values<16;values++)if((values&context.known)==context.values){
+        possible|=1u<<values;
+        for(unsigned i=0;i<3;i++)if(((base&(1u<<i))&&rule_applies(s->defences.conditions[type][i],values))||(d->active&&(d->flags&(1u<<i))&&rule_applies(d->conditions[i],values)))truth[i]|=1u<<values;
+    }
+    for(unsigned i=0;i<3;i++){if(truth[i]==possible)*flags|=1u<<i;else if(truth[i])*unresolved|=1u<<i;}
+    /* Definite immunity makes uncertainty in resistance/vulnerability irrelevant. */
+    if(*flags&PD_IMMUNITY){*unresolved=0;return;}
+    for(unsigned i=0;i<3;i++)if(*unresolved&(1u<<i))for(unsigned bit=1;bit<=8;bit<<=1)if(!(context.known&bit)){
+        for(unsigned values=0;values<16;values++)if((possible&(1u<<values))&&(((truth[i]>>values)^(truth[i]>>(values^bit)))&1u)){*needed|=bit;break;}
+    }
+}
 bool pd_damage_event_preview(const pd_state *s,const pd_damage_event *event,pd_damage_event_summary *out) {
     if(!s||!event||!out||!pd_valid(s)||!event->count||event->count>PD_DAMAGE_COMPONENTS||event->concentration>PD_CONCENTRATION_END)return false;
-    unsigned amounts[PD_DAMAGE_TYPES]={0},present=0;
     pd_damage_event_summary report={0};
     for(unsigned i=0;i<event->count;i++) {
-        const pd_damage_component *c=&event->components[i];if(c->type>=PD_DAMAGE_TYPES||c->amount>9999)return false;
-        amounts[c->type]+=c->amount;present|=1u<<c->type;report.raw+=c->amount;
+        const pd_damage_component *c=&event->components[i];pd_damage_context context=event->contexts[i];
+        if(c->type>=PD_DAMAGE_TYPES||c->amount>9999||context.known>15||(context.values&~context.known))return false;
+        unsigned flags,unresolved,needed;resolve(s,c->type,context,&flags,&unresolved,&needed);
+        bool configured=(s->defences.configured&(1u<<c->type))!=0;
+        if(!configured)report.missing|=1u<<c->type;
+        else if(unresolved){report.context_missing|=1u<<i;report.needed[i]=needed;}
+        unsigned group=0;while(group<report.count&&(report.groups[group].type!=c->type||report.groups[group].flags!=flags||report.groups[group].unresolved!=unresolved))group++;
+        if(group==report.count){pd_damage_group *g=&report.groups[report.count++];g->type=c->type;g->flags=flags;g->unresolved=unresolved;g->configured=configured;}
+        report.groups[group].amount+=c->amount;report.raw+=c->amount;
+    }
+    /* Same type + applied properties share one rounding. Different applicability
+       stays separate, including magical/nonmagical portions of a single impact. */
+    for(unsigned i=1;i<report.count;i++){
+        pd_damage_group g=report.groups[i];unsigned j=i;
+        while(j&&(report.groups[j-1].type>g.type||(report.groups[j-1].type==g.type&&(report.groups[j-1].flags>g.flags||(report.groups[j-1].flags==g.flags&&report.groups[j-1].unresolved>g.unresolved))))){report.groups[j]=report.groups[j-1];j--;}
+        report.groups[j]=g;
     }
     unsigned total=0;
-    /* Canonical grouping prevents row order/splitting from changing rounding.
-       All defences are read from the state before this single damage event. */
-    for(unsigned type=0;type<PD_DAMAGE_TYPES;type++)if(present&(1u<<type)) {
-        pd_damage_group *g=&report.groups[report.count++];
-        g->type=type;g->amount=amounts[type];g->flags=pd_defence_flags(s,type);g->configured=(s->defences.configured&(1u<<type))!=0;
-        if(g->configured){g->adjusted=adjusted(g->amount,g->flags);total+=g->adjusted;}
-        else report.missing|=1u<<type;
-    }
-    pd_damage_summary *r=&report.total;r->configured=!report.missing;r->hp_after=s->hp;r->temp_after=s->temp_hp;r->max_hp_after=pd_max_hp(s);
+    for(unsigned i=0;i<report.count;i++){pd_damage_group *g=&report.groups[i];if(g->configured&&!g->unresolved){g->adjusted=adjusted(g->amount,g->flags);total+=g->adjusted;}}
+    pd_damage_summary *r=&report.total;r->configured=!report.missing&&!report.context_missing;r->hp_after=s->hp;r->temp_after=s->temp_hp;r->max_hp_after=pd_max_hp(s);
     if(report.count==1)r->flags=report.groups[0].flags;
     if(r->configured){
         r->adjusted=total;r->absorbed=total<s->temp_hp?total:s->temp_hp;r->temp_after-=r->absorbed;
