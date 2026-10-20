@@ -152,3 +152,16 @@ conserva le preferenze locali agli import. USB v5, stati estesi in PSRAM,
 PDD5 compatti e nuova NVS a 0x410000; la partizione legacy resta in sola lettura.
 Selezione record senza allocazioni intermedie ambigue: OOM non diventa perdita
 silenziosa della banca più recente. [Schema e verifiche](MAGIE-TASTI.md).
+
+
+Incremento 0.23: `core/rest.c` valida piani di recupero prima della mutazione e
+modella spesa/cura base dei dadi vita. `src/recovery.js` fornisce il riferimento
+deterministico; il parser reale è attraversato dai confronti PC/USB/C.
+`pd_recovery` conserva fino a 20 riserve, con disponibilità distinta da elenco
+vuoto. USB v6 aggiunge `recovery`; PDD6 aggiunge 882 byte al record compatto
+precedente senza cambiare partizioni. `hit_candidate` e gli stati della UI
+restano in PSRAM. La cura è estratta dopo conferma, salvata insieme al consumo
+e poi animata; un tentativo ripetuto nella stessa finestra non rilancia.
+La nuova scorciatoia locale 7 apre Riposi, senza autorizzare conferme fisiche.
+Fixture PDD5 generato dall'encoder `a6c525f`, migrazione senza scritture al boot,
+CRC/allocazioni/versioni future verificati. [Dettagli](RIPOSI-RECUPERI.md).

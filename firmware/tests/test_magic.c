@@ -23,10 +23,10 @@ int main(void){
  assert(pd_magic_recover(&s,5,1)&&s.magic.powers[5].remaining==1);assert(!pd_magic_recover(&s,4,1));
  assert(pd_slot_change(&s,1,false,100)&&s.magic.slots[0].current==2);assert(pd_slot_change(&s,1,false,-100)&&!s.magic.slots[0].current);
  assert(pd_slot_change(&s,1,false,1));assert(pd_magic_use(&s,1,1,false));pd_hp(&s,-999);assert(!s.magic.concentration&&!s.combat.raging);
- s.shortcuts[0]=6;s.shortcuts[1]=0;s.shortcuts[2]=4;
- static uint8_t data[PD_RECORD_SIZE];size_t length=pd_encode(&s,88,data);uint32_t gen;assert(pd_decode(data,length,&out,&gen)&&gen==88&&out.magic.count==6&&out.magic.powers[5].remaining==1&&out.shortcuts[0]==6&&!out.shortcuts[1]&&out.shortcuts[2]==4);
+ s.shortcuts[0]=7;s.shortcuts[1]=0;s.shortcuts[2]=4;
+ static uint8_t data[PD_RECORD_SIZE];size_t length=pd_encode(&s,88,data);uint32_t gen;assert(pd_decode(data,length,&out,&gen)&&gen==88&&out.magic.count==6&&out.magic.powers[5].remaining==1&&out.shortcuts[0]==7&&!out.shortcuts[1]&&out.shortcuts[2]==4);
  s.magic=(pd_magic){.available=true,.count=PD_POWERS};s.hp=24;
  for(unsigned i=0;i<PD_POWERS;i++)s.magic.powers[i]=(pd_power){.name="Magia massima",.flags=PD_PREPARED};
  assert(pd_valid(&s)&&pd_encode(&s,99,data)==PD_RECORD_SIZE&&pd_decode(data,PD_RECORD_SIZE,&out,&gen)&&out.magic.count==PD_POWERS&&!strcmp(out.magic.powers[119].name,"Magia massima"));
- puts("Magic: stats, slots/pact, cantrips, innate costs, preparation, concentration, rage/endurance, manual recovery, HP zero and PDD5 persistence passed");
+ puts("Magic: stats, slots/pact, cantrips, innate costs, preparation, concentration, rage/endurance, manual recovery, HP zero and PDD6 persistence passed");
 }

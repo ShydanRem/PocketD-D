@@ -38,3 +38,7 @@ firmware/brookesia/components/ButtonTest/ButtonTest.cpp at the same pinned
 Waveshare commit. BOOT is active-low GPIO0; conditioned PWR is active-high
 TCA9554 P4. PocketD-D implements its own bounded polling/debounce state machine
 and preserves the other expander direction/output/polarity bits.
+
+The v0.23 rest/hit-die implementation, views and test fixtures are PocketD-D
+code. It reuses the original pixel dice renderer and adds no external artwork,
+rules catalogue, runtime service or firmware dependency.

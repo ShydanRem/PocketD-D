@@ -57,3 +57,12 @@ if all((base/(name+'.ppm')).is_file() for name in magic):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(magic):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'magic-preview.png');print(base/'magic-preview.png')
+
+rests=['rest-home','rest-long','rest-regain','hit-healing']
+for name in rests+['rest-short','rest-settings','hit-dice','hit-confirm','rest-legacy','hit-last']:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in rests):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(rests):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'rest-preview.png');print(base/'rest-preview.png')

@@ -6,7 +6,7 @@
 #define PD_RESOURCES 8
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
-#define PD_RECORD_SIZE 71408
+#define PD_RECORD_SIZE 72290
 #define PD_POWERS 120
 #define PD_POWER_TEXT_BYTES 501
 #define PD_ITEMS 60
@@ -45,6 +45,9 @@ typedef struct {
     pd_slot slots[9],pact[9];
     pd_power powers[PD_POWERS];
 } pd_magic;
+#define PD_HIT_POOLS 20
+typedef struct { char name[41]; uint8_t die,maximum,used; } pd_hit_die;
+typedef struct { bool available; uint8_t count; pd_hit_die pools[PD_HIT_POOLS]; } pd_recovery;
 typedef struct {
     char name[PD_NAME_BYTES];
     uint16_t hp, max_hp, temp_hp;
@@ -58,6 +61,7 @@ typedef struct {
     pd_combat combat;
     pd_item items[PD_ITEMS];
     pd_magic magic;
+    pd_recovery recovery;
     uint8_t shortcuts[3]; /* PWR short, BOOT short, BOOT long; device-local. */
 } pd_state;
 typedef struct { uint8_t dice[2], count, natural; int total, bonus; } pd_roll;

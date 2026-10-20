@@ -2,11 +2,12 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.22:** magie/capacità sul dispositivo (120 voci), slot ordinari/patto, utilizzi e concentrazione con conferma. Tasti PWR/BOOT configurabili, con PWR lungo riservato all’alimentazione. Testi oltre 500 caratteri dichiarati come estratti. Inventario fino a 60 voci, armi scegliibili, attacchi/danni animati e critici fino a 18 dadi sul dispositivo. Cure e consumabili con conferma, salvataggio congiunto di PF/quantità e annullamento. Abilità e salvezze con competenza, maestria, mezza competenza, extra e dettaglio dei bonus. Le prove da verificare restano bloccate; le vecchie copie mantengono le prove di caratteristica e richiedono una nuova esportazione per competenze, inventario e magie mancanti. Avatar personale animato con 81 combinazioni, PF/annulla, contatori, dadi poliedrici e salvataggio offline. Supporto PC per importazione Beyond, configurazione, backup ed esportazione USB con anteprima e conferma sul display. Il firmware non è ancora collaudato sulla scheda fisica.
+**Stato v0.23:** riposi breve/lungo con anteprima e conferma, dadi vita per classe con cure animate, recupero lungo manuale/2014/2024 e scorciatoia Riposi. Magie/capacità sul dispositivo (120 voci), slot ordinari/patto, utilizzi e concentrazione con conferma. Tasti PWR/BOOT configurabili, con PWR lungo riservato all’alimentazione. Testi oltre 500 caratteri dichiarati come estratti. Inventario fino a 60 voci, armi scegliibili, attacchi/danni animati e critici fino a 18 dadi sul dispositivo. Cure e consumabili con conferma, salvataggio congiunto di PF/quantità e annullamento. Abilità e salvezze con competenza, maestria, mezza competenza, extra e dettaglio dei bonus. Le prove da verificare restano bloccate; le vecchie copie mantengono le prove di caratteristica e richiedono una nuova esportazione per competenze, inventario e magie mancanti. Avatar personale animato con 81 combinazioni, PF/annulla, contatori, dadi poliedrici e salvataggio offline. Supporto PC per importazione Beyond, configurazione, backup ed esportazione USB con anteprima e conferma sul display. Il firmware non è ancora collaudato sulla scheda fisica.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
 - [Direzione visiva: pixel art moderna e anteprime del firmware](docs/DIREZIONE-VISIVA.md)
+- [Riposi e dadi vita: uso, recuperi, compatibilità e limiti](docs/RIPOSI-RECUPERI.md)
 - [Magie, capacità e tasti configurabili: uso, memoria e limiti](docs/MAGIE-TASTI.md)
 - [Inventario e attacchi: uso, regole, limiti e verifiche](docs/INVENTARIO-ATTACCHI.md)
 - [Abilità e salvezze: bonus, effetti, limiti e compatibilità](docs/ABILITA-SALVEZZE.md)
@@ -19,7 +20,7 @@ Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazi
 
 ## Primo traguardo
 
-Scheda → caratteristica → d20 → risultato → PF → salvataggio offline sul dispositivo. Il firmware include Elian originale e una copia limitata della scheda preparata da PC, con avatar personale. Inventario, attacchi e cure sono portati nel firmware; magie/capacità e tasti sono portati nella v0.22. Recuperi automatici, gestione completa dello stato e degli effetti restano da portare. Non considerare una build riuscita equivalente a una prova fisica.
+Scheda → caratteristica → d20 → risultato → PF → salvataggio offline sul dispositivo. Il firmware include Elian originale e una copia limitata della scheda preparata da PC, con avatar personale. Inventario, attacchi e cure sono portati nel firmware; magie/capacità e tasti sono portati nella v0.22. La v0.23 porta riposi espliciti e dadi vita. Gestione completa di stato, condizioni e morte resta da portare. Non considerare una build riuscita equivalente a una prova fisica.
 
 ## Avvio del prototipo
 
@@ -219,3 +220,20 @@ Nessun effetto automatico su PF o risorse; prove d20 e vantaggio/svantaggio
 rimangono separati. Sprite originali per i sei solidi, due righe per i gruppi
 più numerosi, uscita dalla preparazione senza perdere il risultato precedente.
 I parametri manuali sono di sessione; i formati di salvataggio non cambiano.
+
+
+## Incremento 0.23 — riposi e dadi vita sul dispositivo
+
+Usi → Riposi distingue breve e lungo con anteprima degli effettivi recuperi.
+Dopo un breve confermato è possibile spendere un dado vita per classe e vedere
+la cura animata; PF e consumo sono salvati insieme e annullabili. Il lungo
+propone recupero dei dadi manuale, 2014 con scelta multiclass o 2024. La scelta
+non pretende di applicare il regolamento completo: requisiti, durate, condizioni
+ed eccezioni rimangono al DM. Contatori generici invariati.
+
+USB v6 e PDD6, lettura dei formati precedenti senza dadi inventati, layout flash
+v0.22 conservato. Riposi è anche una destinazione dei tasti configurabili;
+i tasti restano bloccati durante le conferme. Verificati 134 test JS, 21738
+confronti PC/USB/C totali, UI LVGL, browser con raccolta effimera, sanitizzatori
+e build ESP32-S3. Nessuna nuova lettura personale Beyond o prova fisica.
+[Uso e limiti](docs/RIPOSI-RECUPERI.md).

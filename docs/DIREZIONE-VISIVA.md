@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.22
+# Direzione visiva del dispositivo — v0.23
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -145,3 +145,9 @@ La v0.22 estende lo stile a filtri di magie/capacità, costi, testi paginati
 e impostazioni tasti. I testi in estratto sono dichiarati, senza rimpicciolire
 il font per far entrare intere descrizioni. Anteprima `magic-preview.png`,
 sempre dal renderer LVGL host e non da una foto del dispositivo.
+
+La v0.23 aggiunge riposi e scelta delle riserve dadi vita con lo stesso tema:
+valori recuperati in menta/oro, anteprima compatta prima della conferma e
+pulsanti di almeno 44 px. Le cure riusano i dadi pixel art, mostrando faccia,
+cura calcolata e PF effettivi. `rest-preview.png` raccoglie quattro catture del
+firmware LVGL su host. Nessun nuovo asset esterno o mockup sostitutivo del codice.

@@ -1,4 +1,4 @@
-# Firmware PocketD-D 0.22 — magie, capacità e tasti configurabili
+# Firmware PocketD-D 0.23 — riposi, recuperi e dadi vita
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
@@ -44,14 +44,17 @@ slot ordinari/patto, preparazione, utilizzi e concentrazione con conferma.
 USB v5, record PDD5 compatti in una nuova partizione NVS; vecchia area conservata.
 I testi oltre 500 caratteri sono estratti dichiarati; effetti delle magie al DM.
 
+La v0.23 aggiunge [riposi e dadi vita](RIPOSI-RECUPERI.md), anteprima e conferma,
+recuperi breve/lungo, cure animate e scelta manuale/2014/2024 dei dadi da
+restituire. Riposi è assegnabile ai tasti. USB v6 e PDD6; layout v0.22 invariato.
+
 Primo percorso: avvio con Elian originale o copia precedentemente salvata →
 Scheda → caratteristica → d20 → risultato → Eroe → PF ±1 → annulla →
 salvataggio locale. Anche PF temporanei e fino a otto contatori manuali.
 Vantaggio e svantaggio selezionabili dal pulsante Base/Vant/Svant. Durante il volo
 si può accelerare; modalità e navigazione attendono l'arresto del tiro.
 
-Non è ancora una scheda completa: mancano riposi automatici,
-gestione completa di effetti/condizioni, morte, dadi vita,
+Non è ancora una scheda completa: mancano gestione completa di effetti/condizioni e morte,
 monete, storico persistente, mappa e party. Le prove applicano i contributi
 riconosciuti e trasferiti; i contesti da verificare restano bloccati. Le istantanee per prove e attacchi includono Avvelenato, Ira, attacco potente e dadi critici extra: Ira riconosciuta usa ora il contatore della capacità; altre durate e interazioni restano manuali. Il dado libero
 usa bonus zero. La CA è il valore esportato, non un ricalcolo dell'equipaggiamento.
@@ -168,20 +171,21 @@ Nessun reset/flash, scrittura verso Beyond o modifica della raccolta da questo
 strumento. Il trasferimento fisico USB resta da collaudare, benché parser,
 protocollo host e conferma grafica siano testati separatamente.
 
-Formato `pocketdd-device` v5, massimo 262144 byte, campi esatti di base: `format`, `version`,
+Formato `pocketdd-device` v6, massimo 262144 byte, campi esatti di base: `format`, `version`,
 `name`, `level`, `hp`, `maxHp`, `tempHp`, `armorClass`, `abilities` e `resources`.
 Da v2 è obbligatorio anche `avatar`, con esattamente `skin`, `hair`, `cloak`,
 `style`: indici interi 0–2 corrispondenti alle scelte PC. Da v3 è obbligatorio
 `training`, con gradi, competenze, extra, mezze competenze, blocchi e le due
 istantanee; [schema completo](ABILITA-SALVEZZE.md). Il firmware accetta anche
-v1/v2/v3/v4: v1 usa l'aspetto base; v1/v2 segnalano le competenze mancanti.
+v1/v2/v3/v4/v5: v1 usa l'aspetto base; v1/v2 segnalano le competenze mancanti.
 Da v4 è obbligatorio `inventory`; [schema e omissioni](INVENTARIO-ATTACCHI.md).
 Da v5 è obbligatorio `magic`; [schema, testi e tasti locali](MAGIE-TASTI.md).
+Da v6 è obbligatorio `recovery`; [dadi vita e regole esplicite](RIPOSI-RECUPERI.md).
 La preferenza locale per
 l'animazione non viene trasferita dal PC: la conferma conserva quella già attiva.
-Il nuovo uploader negozia `PDD READY 1/2/3/4/5` e blocca una copia prima dell'invio
+Il nuovo uploader negozia `PDD READY 1/2/3/4/5/6` e blocca una copia prima dell'invio
 se il firmware non ne supporta la versione. Usare lo script di questa versione;
-i precedenti uploader non riconoscono `PDD READY 5`.
+i precedenti uploader non riconoscono `PDD READY 6`.
 Nome ASCII 1–48 byte, contatore 1–32; accenti traslitterati e altri simboli
 sostituiti nell'anteprima PC. Livello 1–20, caratteristiche 1–30, CA 1–40,
 PF 0–massimo (massimo 1–999), temporanei 0–999. Massimo otto contatori con
@@ -198,20 +202,23 @@ reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
 ## Salvataggio e dadi
 
 NVS nel namespace `pocketdd`, nuova partizione `pdd_state`, due chiavi alternate
-`state_a`/`state_b`. Record PDD5 da **5168 + 552 × numero voci** byte, massimo
-71408. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
+`state_a`/`state_b`. Record PDD6 da **6050 + 552 × numero voci** byte, massimo
+72290. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
 visibile. Nessun dump di struct, erase o fallback distruttivo. Errori I/O o
 allocazioni insufficienti bloccano scritture; CRC e versioni future conservati.
 
 Se la nuova area è vuota, legge PDD1/PDD2 da 384 byte, PDD3 da 512 o PDD4 da
 5184 dalla vecchia `pdd_nvs`, aperta in sola lettura. Nessun record vecchio viene
 riscritto al boot o al primo salvataggio nuovo. Magie assenti restano dichiarate
-non importate. Il nuovo uploader supporta USB v1–v5. Preferenze avatar/tasti
+non importate. I record PDD5 della v0.22 sono leggibili dalla nuova partizione;
+i dadi vita assenti restano non disponibili. Le nuove scritture PDD6 richiedono
+firmware v0.23 o successivo: [compatibilità e downgrade](RIPOSI-RECUPERI.md).
+Il nuovo uploader supporta USB v1–v6. Preferenze avatar/tasti
 locali conservate durante l'importazione. [Dettagli](MAGIE-TASTI.md).
 
 PF e contatori vengono persistiti ad ogni modifica; “Annulla modifica” ripristina
-l'ultima modifica di sessione a PF/contatori/inventario e la salva, non la vecchia scheda dopo
-un'importazione. I tiri non scrivono flash e non hanno storico persistente.
+l'ultima modifica di sessione a PF/contatori/inventario/magie/recuperi e la salva, non la vecchia scheda dopo
+un'importazione. I tiri liberi/attacco/danni non scrivono flash; cure e dadi vita salvano PF e consumo prima dell’animazione. Non c’è storico persistente.
 L'uso prolungato della flash va misurato prima di cambiare strategia di scrittura.
 
 Dadi con rejection sampling, senza modulo distorto. Wi-Fi/Bluetooth spenti;
@@ -366,3 +373,18 @@ verifica anteprima/download senza cambiare la raccolta effimera.
 Nessun nuovo accesso Beyond, modifica personale, flash o collaudo fisico.
 [Uso, sorgenti dei tasti e limiti](MAGIE-TASTI.md).
 Build v0.22: **833.072 byte**, partizione app da 4 MiB **80% libera**.
+
+
+## Verifiche v0.23 — riposi e dadi vita
+
+134 test JS; 7840 nuovi confronti PC/USB/C per riposi/dadi vita, 21738 totali
+inclusi prove/combattimento/magie. Schema USB v6, fixture indipendente PDD5,
+round trip PDD6 con 20 riserve e dati malformati a CRC valido. UI LVGL con
+selezione multiclass, recuperi espliciti, cure/cap/annulla, errori di memoria,
+riuso della cura estratta su errore, import busy e tasti protetti. Chromium
+verifica anteprima/copia v6 e raccolta effimera invariata. Sanitizzatori e build
+ESP32-S3 passati; nessun flash, test elettrico o JSON personale pubblicato.
+[Dettagli](RIPOSI-RECUPERI.md).
+
+Build v0.23: **839.696 byte** (80% della partizione app da 4 MiB libera);
+layout flash invariato rispetto alla v0.22.

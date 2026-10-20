@@ -337,5 +337,42 @@ int main(void) {
     page=MAGIC_LIST;magic_filter=2;magic_page=39;render();bounds();screenshot("magic-last.ppm");
     memset(state.magic.powers[0].description,'W',500);state.magic.powers[0].description[500]=0;power_index=0;page=MAGIC_TEXT;text_page=3;render();bounds();
     state.magic.available=false;state.magic.count=0;magic_page=0;page=MAGIC_LIST;render();bounds();screenshot("magic-legacy.ppm");
-    puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px passed");
+    state.shortcuts[0]=7;shortcut(0);assert(page==REST_HOME);state.shortcuts[0]=1;
+    /* Actual rest pages: preview/cancel, multiclass policies, atomic animated cures. */
+    pd_demo(&state);undo_available=false;combat_roll=0;has_roll=false;state.hp=20;state.temp_hp=7;
+    state.magic.count=3;for(unsigned i=0;i<3;i++)state.magic.powers[i]=(pd_power){.name="Risorsa sintetica",.kind=1,.maximum=3,.remaining=1,.recovery=i};
+    state.magic.slots[0]=(pd_slot){0,3};state.magic.pact[1]=(pd_slot){0,2};state.combat.rage_bonus=2;state.combat.raging=true;state.training.strength_advantage=true;
+    state.recovery=(pd_recovery){.available=true,.count=2,.pools={{.name="Classe del viandante",.die=8,.maximum=3,.used=1},{.name="Classe del guardiano",.die=12,.maximum=2,.used=1}}};
+    state.shortcuts[1]=6;page=RESOURCES;render();bounds();click("Riposi");screenshot("rest-home.ppm");
+    static pd_state before_rest;before_rest=state;calls=random_calls;unsigned rest_saves=save_calls;
+    click("Riposo breve");screenshot("rest-short.ppm");assert(page==REST_PREVIEW&&!memcmp(&state,&before_rest,sizeof state)&&random_calls==calls&&save_calls==rest_saves);
+    shortcut(0);act(100);assert(page==REST_PREVIEW);assert(!stage_import(&imported_magic)&&!import_pending);click("Indietro");assert(!memcmp(&state,&before_rest,sizeof state));
+    click("Riposo breve");fail_save=true;click("Conferma");assert(page==REST_PREVIEW&&!memcmp(&state,&before_rest,sizeof state));fail_save=false;click("Conferma");
+    assert(page==REST_SESSION&&rest_active&&state.hp==20&&state.temp_hp==7&&!state.combat.raging&&!state.training.strength_advantage&&state.magic.pact[1].current==2&&!state.magic.slots[0].current);
+    assert(state.magic.powers[0].remaining==1&&state.magic.powers[1].remaining==3&&state.magic.powers[2].remaining==1&&random_calls==calls);
+    click("Spendi un dado vita");screenshot("hit-dice.ppm");click("Spendi 1 dado");screenshot("hit-confirm.ppm");
+    assert(page==HIT_CONFIRM&&random_calls==calls);shortcut(1);act(100);assert(page==HIT_CONFIRM&&!stage_import(&imported_magic));
+    click("Indietro");assert(page==HIT_DICE&&state.recovery.pools[0].used==1);click("Spendi 1 dado");
+    before_rest=state;random_values[0]=random_values[1]=5;fail_save=true;click("Conferma");assert(hit_rolled&&page==HIT_CONFIRM&&!memcmp(&state,&before_rest,sizeof state)&&random_calls==calls+1);
+    click("Conferma");assert(random_calls==calls+1&&!memcmp(&state,&before_rest,sizeof state));fail_save=false;click("Conferma");
+    assert(page==DICE&&combat_roll==4&&state.hp==28&&state.temp_hp==7&&state.recovery.pools[0].used==2&&random_calls==calls+1);
+    calls=random_calls;shortcut(1);assert(!dice_animation.active&&random_calls==calls&&state.hp==28);bounds();screenshot("hit-healing.ppm");
+    click("Riposo");click("Spendi un dado vita");click("Spendi 1 dado");random_values[0]=random_values[1]=7;click("Conferma");click("Accelera");assert(state.hp==32&&state.recovery.pools[0].used==3&&healing_gained==4);
+    click("Altro");calls=random_calls;act(915);assert(page==HIT_DICE&&random_calls==calls);click("Indietro");click("Fine");assert(!rest_active);
+    click("Eroe");click("Annulla");assert(state.hp==28&&state.recovery.pools[0].used==2);click("Usi");click("Riposi");
+    before_rest=state;click("Riposo lungo");screenshot("rest-settings.ppm");click("Anteprima");assert(page==REST_PREVIEW&&!memcmp(&state,&before_rest,sizeof state));click("Indietro");
+    click("Dadi vita: manuale >");click("Scegli dadi da recuperare");click("+1");click(">");click("+1");screenshot("rest-regain.ppm");
+    act(917);assert(selected_hit_dice()==2&&rest_plan.regain[0]==1&&rest_plan.regain[1]==1);
+    click("Indietro");click("Anteprima");screenshot("rest-long.ppm");calls=random_calls;shortcut(1);assert(page==REST_PREVIEW&&random_calls==calls);click("Indietro");
+    click("Dadi vita: 2014 >");assert(rest_plan.policy==PD_HD_2024&&!selected_hit_dice());click("Anteprima");assert(scratch.recovery.pools[0].used==0&&scratch.recovery.pools[1].used==0);click("Indietro");
+    click("Dadi vita: 2024 >");click("Dadi vita: manuale >");click("Scegli dadi da recuperare");click("+1");click(">");click("+1");click("Indietro");click("Anteprima");click("Conferma");
+    assert(page==REST_HOME&&state.hp==32&&!state.temp_hp&&state.magic.slots[0].current==3&&state.magic.powers[2].remaining==3&&state.magic.powers[0].remaining==1&&state.recovery.pools[0].used==1&&!state.recovery.pools[1].used&&random_calls==calls);
+    assert(!memcmp(state.items,before_rest.items,sizeof state.items)&&!memcmp(state.resources,before_rest.resources,sizeof state.resources));
+    click("Usi");click("Eroe");click("Annulla");assert(!memcmp(&state,&before_rest,sizeof state));
+    click("Usi");click("Riposi");click("Riposo lungo");click("Dadi vita: manuale >");click("Dadi vita: 2014 >");click("Anteprima");click("Conferma");assert(!state.recovery.pools[0].used&&!state.recovery.pools[1].used);
+    rest_saves=save_calls;click("Riposo lungo");click("Anteprima");click("Conferma");assert(save_calls==rest_saves); /* No-op rest avoids flash wear. */
+    state.recovery.available=false;state.recovery.count=0;click("Riposo breve");click("Conferma");screenshot("rest-legacy.ppm");click("Fine");
+    state.recovery=(pd_recovery){.available=true,.count=20};for(unsigned i=0;i<20;i++)state.recovery.pools[i]=(pd_hit_die){.name="Classe",.die=12,.maximum=20,.used=i};
+    memset(state.recovery.pools[19].name,'W',40);state.recovery.pools[19].name[40]=0;state.hp=20;rest_active=true;hit_index=19;page=HIT_DICE;render();bounds();screenshot("hit-last.ppm");
+    puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback and guarded physical buttons passed");
 }

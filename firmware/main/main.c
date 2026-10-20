@@ -8,6 +8,7 @@
 #include "combat.h"
 #include "magic.h"
 #include "buttons.h"
+#include "rest.h"
 #ifndef PD_UI_TEST
 #include "esp_attr.h"
 #define PD_EXT EXT_RAM_BSS_ATTR
@@ -28,7 +29,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM } page_t;
 PD_EXT static pd_state state,previous,pending,scratch;
 static bool undo_available,import_pending,has_roll;
 static pd_roll result;
@@ -58,7 +59,7 @@ static bool pool_view,dice_setup,die_picker,pool_damage;
 static unsigned pool_sides=6,pool_count=1;
 static int pool_bonus;
 static unsigned inventory_page,item_index,target_armor=15,healing_gained;
-/* 0: checks/manual pools, 1: attack, 2: damage, 3: committed healing. */
+/* 0: checks/pools, 1: attack, 2: damage, 3: item cure, 4: hit die cure. */
 static unsigned combat_roll;
 static pd_strike strike;
 static bool strike_ready,damage_used;
@@ -66,9 +67,18 @@ static pd_pool damage_result;
 static pd_buttons physical_keys;
 static unsigned magic_filter=2,magic_page,power_index,cast_level,text_page,slot_index;
 static bool cast_pact,slot_pact,stop_rage;
-static const char *const shortcut_names[]={"Spento","Eroe","Scheda","Dadi","Zaino","Magie","Lancia"};
+static const char *const shortcut_names[]={"Spento","Eroe","Scheda","Dadi","Zaino","Magie","Lancia","Riposi"};
 static void shortcut(unsigned gesture);
 static bool can_use_power(void);
+static pd_rest_plan rest_plan;
+static unsigned hit_index;
+static bool rest_active,hit_rolled;
+PD_EXT static pd_state hit_candidate;
+static pd_pool hit_result;
+static unsigned hit_gained;
+static bool confirmation_open(void){return page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM;}
+static unsigned selected_hit_dice(void){unsigned n=0;for(unsigned i=0;i<PD_HIT_POOLS;i++)n+=rest_plan.regain[i];return n;}
+
 
 
 #ifndef PD_UI_TEST
@@ -152,11 +162,13 @@ static void frame(void) {
 }
 static void act(intptr_t action) {
     if(import_pending&&action!=30&&action!=31)return;
+    if(page==REST_PREVIEW&&action!=902&&action!=907)return;
+    if(page==HIT_CONFIRM&&action!=910&&action!=914)return;
     /* Disabled controls also reject queued/synthetic events while dice are in flight. */
     if (dice_animation.active && action!=13 && action!=16) return;
     #define next scratch
     next=state;
-    if (action>=100 && action<104) { page=action-100;dice_setup=false;die_picker=false; }
+    if (action>=100 && action<104) { page=action-100;if(combat_roll==4)invalidate_strike();rest_active=false;dice_setup=false;die_picker=false; }
     else if ((action>=200&&action<206)||(action>=220&&action<238)||(action>=240&&action<246)) {
         pd_check_kind selected_kind=action>=240?PD_SAVE:action>=220?PD_SKILL:PD_CHECK;
         int index=action-(selected_kind==PD_SAVE?240:selected_kind==PD_SKILL?220:200);
@@ -223,7 +235,7 @@ static void act(intptr_t action) {
     else if (action==22 && state.resource_count) resource_index=(resource_index+1)%state.resource_count;
     else if (action==30) {
         if (pd_storage_save(&pending)) {
-            state=pending;combat_roll=0;strike_ready=false;inventory_page=0;item_index=0;undo_available=false;resource_index=0;has_roll=false;ability=-1;mode=0;page=HERO;pool_view=false;dice_setup=false;die_picker=false;pd_dice_idle(&dice_animation,1);
+            state=pending;rest_active=false;hit_rolled=false;combat_roll=0;strike_ready=false;inventory_page=0;item_index=0;undo_available=false;resource_index=0;has_roll=false;ability=-1;mode=0;page=HERO;pool_view=false;dice_setup=false;die_picker=false;pd_dice_idle(&dice_animation,1);
             reply("PDD IMPORTED\n"); import_pending=false;
         } else { reply("PDD ERROR storage\n");import_pending=false; }
     }
@@ -279,9 +291,46 @@ static void act(intptr_t action) {
         apply(&next);page=MAGIC_STATUS;
     }
     else if(action>=860&&action<=862) {
-        unsigned i=action-860;next.shortcuts[i]=(state.shortcuts[i]+1)%7;
+        unsigned i=action-860;next.shortcuts[i]=(state.shortcuts[i]+1)%8;
         if(pd_storage_save(&next)){state=next;memcpy(previous.shortcuts,next.shortcuts,3);}
     }
+    else if(action==900){page=REST_HOME;rest_active=false;rest_plan=(pd_rest_plan){0};hit_index=0;}
+    else if(action==901){rest_plan=(pd_rest_plan){0};page=REST_PREVIEW;}
+    else if(action==902){page=rest_plan.long_rest?REST_LONG_SETTINGS:REST_HOME;}
+    else if(action==903){rest_plan=(pd_rest_plan){.long_rest=true};page=REST_LONG_SETTINGS;hit_index=0;}
+    else if(action==904&&page==REST_LONG_SETTINGS){rest_plan.policy=(rest_plan.policy+1)%3;memset(rest_plan.regain,0,sizeof rest_plan.regain);}
+    else if(action==905&&page==REST_LONG_SETTINGS&&rest_plan.policy==PD_HD_2014&&state.recovery.count){page=REST_REGAIN;hit_index=0;}
+    else if(action==906&&page==REST_LONG_SETTINGS)page=REST_PREVIEW;
+    else if(action==907&&page==REST_PREVIEW){
+        if(!pd_rest_apply(&next,&rest_plan))return;
+        bool changed=memcmp(&next,&state,sizeof state)!=0;
+        if(!changed||pd_storage_save(&next)) {
+            if(changed){previous=state;undo_available=true;state=next;invalidate_strike();}
+            rest_active=!rest_plan.long_rest;page=rest_active?REST_SESSION:REST_HOME;
+        }
+    }
+    else if(action==908&&page==REST_REGAIN)page=REST_LONG_SETTINGS;
+    else if(action==909&&rest_active&&state.recovery.count){page=HIT_DICE;hit_index=0;}
+    else if(action==910){hit_rolled=false;page=HIT_DICE;}
+    else if(action==911&&rest_active)page=REST_SESSION;
+    else if((action==912||action==913)&&(page==REST_REGAIN||page==HIT_DICE)) {
+        if(action==912&&hit_index)hit_index--;
+        if(action==913&&hit_index+1<state.recovery.count)hit_index++;
+    }
+    else if(action==914&&page==HIT_CONFIRM&&rest_active){
+        if(!hit_rolled){if(!pd_spend_hit_die(&state,hit_index,pd_board_random,NULL,&hit_candidate,&hit_result,&hit_gained))return;hit_rolled=true;}
+        if(pd_storage_save(&hit_candidate)){
+            previous=state;undo_available=true;state=hit_candidate;invalidate_strike();
+            healing_gained=hit_gained;combat_roll=4;pool_view=true;has_roll=false;page=DICE;hit_rolled=false;
+            pd_dice_pool_start(&dice_animation,&hit_result,lv_tick_get());
+        }
+    }
+    else if(action==915&&page==HIT_DICE&&rest_active&&state.hp>0&&state.hp<state.max_hp&&hit_index<state.recovery.count&&state.recovery.pools[hit_index].used<state.recovery.pools[hit_index].maximum){page=HIT_CONFIRM;hit_rolled=false;}
+    else if((action==916||action==917)&&page==REST_REGAIN&&hit_index<state.recovery.count){
+        if(action==916&&rest_plan.regain[hit_index])rest_plan.regain[hit_index]--;
+        if(action==917&&rest_plan.regain[hit_index]<state.recovery.pools[hit_index].used&&selected_hit_dice()<pd_hit_budget(&state,rest_plan.policy))rest_plan.regain[hit_index]++;
+    }
+    else if(action==918){rest_active=false;invalidate_strike();page=RESOURCES;}
     else if(action==80)page=INVENTORY;
     else if(action==81||action==85) {
         pd_weapon_info w;if(!pd_weapon_stats(&state,state.equipped,&w))return;
@@ -618,7 +667,7 @@ static void render_magic_other(void) {
         const pd_slot *slot=&(slot_pact?state.magic.pact:state.magic.slots)[slot_index];
         snprintf(text,sizeof text,"%u / %u",slot->current,slot->maximum);label(text,83,210,300,true);
         button("-1",83,257,144,44,840,slot->current>0);button("+1",239,257,144,44,841,slot->current<slot->maximum);
-        small_label("Correzione manuale; riposi successivi",83,319,300,PD_MUTED);button("Risorse",83,359,300,48,836,true);
+        small_label("Correzione manuale; riposi in Usi",83,319,300,PD_MUTED);button("Risorse",83,359,300,48,836,true);
     } else if(page==MAGIC_RECOVER) {
         const pd_power *p=&state.magic.powers[power_index];label(p->name,83,111,300,false);
         label("Utilizzi manuali",83,159,300,true);snprintf(text,sizeof text,"%u / %u",p->remaining,p->maximum);label(text,83,205,300,true);
@@ -632,6 +681,64 @@ static void render_magic_other(void) {
             lv_obj_t *b=button(text,83,157+i*54,300,48,860+i,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
         }
         small_label("PWR lungo: alimentazione",83,326,300,PD_GOLD);button("Indietro",83,359,300,48,50,true);
+    }
+}
+
+static void render_rest(void) {
+    char text[180];
+    if(page==REST_HOME) {
+        label("Riposi e recuperi",83,111,300,true);
+        button("Riposo breve",83,163,300,48,901,true);button("Riposo lungo",83,223,300,48,903,true);
+        small_label("Requisiti e durate: verifica con il DM",83,295,300,PD_GOLD);
+        small_label("Contatori: recupero manuale",83,321,300,PD_MUTED);
+        button("Usi",83,359,300,48,103,true);
+    } else if(page==REST_LONG_SETTINGS) {
+        label("Riposo lungo",83,111,300,true);
+        snprintf(text,sizeof text,"Dadi vita: %s >",(const char *const[]){"manuale","2014","2024"}[rest_plan.policy]);button(text,83,157,300,48,904,true);
+        small_label(rest_plan.policy==PD_HD_2014?"Meta del totale, min. 1; scegli dadi":rest_plan.policy==PD_HD_2024?"Recupera tutti i dadi vita spesi":"Dadi vita invariati; recuperi manuali",83,223,300,PD_GOLD);
+        if(state.recovery.available)snprintf(text,sizeof text,"Dadi da recuperare: %u",rest_plan.policy==PD_HD_2024?pd_hit_budget(&state,rest_plan.policy):selected_hit_dice());else snprintf(text,sizeof text,"Dati assenti: importa nuova copia");small_label(text,83,249,300,PD_TEXT);
+        button("Scegli dadi da recuperare",83,283,300,48,905,rest_plan.policy==PD_HD_2014&&state.recovery.available&&state.recovery.count);
+        button("Indietro",83,359,144,48,900,true);button("Anteprima",239,359,144,48,906,true);
+    } else if(page==REST_PREVIEW) {
+        pd_rest_summary delta;if(!pd_rest_preview(&state,&rest_plan,&scratch,&delta))return;
+        label(rest_plan.long_rest?"Conferma riposo lungo":"Conferma riposo breve",83,107,300,false);
+        snprintf(text,sizeof text,"PF %u -> %u | temporanei %u -> %u",state.hp,scratch.hp,state.temp_hp,scratch.temp_hp);small_label(text,83,148,300,PD_MINT);
+        snprintf(text,sizeof text,"Slot: +%u ordinari / +%u patto",delta.ordinary,delta.pact);small_label(text,83,175,300,PD_TEXT);
+        snprintf(text,sizeof text,"Voci con utilizzi recuperati: %u",delta.powers);small_label(text,83,202,300,PD_TEXT);
+        if(state.recovery.available)snprintf(text,sizeof text,"Dadi vita recuperati: %u (%s)",delta.hit_dice,(const char *const[]){"manuale","2014","2024"}[rest_plan.policy]);else snprintf(text,sizeof text,"Dadi vita: dati non disponibili");small_label(text,83,229,300,PD_GOLD);
+        small_label("Termina Ira e attacco potente",83,260,300,PD_TEXT);
+        small_label(rest_plan.long_rest?"Concentrazione: termina":"Concentrazione: invariata",83,284,300,PD_TEXT);
+        small_label("Contatori invariati; eccezioni: DM",83,309,300,PD_MUTED);
+        small_label(rest_plan.long_rest?"Requisiti e durate: verifica DM":"Poi spendi dadi vita per curarti",83,333,300,PD_MUTED);
+        button("Indietro",83,359,144,48,902,true);button("Conferma",239,359,144,48,907,true);
+    } else if(page==REST_SESSION) {
+        label("Riposo breve applicato",83,111,300,false);
+        snprintf(text,sizeof text,"PF %u/%u | COS %+d",state.hp,state.max_hp,pd_modifier(state.abilities[2]));label(text,83,159,300,false);
+        button("Spendi un dado vita",83,211,300,48,909,state.recovery.available&&state.recovery.count&&state.hp>0&&state.hp<state.max_hp);
+        small_label(!state.recovery.available?"Dadi vita assenti: importa una copia":!state.recovery.count?"Nessuna riserva dadi vita nella scheda":state.hp==0?"A zero PF: verifica con il DM":"Cura base: dado + COS, minimo zero",83,289,300,PD_GOLD);
+        small_label("Ogni spesa richiede conferma",83,318,300,PD_MUTED);button("Fine",83,359,300,48,918,true);
+    } else if(page==REST_REGAIN||page==HIT_DICE) {
+        bool regain=page==REST_REGAIN;const pd_hit_die *h=&state.recovery.pools[hit_index];
+        label(regain?"Recupera dadi":"Dadi vita",139,111,188,false);
+        button("<",83,99,48,44,912,hit_index>0);button(">",335,99,48,44,913,hit_index+1<state.recovery.count);
+        if(regain)snprintf(text,sizeof text,"Scelti %u / limite %u",selected_hit_dice(),pd_hit_budget(&state,rest_plan.policy));
+        else snprintf(text,sizeof text,"Riserva %u/%u | COS %+d",hit_index+1,state.recovery.count,pd_modifier(state.abilities[2]));
+        small_label(text,83,153,300,PD_GOLD);
+        lv_obj_t *name=small_label(h->name,83,183,300,PD_TEXT);lv_label_set_long_mode(name,LV_LABEL_LONG_WRAP);lv_obj_set_height(name,58);
+        snprintf(text,sizeof text,regain?"Spesi %u / %u d%u":"Disponibili %u / %u d%u",regain?h->used:h->maximum-h->used,h->maximum,h->die);label(text,83,243,300,false);
+        if(regain) {
+            button("-1",83,279,72,44,916,rest_plan.regain[hit_index]>0);snprintf(text,sizeof text,"%u",rest_plan.regain[hit_index]);label(text,163,289,140,false);
+            button("+1",311,279,72,44,917,rest_plan.regain[hit_index]<h->used&&selected_hit_dice()<pd_hit_budget(&state,rest_plan.policy));
+        } else button(state.hp==state.max_hp?"PF al massimo":h->used==h->maximum?"Riserva esaurita":"Spendi 1 dado",83,279,300,44,915,rest_active&&state.hp>0&&state.hp<state.max_hp&&h->used<h->maximum);
+        button("Indietro",83,359,300,48,regain?908:911,true);
+    } else if(page==HIT_CONFIRM) {
+        const pd_hit_die *h=&state.recovery.pools[hit_index];label("Spendere un dado vita?",83,111,300,false);
+        small_label(h->name,83,159,300,PD_TEXT);
+        snprintf(text,sizeof text,"1d%u %+d COS | minimo 0 PF",h->die,pd_modifier(state.abilities[2]));label(text,83,201,300,false);
+        snprintf(text,sizeof text,"PF attuali %u/%u",state.hp,state.max_hp);label(text,83,241,300,false);
+        small_label("Consuma il dado anche con cura zero",83,285,300,PD_GOLD);
+        small_label("Bonus speciali: verifica con il DM",83,314,300,PD_MUTED);
+        button("Indietro",83,359,144,48,910,true);button("Conferma",239,359,144,48,914,true);
     }
 }
 
@@ -662,6 +769,7 @@ static void render(void) {
         button("Annulla",83,303,144,54,31,true); button("Conferma",239,303,144,54,30,true);
         return;
     }
+    if(page>=REST_HOME){render_rest();return;}
     if(page==MAGIC_LIST){render_magic_list();return;}
     if(page==MAGIC_DETAIL){render_magic_detail();return;}
     if(page==MAGIC_TEXT){render_magic_text();return;}
@@ -720,7 +828,7 @@ static void render(void) {
             pd_weapon_info w={0};pd_weapon_stats(&state,state.equipped,&w);
             snprintf(text,sizeof text,"Attacco %+d",strike_ready?strike.roll.bonus:w.attack_bonus);
         }
-        else if(combat_roll==3)snprintf(text,sizeof text,"Cura %ud%u %+d",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
+        else if(combat_roll==3||combat_roll==4)snprintf(text,sizeof text,"Cura %ud%u %+d",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
         else if(pool_view)snprintf(text,sizeof text,"%s %ud%u %+d",dice_animation.pool.damage?"Danni":"Somma",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
         else if(ability<0)snprintf(text,sizeof text,"d20 libero +0");else check_name(text,sizeof text,true);
         if(!combat_roll&&!pool_view&&ability>=0) {
@@ -745,7 +853,7 @@ static void render(void) {
         }
         if(has_roll) {
             if(combat_roll==1)snprintf(text,sizeof text,"%s %d / CA %u",strike.critical?"Critico!":strike.hits?"Colpito":"Mancato",strike.roll.total,strike.armor);
-            else if(combat_roll==3)snprintf(text,sizeof text,"Cura %d | PF +%u -> %u/%u",dice_animation.pool.total,healing_gained,state.hp,state.max_hp);
+            else if(combat_roll==3||combat_roll==4)snprintf(text,sizeof text,"Cura %d | PF +%u -> %u/%u",dice_animation.pool.total,healing_gained,state.hp,state.max_hp);
             else if(pool_view) {
                 pd_pool *r=&dice_animation.pool;
                 if(r->damage && r->sum+r->bonus<0)snprintf(text,sizeof text,"Somma %d -> Danni 0",r->sum+r->bonus);
@@ -757,9 +865,9 @@ static void render(void) {
         label(text,73,269,320,false);
         if(!dice_pixels)label("Animazione non disponibile",73,183,320,false);
         if(combat_roll) {
-            button(combat_roll==3?"Zaino":"Arma",83,296,76,44,combat_roll==3?80:85,!dice_animation.active);
-            button(dice_animation.active?"Accelera":"Nuovo",167,296,132,44,dice_animation.active?16:combat_roll==3?80:81,true);
-            button("Danni",307,296,76,44,90,combat_roll==1&&has_roll&&strike_ready&&strike.hits&&!damage_used&&!dice_animation.active);
+            button(combat_roll==4?"Riposo":combat_roll==3?"Zaino":"Arma",83,296,76,44,combat_roll==4?911:combat_roll==3?80:85,!dice_animation.active);
+            button(dice_animation.active?"Accelera":combat_roll==4?"Altro":"Nuovo",167,296,132,44,dice_animation.active?16:combat_roll==4?910:combat_roll==3?80:81,true);
+            button(combat_roll==4?"Fine":"Danni",307,296,76,44,combat_roll==4?918:90,!dice_animation.active&&(combat_roll==4||(combat_roll==1&&has_roll&&strike_ready&&strike.hits&&!damage_used)));
         } else {
         button(pool_view?"Prova":mode==-1?"Svant":mode==1?"Vant":"Base",83,296,76,44,pool_view?14:15,!dice_animation.active);
         button(dice_animation.active?"Accelera":has_roll?"Rilancia":"Lancia",167,296,132,44,13,allowed);
@@ -774,9 +882,8 @@ static void render(void) {
             lv_obj_t *value=label(text,83,194,300,true);label_font(value,&lv_font_montserrat_32);
             lv_obj_set_style_text_color(value,lv_color_hex(PD_VIOLET),0);meter(r->current,r->maximum,235,PD_VIOLET);
             button("-1",83,247,144,44,20,r->current>0);button("+1",239,247,144,44,21,r->current<r->maximum);
-            snprintf(text,sizeof text,"Prossima  %d/%u",resource_index+1,state.resource_count);
-            button(text,83,299,300,44,22,state.resource_count>1);
-        } else label("Nessun contatore importato",83,194,300,false);
+            button("Prossimo",83,299,144,44,22,state.resource_count>1);button("Riposi",239,299,144,44,900,true);
+        } else {label("Nessun contatore importato",83,194,300,false);button("Riposi",83,299,300,44,900,true);}
     }
     const char *nav[]={"Eroe","Scheda","Dadi","Usi"};
     const lv_image_dsc_t *icons[]={&pd_art_hero,&pd_art_sheet,&pd_art_dice,&pd_art_uses};
@@ -811,15 +918,15 @@ static void avatar_frame(lv_timer_t *timer) {
     lv_obj_invalidate(avatar_sprite);
 }
 static void shortcut(unsigned gesture) {
-    if(gesture>=3||import_pending||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP)return;
+    if(gesture>=3||import_pending||confirmation_open())return;
     unsigned binding=state.shortcuts[gesture];if(!binding)return;
     if(dice_animation.active){if(binding==6&&page==DICE)act(16);return;}
     if(binding==6){act(page==DICE?13:14);return;}
     if(binding==1)act(100);else if(binding==2)act(101);else if(binding==3)act(14);
-    else if(binding==4)act(80);else if(binding==5)act(800);
+    else if(binding==4)act(80);else if(binding==5)act(800);else if(binding==7)act(900);
 }
 static bool stage_import(const pd_state *candidate) {
-    if(import_pending) { reply("PDD ERROR busy\n");return false; }
+    if(import_pending||page==REST_PREVIEW||page==HIT_CONFIRM) { reply("PDD ERROR busy\n");return false; }
     if(dice_animation.active) { pd_dice_finish(&dice_animation);has_roll=true; }
     pending=*candidate;pending.idle_animation=state.idle_animation;memcpy(pending.shortcuts,state.shortcuts,3);import_pending=true;
 #ifndef PD_UI_TEST
@@ -838,7 +945,7 @@ static void usb_task(void *unused) {
             if(c=='\n') {
                 if(!overflow && used) {
                     line[used]=0;
-                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 5\n");
+                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 6\n");
                     else {
                         pd_state *candidate=malloc(sizeof *candidate);
                         if(!candidate)reply("PDD ERROR memory\n");
@@ -870,7 +977,7 @@ void app_main(void) {
         }
         pd_board_tick();
         int levels[2];pd_board_buttons(levels);
-        bool enabled=!import_pending&&page!=ITEM_CONFIRM&&page!=MAGIC_CONFIRM&&page!=MAGIC_STOP;
+        bool enabled=!import_pending&&!confirmation_open();
         unsigned gestures=pd_buttons_sample(&physical_keys,levels[0],levels[1],lv_tick_get(),enabled);
         for(unsigned i=0;i<3;i++)if(gestures&(1u<<i))shortcut(i);
         vTaskDelay(pdMS_TO_TICKS(5));

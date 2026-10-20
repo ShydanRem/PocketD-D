@@ -45,7 +45,12 @@ bool pd_valid(const pd_state *s) {
             if(v->kind==PD_WEAPON&&!v->reach)return false;
         }
     }
-    return pd_magic_valid(s)&&s->shortcuts[0]<=6&&s->shortcuts[1]<=6&&s->shortcuts[2]<=6;
+    if(s->recovery.count>PD_HIT_POOLS||(!s->recovery.available&&s->recovery.count))return false;
+    for(unsigned i=0;i<s->recovery.count;i++) {
+        const pd_hit_die *v=&s->recovery.pools[i];
+        if(!text(v->name,sizeof v->name)||!(v->die==6||v->die==8||v->die==10||v->die==12)||!v->maximum||v->maximum>20||v->used>v->maximum)return false;
+    }
+    return pd_magic_valid(s)&&s->shortcuts[0]<=7&&s->shortcuts[1]<=7&&s->shortcuts[2]<=7;
 }
 int pd_modifier(int score) { return score / 2 - 5; }
 void pd_hp(pd_state *s, int delta) {
@@ -92,10 +97,10 @@ static void put16(uint8_t **p, unsigned n) { *(*p)++=n; *(*p)++=n>>8; }
 static unsigned get16(const uint8_t **p) { unsigned n=(*p)[0]|((*p)[1]<<8); *p+=2; return n; }
 static void put32(uint8_t *p, uint32_t n) { for (int i=0;i<4;i++) p[i]=n>>(8*i); }
 static uint32_t get32(const uint8_t *p) { return (uint32_t)p[0]|((uint32_t)p[1]<<8)|((uint32_t)p[2]<<16)|((uint32_t)p[3]<<24); }
-size_t pd_encoded_size(const pd_state *s){return 5168u+552u*s->magic.count;}
+size_t pd_encoded_size(const pd_state *s){return 6050u+552u*s->magic.count;}
 size_t pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
     memset(out, 0, pd_encoded_size(s));
-    memcpy(out, "PDD5", 4); put32(out+4,gen);
+    memcpy(out, "PDD6", 4); put32(out+4,gen);
     uint8_t *p=out+8;
     memcpy(p,s->name,PD_NAME_BYTES); p+=PD_NAME_BYTES;
     put16(&p,s->hp); put16(&p,s->max_hp); put16(&p,s->temp_hp);
@@ -131,11 +136,19 @@ size_t pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
         *p++=v->kind;*p++=v->level;*p++=v->flags;*p++=v->ability;*p++=v->maximum;*p++=v->remaining;*p++=v->recovery;*p++=v->effect;
         *p++=v->attack_modifier+15;*p++=v->save_modifier+15;
     }
+    *p++=s->recovery.available;*p++=s->recovery.count;
+    for(unsigned i=0;i<PD_HIT_POOLS;i++) {
+        const pd_hit_die *v=&s->recovery.pools[i];memcpy(p,v->name,41);p+=41;*p++=v->die;*p++=v->maximum;*p++=v->used;
+    }
     size_t size=pd_encoded_size(s);put32(out+size-4,pd_crc32(out,size-4));return size;
 }
 bool pd_record_known(const uint8_t *data,size_t size) {
-    return data&&((size==384&&(!memcmp(data,"PDD1",4)||!memcmp(data,"PDD2",4)))||
-                  (size==512&&!memcmp(data,"PDD3",4))||(size==5184&&!memcmp(data,"PDD4",4))||(size>=5168&&size<=PD_RECORD_SIZE&&!memcmp(data,"PDD5",4)&&data[5123]<=PD_POWERS&&size==5168u+552u*data[5123]));
+    if(!data)return false;
+    if(size==384&&(!memcmp(data,"PDD1",4)||!memcmp(data,"PDD2",4)))return true;
+    if(size==512&&!memcmp(data,"PDD3",4))return true;
+    if(size==5184&&!memcmp(data,"PDD4",4))return true;
+    if(size>=5168&&size<=71408&&!memcmp(data,"PDD5",4)&&data[5123]<=PD_POWERS)return size==5168u+552u*data[5123];
+    return size>=6050&&size<=PD_RECORD_SIZE&&!memcmp(data,"PDD6",4)&&data[5123]<=PD_POWERS&&size==6050u+552u*data[5123];
 }
 static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint32_t *gen) {
     if (!pd_record_known(data,size) ||
@@ -168,7 +181,7 @@ static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint
         for(int i=0;i<6;i++) { if(*p>60)goto invalid;t->save_bonus[i]=(int)*p++-30; }
         for(int i=0;i<6;i++) { if(*p>60)goto invalid;t->check_bonus[i]=(int)*p++-30; }
     }
-    if(!memcmp(data,"PDD4",4)||!memcmp(data,"PDD5",4)) {
+    if(!memcmp(data,"PDD4",4)||!memcmp(data,"PDD5",4)||!memcmp(data,"PDD6",4)) {
         if(p[0]>1||p[5]>1||p[6]>1||p[7]>1)goto invalid;
         candidate.inventory_available=*p++;candidate.item_count=*p++;candidate.equipped=*p++;
         candidate.combat.rage_bonus=*p++;candidate.combat.critical_dice=*p++;candidate.combat.raging=*p++;candidate.combat.power_attack=*p++;candidate.combat.thrown=*p++;
@@ -179,7 +192,7 @@ static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint
             v->attack_modifier=(int)*p++-10;v->damage_modifier=(int)*p++-10;v->healing_modifier=*p++;
         }
     }
-    if(!memcmp(data,"PDD5",4)) {
+    if(!memcmp(data,"PDD5",4)||!memcmp(data,"PDD6",4)) {
         pd_magic *m=&candidate.magic;if(*p>1)goto invalid;m->available=*p++;m->count=*p++;m->concentration=*p++;
         for(int i=0;i<9;i++){m->slots[i].current=*p++;m->slots[i].maximum=*p++;m->pact[i].current=*p++;m->pact[i].maximum=*p++;}
         memcpy(candidate.shortcuts,p,3);p+=3;
@@ -188,6 +201,13 @@ static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint
             v->kind=*p++;v->level=*p++;v->flags=*p++;v->ability=*p++;v->maximum=*p++;v->remaining=*p++;v->recovery=*p++;v->effect=*p++;
             if(p[0]>45||p[1]>45)goto invalid;
             v->attack_modifier=(int)*p++-15;v->save_modifier=(int)*p++-15;
+        }
+    }
+    if(!memcmp(data,"PDD6",4)) {
+        if(*p>1)goto invalid;
+        candidate.recovery.available=*p++;candidate.recovery.count=*p++;
+        for(unsigned i=0;i<PD_HIT_POOLS;i++) {
+            pd_hit_die *v=&candidate.recovery.pools[i];memcpy(v->name,p,41);p+=41;v->die=*p++;v->maximum=*p++;v->used=*p++;
         }
     }
     if (!pd_valid(&candidate)) goto invalid;

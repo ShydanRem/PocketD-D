@@ -6,9 +6,9 @@ export function projectDevice(input){
   const s=parseBackup(serialize(input));
   const warnings=[
     'Firmware iniziale: una sola scheda attiva. La conferma sul display sostituisce la copia sul dispositivo; la raccolta PC resta conservata.',
-    'Trasferisce nome, livello, aspetto dell’avatar, PF, PF temporanei, CA, caratteristiche, abilità, salvezze, inventario (60 voci), attacchi, magie/capacità e fino a 8 contatori manuali. Non trasferisce la risposta originale di Beyond.',
+    'Trasferisce nome, livello, aspetto dell’avatar, PF, PF temporanei, CA, caratteristiche, abilità, salvezze, inventario (60 voci), attacchi, magie/capacità, dadi vita e fino a 8 contatori manuali. Non trasferisce la risposta originale di Beyond.',
     'Avatar originale: carnagione, colore/taglio dei capelli e mantello scelti sul PC. Non rappresenta equipaggiamento o immagini di Beyond. Animazione disattivabile dal dispositivo in Aspetto.',
-    'Non disponibili sul dispositivo: gestione completa di condizioni/effetti, tiri salvezza contro morte, dadi vita, monete, mappa, party e storico.',
+    'Non disponibili sul dispositivo: gestione completa di condizioni/effetti, tiri salvezza contro morte, monete, mappa, party e storico.',
     'Prove con competenze, maestrie, bonus extra e mezza competenza riconosciuti dal PC. Le prove da verificare restano bloccate; per eccezioni del DM è disponibile il dado libero.',
     'Avvelenato e vantaggio FOR da Ira sono fotografati al trasferimento. Ira riconosciuta attivabile dalla capacità; altre condizioni e durate restano manuali. Effetti PC disattivabili per il singolo tiro; altri effetti restano da gestire con il DM.',
     'CA fotografata al momento dell’esportazione; non ricalcolata cambiando equipaggiamento. I contatori non applicano recuperi o effetti automatici.',
@@ -44,11 +44,13 @@ export function projectDevice(input){
   }),slots:s.slots.map(v=>({current:v.current,maximum:v.max})),pact:(s.extended?.pactSlots??Array.from({length:9},()=>({current:0,max:0}))).map(v=>({current:v.current,maximum:v.max})),
     concentration:s.concentration?s.powers.findIndex(p=>p.id===s.concentration)+1:0};
   warnings.push('Magie e capacità: fino a 120 voci, descrizioni ASCII fino a 500 caratteri con estratti segnalati, slot ordinari/patto, utilizzi innati, preparazione e concentrazione. Consumo solo dopo conferma; effetti, danni e salvezze delle magie da risolvere con il DM.');
-  warnings.push('Recuperi di magie/capacità manuali: nessun riposo o recupero dadi vita automatico in questa versione. Tasti configurabili sul dispositivo; la copia conserva le preferenze locali.');
-  const packet={format:'pocketdd-device',version:5,name:ascii(s.name,48),level:integer(s.level,1,20,'Livello'),hp:integer(s.hp,0,999,'PF'),
+  const recovery={available:Boolean(s.extended),pools:(s.extended?.hitDice??[]).map(h=>({name:h.name.trim()?ascii(h.name,40):'Classe senza nome',die:h.die,maximum:h.max,used:h.used}))};
+  warnings.push('Riposi con anteprima e conferma: patto e risorse con recupero breve/lungo riconosciuto. Dadi vita importati senza inventare riserve; recupero lungo 2014, 2024 o manuale scelto sul dispositivo. Requisiti, eccezioni e condizioni da verificare con il DM. Contatori generici manuali.');
+  warnings.push('Dadi vita: nomi ASCII fino a 40 caratteri, d6/d8/d10/d12 e utilizzi per classe. Spesa singola durante il riposo breve con cura base dado + COS, minimo zero; bonus speciali e regole opzionali manuali. Tasti configurabili; la copia conserva le preferenze locali.');
+  const packet={format:'pocketdd-device',version:6,name:ascii(s.name,48),level:integer(s.level,1,20,'Livello'),hp:integer(s.hp,0,999,'PF'),
     maxHp:integer(s.maxHp,1,999,'PF massimi'),tempHp:integer(s.extended?.tempHp??0,0,999,'PF temporanei'),armorClass:integer(s.armorClass,1,40,'CA'),
     avatar:Object.fromEntries(['skin','hair','cloak','style'].map(k=>[k,integer(s.avatar[k],0,2,k)])),
-    training,inventory,magic,
+    training,inventory,magic,recovery,
     abilities:Object.fromEntries(abilityKeys.map(k=>[k,integer(s.abilities[k],1,30,k)])),
     resources:counters.slice(0,DEVICE_MAX_RESOURCES).map(r=>({name:ascii(r.name,32),current:integer(r.current,0,999,r.name),maximum:integer(r.maximum,1,999,r.name)}))};
   if(serializeDevice(packet).length>262144)throw new Error('Copia oltre 262144 byte: nessun inventario troncato.');

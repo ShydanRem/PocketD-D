@@ -12,7 +12,7 @@ test('device export is a bounded projection and never mutates the source',()=>{
   const {packet,warnings}=projectDevice(s);
   assert.equal(packet.name,'Elian ??');assert.equal(packet.hp,24);assert.equal(packet.armorClass,16);
   assert.deepEqual(packet.abilities,s.abilities);assert.deepEqual(s,before);
-  assert.equal(packet.format,'pocketdd-device');assert.equal(packet.version,5);
+  assert.equal(packet.format,'pocketdd-device');assert.equal(packet.version,6);
   assert.equal(packet.resources[0].current,1);assert(warnings.some(w=>w.includes('inventario')));
   assert.equal(packet.inventory.items.length,s.inventory.length);assert.equal(packet.inventory.equipped,1);
 });
@@ -64,7 +64,7 @@ test('extended imported projection preserves HP, temp HP and resources without d
   assert(!serializeDevice(packet).includes('importInfo'));
 });
 
-test('full 60-item inventory fits USB v5 without dropping quantities, including zero and escaped names',()=>{
+test('full 60-item inventory fits USB v6 without dropping quantities, including zero and escaped names',()=>{
   const s=initialState();s.inventory[1].quantity=0;
   while(s.inventory.length<60)s.inventory.push({id:`item-${s.inventory.length}`,name:'"Oggetto\\ lungo per il dispositivo abcde'.slice(0,40),type:'gear',quantity:999,notes:'Nota solo PC '.repeat(30)});
   const before=structuredClone(s),{packet,warnings}=projectDevice(s);
@@ -86,9 +86,12 @@ test('combat projection preserves recognized weapon and healing data; notes neve
   assert(!serializeDevice(packet).includes('+99'));
 });
 
-test('all 120 power rows fit v5; long descriptions are explicitly marked without mutating the source',()=>{
+test('all 120 power rows fit v6; long descriptions are explicitly marked without mutating the source',()=>{
   const s=initialState();s.extended=emptyExtended();s.powers=Array.from({length:120},(_,i)=>({id:`spell-${i}`,type:'spell',name:`Magia sintetica ${i}`,description:'"\\'.repeat(3000),level:i%10,concentration:false}));
+  while(s.inventory.length<60)s.inventory.push({id:`max-item-${s.inventory.length}`,name:'W'.repeat(40),type:'gear',quantity:999,notes:''});
+  s.extended.hitDice=Array.from({length:20},(_,i)=>({name:'W'.repeat(80),die:12,max:20,used:i}));
   const before=structuredClone(s),{packet,warnings}=projectDevice(s);
+  assert.equal(packet.recovery.pools.length,20);assert.equal(packet.inventory.items.length,60);
   assert.equal(packet.magic.powers.length,120);assert(serializeDevice(packet).length<=262144);
   for(const p of packet.magic.powers){assert.equal(p.description.length,500);assert(p.flags&32)}
   assert.equal(warnings.filter(w=>w.startsWith('Descrizione in estratto')).length,120);assert.deepEqual(s,before);
