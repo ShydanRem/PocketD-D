@@ -73,6 +73,9 @@ nel firmware: scena originale, avatar base, icone e tema condiviso.
 La v0.19 aggiunge avatar personale con 81 combinazioni dall'editor PC,
 anteprima USB coerente, animazione sobria e preferenza locale per fermarla.
 Il disegno pixel per pixel e nuove silhouette restano successivi.
+La v0.20 porta 18 abilità e sei salvezze nel firmware, con contributi spiegati,
+maestria, mezze competenze, extra e blocchi espliciti dei valori non verificati.
+Inventario, attacchi e magie rimangono i prossimi blocchi del porting.
 Il porting della scheda estesa procede con questa direzione visiva; collaudo
 hardware, alimentazione e autonomia restano attività necessarie in parallelo.
 Vedere [FIRMWARE.md](FIRMWARE.md) e [DIREZIONE-VISIVA.md](DIREZIONE-VISIVA.md).

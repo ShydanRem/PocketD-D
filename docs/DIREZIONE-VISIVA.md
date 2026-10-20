@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.19
+# Direzione visiva del dispositivo — v0.20
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -33,6 +33,9 @@ dell'interfaccia, senza un rettangolo di colore diverso.
 - Caratteristiche, contatori, preparazione dei dadi, scelta del tipo e conferma
   USB con lo stesso linguaggio grafico. Feedback premuto e disabilitato distinto.
 - Nomi lunghi limitati a una riga con ellissi: non invadono i valori sottostanti.
+- Nella v0.20, abilità a tre righe per pagina, salvezze su griglia e vista
+  dedicata alla composizione dei bonus. Il punto interrogativo e il testo
+  Da verificare distinguono i valori incompleti anche senza affidarsi al colore.
 
 L'avventuriero è un **avatar originale personalizzabile**: carnagione, colore dei
 capelli, mantello e taglio hanno tre scelte ciascuno, per 81 combinazioni. Si
@@ -122,8 +125,8 @@ raccolta invariata. Nessun personaggio personale Beyond letto o modificato.
 
 1. Ulteriori silhouette e personalizzazioni, mantenendo esplicite le scelte del
    giocatore; eventuale aspetto dell'equipaggiamento dopo il porting dell'inventario.
-2. Componenti per elenchi, dettagli e testi lunghi mentre abilità, inventario,
-   attacchi e magie vengono portati sul dispositivo. Icone specifiche e pochi
+2. Estendere elenchi e dettagli già introdotti per le abilità a inventario,
+   attacchi, magie e testi lunghi. Icone specifiche e pochi
    tocchi per le azioni frequenti, evitando di stipare tutto nella schermata Eroe.
 3. Illustrazioni coordinate per nuove sezioni, stati vuoti e feedback delle azioni.
 4. Transizioni leggere e preferenza per ridurre le animazioni. Le animazioni

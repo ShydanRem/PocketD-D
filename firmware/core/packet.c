@@ -1,4 +1,5 @@
 #include "pocketdd.h"
+#include "checks.h"
 #include "cJSON.h"
 #include <math.h>
 #include <string.h>
@@ -23,6 +24,58 @@ static bool copy(cJSON *o,const char *key,char *out,size_t cap) {
     if (!cJSON_IsString(n) || !n->valuestring[0] || strlen(n->valuestring)>=cap) return false;
     strcpy(out,n->valuestring); return true;
 }
+static bool bonus_map(cJSON *o,const char *const *names,int count,int8_t *out) {
+    if(!keys(o,names,count))return false;
+    for(int i=0;i<count;i++) {
+        cJSON *v=cJSON_GetObjectItemCaseSensitive(o,names[i]);
+        if(!cJSON_IsNumber(v)||!isfinite(v->valuedouble)||v->valuedouble<-30||v->valuedouble>30||floor(v->valuedouble)!=v->valuedouble)return false;
+        out[i]=v->valueint;
+    }
+    return true;
+}
+static int named(const char *name,const char *const *names,int count) {
+    for(int i=0;i<count;i++)if(!strcmp(name,names[i]))return i;
+    return -1;
+}
+static bool training(cJSON *o,pd_training *t) {
+    const char *const fields[]={"skillRanks","saveProficiencies","skillBonuses","saveBonuses","checkBonuses","halfAbilityChecks","halfSkills","blockedChecks","poisoned","strengthAdvantage"};
+    if(!keys(o,fields,10))return false;
+    cJSON *ranks=cJSON_GetObjectItemCaseSensitive(o,"skillRanks"),*saves=cJSON_GetObjectItemCaseSensitive(o,"saveProficiencies");
+    if(!keys(ranks,pd_skill_ids,PD_SKILLS)||!keys(saves,pd_abilities,6))return false;
+    for(int i=0;i<PD_SKILLS;i++) { int n=number(ranks,pd_skill_ids[i],0,2);if(n<0)return false;t->ranks[i]=n; }
+    for(int i=0;i<6;i++) {
+        cJSON *v=cJSON_GetObjectItemCaseSensitive(saves,pd_abilities[i]);if(!cJSON_IsBool(v))return false;
+        if(cJSON_IsTrue(v))t->saves|=1u<<i;
+    }
+    if(!bonus_map(cJSON_GetObjectItemCaseSensitive(o,"skillBonuses"),pd_skill_ids,PD_SKILLS,t->skill_bonus)||
+       !bonus_map(cJSON_GetObjectItemCaseSensitive(o,"saveBonuses"),pd_abilities,6,t->save_bonus)||
+       !bonus_map(cJSON_GetObjectItemCaseSensitive(o,"checkBonuses"),pd_abilities,6,t->check_bonus))return false;
+    const char *const booleans[]={"halfAbilityChecks","poisoned","strengthAdvantage"};
+    bool *targets[]={&t->half_checks,&t->poisoned,&t->strength_advantage};
+    for(int i=0;i<3;i++) {
+        cJSON *v=cJSON_GetObjectItemCaseSensitive(o,booleans[i]);if(!cJSON_IsBool(v))return false;*targets[i]=cJSON_IsTrue(v);
+    }
+    cJSON *half=cJSON_GetObjectItemCaseSensitive(o,"halfSkills");
+    if(!cJSON_IsArray(half)||cJSON_GetArraySize(half)>PD_SKILLS)return false;
+    cJSON *v;cJSON_ArrayForEach(v,half) {
+        if(!cJSON_IsString(v))return false;
+        int i=named(v->valuestring,pd_skill_ids,PD_SKILLS);
+        if(i<0||(t->half_skills&(1u<<i)))return false;
+        t->half_skills|=1u<<i;
+    }
+    cJSON *blocked=cJSON_GetObjectItemCaseSensitive(o,"blockedChecks");
+    if(!cJSON_IsArray(blocked)||cJSON_GetArraySize(blocked)>30)return false;
+    cJSON_ArrayForEach(v,blocked) {
+        if(!cJSON_IsString(v))return false;
+        const char *name=v->valuestring;int bit=-1,index;
+        if(!strncmp(name,"check:",6)&&(index=named(name+6,pd_abilities,6))>=0)bit=index;
+        else if(!strncmp(name,"skill:",6)&&(index=named(name+6,pd_skill_ids,PD_SKILLS))>=0)bit=6+index;
+        else if(!strncmp(name,"save:",5)&&(index=named(name+5,pd_abilities,6))>=0)bit=24+index;
+        if(bit<0||(t->blocked&(1u<<bit)))return false;
+        t->blocked|=1u<<bit;
+    }
+    t->available=true;return true;
+}
 bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
     if (!json || !size || size>PD_PACKET_MAX || memchr(json,0,size)) return false;
     /* cJSON's string model cannot represent embedded NUL. Refuse all JSON Unicode
@@ -41,20 +94,20 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
     if (!root) return false;
     while (end<json+size && (*end==' ' || *end=='\n' || *end=='\r' || *end=='\t')) end++;
     bool ok=false; pd_state candidate={.idle_animation=true};
-    const char *const fields[]={"format","version","name","level","hp","maxHp","tempHp","armorClass","abilities","resources","avatar"};
+    const char *const fields[]={"format","version","name","level","hp","maxHp","tempHp","armorClass","abilities","resources","avatar","training"};
     const char *const abilities[]={"FOR","DES","COS","INT","SAG","CAR"};
     const char *const resource_keys[]={"name","current","maximum"};
     const char *const avatar_keys[]={"skin","hair","cloak","style"};
-    int version=number(root,"version",1,2);
+    int version=number(root,"version",1,3);
     cJSON *fmt=cJSON_GetObjectItemCaseSensitive(root,"format");
-    if (version<0 || end!=json+size || !keys(root,fields,version==1?10:11) || !cJSON_IsString(fmt) ||
+    if (version<0 || end!=json+size || !keys(root,fields,version==1?10:version==2?11:12) || !cJSON_IsString(fmt) ||
         strcmp(fmt->valuestring,"pocketdd-device") ||
         !copy(root,"name",candidate.name,sizeof candidate.name)) goto done;
     int level=number(root,"level",1,20),hp=number(root,"hp",0,999),max=number(root,"maxHp",1,999),
         temp=number(root,"tempHp",0,999),armor=number(root,"armorClass",1,40);
     if (level<0 || hp<0 || max<0 || temp<0 || armor<0) goto done;
     candidate.level=level; candidate.hp=hp; candidate.max_hp=max; candidate.temp_hp=temp; candidate.armor=armor;
-    if(version==2) {
+    if(version>=2) {
         cJSON *avatar=cJSON_GetObjectItemCaseSensitive(root,"avatar");
         if(!keys(avatar,avatar_keys,4))goto done;
         int skin=number(avatar,"skin",0,2),hair=number(avatar,"hair",0,2),
@@ -62,6 +115,7 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
         if(skin<0||hair<0||cloak<0||style<0)goto done;
         candidate.avatar=(pd_avatar){skin,hair,cloak,style};
     }
+    if(version==3&&!training(cJSON_GetObjectItemCaseSensitive(root,"training"),&candidate.training))goto done;
     cJSON *a=cJSON_GetObjectItemCaseSensitive(root,"abilities");
     if (!keys(a,abilities,6)) goto done;
     for (int i=0;i<6;i++) { int n=number(a,abilities[i],1,30); if (n<0) goto done; candidate.abilities[i]=n; }

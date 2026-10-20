@@ -19,9 +19,11 @@ bool pd_storage_load(pd_state *s) {
         errors[i]=nvs_get_blob(handle,keys[i],data[i],&size[i]);
         if (errors[i]!=ESP_OK) size[i]=0;
     }
-    for (int i=0;i<2;i++) if (size[i]==PD_RECORD_SIZE &&
-        pd_crc32(data[i],PD_RECORD_SIZE-4)==((uint32_t)data[i][380]|((uint32_t)data[i][381]<<8)|((uint32_t)data[i][382]<<16)|((uint32_t)data[i][383]<<24)) &&
-        memcmp(data[i],"PDD1",4) && memcmp(data[i],"PDD2",4)) return failure();
+    for (int i=0;i<2;i++) if(size[i]>=8) {
+        const uint8_t *tail=data[i]+size[i]-4;
+        uint32_t crc=(uint32_t)tail[0]|((uint32_t)tail[1]<<8)|((uint32_t)tail[2]<<16)|((uint32_t)tail[3]<<24);
+        if(pd_crc32(data[i],size[i]-4)==crc&&!pd_record_known(data[i],size[i]))return failure();
+    }
     bank=pd_select(data[0],size[0],data[1],size[1],s,&generation);
     bool absent=errors[0]==ESP_ERR_NVS_NOT_FOUND && errors[1]==ESP_ERR_NVS_NOT_FOUND;
     if (bank<0) {

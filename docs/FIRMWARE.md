@@ -1,4 +1,4 @@
-# Firmware PocketD-D 0.19 — avatar personale e percorso offline
+# Firmware PocketD-D 0.20 — abilità, salvezze e percorso offline
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
@@ -28,6 +28,12 @@ Eroe → Aspetto. L'anteprima PC usa i disegni del firmware. La copia USB è v2;
 lettura delle vecchie copie v1 ancora supportata, con aspetto base. I salvataggi
 v1 restano leggibili; le nuove scritture sono v2 (vedere compatibilità sotto).
 
+La v0.20 porta abilità e salvezze con competenza/maestria, mezza competenza,
+extra e dettaglio dei contributi; [uso e limiti](ABILITA-SALVEZZE.md).
+Copia USB v3, record NVS PDD3 da 512 byte. Le copie v1/v2 restano leggibili e
+conservano PF/avatar/contatori, ma non hanno competenze: per quelle viene
+richiesta una copia aggiornata, senza assegnare falsi gradi zero.
+
 Primo percorso: avvio con Elian originale o copia precedentemente salvata →
 Scheda → caratteristica → d20 → risultato → Eroe → PF ±1 → annulla →
 salvataggio locale. Anche PF temporanei e fino a otto contatori manuali.
@@ -35,9 +41,11 @@ Vantaggio e svantaggio selezionabili dal pulsante Base/Vant/Svant. Durante il vo
 si può accelerare; modalità e navigazione attendono l'arresto del tiro.
 
 Non è ancora una scheda completa: mancano inventario, attacchi, magie,
-abilità e salvezze con competenze, effetti/condizioni, morte, dadi vita,
-monete, storico persistente, mappa e party. Le prove sono **solo di
-caratteristica base**, senza competenza, bonus extra o effetti. Il dado libero
+gestione completa di effetti/condizioni, morte, dadi vita,
+monete, storico persistente, mappa e party. Le prove applicano i contributi
+riconosciuti e trasferiti; i contesti da verificare restano bloccati. Le sole
+istantanee automatiche sono Avvelenato e vantaggio FOR da Ira: non gestiscono
+durate, utilizzi o altri effetti. Il dado libero
 usa bonus zero. La CA è il valore esportato, non un ricalcolo dell'equipaggiamento.
 I contatori sono manuali: usarli non attiva effetti né riposi automatici.
 Il firmware tiene una sola scheda attiva; non sincronizza modifiche al PC.
@@ -62,6 +70,9 @@ DMA diretto da PSRAM. Un solo task possiede LVGL; il task USB passa copie
 validate attraverso una coda. Il trasferimento SPI termina prima di riutilizzare
 il buffer. Rettangoli allineati a coordinate pari come richiesto dal pannello.
 Le aree touch sono alte almeno 44 pixel e restano dentro il cerchio.
+Stack del task principale a 8192 byte per il percorso LVGL e lo stato esteso;
+task USB separato da 8192 byte. Il margine effettivo degli stack resta da misurare
+sulla scheda insieme a heap e PSRAM.
 
 Non vengono scritti registri di carica/voltaggio del PMIC AXP2101: si segue il
 percorso display/touch dell'esempio ufficiale, che non riprogramma il PMIC.
@@ -146,15 +157,18 @@ Nessun reset/flash, scrittura verso Beyond o modifica della raccolta da questo
 strumento. Il trasferimento fisico USB resta da collaudare, benché parser,
 protocollo host e conferma grafica siano testati separatamente.
 
-Formato `pocketdd-device` v2, massimo 4096 byte, campi esatti: `format`, `version`,
+Formato `pocketdd-device` v3, massimo 4096 byte, campi esatti di base: `format`, `version`,
 `name`, `level`, `hp`, `maxHp`, `tempHp`, `armorClass`, `abilities` e `resources`.
-In v2 è obbligatorio anche `avatar`, con esattamente `skin`, `hair`, `cloak`,
-`style`: indici interi 0–2 corrispondenti alle scelte PC. Il firmware accetta
-anche v1, senza `avatar`, e assegna l'aspetto base. La preferenza locale per
+Da v2 è obbligatorio anche `avatar`, con esattamente `skin`, `hair`, `cloak`,
+`style`: indici interi 0–2 corrispondenti alle scelte PC. Da v3 è obbligatorio
+`training`, con gradi, competenze, extra, mezze competenze, blocchi e le due
+istantanee; [schema completo](ABILITA-SALVEZZE.md). Il firmware accetta anche
+v1/v2: v1 usa l'aspetto base, entrambe segnalano le competenze mancanti.
+La preferenza locale per
 l'animazione non viene trasferita dal PC: la conferma conserva quella già attiva.
-Il nuovo uploader negozia `PDD READY 1/2` e blocca una copia v2 prima dell'invio
-se il firmware dichiara solo v1. Usare lo script di questa versione; i precedenti
-uploader riconoscono soltanto `PDD READY 1`.
+Il nuovo uploader negozia `PDD READY 1/2/3` e blocca una copia prima dell'invio
+se il firmware non ne supporta la versione. Usare lo script di questa versione;
+i precedenti uploader non riconoscono `PDD READY 3`.
 Nome ASCII 1–48 byte, contatore 1–32; accenti traslitterati e altri simboli
 sostituiti nell'anteprima PC. Livello 1–20, caratteristiche 1–30, CA 1–40,
 PF 0–massimo (massimo 1–999), temporanei 0–999. Massimo otto contatori con
@@ -171,7 +185,7 @@ reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
 ## Salvataggio e dadi
 
 NVS nel namespace `pocketdd`, due chiavi alternate `state_a`/`state_b`.
-Record binario esplicito di 384 byte, magic/versione `PDD2`, generazione uint32,
+Record binario esplicito di 512 byte, magic/versione `PDD3`, generazione uint32,
 CRC32; niente dump di struct C con padding. La nuova copia è scritta, committata
 e riletta prima di aggiornare lo stato visibile. Quella precedente rimane valida.
 All'avvio si sceglie la generazione valida più recente, incluso wrap del contatore.
@@ -181,12 +195,13 @@ Se un'operazione I/O fallisce, ulteriori scritture restano bloccate fino al riav
 un errore di commit può avere esito ambiguo e non va dichiarato annullamento certo.
 La demo visualizzata con errore memoria non sostituisce dati salvati.
 
-La v0.19 legge anche `PDD1` e assegna avatar base e animazione abilitata senza
-scrivere nulla durante il caricamento. La prima modifica confermata scrive
-`PDD2` nell'altra banca, conservando la precedente; avatar agli offset 368–371,
-preferenza 0/1 all'offset 372. I dati e il CRC mantengono le dimensioni precedenti.
-Un firmware precedente non legge `PDD2`: riconosce la versione sconosciuta con
-CRC valido e blocca le scritture. Tornare a una vecchia versione non è una
+La v0.20 legge `PDD1/PDD2` da 384 byte senza scritture al caricamento. Per v1
+assegna avatar base e animazione abilitata; per entrambe segna le competenze
+come non importate. La prima modifica confermata scrive PDD3 nell'altra banca,
+conservando la precedente. Dati PF/avatar mantengono gli offset; la formazione
+parte dall'offset 373 e il CRC è agli ultimi quattro byte del record da 512.
+I firmware precedenti non leggono PDD3 e bloccano scritture su formati non
+supportati, senza cancellazione. Tornare a una vecchia versione non è una
 migrazione automatica; conservare i backup prima di cambiare firmware.
 
 PF e contatori vengono persistiti ad ogni modifica; “Annulla modifica” ripristina
@@ -302,3 +317,28 @@ Binario **808.736 byte**, partizione app da 4 MiB **81% libera**. Buffer avatar
 statico aggiuntivo da **5.824 byte**, canvas Dadi invariato a 81.920 byte dinamici.
 Sono misure di compilazione: heap, resa, fluidità e consumi fisici restano da
 misurare. Nessun flash o accesso al personaggio Beyond per questo incremento.
+
+## Verifiche v0.20 — abilità e salvezze
+
+127 test JavaScript; 1.890 confronti di integrazione modello PC → JSON USB →
+parser e calcolo C per bonus e modalità, inclusa una conversione Beyond sintetica.
+Unit test per livelli 1–20, caratteristiche 1–30, gradi 0–2, estremi −35/+52,
+mezze competenze, annullamento vantaggio/svantaggio e contesti bloccati.
+
+Record golden PDD1/PDD2 da 384 byte letti senza scritture; nuova banca PDD3 da
+512 byte e recupero precedente verificati. CRC, 4096 corruzioni singolo bit,
+512 troncamenti, wrap delle generazioni e blocco di versioni future. Core/parser,
+adapter NVS, calcoli e UI passati anche con ASan/UBSan; leak detector disabilitato
+per l'istanza globale LVGL mantenuta fino a fine processo.
+
+UI LVGL: sei pagine di abilità, griglia salvezze, dettaglio contributi, risultati,
+override degli effetti fotografati, protezione da eventi forzati e avviso per
+copie vecchie senza competenze. Browser con profilo effimero: anteprima tabellare
+di 30 prove, esportazione e raccolta sintetica invariata. Dettagli in
+[ABILITA-SALVEZZE.md](ABILITA-SALVEZZE.md).
+
+Build ESP32-S3 v0.20: **813.856 byte**, partizione app da 4 MiB **81% libera**.
+Stesso canvas Dadi da 81.920 byte e buffer avatar da 5.824 byte. Stack principale
+configurato a 8192 byte; sono dimensioni di compilazione e configurazione,
+senza misure di heap o margine stack sul dispositivo. Nessun flash o accesso
+al personaggio personale Beyond per questa revisione.

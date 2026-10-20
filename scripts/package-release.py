@@ -59,7 +59,7 @@ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as out:
     for name in ['hero','hero-maximum','hero-zero','hero-storage-error','hero-imported','appearance','appearance-still','avatar-preset-0','avatar-preset-1','avatar-preset-2','sheet','dice','dice-advantage','dice-disadvantage','dice-twenty','pool-setup','pool-picker','pool-configured','pool-six','pool-maximum','pool-negative','pool-zero','pool-d4','pool-d6','pool-d8','pool-d10','pool-d12','pool-d20','resources','confirm']:
         image=preview/(name+'.ppm')
         if image.is_file():out.write(image,folder+'firmware-host-preview/'+image.name)
-    for name in ['dice-preview.gif','pool-preview.gif','device-preview.png','hero.png','dice.png','sheet.png','resources.png','avatar-preview.gif','avatar-presets.png','appearance.png','appearance-still.png','hero-imported.png']:
+    for name in ['dice-preview.gif','pool-preview.gif','device-preview.png','hero.png','dice.png','sheet.png','resources.png','avatar-preview.gif','avatar-presets.png','appearance.png','appearance-still.png','hero-imported.png','skills-preview.png','skills-first.png','skills-last.png','saves.png','check-detail.png','check-blocked.png','skill-result.png','save-detail.png','skills-legacy.png','sheet-trained.png']:
         animation=preview/name
         if animation.is_file():out.write(animation,folder+'firmware-host-preview/'+name)
 digest=hashlib.sha256(args.output.read_bytes()).hexdigest()

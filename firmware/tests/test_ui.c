@@ -221,5 +221,39 @@ int main(void) {
         click("Indietro");click("Scheda");assert(!avatar_timer&&!avatar_sprite);
         click("Eroe");click("Aspetto");click("Animazione: si");assert(!avatar_timer);click("Indietro");
     }
+    /* Full touch flow: training, half proficiency, extras and automatic modes. */
+    pd_demo(&state);state.level=5;state.training.ranks[11]=2;state.training.skill_bonus[11]=2;
+    state.training.half_skills=1;state.training.skill_bonus[0]=-1;
+    state.training.half_checks=true;state.training.check_bonus[1]=-2;
+    state.training.saves=2;state.training.save_bonus[1]=1;
+    state.training.blocked=1u<<(6+2);state.training.poisoned=true;state.training.strength_advantage=true;
+    pd_state trained=state;unsigned check_saves=save_calls;
+    page=SHEET;sheet_tab=0;skill_page=0;render();bounds();screenshot("sheet-trained.ppm");
+    click("Abilita");screenshot("skills-first.ppm");
+    for(int i=0;i<5;i++) { click(">");assert(skill_page==i+1); }
+    screenshot("skills-last.ppm");for(int i=0;i<5;i++)click("<");assert(!skill_page);
+    click("Acrobazia  +3");assert(check_kind==PD_SKILL&&ability==0&&pd_dice_count(&dice_animation)==2);
+    click("Acrobazia +3 >");assert(page==CHECK_DETAIL);screenshot("check-detail.ppm");
+    random_values[0]=random_values[1]=9;calls=random_calls;click("Lancia");
+    assert(result.count==2&&result.total==13&&random_calls==calls+2);click("Accelera");screenshot("skill-result.ppm");
+    click("Acrobazia +3 >");click("Base");assert(mode==1);
+    calls=random_calls;click("Lancia");assert(result.count==1&&result.total==13&&random_calls==calls+1);click("Accelera");
+    click("Acrobazia +3 >");click("Effetti PC: si");assert(ignore_effects);
+    click("Lancia");assert(result.count==2);click("Accelera");
+    click("Scheda");click("Arcano  ?");assert(!dice_animation.active);calls=random_calls;
+    for(unsigned i=0;i<lv_obj_get_child_count(lv_screen_active());i++) {
+        lv_obj_t *b=lv_obj_get_child(lv_screen_active(),i);
+        if(lv_obj_check_type(b,&lv_button_class)&&!strcmp(lv_label_get_text(button_label(b)),"Lancia"))lv_obj_send_event(b,LV_EVENT_CLICKED,NULL);
+    }
+    assert(random_calls==calls&&!dice_animation.active);
+    click("Arcano ?");screenshot("check-blocked.ppm");click("Libero");
+    click("Lancia");assert(result.count==1&&result.bonus==0&&result.total==10);click("Accelera");
+    click("Scheda");click("Salvezze");screenshot("saves.ppm");click("DES\n+7");
+    click("Lancia");assert(result.count==1&&result.total==17);click("Accelera");
+    click("Salv. DES +7 >");screenshot("save-detail.ppm");click("Indietro");
+    click("Scheda");click("FOR\n+2");click("Lancia");assert(result.count==2&&result.bonus==2);click("Accelera");
+    assert(save_calls==check_saves&&!memcmp(&state,&trained,sizeof state));
+    state.training.available=false;page=SHEET;sheet_tab=1;render();bounds();screenshot("skills-legacy.ppm");
+    click("Caratt.");click("DES 16\n+3");click("Lancia");assert(result.count==1&&result.bonus==3);click("Accelera");
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px passed");
 }

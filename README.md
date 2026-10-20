@@ -2,11 +2,12 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.19:** avatar personale in pixel art con 81 combinazioni, trasferimento dell'aspetto dal PC, animazione di attesa e vista Aspetto con comando per fermarla. Tema notturno, PF in evidenza e dadi d4/d6/d8/d10/d12/d20 animati, prove con vantaggio/svantaggio e lanci manuali fino a sei dadi con bonus. Include scheda essenziale, PF/annulla, contatori e salvataggio locale compatibile in lettura con la versione precedente. Supporto PC per importazione Beyond, configurazione, backup ed esportazione USB con conferma sul display. Il firmware non è ancora collaudato sulla scheda fisica.
+**Stato v0.20:** abilità e tiri salvezza sul dispositivo con competenza, maestria, mezza competenza, extra e dettaglio dei bonus. Le prove da verificare restano bloccate; le vecchie copie mantengono le prove di caratteristica e richiedono una nuova esportazione per le competenze mancanti. Avatar personale animato con 81 combinazioni, PF/annulla, contatori, dadi poliedrici e salvataggio offline. Supporto PC per importazione Beyond, configurazione, backup ed esportazione USB con anteprima e conferma sul display. Il firmware non è ancora collaudato sulla scheda fisica.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
 - [Direzione visiva: pixel art moderna e anteprime del firmware](docs/DIREZIONE-VISIVA.md)
+- [Abilità e salvezze: bonus, effetti, limiti e compatibilità](docs/ABILITA-SALVEZZE.md)
 - [Dadi animati: uso, rendering e verifiche](docs/DADI-ANIMATI.md)
 - [Firmware: compilazione, trasferimento USB, limiti e prove hardware](docs/FIRMWARE.md)
 - [Proposta di prodotto e roadmap](docs/PROGETTO.md)

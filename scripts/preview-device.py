@@ -32,3 +32,11 @@ for i in range(3):
     presets.paste(Image.open(source),(i*466,0))
 else:
     presets.save(base/'avatar-presets.png');print(base/'avatar-presets.png')
+checks=['skills-first','saves','check-detail','skill-result']
+for name in checks+['skills-last','check-blocked','save-detail','skills-legacy','sheet-trained']:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in checks):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(checks):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'skills-preview.png');print(base/'skills-preview.png')

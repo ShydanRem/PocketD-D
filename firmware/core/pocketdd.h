@@ -6,11 +6,18 @@
 #define PD_RESOURCES 8
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
-#define PD_RECORD_SIZE 384
+#define PD_RECORD_SIZE 512
+#define PD_SKILLS 18
 #define PD_PACKET_MAX 4096
 
 typedef struct { char name[PD_RESOURCE_BYTES]; uint16_t current, maximum; } pd_resource;
 typedef struct { uint8_t skin,hair,cloak,style; } pd_avatar;
+typedef struct {
+    bool available,half_checks,poisoned,strength_advantage;
+    uint8_t ranks[PD_SKILLS],saves;
+    int8_t skill_bonus[PD_SKILLS],save_bonus[6],check_bonus[6];
+    uint32_t half_skills,blocked;
+} pd_training;
 typedef struct {
     char name[PD_NAME_BYTES];
     uint16_t hp, max_hp, temp_hp;
@@ -18,6 +25,7 @@ typedef struct {
     pd_resource resources[PD_RESOURCES];
     pd_avatar avatar;
     bool idle_animation;
+    pd_training training;
 } pd_state;
 typedef struct { uint8_t dice[2], count, natural; int total, bonus; } pd_roll;
 typedef uint32_t (*pd_random)(void *context);
@@ -30,6 +38,7 @@ pd_roll pd_d20(int bonus, int mode, pd_random random, void *context);
 uint32_t pd_crc32(const uint8_t *data, size_t size);
 void pd_encode(const pd_state *state, uint32_t generation, uint8_t out[PD_RECORD_SIZE]);
 bool pd_decode(const uint8_t *data, size_t size, pd_state *state, uint32_t *generation);
+bool pd_record_known(const uint8_t *data,size_t size);
 /* -1: neither record valid; otherwise newest valid bank, including uint32 wrap. */
 int pd_select(const uint8_t *a, size_t as, const uint8_t *b, size_t bs,
               pd_state *state, uint32_t *generation);

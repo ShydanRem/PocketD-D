@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <limits.h>
 #include "fixtures/state-v1.h"
+#include "fixtures/state-v2.h"
 static void record_crc(uint8_t *record) {
     uint32_t crc=pd_crc32(record,PD_RECORD_SIZE-4);
     for(int i=0;i<4;i++)record[PD_RECORD_SIZE-4+i]=crc>>(8*i);
@@ -35,9 +36,17 @@ int main(int argc,char **argv) {
     uint8_t a[PD_RECORD_SIZE],b[PD_RECORD_SIZE];
     assert(pd_decode(legacy_v1,sizeof legacy_v1,&out,&gen)&&gen==41&&out.hp==17&&out.temp_hp==4);
     assert(!out.avatar.skin&&!out.avatar.hair&&!out.avatar.cloak&&!out.avatar.style&&out.idle_animation);
+    assert(!out.training.available);
+    assert(pd_decode(legacy_v2,sizeof legacy_v2,&out,&gen)&&gen==42&&out.hp==17&&!out.idle_animation);
+    assert(out.avatar.skin==2&&!out.training.available);
     pd_demo(&s);s.avatar=(pd_avatar){2,1,2,1};s.idle_animation=false;
+    for(int i=0;i<PD_SKILLS;i++) { s.training.ranks[i]=i%3;s.training.skill_bonus[i]=i-8; }
+    for(int i=0;i<6;i++) { s.training.save_bonus[i]=i-2;s.training.check_bonus[i]=3-i; }
+    s.training.saves=63;s.training.half_skills=0x3ffff;s.training.blocked=0x3fffffff;
+    s.training.half_checks=true;s.training.poisoned=true;s.training.strength_advantage=true;
     pd_encode(&s,42,b);assert(pd_decode(b,sizeof b,&out,&gen));
     assert(!memcmp(&s.avatar,&out.avatar,sizeof s.avatar)&&!out.idle_animation);
+    uint8_t encoded_again[PD_RECORD_SIZE];pd_encode(&out,gen,encoded_again);assert(!memcmp(b,encoded_again,sizeof b));
     assert(pd_select(legacy_v1,sizeof legacy_v1,b,sizeof b,&out,&gen)==1&&gen==42);
     b[368]=3;record_crc(b);assert(!pd_decode(b,sizeof b,&out,&gen));
     pd_encode(&s,42,b);b[372]=2;record_crc(b);assert(!pd_decode(b,sizeof b,&out,&gen));
@@ -62,7 +71,7 @@ int main(int argc,char **argv) {
         assert(!pd_parse_packet(json,n-1,&out));
         cJSON *base=cJSON_ParseWithLength(json,n),*v;assert(base);
         const char *numeric_keys[]={"version","level","hp","maxHp","tempHp","armorClass"};
-        double bad[]={3,21,33,0,-1,41};
+        double bad[]={4,21,33,0,-1,41};
         for (int i=0;i<6;i++) {
             v=cJSON_Duplicate(base,true);cJSON_ReplaceItemInObjectCaseSensitive(v,numeric_keys[i],cJSON_CreateNumber(bad[i]));reject(v);
         }
@@ -77,9 +86,23 @@ int main(int argc,char **argv) {
         v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"avatar");reject(v);
         v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),1);reject(v);
         v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),1);
-        cJSON_DeleteItemFromObjectCaseSensitive(v,"avatar");char *old=cJSON_PrintUnformatted(v);
-        assert(pd_parse_packet(old,strlen(old),&out)&&out.avatar.skin==0&&out.idle_animation);
+        cJSON_DeleteItemFromObjectCaseSensitive(v,"training");cJSON_DeleteItemFromObjectCaseSensitive(v,"avatar");char *old=cJSON_PrintUnformatted(v);
+        assert(pd_parse_packet(old,strlen(old),&out)&&out.avatar.skin==0&&out.idle_animation&&!out.training.available);
         cJSON_free(old);cJSON_Delete(v);
+        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),2);
+        cJSON_DeleteItemFromObjectCaseSensitive(v,"training");old=cJSON_PrintUnformatted(v);
+        assert(pd_parse_packet(old,strlen(old),&out)&&out.avatar.skin==2&&!out.training.available);cJSON_free(old);cJSON_Delete(v);
+        v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"training");reject(v);
+        v=cJSON_Duplicate(base,true);cJSON *t=cJSON_GetObjectItemCaseSensitive(v,"training");
+        cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetObjectItemCaseSensitive(t,"skillRanks"),"perception",cJSON_CreateNumber(3));reject(v);
+        v=cJSON_Duplicate(base,true);t=cJSON_GetObjectItemCaseSensitive(v,"training");
+        cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetObjectItemCaseSensitive(t,"skillBonuses"),"perception",cJSON_CreateNumber(-31));reject(v);
+        v=cJSON_Duplicate(base,true);t=cJSON_GetObjectItemCaseSensitive(v,"training");cJSON_ReplaceItemInObjectCaseSensitive(t,"poisoned",cJSON_CreateNumber(1));reject(v);
+        v=cJSON_Duplicate(base,true);t=cJSON_GetObjectItemCaseSensitive(v,"training");
+        cJSON_AddItemToArray(cJSON_GetObjectItemCaseSensitive(t,"halfSkills"),cJSON_CreateString("perception"));
+        cJSON_AddItemToArray(cJSON_GetObjectItemCaseSensitive(t,"halfSkills"),cJSON_CreateString("perception"));reject(v);
+        v=cJSON_Duplicate(base,true);t=cJSON_GetObjectItemCaseSensitive(v,"training");
+        cJSON_AddItemToArray(cJSON_GetObjectItemCaseSensitive(t,"blockedChecks"),cJSON_CreateString("save:unknown"));reject(v);
         v=cJSON_Duplicate(base,true);cJSON_ReplaceItemInObjectCaseSensitive(v,"name",cJSON_CreateString(""));reject(v);
         v=cJSON_Duplicate(base,true);cJSON_ReplaceItemInObjectCaseSensitive(v,"name",cJSON_CreateString("1234567890123456789012345678901234567890123456789"));reject(v);
         v=cJSON_Duplicate(base,true);cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetObjectItemCaseSensitive(v,"abilities"),"DES",cJSON_CreateNumber(31));reject(v);

@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include "../main/storage.c"
 #include "fixtures/state-v1.h"
+#include "fixtures/state-v2.h"
 static uint8_t blobs[2][PD_RECORD_SIZE];static size_t sizes[2];
 static int fail_init,fail_set,fail_commit,fail_read,set_calls;
 static int index_of(const char *key) { return !strcmp(key,"state_a")?0:1; }
@@ -23,12 +24,17 @@ esp_err_t nvs_commit(nvs_handle_t h) { return fail_commit?ESP_FAIL:ESP_OK; }
 static void reboot(void) { blocked=false;bank=-1;generation=0;status="Demo: non salvata"; }
 int main(void) {
     pd_state s;
-    memcpy(blobs[0],legacy_v1,PD_RECORD_SIZE);sizes[0]=PD_RECORD_SIZE;
+    memcpy(blobs[0],legacy_v1,sizeof legacy_v1);sizes[0]=sizeof legacy_v1;
     assert(pd_storage_load(&s)&&s.hp==17&&s.temp_hp==4&&s.idle_animation&&!set_calls);
     s.hp=16;s.avatar=(pd_avatar){1,2,1,2};s.idle_animation=false;
-    assert(pd_storage_save(&s));assert(!memcmp(blobs[0],legacy_v1,PD_RECORD_SIZE));
+    assert(pd_storage_save(&s));assert(!memcmp(blobs[0],legacy_v1,sizeof legacy_v1));
     reboot();assert(pd_storage_load(&s)&&s.hp==16&&s.avatar.skin==1&&s.avatar.style==2&&!s.idle_animation);
     blobs[1][40]^=1;reboot();assert(pd_storage_load(&s)&&s.hp==17&&s.idle_animation);
+    memcpy(blobs[1],legacy_v2,sizeof legacy_v2);sizes[1]=sizeof legacy_v2;
+    reboot();int unchanged=set_calls;assert(pd_storage_load(&s)&&!s.idle_animation&&s.avatar.skin==2&&!s.training.available&&set_calls==unchanged);
+    s.training.available=true;s.training.ranks[0]=2;s.training.skill_bonus[0]=-3;
+    assert(pd_storage_save(&s));assert(!memcmp(blobs[1],legacy_v2,sizeof legacy_v2));
+    reboot();assert(pd_storage_load(&s)&&s.training.available&&s.training.ranks[0]==2&&s.training.skill_bonus[0]==-3);
     memset(sizes,0,sizeof sizes);set_calls=0;reboot();
     assert(pd_storage_load(&s)&&s.hp==24);
     s.hp=23;assert(pd_storage_save(&s));uint8_t first[PD_RECORD_SIZE];memcpy(first,blobs[0],sizeof first);
@@ -45,7 +51,7 @@ int main(void) {
        a fully valid newer record may already exist, but old bank is preserved. */
     reboot();assert(pd_storage_load(&s)&&s.hp==19);
     /* A valid record from a future format must never be overwritten. */
-    pd_encode(&s,100,blobs[1]);blobs[1][3]='3';
+    pd_encode(&s,100,blobs[1]);blobs[1][3]='4';
     uint32_t crc=pd_crc32(blobs[1],PD_RECORD_SIZE-4);
     for(int i=0;i<4;i++)blobs[1][PD_RECORD_SIZE-4+i]=crc>>(8*i);
     reboot();assert(!pd_storage_load(&s)&&blocked);

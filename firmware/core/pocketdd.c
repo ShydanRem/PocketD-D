@@ -10,7 +10,7 @@ static bool text(const char *s, size_t cap) {
 void pd_demo(pd_state *s) {
     *s = (pd_state){.name="Elian", .hp=24, .max_hp=32, .level=3, .armor=16,
         .abilities={14,16,14,10,12,8}, .resource_count=1,
-        .resources={{.name="Slancio", .current=1, .maximum=1}},.idle_animation=true};
+        .resources={{.name="Slancio", .current=1, .maximum=1}},.idle_animation=true,.training={.available=true}};
 }
 bool pd_valid(const pd_state *s) {
     if (!text(s->name, sizeof s->name) || s->level < 1 || s->level > 20 ||
@@ -18,6 +18,10 @@ bool pd_valid(const pd_state *s) {
         s->hp > s->max_hp || s->temp_hp > 999 || s->resource_count > PD_RESOURCES ||
         s->avatar.skin>2 || s->avatar.hair>2 || s->avatar.cloak>2 || s->avatar.style>2) return false;
     for (int i=0;i<6;i++) if (s->abilities[i] < 1 || s->abilities[i] > 30) return false;
+    const pd_training *t=&s->training;
+    if(t->saves>63||t->half_skills>0x3ffff||t->blocked>0x3fffffff)return false;
+    for(int i=0;i<PD_SKILLS;i++)if(t->ranks[i]>2||t->skill_bonus[i]<-30||t->skill_bonus[i]>30)return false;
+    for(int i=0;i<6;i++)if(t->save_bonus[i]<-30||t->save_bonus[i]>30||t->check_bonus[i]<-30||t->check_bonus[i]>30)return false;
     for (int i=0;i<s->resource_count;i++) if (!text(s->resources[i].name, PD_RESOURCE_BYTES) ||
         !s->resources[i].maximum || s->resources[i].maximum > 999 ||
         s->resources[i].current > s->resources[i].maximum) return false;
@@ -69,7 +73,7 @@ static void put32(uint8_t *p, uint32_t n) { for (int i=0;i<4;i++) p[i]=n>>(8*i);
 static uint32_t get32(const uint8_t *p) { return (uint32_t)p[0]|((uint32_t)p[1]<<8)|((uint32_t)p[2]<<16)|((uint32_t)p[3]<<24); }
 void pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
     memset(out, 0, PD_RECORD_SIZE);
-    memcpy(out, "PDD2", 4); put32(out+4,gen);
+    memcpy(out, "PDD3", 4); put32(out+4,gen);
     uint8_t *p=out+8;
     memcpy(p,s->name,PD_NAME_BYTES); p+=PD_NAME_BYTES;
     put16(&p,s->hp); put16(&p,s->max_hp); put16(&p,s->temp_hp);
@@ -80,11 +84,22 @@ void pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
         put16(&p,s->resources[i].current); put16(&p,s->resources[i].maximum);
     }
     *p++=s->avatar.skin;*p++=s->avatar.hair;*p++=s->avatar.cloak;*p++=s->avatar.style;
-    *p=s->idle_animation?1:0;
+    *p++=s->idle_animation?1:0;
+    const pd_training *t=&s->training;
+    *p++=t->available;*p++=t->half_checks;*p++=t->poisoned;*p++=t->strength_advantage;*p++=t->saves;
+    put32(p,t->half_skills);p+=4;put32(p,t->blocked);p+=4;
+    for(int i=0;i<PD_SKILLS;i++)*p++=t->ranks[i];
+    for(int i=0;i<PD_SKILLS;i++)*p++=(uint8_t)(t->skill_bonus[i]+30);
+    for(int i=0;i<6;i++)*p++=(uint8_t)(t->save_bonus[i]+30);
+    for(int i=0;i<6;i++)*p++=(uint8_t)(t->check_bonus[i]+30);
     put32(out+PD_RECORD_SIZE-4,pd_crc32(out,PD_RECORD_SIZE-4));
 }
+bool pd_record_known(const uint8_t *data,size_t size) {
+    return data&&((size==384&&(!memcmp(data,"PDD1",4)||!memcmp(data,"PDD2",4)))||
+                  (size==PD_RECORD_SIZE&&!memcmp(data,"PDD3",4)));
+}
 bool pd_decode(const uint8_t *data,size_t size,pd_state *s,uint32_t *gen) {
-    if (!data || size != PD_RECORD_SIZE || (memcmp(data,"PDD1",4) && memcmp(data,"PDD2",4)) ||
+    if (!pd_record_known(data,size) ||
         pd_crc32(data,size-4) != get32(data+size-4)) return false;
     pd_state candidate={0}; const uint8_t *p=data+8;
     memcpy(candidate.name,p,PD_NAME_BYTES); p+=PD_NAME_BYTES;
@@ -96,10 +111,20 @@ bool pd_decode(const uint8_t *data,size_t size,pd_state *s,uint32_t *gen) {
         candidate.resources[i].current=get16(&p); candidate.resources[i].maximum=get16(&p);
     }
     candidate.idle_animation=true;
-    if(!memcmp(data,"PDD2",4)) {
+    if(memcmp(data,"PDD1",4)) {
         candidate.avatar=(pd_avatar){p[0],p[1],p[2],p[3]};
         if(p[4]>1)return false;
         candidate.idle_animation=p[4]!=0;
+    }
+    if(!memcmp(data,"PDD3",4)) {
+        p+=5;pd_training *t=&candidate.training;
+        for(int i=0;i<4;i++)if(p[i]>1)return false;
+        t->available=*p++;t->half_checks=*p++;t->poisoned=*p++;t->strength_advantage=*p++;t->saves=*p++;
+        t->half_skills=get32(p);p+=4;t->blocked=get32(p);p+=4;
+        for(int i=0;i<PD_SKILLS;i++)t->ranks[i]=*p++;
+        for(int i=0;i<PD_SKILLS;i++) { if(*p>60)return false;t->skill_bonus[i]=(int)*p++-30; }
+        for(int i=0;i<6;i++) { if(*p>60)return false;t->save_bonus[i]=(int)*p++-30; }
+        for(int i=0;i<6;i++) { if(*p>60)return false;t->check_bonus[i]=(int)*p++-30; }
     }
     if (!pd_valid(&candidate)) return false;
     *s=candidate; *gen=get32(data+4); return true;

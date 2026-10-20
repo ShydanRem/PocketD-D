@@ -25,6 +25,13 @@ trasformare l'immagine indicizzata in LVGL. Il core di presentazione resta puro.
 La copia USB v2 porta quattro indici estetici; il firmware legge v1/v2 e negozia
 la capacità tramite `PDD READY 2`. NVS scrive `PDD2`, legge anche `PDD1` senza
 riscrittura all'avvio e conserva la banca precedente alla prima modifica.
+La v0.20 aggiunge `core/checks.c` per calcoli di prove/abilità/salvezze, copia USB
+v3 e NVS PDD3 da 512 byte. Legge i record precedenti da 384 byte senza inventare
+competenze: lo stato distingue dati non importati da gradi zero reali. Il parser
+conserva blocchi di conversione, mezze competenze ed extra; gli effetti attivi
+supportati sono due istantanee esplicite. UI e renderer restano separati dal
+calcolo. Il confronto di integrazione passa dal JSON PC al parser C e confronta
+1.890 risultati/modalità con il modello PC. [Dettagli](ABILITA-SALVEZZE.md).
 Il resto di questo documento conserva le scelte
 progettuali e le verifiche ancora necessarie.
 
