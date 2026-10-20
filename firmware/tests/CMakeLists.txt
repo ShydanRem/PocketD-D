@@ -52,3 +52,6 @@ target_include_directories(links PRIVATE ../core)
 
 add_executable(temporary-defences test_temporary_defences.c ../core/damage.c ../core/rest.c ../core/dice_pool.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
 target_include_directories(temporary-defences PRIVATE ../core)
+
+add_executable(mixed-damage test_mixed_damage.c ../core/damage.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
+target_include_directories(mixed-damage PRIVATE ../core)

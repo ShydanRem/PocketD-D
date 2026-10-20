@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.31
+# Direzione visiva del dispositivo — v0.32
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -214,3 +214,12 @@ sole difese con timer in avanzamento, tre per pagina. La navigazione conserva
 conferma touch e pulsanti ≥44 px nel cerchio. `temporary-defences-preview.png`
 e le viste allegate sono render LVGL su host, non catture hardware. Nessun nuovo
 asset esterno. [Uso](DIFESE-TEMPORANEE.md).
+
+
+La v0.32 aggiunge Componenti ed editor del singolo contributo al colpo, tre
+righe per pagina. Tipi espone i gruppi ordinati e le difese applicate prima/dopo
+la conferma; il totale rimane al centro con PF/temporanei e risultato della
+concentrazione. Il pulsante Tipi resta visibile senza comprimere i tre comandi
+inferiori della verifica COS. `mixed-damage-preview.png` e i dettagli sono
+render reali LVGL su host; nessuna cattura hardware o asset esterno.
+[Uso](DANNI-MISTI.md).

@@ -256,3 +256,15 @@ scollega/disattiva anche tutti gli extra associati. Il colpo usa la fotografia
 delle difese precedente a questa fine. PDD13 aggiunge 65 byte prima del CRC,
 massimo 74287; PDD1–PDD12 letti senza extra e senza scritture al boot. USB v7 e
 backup PC v10 invariati. [Uso e limiti](DIFESE-TEMPORANEE.md).
+
+
+Incremento 0.32: pd_damage_event contiene 1–6 componenti di un solo impatto.
+La preview raggruppa per tipo, applica le difese presenti all'impatto e ricava
+un totale unico per temporanei/PF/concentrazione. L'ordine delle righe e la
+suddivisione per uno stesso tipo non cambiano arrotondamenti o soglie. Un profilo
+sconosciuto blocca l'intero evento. pd_damage_event_summary conserva gruppi,
+flags, valori grezzi/effettivi e risultato complessivo; i vecchi ingressi singoli
+sono wrapper dello stesso motore. Candidati e dettaglio restano fissi insieme
+al dado sul retry; il risultato non usa i profili successivi alla fine dei vincoli.
+PDD13/USB v7/backup PC v10 invariati; composizione e dettaglio solo RAM.
+[Uso e perimetro](DANNI-MISTI.md).

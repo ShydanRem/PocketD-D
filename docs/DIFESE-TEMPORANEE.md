@@ -1,5 +1,8 @@
 # Difese temporanee sul dispositivo — v0.31
 
+> Aggiornamento v0.32: [danni misti dello stesso colpo](DANNI-MISTI.md), con
+> raggruppamento per tipo e un solo esito. PDD13/USB v7/layout invariati.
+
 Resistenza, vulnerabilità e immunità possono avere una durata manuale o a round,
 con un vincolo facoltativo alla concentrazione. Sono configurazioni locali
 esplicite, disponibili offline e senza Foundry. Si aggiungono ai

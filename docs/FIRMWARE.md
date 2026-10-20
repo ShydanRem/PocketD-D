@@ -1,11 +1,11 @@
-# Firmware PocketD-D 0.31 — difese temporanee
+# Firmware PocketD-D 0.32 — danni misti
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
-[Novità v0.31: difese temporanee e avanzamento comune](DIFESE-TEMPORANEE.md),
-PDD13 e lettura dei salvataggi precedenti.
+[Novità v0.32: componenti di un solo colpo e totale congiunto](DANNI-MISTI.md).
+PDD13/USB v7/layout invariati e lettura dei salvataggi precedenti.
 
 ## Stato e perimetro
 
@@ -564,3 +564,25 @@ disattivato nel sandbox. Nuove scritture PDD13; USB v7 e layout invariati.
 Build v0.31: **869200 byte**, partizione app da 4 MiB **79% libera**;
 ESP-IDF 5.5.5/LVGL 9.4.0. Nessun flash, collaudo fisico, nuova lettura Beyond
 o modifica della raccolta personale. [Uso e limiti](DIFESE-TEMPORANEE.md).
+
+
+## Verifiche v0.32 — danni misti
+
+494312 casi indipendenti di tipi/proprietà/quantità, 19968 suddivisioni e 720
+permutazioni verificano raggruppamento prima degli arrotondamenti, totale,
+temporanei e PF. Fino a 119988 senza troncamento, profilo mancante che blocca
+tutto, soglie aggregate, difese presenti all'impatto, un solo tiro COS e scelta
+CD max 30. Candidato danni/concentrazione riletto in PDD13. UI LVGL di righe,
+bozze/rimozione/paginazione, dettaglio Tipi, conferma, annullamento, grandi
+valori, immunità e save error con tiro/dettaglio fissati. Risultato con profili
+originali anche dopo la fine concentrazione; tasti, import e schermate protetti.
+Regressioni 138 JS/build PC, 37751 confronti PC→USB→C, 139904 danni, 78840
+salvezze, 4608 vincoli, 32032 difese/64350 avanzamenti, 17266 effetti e 40648
+durate. ASan/UBSan su calcolo misto/danni/concentrazione/vincoli/difese,
+effetti/durate, magie/riposi/stato, allocazioni e UI; leak detector disattivato.
+
+Build v0.32: **872416 byte**, partizione app da 4 MiB **79% libera**;
+ESP-IDF 5.5.5/LVGL 9.4.0. PDD13/USB v7/layout invariati: righe e dettaglio sono
+solo in RAM, nessuna nuova migrazione o grande stato sullo stack. Nessun flash,
+collaudo fisico, nuova lettura Beyond o modifica della raccolta personale.
+[Uso e limiti](DANNI-MISTI.md).

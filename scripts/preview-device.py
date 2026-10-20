@@ -139,3 +139,13 @@ if all((base/(name+'.ppm')).is_file() for name in temporary):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(temporary):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'temporary-defences-preview.png');print(base/'temporary-defences-preview.png')
+
+# A single mixed impact: composition, canonical type groups, total and committed result.
+mixed=['mixed-parts','mixed-types','mixed-preview','mixed-result']
+for name in mixed+['mixed-editor','mixed-rounding','mixed-unknown','mixed-impact','mixed-save-error','mixed-concentration','mixed-snapshot','mixed-parts-last','mixed-massive','mixed-types-last','mixed-immune']:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in mixed):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(mixed):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'mixed-damage-preview.png');print(base/'mixed-damage-preview.png')

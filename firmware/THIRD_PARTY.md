@@ -81,3 +81,8 @@ character data, rules catalogue, external artwork or dependency is introduced.
 The v0.31 additional defence grants, shared-round preview and synthetic PDD12
 fixture are original PocketD-D code. No external artwork, rules catalogue,
 private character data, credentials, runtime service or dependency is bundled.
+
+
+The v0.32 mixed-impact grouping, component editor and synthetic tests are
+original PocketD-D code. No new rules catalogue, private character data,
+external artwork, credential, runtime service or dependency is introduced.

@@ -56,13 +56,13 @@ Non fanno parte di questo traguardo: importazione Beyond, editor completo, incan
 
 L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco non impedisce le altre fasi. L'ordine delle fasi 0 e 1 può sovrapporsi se l'hardware non è immediatamente disponibile.
 
-## Punto attuale — v0.31
+## Punto attuale — v0.32
 
 | Blocco | Stato software | Cosa manca |
 | --- | --- | --- |
 | Scheda individuale offline | PF/temporanei, prove, abilità/salvezze, zaino, armi, magie, risorse, riposi e dadi vita nel firmware | Monete, storico persistente, effetti completi e regole speciali; sessione reale |
 | Effetti numerici | Otto modificatori CA/PF massimi, basi separate, cure integrate, durate manuali/a round e vincolo esplicito alla concentrazione con fine congiunta | Altre durate/regole, difese condizionali, proprietà speciali e ricalcolo da equipaggiamento |
-| Danni e difese | Profili manuali per 13 tipi, base/extra separati, durate/vincoli e scadenze comuni, PF/temporanei e salvezza COS di concentrazione | Difese condizionali, più fonti temporanee per tipo, colpi misti, eccezioni alle salvezze e casi morte bloccati |
+| Danni e difese | Profili manuali per 13 tipi, base/extra separati, durate/vincoli e scadenze comuni, PF/temporanei, salvezza COS e colpi misti fino a sei componenti con raggruppamento per tipo | Difese condizionali, più fonti temporanee per tipo, riduzioni fisse, eccezioni alle salvezze e casi morte bloccati |
 | Stato e morte | Note delle condizioni, Avvelenato separato, d20 morte base e correzioni | Effetti delle altre condizioni, eccezioni e morte istantanea |
 | Grafica e comandi | Tema pixel art, avatar 81 combinazioni, dadi animati, PWR/BOOT configurabili | Leggibilità e precisione touch sulla scheda |
 | Impostazioni schermo | Luminosità, inattività e risveglio protetto nella v0.25 | Consumi misurati, sospensione, batteria e alimentazione |
@@ -162,8 +162,9 @@ Il percorso principale rimane articolato nei quattro blocchi concordati:
    bonus/CD verificabili e salvataggio prima dell'animazione. La v0.30 collega
    esplicitamente gli effetti alla concentrazione, con disattivazione e PF
    coerenti alla fine/sostituzione. La v0.31 aggiunge difese temporanee separate
-   dalla base, con durata/vincolo e round comune agli effetti numerici. Seguono
-   colpi misti, difese condizionali, più fonti per tipo, proprietà speciali e
+   dalla base, con durata/vincolo e round comune agli effetti numerici. La v0.32
+   compone fino a sei componenti per colpo con raggruppamento e un solo esito.
+   Seguono difese condizionali, più fonti per tipo, proprietà speciali e
    durate di turno/minuti. Nessuna
    regola dedotta dai nomi delle note.
 3. **Prodotto fisico:** luminosità/attenuazione implementate; batteria,
@@ -239,6 +240,16 @@ La v0.31 aggiunge un profilo temporaneo per tipo di danno: proprietà aggiuntive
 esplicite, durata a round e vincolo facoltativo alla concentrazione. 1 round
 avanza insieme effetti numerici e difese con una sola conferma/annullamento.
 Le basi restano separate e i colpi usano le difese presenti all'impatto.
-PDD13 legge PDD1–PDD12 senza riscriverli al boot. Il prossimo incremento riguarda
+PDD13 legge PDD1–PDD12 senza riscriverli al boot. L’incremento successivo porta
 le componenti di danno miste; restano difese condizionali e più fonti con
 scadenze distinte per tipo. [Dettagli](DIFESE-TEMPORANEE.md).
+
+
+La v0.32 aggiunge i danni misti: sei righe di un solo impatto, raggruppamento
+per tipo prima delle difese, un totale per temporanei/PF/concentrazione e un
+candidato salvato prima dei dadi. Dettaglio originale conservato dopo la fine
+dei vincoli, profilo mancante che blocca tutto e annullamento congiunto.
+PDD13/USB v7/layout invariati. Nel blocco effetti restano difese condizionali,
+più fonti temporanee per tipo, riduzioni fisse e regole particolari; il prodotto
+fisico conserva priorità e richiede ancora i collaudi della scheda.
+[Dettagli](DANNI-MISTI.md).

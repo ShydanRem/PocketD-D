@@ -1,5 +1,8 @@
 # Effetti collegati alla concentrazione — v0.30
 
+> Aggiornamento v0.32: [danni misti dello stesso colpo](DANNI-MISTI.md), con
+> raggruppamento per tipo e un solo esito. PDD13/USB v7/layout invariati.
+
 > Aggiornamento v0.31: [difese temporanee, concentrazione e round comune](DIFESE-TEMPORANEE.md)
 > con PDD13. I limiti/formati dell’incremento sotto sono storici.
 
