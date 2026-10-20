@@ -56,12 +56,12 @@ Non fanno parte di questo traguardo: importazione Beyond, editor completo, incan
 
 L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco non impedisce le altre fasi. L'ordine delle fasi 0 e 1 può sovrapporsi se l'hardware non è immediatamente disponibile.
 
-## Punto attuale — v0.29
+## Punto attuale — v0.30
 
 | Blocco | Stato software | Cosa manca |
 | --- | --- | --- |
 | Scheda individuale offline | PF/temporanei, prove, abilità/salvezze, zaino, armi, magie, risorse, riposi e dadi vita nel firmware | Monete, storico persistente, effetti completi e regole speciali; sessione reale |
-| Effetti numerici | Otto modificatori CA/PF massimi, basi separate, cure integrate e durate manuali/a round con scadenze confermate | Altre durate/regole, difese condizionali, proprietà speciali e ricalcolo da equipaggiamento |
+| Effetti numerici | Otto modificatori CA/PF massimi, basi separate, cure integrate, durate manuali/a round e vincolo esplicito alla concentrazione con fine congiunta | Altre durate/regole, difese condizionali, proprietà speciali e ricalcolo da equipaggiamento |
 | Danni e difese | Profili manuali per 13 tipi, resistenza/vulnerabilità/immunità, PF/temporanei e salvezza COS di concentrazione con bonus/CD espliciti oppure esito manuale | Difese condizionali e scadenze, colpi misti, eccezioni alle salvezze e casi morte bloccati |
 | Stato e morte | Note delle condizioni, Avvelenato separato, d20 morte base e correzioni | Effetti delle altre condizioni, eccezioni e morte istantanea |
 | Grafica e comandi | Tema pixel art, avatar 81 combinazioni, dadi animati, PWR/BOOT configurabili | Leggibilità e precisione touch sulla scheda |
@@ -159,9 +159,10 @@ Il percorso principale rimane articolato nei quattro blocchi concordati:
    espliciti a CA/PF massimi; la v0.27 aggiunge round/pausa/scadenze simultanee
    confermate. La v0.28 aggiunge difese manuali per tipo e danni ricevuti con
    esito esplicito della concentrazione; la v0.29 aggiunge il tiro COS con
-   bonus/CD verificabili e salvataggio prima dell'animazione. Seguono difese condizionali, colpi
-   misti, altre interazioni e proprietà speciali; durate di turno/minuti e
-   legami con concentrazione ancora aperti. Nessuna
+   bonus/CD verificabili e salvataggio prima dell'animazione. La v0.30 collega
+   esplicitamente gli effetti alla concentrazione, con disattivazione e PF
+   coerenti alla fine/sostituzione. Seguono difese condizionali/con durata,
+   colpi misti, altre interazioni, proprietà speciali e durate di turno/minuti. Nessuna
    regola dedotta dai nomi delle note.
 3. **Prodotto fisico:** luminosità/attenuazione implementate; batteria,
    sospensione/spegnimento e collaudo di touch, tasti, USB, memoria, fluidità e
@@ -221,3 +222,12 @@ competenze per copie incomplete. Formula della CD e modalità esplicite, candida
 congiunto danni/esito, animazione dopo salvataggio e tiro fissato sul retry.
 Il risultato pendente resta in RAM: recupero dopo perdita d'alimentazione e
 storico persistente rimangono aperti. [Dettagli](CONCENTRAZIONE.md).
+
+
+La v0.30 chiude il legame esplicito fra concentrazione e modificatori locali:
+fine, nuova magia (anche la stessa voce), Ira, danni/zero PF e riposo lungo
+terminano i vincoli in un'unica modifica. Controlli dei totali anche senza
+concentrazione, limiti PF applicati una volta e annullamento completo. PDD12,
+lettura PDD1–PDD11; le funzioni restano sul dispositivo. Prossimo lavoro del
+blocco effetti: difese condizionali/con durata e componenti di danno miste,
+con scelte esplicite e anteprima. [Dettagli](EFFETTI-CONCENTRAZIONE.md).

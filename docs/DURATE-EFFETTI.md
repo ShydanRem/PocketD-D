@@ -1,5 +1,8 @@
 # Durate e scadenze degli effetti — v0.27
 
+> Aggiornamento v0.30: [effetti collegati alla concentrazione](EFFETTI-CONCENTRAZIONE.md),
+> fine/sostituzione congiunta e PDD12. I limiti e formati sotto sono storici.
+
 > Documento della v0.27. La v0.28 aggiunge [danni e difese manuali](DANNI-DIFESE.md)
 > e PDD11. Le omissioni sulle resistenze riportate sotto sono storiche; le difese
 > non sono legate automaticamente ai timer degli effetti.

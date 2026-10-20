@@ -25,14 +25,14 @@ bool pd_magic_stats(const pd_state *s,unsigned index,int *attack,int *dc) {
     *attack=base+v->attack_modifier;*dc=8+base+v->save_modifier;return true;
 }
 bool pd_magic_use(pd_state *s,unsigned index,unsigned slot,bool pact) {
-    if(!s||!s->magic.available||index>=s->magic.count)return false;
+    if(!s||!pd_valid(s)||!s->magic.available||index>=s->magic.count)return false;
     pd_power *v=&s->magic.powers[index];
     if(v->kind==1) {
         if((v->flags&PD_PASSIVE)||!v->remaining)return false;
         if(v->effect==1&&(!s->combat.rage_bonus||!s->hp||s->combat.raging))return false;
         if(v->effect==2&&(s->hp||(s->status.available&&s->status.failures==3)))return false;
         v->remaining--;
-        if(v->effect==1){s->combat.raging=true;s->training.strength_advantage=true;s->magic.concentration=0;}
+        if(v->effect==1){pd_concentration_end(s);s->combat.raging=true;s->training.strength_advantage=true;}
         if(v->effect==2)pd_hp(s,1);
         return true;
     }
@@ -44,7 +44,7 @@ bool pd_magic_use(pd_state *s,unsigned index,unsigned slot,bool pact) {
     }
     if(cost)cost->current--;
     if(v->flags&PD_LIMITED)v->remaining--;
-    if(v->flags&PD_CONCENTRATES)s->magic.concentration=index+1;
+    if(v->flags&PD_CONCENTRATES){pd_concentration_end(s);s->magic.concentration=index+1;}
     return true;
 }
 bool pd_magic_recover(pd_state *s,unsigned index,int delta) {

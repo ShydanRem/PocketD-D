@@ -229,3 +229,16 @@ reciproca delle conferme. Dopo estrazione un save error fissa dado e opzioni fin
 al retry/riavvio; lo stato non salvato non è un giornale persistente. L'animazione
 combat_roll=6 mostra il risultato impegnato senza percorso di rilancio. Nessuna
 migrazione o nuovo campo in PDD11/USB v7. [Uso e limiti](CONCENTRAZIONE.md).
+
+
+Incremento 0.30: ogni pd_effect conserva un riferimento facoltativo alla magia
+attualmente concentrata. effects_valid impone totali validi con e senza tutti
+quei riferimenti; pd_concentration_end disattiva/scollega tutte le voci prima
+di limitare i PF una sola volta. Sostituzione, stessa magia rilanciata, Ira,
+danni/zero PF e riposo lungo usano questa operazione senza allocare stati
+sullo stack. Nessun fallimento di validità possibile dopo il RNG per uno stato
+accettato. La preview danni espone massimo e PF finali, compreso il limite
+indotto dalla perdita di concentrazione; il delta PF del riposo è con segno.
+PDD12 (PDDC) aggiunge otto byte prima del CRC, massimo 74222; PDD1–PDD11
+letti senza vincoli e senza scritture al boot. USB v7/backup PC v10 invariati.
+[Uso, vincoli e limiti](EFFETTI-CONCENTRAZIONE.md).

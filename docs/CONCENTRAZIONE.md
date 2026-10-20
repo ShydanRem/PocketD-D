@@ -1,5 +1,8 @@
 # Salvezza di concentrazione nel flusso danni — v0.29
 
+> Documento della v0.29. La v0.30 aggiunge [vincoli degli effetti alla concentrazione](EFFETTI-CONCENTRAZIONE.md)
+> e PDD12; i formati e i limiti sui collegamenti sotto descrivono lo stato storico.
+
 La v0.29 aggiunge **Tira COS** all'anteprima dei [danni ricevuti](DANNI-DIFESE.md).
 Il dispositivo può estrarre il dado, confrontare il totale con la CD e salvare
 insieme danni, temporanei e concentrazione prima dell'animazione. Funziona offline,

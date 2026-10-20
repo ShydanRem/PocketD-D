@@ -31,7 +31,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP } page_t;
 PD_EXT static pd_state state,previous,pending,scratch;
 static bool undo_available,import_pending,has_roll;
 static pd_roll result;
@@ -208,6 +208,8 @@ static void frame(void) {
 }
 static void act(intptr_t action) {
     if(import_pending&&action!=30&&action!=31)return;
+    if(page==MAGIC_STOP&&action!=852&&action!=853)return;
+    if(page==MAGIC_CONFIRM&&action!=832&&action!=833)return;
     if(page==DEFENCE_CONFIRM&&action!=1816&&action!=1817)return;
     if(page==DAMAGE_CONFIRM&&action!=1804&&action!=1805&&action!=1806&&action!=1807&&action!=1860)return;
     if(page==CONCENTRATION_SETUP&&(action<1861||action>1866||(concentration_rolled&&action!=1865)))return;
@@ -340,8 +342,8 @@ static void act(intptr_t action) {
     else if(action==850)page=KEY_SETTINGS;
     else if(action==851)page=MAGIC_SLOTS;
     else if(action==852&&page==MAGIC_STOP){
-        if(stop_rage)pd_end_rage(&next);else next.magic.concentration=0;
-        apply(&next);page=MAGIC_STATUS;
+        if(stop_rage)pd_end_rage(&next);else pd_concentration_end(&next);
+        if(pd_storage_save(&next)){previous=state;undo_available=true;state=next;invalidate_strike();page=MAGIC_STATUS;}
     }
     else if(action>=860&&action<=862) {
         unsigned i=action-860;next.shortcuts[i]=(state.shortcuts[i]+1)%13;
@@ -413,7 +415,7 @@ static void act(intptr_t action) {
         int value=effect_draft.value+delta;effect_draft.value=value< -bound?-bound:value>bound?bound:value;
     }
     else if(action==1703&&page==EFFECT_EDIT)effect_draft.active=!effect_draft.active;
-    else if((action==1704||action==1705)&&(page==EFFECT_EDIT||page==EFFECT_DURATION)){effect_removing=action==1705;if(!effect_removing||effect_index<state.effect_count)page=EFFECT_CONFIRM;}
+    else if((action==1704||action==1705)&&(page==EFFECT_EDIT||page==EFFECT_DURATION||page==EFFECT_LINK)){effect_removing=action==1705;if(!effect_removing||effect_index<state.effect_count)page=EFFECT_CONFIRM;}
     else if(action==1706&&effect_page)effect_page--;
     else if(action==1707&&(effect_page+1)*3<state.effect_count)effect_page++;
     else if(action==1708&&page==EFFECT_CONFIRM)page=EFFECT_EDIT;
@@ -423,6 +425,9 @@ static void act(intptr_t action) {
         int value=effect_draft.rounds+(const int[]){-10,-1,1,10}[action-1712];effect_draft.rounds=value<0?0:value>99?99:value;
     }
     else if(action==1716&&page==EFFECT_DURATION)page=EFFECT_EDIT;
+    else if(action==1750&&page==EFFECT_DURATION)page=EFFECT_LINK;
+    else if(action==1751&&page==EFFECT_LINK&&(effect_draft.concentration||state.magic.concentration))effect_draft.concentration=effect_draft.concentration?0:state.magic.concentration;
+    else if(action==1752&&page==EFFECT_LINK)page=EFFECT_DURATION;
     else if(action==1740&&timed_effects())page=EFFECT_ROUND;
     else if(action==1741&&page==EFFECT_ROUND)page=EFFECT_LIST;
     else if(action==1742&&page==EFFECT_ROUND){
@@ -831,7 +836,10 @@ static void render_magic_other(void) {
         label("Conferma utilizzo",83,111,300,true);label(p->name,83,159,300,false);cost_text(text,sizeof text);small_label(text,83,204,300,PD_GOLD);
         if(!p->kind&&p->level&&(p->flags&PD_USES_SLOT)){snprintf(text,sizeof text,"Slot %u %s",cast_level,cast_pact?"patto":"ordinario");small_label(text,83,231,300,PD_TEXT);}
         small_label(p->flags&PD_CONCENTRATES&&state.magic.concentration?"Sostituisce la concentrazione attuale":p->effect==1?"Attiva Ira e termina concentrazione":"Effetti da risolvere con il DM",83,275,300,PD_MUTED);
-        if((p->flags&PD_CONCENTRATES)&&state.magic.concentration){snprintf(text,sizeof text,"Attuale: %s",state.magic.powers[state.magic.concentration-1].name);small_label(text,83,306,300,PD_GOLD);}
+        if(((p->flags&PD_CONCENTRATES)||p->effect==1)&&state.magic.concentration){
+            scratch=state;pd_concentration_end(&scratch);
+            snprintf(text,sizeof text,"Termina %u effetti | PF %u -> %u",pd_concentration_effects(&state),state.hp,scratch.hp);small_label(text,83,306,300,PD_GOLD);
+        }
         button("Indietro",83,359,144,48,833,true);button("Conferma",239,359,144,48,832,can_use_power());
     } else if(page==MAGIC_STATUS) {
         label("Risorse magiche",83,111,300,true);button("Slot ordinari / patto",83,153,300,44,851,true);
@@ -841,7 +849,11 @@ static void render_magic_other(void) {
         button("Usi",83,359,144,48,103,true);button("Elenco",239,359,144,48,835,true);
     } else if(page==MAGIC_STOP) {
         label(stop_rage?"Terminare Ira?":"Termina concentrazione?",83,153,300,false);
-        small_label("Modifica salvata; annullabile da Eroe",83,221,300,PD_MUTED);
+        scratch=state;if(!stop_rage)pd_concentration_end(&scratch);
+        snprintf(text,sizeof text,"Effetti associati che terminano: %u",stop_rage?0:pd_concentration_effects(&state));small_label(text,83,201,300,PD_GOLD);
+        snprintf(text,sizeof text,"CA %u -> %u | PF max %u -> %u",pd_armor(&state),pd_armor(&scratch),pd_max_hp(&state),pd_max_hp(&scratch));small_label(text,83,233,300,PD_TEXT);
+        snprintf(text,sizeof text,"PF correnti %u -> %u",state.hp,scratch.hp);label(text,83,267,300,false);
+        small_label(state.hp>scratch.hp?"PF oltre il nuovo massimo: persi":"Annullabile da Eroe",83,309,300,state.hp>scratch.hp?PD_DANGER:PD_MUTED);
         button("Indietro",83,359,144,48,853,true);button("Conferma",239,359,144,48,852,true);
     } else if(page==MAGIC_SLOTS) {
         snprintf(text,sizeof text,"Slot livello %u",slot_index+1);label(text,139,111,188,false);
@@ -890,7 +902,7 @@ static void render_rest(void) {
         snprintf(text,sizeof text,"Voci con utilizzi recuperati: %u",delta.powers);small_label(text,83,202,300,PD_TEXT);
         if(state.recovery.available)snprintf(text,sizeof text,"Dadi vita recuperati: %u (%s)",delta.hit_dice,(const char *const[]){"manuale","2014","2024"}[rest_plan.policy]);else snprintf(text,sizeof text,"Dadi vita: dati non disponibili");small_label(text,83,229,300,PD_GOLD);
         small_label("Termina Ira e attacco potente",83,260,300,PD_TEXT);
-        small_label(rest_plan.long_rest?"Concentrazione: termina":"Concentrazione: invariata",83,284,300,PD_TEXT);
+        if(rest_plan.long_rest)snprintf(text,sizeof text,"Concentr.: fine | %u effetti terminati",pd_concentration_effects(&state));else strcpy(text,"Concentrazione: invariata");small_label(text,83,284,300,PD_TEXT);
         small_label(rest_plan.long_rest&&state.status.available?"Registro morte: azzera al riposo":"Contatori invariati; eccezioni: DM",83,309,300,PD_MUTED);
         small_label(rest_plan.long_rest?"Requisiti e durate: verifica DM":"Poi spendi dadi vita per curarti",83,333,300,PD_MUTED);
         button("Indietro",83,359,144,48,902,true);button("Conferma",239,359,144,48,907,true);
@@ -1019,7 +1031,8 @@ static void render_effects(void) {
             char duration[24];if(!e->timed)snprintf(duration,sizeof duration,"%s",e->active?"si":"no");
             else if(!e->rounds)strcpy(duration,"scaduto");else snprintf(duration,sizeof duration,"%ur%s",e->rounds,e->active?"":" pausa");
             snprintf(text,sizeof text,"%u. %s %+d | %s",i+1,e->target==PD_EFFECT_ARMOR?"CA":"PF max",e->value,duration);
-            lv_obj_t *b=button(text,83,159+row*48,300,44,1720+i,true);if(e->timed)lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
+            if(e->concentration)strcat(text," | C");
+            lv_obj_t *b=button(text,83,159+row*48,300,44,1720+i,true);if(e->timed||e->concentration)lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
         }
         button("<",83,305,60,44,1706,effect_page>0);button("1 round",155,305,156,44,1740,timed_effects());button(">",323,305,60,44,1707,effect_page+1<pages);
         button("Stato",83,359,144,48,1500,true);button("Aggiungi",239,359,144,48,1701,state.effect_count<PD_EFFECTS);
@@ -1042,14 +1055,24 @@ static void render_effects(void) {
         for(unsigned i=0;i<4;i++)button(names[i],83+i*78,263,66,44,1712+i,effect_draft.timed&&(i<2?effect_draft.rounds>0:effect_draft.rounds<99));
         small_label("Round manuali dal menu Effetti",83,319,300,PD_GOLD);
         small_label("Disattivato: conteggio in pausa",83,339,300,PD_MUTED);
-        button("Indietro",83,359,144,48,1716,true);button("Anteprima",239,359,144,48,1704,true);
+        const char *names2[]={"Indietro","Vincolo","Anteprima"};const unsigned codes[]={1716,1750,1704};
+        for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names2[i],83+i*104,359,92,48,codes[i],true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
+    } else if(page==EFFECT_LINK) {
+        label("Vincolo dell'effetto",83,111,300,true);
+        lv_obj_t *b=button(effect_draft.concentration?"Concentrazione: si >":"Concentrazione: no >",83,157,300,44,1751,effect_draft.concentration||state.magic.concentration);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
+        small_label(state.magic.concentration?state.magic.powers[state.magic.concentration-1].name:"Nessuna magia concentrata",83,215,300,PD_GOLD);
+        small_label("Alla fine: disattiva e scollega",83,255,300,PD_TEXT);
+        small_label("Anche rilanciando la stessa magia",83,281,300,PD_TEXT);
+        small_label("Nessuna riattivazione automatica",83,311,300,PD_MUTED);
+        small_label("Durata a round: puo scadere prima",83,335,300,PD_MUTED);
+        button("Indietro",83,359,144,48,1752,true);button("Anteprima",239,359,144,48,1704,true);
     } else if(page==EFFECT_CONFIRM) {
         bool valid=preview_effect(&scratch);
         label(effect_removing?"Rimuovere l'effetto?":"Confermare l'effetto?",83,107,300,false);
         snprintf(text,sizeof text,"Base: CA %u | PF max %u",state.armor,state.max_hp);small_label(text,83,151,300,PD_GOLD);
         small_label("Aggiungi solo bonus non gia inclusi",83,179,300,PD_GOLD);
         const pd_effect *e=effect_removing?&state.effects[effect_index]:&effect_draft;
-        if(e->timed)snprintf(text,sizeof text,"Durata: %u round | %s",e->rounds,!e->rounds?"scaduto":e->active?"attivo":"in pausa");else strcpy(text,"Durata: manuale");small_label(text,83,199,300,PD_MUTED);
+        if(e->timed)snprintf(text,sizeof text,"%u round | %s",e->rounds,e->active?"attivo":"pausa");else strcpy(text,"Manuale");strcat(text,e->concentration?" | conc. si":" | conc. no");small_label(text,83,199,300,PD_MUTED);
         if(valid){
             snprintf(text,sizeof text,"CA %u -> %u",pd_armor(&state),pd_armor(&scratch));label(text,83,219,300,false);
             snprintf(text,sizeof text,"PF massimi %u -> %u",pd_max_hp(&state),pd_max_hp(&scratch));label(text,83,251,300,false);
@@ -1058,7 +1081,7 @@ static void render_effects(void) {
         } else {
             bool expired=e->timed&&e->active&&!e->rounds;
             label(expired?"Durata da verificare":"Valori fuori limite",83,227,300,false);small_label(expired?"Attivo: serve almeno 1 round":"CA: 1-40 | PF massimi: 1-999",83,267,300,PD_DANGER);
-            small_label(expired?"Imposta la durata prima di riattivare":"Modifica o disattiva gli altri effetti",83,305,300,PD_MUTED);
+            small_label(expired?"Imposta la durata prima di riattivare":"Verifica anche senza concentrazione",83,305,300,PD_MUTED);
         }
         button("Indietro",83,359,144,48,1708,true);button("Conferma",239,359,144,48,1709,valid);
     } else if(page==EFFECT_ROUND) {
@@ -1122,9 +1145,9 @@ static void render_damage(void) {
             else if(r.needs_concentration){
                 pd_damage_plan plan=damage_plan;plan.concentration=0;pd_check_info info;pd_damage_summary summary;
                 bool known=pd_concentration_info(&state,&plan,0,0,&info,&summary,false);
-                snprintf(text,sizeof text,known?"Concentrazione CD %u (con DM)":"CD %u | COS da verificare",r.concentration_dc);small_label(text,83,269,300,PD_GOLD);
+                if(known&&pd_concentration_effects(&state))snprintf(text,sizeof text,"CD %u | fallimento: %u effetti",r.concentration_dc,pd_concentration_effects(&state));else snprintf(text,sizeof text,known?"Concentrazione CD %u (con DM)":"CD %u | COS da verificare",r.concentration_dc);small_label(text,83,269,300,PD_GOLD);
                 snprintf(text,sizeof text,"Esito: %s",(const char *const[]){"da risolvere","mantieni","termina"}[damage_plan.concentration]);button(text,83,299,300,44,1806,true);
-            } else {small_label(r.ends_concentration?"A zero PF termina concentrazione":!r.adjusted?"Nessun danno effettivo":"Una componente di danno per volta",83,285,300,PD_MINT);small_label("Difese selezionate manualmente",83,317,300,PD_MUTED);}
+            } else {small_label(r.ends_concentration?"A zero PF: fine concentr. ed effetti":!r.adjusted?"Nessun danno effettivo":"Una componente di danno per volta",83,285,300,PD_MINT);small_label("Difese selezionate manualmente",83,317,300,PD_MUTED);}
         }
         if(r.needs_concentration){
             pd_check_info info;pd_damage_summary summary;pd_damage_plan plan=damage_plan;plan.concentration=0;
@@ -1137,7 +1160,7 @@ static void render_damage(void) {
         snprintf(text,sizeof text,"Temporanei %u -> %u",damage_temp_before,state.temp_hp);label(text,83,211,300,false);
         snprintf(text,sizeof text,"PF %u -> %u",damage_hp_before,state.hp);label(text,83,251,300,true);
         small_label(incoming_result.ends_concentration?"Concentrazione terminata":incoming_result.needs_concentration?(combat_roll==6?"Concentrazione mantenuta dal tiro":"Concentrazione mantenuta con il DM"):"Concentrazione: non richiesta",83,299,300,PD_MINT);
-        small_label("Eroe > Annulla ripristina la modifica",83,329,300,PD_MUTED);button("Stato",83,359,144,48,1500,true);button("Nuovo",239,359,144,48,1808,true);
+        if(incoming_result.ended_effects)snprintf(text,sizeof text,"Effetti terminati: %u | PF max %u",incoming_result.ended_effects,incoming_result.max_hp_after);else strcpy(text,"Eroe > Annulla ripristina la modifica");small_label(text,83,329,300,PD_MUTED);button("Stato",83,359,144,48,1500,true);button("Nuovo",239,359,144,48,1808,true);
     } else if(page==CONCENTRATION_SETUP){
         pd_check_info info={0};pd_damage_summary summary={0};bool ready=pd_concentration_info(&state,&damage_plan,concentration_mode,concentration_extra,&info,&summary,concentration_cap30);
         label("Concentrazione",83,103,300,true);

@@ -1,5 +1,8 @@
 # Magie, capacità e tasti sul dispositivo — v0.22
 
+> Aggiornamento v0.30: [effetti collegati alla concentrazione](EFFETTI-CONCENTRAZIONE.md),
+> fine/sostituzione congiunta e PDD12. I limiti e formati sotto sono storici.
+
 > Documento dell’incremento v0.22. Con la v0.23 sono disponibili
 > anche [riposi e dadi vita](RIPOSI-RECUPERI.md), USB v6/PDD6 e la scorciatoia
 > Riposi. La v0.24 aggiunge [Stato e registro morte](STATO-CONDIZIONI-MORTE.md),

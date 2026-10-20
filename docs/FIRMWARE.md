@@ -1,8 +1,11 @@
-# Firmware PocketD-D 0.25 — schermo e impostazioni locali
+# Firmware PocketD-D 0.30 — effetti e concentrazione
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
+
+[Novità v0.30: vincoli degli effetti alla concentrazione](EFFETTI-CONCENTRAZIONE.md),
+PDD12 e lettura dei salvataggi precedenti.
 
 ## Stato e perimetro
 
@@ -230,8 +233,8 @@ reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
 ## Salvataggio e dadi
 
 NVS nel namespace `pocketdd`, nuova partizione `pdd_state`, due chiavi alternate
-`state_a`/`state_b`. Record PDD11 (tag `PDDB`) da **7974 + 552 × numero voci** byte, massimo
-74214. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
+`state_a`/`state_b`. Record PDD12 (tag `PDDC`) da **7982 + 552 × numero voci** byte, massimo
+74222. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
 visibile. Nessun dump di struct, erase o fallback distruttivo. Errori I/O o
 allocazioni insufficienti bloccano scritture; CRC e versioni future conservati.
 
@@ -243,9 +246,11 @@ i record PDD6 sono leggibili senza creare registri morte. PDD7 mantiene stato
 e contatori; le copie precedenti a PDD8 ricevono 50%/mai senza riscrittura al boot.
 PDD8 conserva le preferenze; le copie precedenti iniziano senza effetti locali.
 PDD9 conserva i modificatori con durata manuale, PDD10 conserva i timer; le
-vecchie copie iniziano con difese da configurare. Le nuove scritture PDD11
-richiedono firmware v0.28 o successivo:
-[compatibilità e downgrade](DANNI-DIFESE.md).
+vecchie copie iniziano con difese da configurare. PDD11 conserva le difese;
+le copie precedenti a PDD12 iniziano con effetti senza vincoli alla concentrazione.
+Otto byte prima del CRC contengono gli indici dei collegamenti (zero: nessuno).
+Le nuove scritture PDD12 richiedono firmware v0.30 o successivo:
+[compatibilità e downgrade](EFFETTI-CONCENTRAZIONE.md).
 Il nuovo uploader supporta USB v1–v7. Preferenze avatar/tasti
 locali conservate durante l'importazione. [Dettagli](MAGIE-TASTI.md).
 
@@ -517,3 +522,23 @@ Build v0.29: **863008 byte**, partizione app da 4 MiB **79% libera**;
 ESP-IDF 5.5.5/LVGL 9.4.0. Il controller NVS rimane bloccato dopo errore I/O:
 riavvio e verifica necessari; il tiro pendente non sopravvive al reboot. Nessun
 flash, collaudo fisico, nuova lettura Beyond o modifica della raccolta personale.
+
+
+## Verifiche v0.30 — effetti e concentrazione
+
+4608 casi indipendenti di vincoli/bersagli/fine, comprese stessa magia, Ira,
+zero PF e danni con tiro; disattivazione simultanea, nessuna cura implicita,
+costi e validità dei totali anche dopo la fine. Delta PF del riposo con segno,
+timer/pausa, riferimenti non correnti e otto byte corrotti con CRC valido.
+Fixture sintetica PDD11 dell'encoder v0.29 `a75afd1`; lettura PDD1–PDD11,
+nessuna scrittura al boot e copia originale conservata al primo salvataggio.
+UI LVGL di vincolo/anteprima/fine, sostituzione, riposo, danni, errore e tiro
+fissato, annullamento e tasti protetti. Regressioni 138 JS/build PC,
+37751 confronti PC→USB→C, 17266 effetti, 40648 durate, 139904 danni e 78840
+salvezze. ASan/UBSan su vincoli/effetti/durate/danni/concentrazione,
+magie/riposi/stato, allocazioni e UI; leak detector disattivato nel sandbox.
+
+Build v0.30: **865008 byte**, partizione app da 4 MiB **79% libera**;
+ESP-IDF 5.5.5/LVGL 9.4.0. PDD12, layout/USB v7 invariati. Nessun flash,
+collaudo fisico, nuova lettura Beyond o modifica della raccolta personale.
+[Uso e limiti](EFFETTI-CONCENTRAZIONE.md).

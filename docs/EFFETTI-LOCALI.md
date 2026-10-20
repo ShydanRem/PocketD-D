@@ -1,5 +1,8 @@
 # Effetti numerici locali sul dispositivo — v0.26
 
+> Aggiornamento v0.30: [effetti collegati alla concentrazione](EFFETTI-CONCENTRAZIONE.md),
+> fine/sostituzione congiunta e PDD12. I limiti e formati sotto sono storici.
+
 > Documento della v0.26. La v0.27 aggiunge [durate a round e scadenze](DURATE-EFFETTI.md)
 > e PDD10; i limiti sulle durate riportati sotto sono storici.
 

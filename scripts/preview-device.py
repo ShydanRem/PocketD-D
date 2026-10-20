@@ -119,3 +119,13 @@ if all((base/(name+'.ppm')).is_file() for name in concentration):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(concentration):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'concentration-preview.png');print(base/'concentration-preview.png')
+
+# Explicit concentration bindings; these are host renders, not hardware captures.
+links=['link-editor','link-confirm','link-stop','link-damage']
+for name in links+['link-recast','link-rest','link-unavailable']:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in links):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(links):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'links-preview.png');print(base/'links-preview.png')

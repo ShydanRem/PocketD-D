@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.29
+# Direzione visiva del dispositivo — v0.30
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -196,3 +196,12 @@ salvataggio; il risultato indica concentrazione mantenuta/persa senza pulsante
 di rilancio. Un errore mostra tiro fissato e comandi disabilitati. Font/contrasto
 e pulsanti ≥44 px nel cerchio verificati sul renderer host; anteprima
 concentration-preview.png. Nessuna nuova risorsa esterna o prova fisica.
+
+
+La v0.30 aggiunge Durata → Vincolo, con nome della magia attuale e scelta
+esplicita; C nelle righe e conc. sì/no nella conferma. Fine concentrazione
+mostra CA/PF massimi/correnti prima e dopo e perdita oltre il nuovo massimo.
+Sostituzione, riposo e danni spiegano la fine degli effetti. Nessun nuovo asset;
+la vista conserva tema, centro leggibile e pulsanti ≥44 px nel cerchio.
+Preview `links-preview.png` e sette schermate sono render reali LVGL su host,
+non fotografie hardware. [Uso](EFFETTI-CONCENTRAZIONE.md).

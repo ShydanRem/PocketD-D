@@ -1,5 +1,8 @@
 # Riposi e dadi vita sul dispositivo — v0.23
 
+> Aggiornamento v0.30: [effetti collegati alla concentrazione](EFFETTI-CONCENTRAZIONE.md),
+> fine/sostituzione congiunta e PDD12. I limiti e formati sotto sono storici.
+
 > Documento dell’incremento v0.23. La v0.24 aggiunge
 > [registro morte e condizioni](STATO-CONDIZIONI-MORTE.md), USB v7/PDD7 e il
 > blocco del lungo a tre fallimenti/zero PF. Le omissioni v0.23 sotto sono storiche.

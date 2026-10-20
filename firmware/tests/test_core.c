@@ -15,8 +15,9 @@
 #include "fixtures/state-v8.h"
 #include "fixtures/state-v9.h"
 #include "fixtures/state-v10.h"
+#include "fixtures/state-v11.h"
 static void record_crc(uint8_t *record) {
-    size_t size=7974; /* No powers: PDD11 prefix, recovery, status and CRC. */
+    size_t size=7982; /* No powers: PDD12 prefix, recovery, status and CRC. */
     uint32_t crc=pd_crc32(record,size-4);
     for(int i=0;i<4;i++)record[size-4+i]=crc>>(8*i);
 }
@@ -56,6 +57,7 @@ int main(int argc,char **argv) {
     assert(pd_decode(golden_v8,sizeof golden_v8,&out,&gen)&&gen==126&&out.hp==29&&out.brightness==80&&out.dim_timeout==2&&out.shortcuts[0]==9&&!out.effect_count);
     assert(pd_decode(golden_v9,sizeof golden_v9,&out,&gen)&&gen==128&&out.hp==41&&out.max_hp==32&&pd_max_hp(&out)==42&&pd_armor(&out)==18&&out.effect_count==2&&!out.effects[0].timed&&!out.effects[1].rounds);
     assert(pd_decode(golden_v10,sizeof golden_v10,&out,&gen)&&gen==130&&out.hp==41&&out.effects[0].rounds==2&&out.effects[1].rounds==1&&out.shortcuts[0]==11&&!out.defences.configured);
+    assert(pd_decode(golden_v11,sizeof golden_v11,&out,&gen)&&gen==132&&out.hp==41&&out.magic.concentration==1&&out.effects[0].rounds==3&&out.effects[1].active&&!out.effects[0].concentration&&!out.effects[1].concentration&&out.training.save_bonus[2]==3&&out.defences.resistance==32&&out.defences.immunity==4);
     pd_demo(&s);s.avatar=(pd_avatar){2,1,2,1};s.idle_animation=false;s.brightness=90;s.dim_timeout=2;
     for(int i=0;i<PD_SKILLS;i++) { s.training.ranks[i]=i%3;s.training.skill_bonus[i]=i-8; }
     for(int i=0;i<6;i++) { s.training.save_bonus[i]=i-2;s.training.check_bonus[i]=3-i; }
@@ -191,6 +193,6 @@ int main(int argc,char **argv) {
     }
     const char *invalid[]={"{}","[]","null","{\"format\":\"pocketdd-device\",\"version\":1}","{", "{\"x\":\"\\u0000\"}","1e999"};
     for(size_t i=0;i<sizeof invalid/sizeof invalid[0];i++) assert(!pd_parse_packet(invalid[i],strlen(invalid[i]),&out));
-    puts("C core: HP/temp, counters, d20, CRC/corruption/wrap, golden v1..v10 migration, PDD11 persistence and strict USB v1..v7 passed");
+    puts("C core: HP/temp, counters, d20, CRC/corruption/wrap, golden v1..v11 migration, PDD12 persistence and strict USB v1..v7 passed");
     return 0;
 }

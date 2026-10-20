@@ -6,7 +6,7 @@
 #define PD_RESOURCES 8
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
-#define PD_RECORD_SIZE 74214
+#define PD_RECORD_SIZE 74222
 #define PD_POWERS 120
 #define PD_POWER_TEXT_BYTES 501
 #define PD_ITEMS 60
@@ -54,7 +54,7 @@ typedef struct { bool available; uint8_t count,successes,failures; bool stabiliz
 #define PD_EFFECTS 8
 enum { PD_EFFECT_ARMOR,PD_EFFECT_MAX_HP };
 /* Explicit additive deltas to the imported bases; no rule inferred from a label. */
-typedef struct { uint8_t target; int16_t value; bool active,timed; uint8_t rounds; } pd_effect;
+typedef struct { uint8_t target; int16_t value; bool active,timed; uint8_t rounds,concentration; /* 0 or current magic index + 1; cleared on end/recast. */ } pd_effect;
 #define PD_DAMAGE_TYPES 13
 enum { PD_RESISTANCE=1,PD_VULNERABILITY=2,PD_IMMUNITY=4 };
 typedef struct { uint16_t configured,resistance,vulnerability,immunity; } pd_defences;
@@ -86,6 +86,13 @@ bool pd_valid(const pd_state *state);
 int pd_effect_bonus(const pd_state *state,unsigned target);
 unsigned pd_armor(const pd_state *state);
 unsigned pd_max_hp(const pd_state *state);
+/* Active totals with concentration-bound effects excluded. */
+unsigned pd_unconcentrated_max_hp(const pd_state *state);
+/* Number of active bound effects; inactive bindings are still cleared at end. */
+unsigned pd_concentration_effects(const pd_state *state);
+/* Ends every binding, deactivates bound effects together and caps HP once.
+   Accepted states guarantee valid totals without concentration; cannot fail. */
+void pd_concentration_end(pd_state *state);
 /* Index == count appends. Invalid totals reject without changing the state.
    A lower maximum caps current HP; a higher maximum never heals. */
 bool pd_effect_set(pd_state *state,unsigned index,pd_effect effect);

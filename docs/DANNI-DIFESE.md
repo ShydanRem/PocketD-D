@@ -1,5 +1,8 @@
 # Danni ricevuti e difese per tipo — v0.28
 
+> Aggiornamento v0.30: [effetti collegati alla concentrazione](EFFETTI-CONCENTRAZIONE.md),
+> fine/sostituzione congiunta e PDD12. I limiti e formati sotto sono storici.
+
 > Documento della v0.28. La v0.29 aggiunge [salvezza COS e CD opzionale max 30](CONCENTRAZIONE.md).
 > La risoluzione manuale resta disponibile; i limiti sul tiro riportati sotto
 > descrivono l'incremento storico. Formati invariati.

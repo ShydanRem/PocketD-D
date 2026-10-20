@@ -19,7 +19,7 @@ bool pd_rest_apply(pd_state *s,const pd_rest_plan *plan) {
         regain+=selected;
     }
     if(regain>pd_hit_budget(s,plan->policy))return false;
-    if(plan->long_rest){pd_hp(s,pd_max_hp(s));s->temp_hp=0;s->magic.concentration=0;s->status.successes=0;s->status.failures=0;s->status.stabilized=false;}
+    if(plan->long_rest){pd_concentration_end(s);pd_hp(s,pd_max_hp(s));s->temp_hp=0;s->status.successes=0;s->status.failures=0;s->status.stabilized=false;}
     pd_end_rage(s);s->combat.power_attack=false;
     if(s->magic.available) {
         for(unsigned i=0;i<9;i++) {
@@ -41,7 +41,7 @@ bool pd_rest_apply(pd_state *s,const pd_rest_plan *plan) {
 bool pd_rest_preview(const pd_state *s,const pd_rest_plan *plan,pd_state *scratch,pd_rest_summary *out) {
     if(!s||!scratch||s==scratch||!out)return false;
     *scratch=*s;if(!pd_rest_apply(scratch,plan))return false;
-    pd_rest_summary result={.hp=scratch->hp-s->hp,.clears_temp=s->temp_hp>scratch->temp_hp,
+    pd_rest_summary result={.hp=(int)scratch->hp-(int)s->hp,.clears_temp=s->temp_hp>scratch->temp_hp,
         .ends_rage=s->combat.raging&&!scratch->combat.raging,.ends_concentration=s->magic.concentration&&!scratch->magic.concentration};
     for(unsigned i=0;i<9;i++){result.ordinary+=scratch->magic.slots[i].current-s->magic.slots[i].current;result.pact+=scratch->magic.pact[i].current-s->magic.pact[i].current;}
     for(unsigned i=0;i<s->magic.count;i++)if(scratch->magic.powers[i].remaining>s->magic.powers[i].remaining)result.powers++;

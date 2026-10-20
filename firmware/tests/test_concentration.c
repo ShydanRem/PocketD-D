@@ -56,8 +56,8 @@ int main(void){
  plan.concentration=PD_CONCENTRATION_KEEP;assert(!pd_concentration_roll(&s,&plan,0,0,rng,NULL,&next,&roll,&summary,false)&&!calls);plan.concentration=0;plan.amount=0;
  assert(!pd_concentration_roll(&s,&plan,0,0,rng,NULL,&next,&roll,&summary,false)&&!calls);plan.amount=24;s.temp_hp=0;
  assert(!pd_concentration_roll(&s,&plan,0,0,rng,NULL,&next,&roll,&summary,false)&&!calls);plan.amount=56;assert(!pd_concentration_roll(&s,&plan,0,0,rng,NULL,&next,&roll,&summary,false)&&!calls);
- /* The candidate roundtrips existing PDD11 with damage and concentration together. */
+ /* The candidate roundtrips existing PDD12 with damage and concentration together. */
  setup(&s);plan=(pd_damage_plan){.amount=25};at=calls=0;values[0]=0;assert(pd_concentration_roll(&s,&plan,0,0,rng,NULL,&next,&roll,&summary,false)&&!next.magic.concentration&&next.temp_hp==74);
  static uint8_t data[PD_RECORD_SIZE];size_t n=pd_encode(&next,132,data);uint32_t gen;assert(pd_decode(data,n,&s,&gen)&&gen==132&&s.temp_hp==74&&!s.magic.concentration&&s.hp==24);
- printf("Concentration: %u independent CON/proficiency/bonus/faces/modes/DC cases, natural 1/20 by total, validation before RNG and atomic PDD11 result passed\n",cases);
+ printf("Concentration: %u independent CON/proficiency/bonus/faces/modes/DC cases, natural 1/20 by total, validation before RNG and atomic PDD12 result passed\n",cases);
 }

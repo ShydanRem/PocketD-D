@@ -71,3 +71,8 @@ catalogue, private character data, external artwork or new dependency is bundled
 The v0.29 concentration-save validation, explicit DC option and atomic damage
 candidate are original PocketD-D code. It reuses the existing pixel dice assets;
 no new external art, rules catalogue, runtime service or dependency is bundled.
+
+
+The v0.30 explicit effect/concentration binding, atomic end transitions and
+synthetic PDD11 migration fixture are original PocketD-D work. No private
+character data, rules catalogue, external artwork or dependency is introduced.
