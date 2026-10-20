@@ -3,6 +3,9 @@
 > Documento della v0.24. La v0.25 aggiunge [Schermo](SCHERMO-IMPOSTAZIONI.md),
 > preferenze locali e PDD8; USB v7 e regole di questo blocco rimangono invariati.
 
+> La v0.28 aggiunge [danni ricevuti e difese manuali](DANNI-DIFESE.md):
+> i casi già a zero PF/morte istantanea rimangono bloccati in quel flusso.
+
 Questo blocco porta sul dispositivo le annotazioni delle condizioni e il registro
 morte del modello PC, con un d20 base animato e correzioni esplicite. Tutto
 funziona offline; il PC rimane lo strumento di importazione, configurazione e

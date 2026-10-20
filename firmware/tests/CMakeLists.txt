@@ -5,7 +5,7 @@ set(CONFIG_LV_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(CONFIG_LV_USE_THORVG_INTERNAL OFF CACHE BOOL "" FORCE)
 set(LV_BUILD_CONF_PATH "${CMAKE_CURRENT_LIST_DIR}/lv_conf.h" CACHE PATH "" FORCE)
 add_subdirectory(../.deps/lvgl lvgl)
-add_executable(ui ../core/screen.c ../core/status.c ../core/rest.c test_ui.c ../core/buttons.c ../core/pocketdd.c ../core/magic.c ../core/checks.c ../core/combat.c ../core/dice_animation.c ../core/dice_pool.c ../core/avatar.c)
+add_executable(ui ../core/damage.c ../core/screen.c ../core/status.c ../core/rest.c test_ui.c ../core/buttons.c ../core/pocketdd.c ../core/magic.c ../core/checks.c ../core/combat.c ../core/dice_animation.c ../core/dice_pool.c ../core/avatar.c)
 target_include_directories(ui PRIVATE ../core)
 target_link_libraries(ui lvgl m)
 
@@ -40,3 +40,6 @@ target_include_directories(effects PRIVATE ../core)
 
 add_executable(durations test_durations.c ../core/pocketdd.c ../core/magic.c ../core/checks.c ../core/rest.c ../core/dice_pool.c)
 target_include_directories(durations PRIVATE ../core)
+
+add_executable(damage test_damage.c ../core/damage.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
+target_include_directories(damage PRIVATE ../core)

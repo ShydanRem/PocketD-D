@@ -99,3 +99,13 @@ if all((base/(name+'.ppm')).is_file() for name in durations):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(durations):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'durations-preview.png');print(base/'durations-preview.png')
+
+# Incoming damage and manually configured defences; actual host firmware frames.
+damage=['damage-home','defence-editor','damage-preview','damage-result']
+for name in damage+['damage-unknown','defence-confirm','damage-concentration','damage-immune','defences-list','damage-combined','damage-massive','damage-zero','defences-last','damage-maximum','defences-import']:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in damage):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(damage):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'damage-overview.png');print(base/'damage-overview.png')

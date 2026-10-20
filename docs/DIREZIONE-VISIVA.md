@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.27
+# Direzione visiva del dispositivo — v0.28
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -180,3 +180,11 @@ effetti che avanzano e scadono, valori prima/dopo e perdita PF distinta. La
 scorciatoia Round apre la stessa vista senza confermarla. Aree ≥44 px nel cerchio,
 nessun asset esterno; anteprima host durations-preview.png. Il collaudo fisico
 rimane aperto.
+
+
+La v0.28 aggiunge modulo Danni, difese per tipo e riepilogo. L'anteprima separa
+importo, temporanei e PF; distingue profili mancanti, esito concentrazione da
+risolvere e casi bloccati. Il risultato resta leggibile dopo la conferma; Nuovo
+richiede una nuova anteprima. Controllate anche le sovrapposizioni fra pulsanti,
+con almeno 44 px nel cerchio; nessun nuovo asset esterno. Anteprima host:
+firmware/tests/out/ui-build/damage-overview.png, non una foto dell'hardware.

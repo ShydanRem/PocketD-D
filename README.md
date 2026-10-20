@@ -2,11 +2,12 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.27:** durate manuali/a round per gli effetti locali, pausa, scadenze simultanee con anteprima/conferma e scorciatoia Round; fino a otto modificatori locali a CA/PF massimi, con basi conservate, anteprima, conferma, annullamento e scorciatoia Effetti; cure e riposi usano il massimo effettivo. Effetti completi e durate secondo tutte le regole restano successivi. luminosità locale, attenuazione per inattività e risveglio con primo gesto assorbito; nuova scorciatoia Schermo. Registro morte con d20 base animato, stabilizzazione e correzioni confermate; 30 condizioni annotate e Avvelenato come effetto separato. Riposi breve/lungo con anteprima e conferma, dadi vita per classe con cure animate, recupero lungo manuale/2014/2024 e scorciatoia Riposi. Magie/capacità sul dispositivo (120 voci), slot ordinari/patto, utilizzi e concentrazione con conferma. Tasti PWR/BOOT configurabili, con PWR lungo riservato all’alimentazione. Testi oltre 500 caratteri dichiarati come estratti. Inventario fino a 60 voci, armi scegliibili, attacchi/danni animati e critici fino a 18 dadi sul dispositivo. Cure e consumabili con conferma, salvataggio congiunto di PF/quantità e annullamento. Abilità e salvezze con competenza, maestria, mezza competenza, extra e dettaglio dei bonus. Le prove da verificare restano bloccate; le vecchie copie mantengono le prove di caratteristica e richiedono una nuova esportazione per competenze, inventario e magie mancanti. Avatar personale animato con 81 combinazioni, PF/annulla, contatori, dadi poliedrici e salvataggio offline. Supporto PC per importazione Beyond, configurazione, backup ed esportazione USB con anteprima e conferma sul display. Il firmware non è ancora collaudato sulla scheda fisica.
+**Stato v0.28:** danni ricevuti con difese manuali per 13 tipi, profili da verificare, anteprima/conferma di PF e temporanei, esito esplicito della concentrazione e scorciatoia Danni; durate manuali/a round per gli effetti locali, pausa, scadenze simultanee con anteprima/conferma e scorciatoia Round; fino a otto modificatori locali a CA/PF massimi, con basi conservate, anteprima, conferma, annullamento e scorciatoia Effetti; cure e riposi usano il massimo effettivo. Effetti completi e durate secondo tutte le regole restano successivi. luminosità locale, attenuazione per inattività e risveglio con primo gesto assorbito; nuova scorciatoia Schermo. Registro morte con d20 base animato, stabilizzazione e correzioni confermate; 30 condizioni annotate e Avvelenato come effetto separato. Riposi breve/lungo con anteprima e conferma, dadi vita per classe con cure animate, recupero lungo manuale/2014/2024 e scorciatoia Riposi. Magie/capacità sul dispositivo (120 voci), slot ordinari/patto, utilizzi e concentrazione con conferma. Tasti PWR/BOOT configurabili, con PWR lungo riservato all’alimentazione. Testi oltre 500 caratteri dichiarati come estratti. Inventario fino a 60 voci, armi scegliibili, attacchi/danni animati e critici fino a 18 dadi sul dispositivo. Cure e consumabili con conferma, salvataggio congiunto di PF/quantità e annullamento. Abilità e salvezze con competenza, maestria, mezza competenza, extra e dettaglio dei bonus. Le prove da verificare restano bloccate; le vecchie copie mantengono le prove di caratteristica e richiedono una nuova esportazione per competenze, inventario e magie mancanti. Avatar personale animato con 81 combinazioni, PF/annulla, contatori, dadi poliedrici e salvataggio offline. Supporto PC per importazione Beyond, configurazione, backup ed esportazione USB con anteprima e conferma sul display. Il firmware non è ancora collaudato sulla scheda fisica.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
 - [Direzione visiva: pixel art moderna e anteprime del firmware](docs/DIREZIONE-VISIVA.md)
+- [Danni ricevuti e difese: configurazione, concentrazione e limiti](docs/DANNI-DIFESE.md)
 - [Durate degli effetti: round, pausa, scadenze e compatibilità](docs/DURATE-EFFETTI.md)
 - [Effetti locali: CA, PF massimi, conferme e limiti](docs/EFFETTI-LOCALI.md)
 - [Schermo: luminosità, inattività, risveglio e limiti energetici](docs/SCHERMO-IMPOSTAZIONI.md)
@@ -300,3 +301,18 @@ USB v7 e layout flash invariati.
 40648 nuove verifiche di conteggi/scadenze, regressioni, UI LVGL, migrazioni,
 sanitizzatori e build ESP32-S3. Resistenze, immunità, altre durate/regole e
 collaudo fisico restano aperti. [Uso e limiti](docs/DURATE-EFFETTI.md).
+
+
+## Incremento 0.28 — danni ricevuti e difese
+
+**Usi → Stato → Danni** configura resistenza, vulnerabilità e immunità per 13 tipi
+e applica una componente di danno con anteprima e conferma. Profili non dedotti
+dai testi/import: un tipo non configurato resta bloccato. Arrotondamenti espliciti,
+temporanei prima dei PF, esito della concentrazione scelto dopo risoluzione col
+DM e annullamento congiunto. Già a zero PF e possibili casi di morte istantanea
+sono bloccati, senza fingere di risolvere quelle regole. Nuova scorciatoia Danni;
+PDD11 (PDDB), lettura PDD1–PDD10, USB v7/layout invariati.
+
+139904 casi del modello, regressioni, UI LVGL, migrazioni, sanitizzatori e build
+ESP32-S3. Difese condizionali, colpi misti, proprietà speciali e collaudo fisico
+restano aperti. Nessuna modifica della raccolta personale. [Uso e limiti](docs/DANNI-DIFESE.md).

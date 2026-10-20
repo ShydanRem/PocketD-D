@@ -22,5 +22,5 @@ cc -std=c11 -Wall -Wextra -Werror -Wno-unused-parameter -Ifirmware/core -Ifirmwa
 firmware/tests/out/storage
 cmake -S firmware/tests -B firmware/tests/out/ui-build -G Ninja
 cmake --build firmware/tests/out/ui-build --parallel 4
-(cd firmware/tests/out/ui-build && ./dice && ./pool && ./avatar && ./checks && ./combat && ./magic && ./rest && ./status && ./effects && ./durations && ./screen && ./buttons && ./alloc && ./ui)
+(cd firmware/tests/out/ui-build && ./dice && ./pool && ./avatar && ./checks && ./combat && ./magic && ./rest && ./status && ./effects && ./durations && ./damage && ./screen && ./buttons && ./alloc && ./ui)
 python3 scripts/check-device.py

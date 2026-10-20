@@ -58,6 +58,11 @@ static void bounds(void) {
         lv_obj_t *o=lv_obj_get_child(root,i);if(!lv_obj_check_type(o,&lv_button_class))continue;
         lv_area_t a;lv_obj_get_coords(o,&a);
         assert(a.y2-a.y1+1>=44);
+        for(unsigned j=i+1;j<lv_obj_get_child_count(root);j++){
+            lv_obj_t *other=lv_obj_get_child(root,j);if(!lv_obj_check_type(other,&lv_button_class))continue;
+            lv_area_t b;lv_obj_get_coords(other,&b);
+            if(!(a.x2<b.x1||a.x1>b.x2||a.y2<b.y1||a.y1>b.y2)){fprintf(stderr,"Buttons overlap: %s / %s\n",lv_label_get_text(button_label(o)),lv_label_get_text(button_label(other)));abort();}
+        }
         int xs[]={a.x1,a.x2},ys[]={a.y1,a.y2};
         for(int x=0;x<2;x++)for(int y=0;y<2;y++)assert((xs[x]-233)*(xs[x]-233)+(ys[y]-233)*(ys[y]-233)<=233*233);
         lv_obj_t *l=button_label(o);lv_area_t text;lv_obj_get_coords(l,&text);
@@ -474,5 +479,35 @@ int main(void) {
     pd_demo(&state);assert(pd_effect_set(&state,0,(pd_effect){.target=PD_EFFECT_ARMOR,.value=20,.active=true,.timed=true,.rounds=1}));assert(pd_effect_set(&state,1,(pd_effect){.target=PD_EFFECT_ARMOR,.value=-20,.active=true,.timed=true,.rounds=2}));
     page=EFFECT_LIST;render();click("1 round");effects_before=state;effects_saves=save_calls;act(1742);assert(page==EFFECT_ROUND&&save_calls==effects_saves&&!memcmp(&state,&effects_before,sizeof state));screenshot("duration-invalid.ppm");click("Indietro");
     assert(stage_import(&imported_magic));click("Annulla");assert(state.effects[0].rounds==1&&state.effects[1].rounds==2);
-    puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry and guarded physical buttons passed");
+    /* Incoming typed damage: explicit unknown profiles, preview, retry and undo. */
+    pd_demo(&state);state.temp_hp=3;page=STATUS_HOME;render();click("Danni");assert(page==DAMAGE_HOME&&damage_plan.amount==1);screenshot("damage-home.ppm");
+    click("+10");click("Anteprima");assert(page==DAMAGE_CONFIRM);effects_before=state;effects_saves=save_calls;effects_calls=random_calls;act(1805);assert(page==DAMAGE_CONFIRM&&!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves);screenshot("damage-unknown.ppm");
+    click("Configura difesa");assert(page==DEFENCE_EDIT);click("Resistenza: no");click("Anteprima");screenshot("defence-confirm.ppm");shortcut(0);act(100);assert(page==DEFENCE_CONFIRM&&!stage_import(&imported_magic));click("Indietro");assert(!state.defences.configured);click("Anteprima");click("Conferma");
+    assert(page==DAMAGE_HOME&&state.defences.configured==1&&pd_defence_flags(&state,0)==PD_RESISTANCE&&state.hp==24&&state.temp_hp==3);
+    click("Anteprima");screenshot("damage-preview.ppm");effects_before=state;effects_saves=save_calls;shortcut(0);act(100);assert(page==DAMAGE_CONFIRM&&!stage_import(&imported_magic));
+    state.dim_timeout=1;pd_screen_activity(&display_screen,lv_tick_get());lv_tick_inc(60000);screen_service(-1,0);assert(page==DAMAGE_CONFIRM&&!display_screen.dimmed);state.dim_timeout=0;
+    click("Indietro");assert(!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves);click("Anteprima");fail_save=true;click("Conferma");assert(page==DAMAGE_CONFIRM&&!memcmp(&state,&effects_before,sizeof state));fail_save=false;click("Conferma");
+    assert(page==DAMAGE_RESULT&&state.hp==22&&!state.temp_hp&&incoming_result.adjusted==5&&random_calls==effects_calls);screenshot("damage-result.ppm");effects_saves=save_calls;act(1805);assert(state.hp==22&&save_calls==effects_saves);
+    act(100);click("Annulla");assert(state.hp==24&&state.temp_hp==3&&state.defences.resistance==1);
+    /* Concentration uses damage before temporary HP, and requires a manual outcome. */
+    state.temp_hp=20;state.magic.count=1;state.magic.powers[0]=(pd_power){.name="Magia",.flags=PD_PREPARED|PD_CONCENTRATES};state.magic.concentration=1;
+    act(1800);click("+10");click("Anteprima");effects_before=state;act(1805);assert(page==DAMAGE_CONFIRM&&!memcmp(&state,&effects_before,sizeof state));screenshot("damage-concentration.ppm");
+    click("Esito: da risolvere");fail_save=true;click("Conferma");assert(page==DAMAGE_CONFIRM&&!memcmp(&state,&effects_before,sizeof state));fail_save=false;click("Conferma");assert(state.hp==24&&state.temp_hp==15&&state.magic.concentration==1);click("Nuovo");click("+10");click("Anteprima");assert(damage_plan.concentration==0);
+    click("Esito: da risolvere");click("Esito: mantieni");click("Conferma");assert(!state.magic.concentration&&state.temp_hp==10&&state.hp==24);
+    /* Immunity and resistance-rounded-to-zero avoid NVS writes and preserve state. */
+    assert(pd_defence_set(&state,0,true,PD_RESISTANCE|PD_IMMUNITY));act(1800);click("+10");click("Anteprima");effects_before=state;effects_saves=save_calls;click("Conferma");assert(page==DAMAGE_RESULT&&!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves);screenshot("damage-immune.ppm");
+    assert(pd_defence_set(&state,0,true,PD_RESISTANCE));act(1800);click("Anteprima");effects_before=state;effects_saves=save_calls;click("Conferma");assert(!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves);
+    /* Profiles are editable without applying a hit; unknown remains distinct from normal. */
+    act(1800);click("Difese per tipo");screenshot("defences-list.ppm");click("Contundente | resistenza");screenshot("defence-editor.ppm");click("Vulnerabilita: no");click("Anteprima");click("Conferma");assert(pd_defence_flags(&state,0)==3);click("Indietro");click("+10");click("Anteprima");screenshot("damage-combined.ppm");click("Conferma");assert(incoming_result.adjusted==10&&!state.temp_hp&&state.hp==24);
+    click("Nuovo");click("Difese per tipo");click("Contundente | resist. + vulner.");click("Configurato: si");click("Anteprima");click("Conferma");assert(!state.defences.configured);click("Indietro");click("Anteprima");act(1805);assert(page==DAMAGE_CONFIRM);
+    click("Configura difesa");click("Configurato: no");click("Anteprima");click("Conferma");assert(state.defences.configured==1&&pd_defence_flags(&state,0)==0);
+    /* Massive and already-zero cases block instead of inventing death rules. */
+    damage_plan.amount=56;render();click("Anteprima");effects_before=state;effects_saves=save_calls;act(1805);assert(page==DAMAGE_CONFIRM&&save_calls==effects_saves&&!memcmp(&state,&effects_before,sizeof state));screenshot("damage-massive.ppm");click("Indietro");
+    state.hp=0;state.temp_hp=9;damage_plan.amount=1;render();click("Anteprima");effects_before=state;act(1805);assert(page==DAMAGE_CONFIRM&&!memcmp(&state,&effects_before,sizeof state));screenshot("damage-zero.ppm");click("Indietro");
+    state.hp=1;state.temp_hp=0;state.status.available=true;state.status.failures=2;click("Anteprima");click("Conferma");assert(!state.hp&&!state.status.failures);
+    /* Last type, input limits, configurable key and import cancellation. */
+    act(1800);click("Difese per tipo");defence_page=4;render();bounds();screenshot("defences-last.ppm");click("Tuono | da configurare");click("Immunita: no");click("Anteprima");click("Conferma");assert(pd_defence_flags(&state,12)==PD_IMMUNITY);click("Indietro");
+    for(unsigned i=0;i<12;i++)act(1801);assert(damage_plan.type==12);damage_plan.amount=9999;render();bounds();screenshot("damage-maximum.ppm");
+    state.shortcuts[0]=11;act(850);click("PWR breve: Round");assert(state.shortcuts[0]==12);shortcut(0);assert(page==DAMAGE_HOME&&damage_plan.amount==1);effects_before=state;assert(stage_import(&imported_magic)&&!pending.defences.configured);screenshot("defences-import.ppm");click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));
+    puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage and guarded physical buttons passed");
 }

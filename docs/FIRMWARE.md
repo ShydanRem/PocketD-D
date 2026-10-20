@@ -64,6 +64,11 @@ La v0.27 aggiunge [durate e scadenze](DURATE-EFFETTI.md) dei modificatori locali
 con avanzamento manuale dei round, pausa e scorciatoia Round. PDD10 (PDDA);
 USB v7/layout invariati, niente scadenze da orologio o interpretazione dei testi.
 
+La v0.28 aggiunge [danni ricevuti e difese manuali per tipo](DANNI-DIFESE.md),
+con anteprima dei temporanei/PF ed esito della concentrazione scelto col DM.
+Non configurato distinto da normale; zero PF/morte istantanea rimangono bloccati.
+PDD11 (PDDB), USB v7 e layout invariati.
+
 Primo percorso: avvio con Elian originale o copia precedentemente salvata →
 Scheda → caratteristica → d20 → risultato → Eroe → PF ±1 → annulla →
 salvataggio locale. Anche PF temporanei e fino a otto contatori manuali.
@@ -221,8 +226,8 @@ reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
 ## Salvataggio e dadi
 
 NVS nel namespace `pocketdd`, nuova partizione `pdd_state`, due chiavi alternate
-`state_a`/`state_b`. Record PDD10 (tag `PDDA`) da **7966 + 552 × numero voci** byte, massimo
-74206. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
+`state_a`/`state_b`. Record PDD11 (tag `PDDB`) da **7974 + 552 × numero voci** byte, massimo
+74214. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
 visibile. Nessun dump di struct, erase o fallback distruttivo. Errori I/O o
 allocazioni insufficienti bloccano scritture; CRC e versioni future conservati.
 
@@ -233,14 +238,15 @@ non importate. I record PDD5 della v0.22 sono leggibili dalla nuova partizione;
 i record PDD6 sono leggibili senza creare registri morte. PDD7 mantiene stato
 e contatori; le copie precedenti a PDD8 ricevono 50%/mai senza riscrittura al boot.
 PDD8 conserva le preferenze; le copie precedenti iniziano senza effetti locali.
-PDD9 conserva i modificatori con durata manuale. Le nuove scritture PDD10
-richiedono firmware v0.27 o successivo:
-[compatibilità e downgrade](DURATE-EFFETTI.md).
+PDD9 conserva i modificatori con durata manuale, PDD10 conserva i timer; le
+vecchie copie iniziano con difese da configurare. Le nuove scritture PDD11
+richiedono firmware v0.28 o successivo:
+[compatibilità e downgrade](DANNI-DIFESE.md).
 Il nuovo uploader supporta USB v1–v7. Preferenze avatar/tasti
 locali conservate durante l'importazione. [Dettagli](MAGIE-TASTI.md).
 
 PF e contatori vengono persistiti ad ogni modifica; “Annulla modifica” ripristina
-l'ultima modifica di sessione a PF/contatori/inventario/magie/recuperi/stato/effetti/durate e la salva, non la vecchia scheda dopo
+l'ultima modifica di sessione a PF/contatori/inventario/magie/recuperi/stato/effetti/durate/difese e la salva, non la vecchia scheda dopo
 un'importazione. I tiri liberi/attacco/danni non scrivono flash; cure e dadi vita salvano PF e consumo; le salvezze morte salvano PF e contatori prima dell’animazione. Non c’è storico persistente.
 L'uso prolungato della flash va misurato prima di cambiare strategia di scrittura.
 
@@ -471,3 +477,22 @@ effetti/durate, riposi, stato, allocazioni e UI; leak detector disattivato.
 Build v0.27: **855360 byte**, partizione app da 4 MiB **80% libera**;
 ESP-IDF 5.5.5/LVGL 9.4.0, layout flash invariato. Nessun flash o prova fisica.
 Nessuna nuova lettura personale Beyond o modifica della raccolta personale.
+
+
+## Verifiche v0.28 — danni e difese
+
+139904 casi indipendenti di tipo/flag/importo/PF/temporanei, profili non
+configurati, concentrazione con temporanei, arrotondamenti e immunità. Blocco di
+zero PF e danni massicci sul massimo effettivo; errori senza mutazione, durata
+indipendente e fine Ira/concentrazione a zero. Regressioni 138 JS, build PC,
+37751 confronti PC→USB→C, 17266 casi degli effetti e 40648 delle durate.
+Fixture PDD1–PDD10, NVS senza scritture al boot, tutti i profili/record massimo
+e CRC valido con campi invalidi. UI LVGL con bozze, conferme, retry, esiti della
+concentrazione, zero danni senza scritture, annullamento, limiti, import e tasti.
+Controllo delle sovrapposizioni fra pulsanti oltre alle dimensioni e al cerchio.
+ASan/UBSan su core/parser, storage, danni/difese, effetti/durate, riposi, stato,
+allocazioni e UI; leak detector disattivato nel sandbox.
+
+Build v0.28: **860688 byte**, partizione app da 4 MiB **79% libera**;
+ESP-IDF 5.5.5/LVGL 9.4.0, layout invariato. Nessun flash, collaudo fisico,
+nuova lettura personale Beyond o modifica della raccolta personale.

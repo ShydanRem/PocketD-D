@@ -61,3 +61,8 @@ runtime dependency is introduced.
 The v0.27 explicit round-duration model, expiry preview and synthetic fixtures
 are original PocketD-D code. No rules text, external assets, private character
 data, new runtime services or dependencies are introduced.
+
+
+The v0.28 typed-damage calculation, manual-defence editor and synthetic fixtures
+are original PocketD-D code. Common damage-type names are labels; no rules
+catalogue, private character data, external artwork or new dependency is bundled.

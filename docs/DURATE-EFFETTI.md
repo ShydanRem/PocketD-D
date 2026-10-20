@@ -1,5 +1,9 @@
 # Durate e scadenze degli effetti — v0.27
 
+> Documento della v0.27. La v0.28 aggiunge [danni e difese manuali](DANNI-DIFESE.md)
+> e PDD11. Le omissioni sulle resistenze riportate sotto sono storiche; le difese
+> non sono legate automaticamente ai timer degli effetti.
+
 Questo incremento estende gli otto [modificatori locali CA/PF massimi](EFFETTI-LOCALI.md)
 con una durata esplicita. Funziona nel firmware offline; non serve Foundry, un
 server o il PC durante il gioco. Il modello numerico e i valori base importati

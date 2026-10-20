@@ -12,6 +12,7 @@
 #include "fixtures/state-v7.h"
 #include "fixtures/state-v8.h"
 #include "fixtures/state-v9.h"
+#include "fixtures/state-v10.h"
 static uint8_t blobs[2][2][PD_RECORD_SIZE];static size_t sizes[2][2];
 static int fail_init,fail_set,fail_commit,fail_read,set_calls,missing_layout;
 static int index_of(const char *key){return !strcmp(key,"state_a")?0:1;}
@@ -58,6 +59,10 @@ int main(void){
  reboot();assert(pd_storage_load(&s)&&s.effects[1].rounds==1&&s.effects[1].active);uint8_t advanced,expired;
  assert(pd_effect_advance(&s,&advanced,&expired)&&advanced==2&&expired==2&&s.hp==32&&pd_storage_save(&s));
  reboot();assert(pd_storage_load(&s)&&s.effects[1].timed&&!s.effects[1].rounds&&!s.effects[1].active&&s.hp==32&&pd_max_hp(&s)==32);
+ memset(sizes,0,sizeof sizes);memcpy(blobs[1][0],golden_v10,sizeof golden_v10);sizes[1][0]=sizeof golden_v10;reboot();int v10_calls=set_calls;
+ assert(pd_storage_load(&s)&&s.hp==41&&s.effects[0].rounds==2&&s.effects[1].rounds==1&&!s.defences.configured&&set_calls==v10_calls);
+ assert(pd_defence_set(&s,5,true,PD_RESISTANCE)&&pd_defence_set(&s,12,true,7)&&pd_storage_save(&s));assert(!memcmp(blobs[1][0],golden_v10,sizeof golden_v10));
+ reboot();assert(pd_storage_load(&s)&&s.hp==41&&s.effects[1].rounds==1&&s.defences.configured==((1u<<5)|(1u<<12))&&pd_defence_flags(&s,5)==PD_RESISTANCE&&pd_defence_flags(&s,12)==7);
  memset(sizes,0,sizeof sizes);memcpy(blobs[0][0],legacy_v4,sizeof legacy_v4);sizes[0][0]=sizeof legacy_v4;missing_layout=1;reboot();
  assert(!pd_storage_load(&s)&&s.hp==17&&blocked&&!strcmp(status,"Layout da aggiornare"));int calls=set_calls;assert(!pd_storage_save(&s)&&set_calls==calls);missing_layout=0;
  memset(sizes,0,sizeof sizes);reboot();assert(pd_storage_load(&s)&&s.hp==24&&s.magic.available);s.hp=23;assert(pd_storage_save(&s));
@@ -69,5 +74,5 @@ int main(void){
  sizes[1][1]=pd_encode(&s,100,blobs[1][1]);blobs[1][1][3]='X';uint32_t crc=pd_crc32(blobs[1][1],sizes[1][1]-4);for(int i=0;i<4;i++)blobs[1][1][sizes[1][1]-4+i]=crc>>(8*i);
  reboot();assert(!pd_storage_load(&s)&&blocked);blobs[1][0][0]=0;blobs[1][1][0]=0;reboot();assert(!pd_storage_load(&s));
  fail_init=1;reboot();assert(!pd_storage_load(&s));fail_init=0;fail_read=1;reboot();assert(!pd_storage_load(&s));
- puts("NVS: new/legacy partitions, golden v1..v9 migration without boot writes, missing layout, alternate banks, errors, rollback and future-version preservation passed");
+ puts("NVS: new/legacy partitions, golden v1..v10 migration without boot writes, missing layout, alternate banks, errors, rollback and future-version preservation passed");
 }

@@ -209,3 +209,14 @@ Nessun orologio o RNG; riposi, zero PF e concentrazione indipendenti. PDD10 con
 tag PDDA aggiunge 16 byte al payload PDD9; fixture v9 dall'encoder 6999e80 prima
 della modifica. Scorciatoia 11 Round apre l'anteprima protetta. USB v7 e layout
 flash invariati. [Schema e limiti](DURATE-EFFETTI.md).
+
+
+Incremento 0.28: core/damage.c separa il piano di danno, anteprima e applicazione
+senza RNG. La preview distingue configured/allowed, temporanei, massimo effettivo,
+zero/massive e concentrazione. apply rifiuta senza mutazione e scrive PF/esito
+insieme tramite il candidato scratch in PSRAM. pd_defences usa quattro maschere
+uint16, con flag sottoinsieme dei tipi configurati; le copie precedenti partono
+da sconosciuto, non da normale. PDD11 (PDDB) aggiunge 8 byte prima del CRC;
+fixture PDD10 generato dall'encoder 066e3d8 prima della modifica. Scorciatoia 12
+Danni; conferme/import/input protetti. USB v7, backup PC v10 e layout invariati.
+[Uso e limiti](DANNI-DIFESE.md).
