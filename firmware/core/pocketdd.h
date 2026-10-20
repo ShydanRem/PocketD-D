@@ -6,7 +6,7 @@
 #define PD_RESOURCES 8
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
-#define PD_RECORD_SIZE 74190
+#define PD_RECORD_SIZE 74206
 #define PD_POWERS 120
 #define PD_POWER_TEXT_BYTES 501
 #define PD_ITEMS 60
@@ -54,7 +54,7 @@ typedef struct { bool available; uint8_t count,successes,failures; bool stabiliz
 #define PD_EFFECTS 8
 enum { PD_EFFECT_ARMOR,PD_EFFECT_MAX_HP };
 /* Explicit additive deltas to the imported bases; no rule inferred from a label. */
-typedef struct { uint8_t target; int16_t value; bool active; } pd_effect;
+typedef struct { uint8_t target; int16_t value; bool active,timed; uint8_t rounds; } pd_effect;
 typedef struct {
     char name[PD_NAME_BYTES];
     uint16_t hp, max_hp, temp_hp;
@@ -86,6 +86,9 @@ unsigned pd_max_hp(const pd_state *state);
    A lower maximum caps current HP; a higher maximum never heals. */
 bool pd_effect_set(pd_state *state,unsigned index,pd_effect effect);
 bool pd_effect_remove(pd_state *state,unsigned index);
+/* One explicit round for all active timed effects at once; output bitmasks
+   and state remain untouched on invalid final totals. Zero rounds means expired. */
+bool pd_effect_advance(pd_state *state,uint8_t *advanced,uint8_t *expired);
 int pd_modifier(int score);
 void pd_hp(pd_state *state, int delta);
 bool pd_resource_change(pd_state *state, unsigned index, int delta);

@@ -30,7 +30,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND } page_t;
 PD_EXT static pd_state state,previous,pending,scratch;
 static bool undo_available,import_pending,has_roll;
 static pd_roll result;
@@ -69,7 +69,7 @@ static pd_buttons physical_keys;
 static pd_screen display_screen;
 static unsigned magic_filter=2,magic_page,power_index,cast_level,text_page,slot_index;
 static bool cast_pact,slot_pact,stop_rage;
-static const char *const shortcut_names[]={"Spento","Eroe","Scheda","Dadi","Zaino","Magie","Lancia","Riposi","Stato","Schermo","Effetti"};
+static const char *const shortcut_names[]={"Spento","Eroe","Scheda","Dadi","Zaino","Magie","Lancia","Riposi","Stato","Schermo","Effetti","Round"};
 static void shortcut(unsigned gesture);
 static bool can_use_power(void);
 static pd_rest_plan rest_plan;
@@ -78,11 +78,13 @@ static bool rest_active,hit_rolled;
 PD_EXT static pd_state hit_candidate;
 static pd_pool hit_result;
 static unsigned hit_gained;
-static bool confirmation_open(void){return page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM;}
+static bool confirmation_open(void){return page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND;}
 static unsigned effect_index,effect_page;
 static pd_effect effect_draft;
 static bool effect_removing;
 static bool preview_effect(pd_state *next){*next=state;return effect_removing?pd_effect_remove(next,effect_index):pd_effect_set(next,effect_index,effect_draft);}
+static bool timed_effects(void){for(unsigned i=0;i<state.effect_count;i++)if(state.effects[i].active&&state.effects[i].timed)return true;return false;}
+static bool preview_round(pd_state *next,uint8_t *advanced,uint8_t *expired){*next=state;return pd_effect_advance(next,advanced,expired);}
 enum { STATUS_ROLL,STATUS_POISON,STATUS_DEATH,STATUS_LEVEL,STATUS_REMOVE,STATUS_ADD };
 static unsigned status_command,death_action,condition_page,condition_index,preset_page,preset_index;
 static int condition_delta;
@@ -195,6 +197,7 @@ static void frame(void) {
 static void act(intptr_t action) {
     if(import_pending&&action!=30&&action!=31)return;
     if(page==EFFECT_CONFIRM&&action!=1708&&action!=1709)return;
+    if(page==EFFECT_ROUND&&action!=1741&&action!=1742)return;
     if(page==STATUS_CONFIRM&&action!=1505&&action!=1506)return;
     if(page==REST_PREVIEW&&action!=902&&action!=907)return;
     if(page==HIT_CONFIRM&&action!=910&&action!=914)return;
@@ -326,7 +329,7 @@ static void act(intptr_t action) {
         apply(&next);page=MAGIC_STATUS;
     }
     else if(action>=860&&action<=862) {
-        unsigned i=action-860;next.shortcuts[i]=(state.shortcuts[i]+1)%11;
+        unsigned i=action-860;next.shortcuts[i]=(state.shortcuts[i]+1)%12;
         if(pd_storage_save(&next)){state=next;memcpy(previous.shortcuts,next.shortcuts,3);}
     }
     else if(action==1600)page=DEVICE_SETTINGS;
@@ -339,10 +342,23 @@ static void act(intptr_t action) {
         int value=effect_draft.value+delta;effect_draft.value=value< -bound?-bound:value>bound?bound:value;
     }
     else if(action==1703&&page==EFFECT_EDIT)effect_draft.active=!effect_draft.active;
-    else if((action==1704||action==1705)&&page==EFFECT_EDIT){effect_removing=action==1705;if(!effect_removing||effect_index<state.effect_count)page=EFFECT_CONFIRM;}
+    else if((action==1704||action==1705)&&(page==EFFECT_EDIT||page==EFFECT_DURATION)){effect_removing=action==1705;if(!effect_removing||effect_index<state.effect_count)page=EFFECT_CONFIRM;}
     else if(action==1706&&effect_page)effect_page--;
     else if(action==1707&&(effect_page+1)*3<state.effect_count)effect_page++;
     else if(action==1708&&page==EFFECT_CONFIRM)page=EFFECT_EDIT;
+    else if(action==1710&&page==EFFECT_EDIT)page=EFFECT_DURATION;
+    else if(action==1711&&page==EFFECT_DURATION){effect_draft.timed=!effect_draft.timed;effect_draft.rounds=effect_draft.timed?1:0;}
+    else if(action>=1712&&action<=1715&&page==EFFECT_DURATION&&effect_draft.timed){
+        int value=effect_draft.rounds+(const int[]){-10,-1,1,10}[action-1712];effect_draft.rounds=value<0?0:value>99?99:value;
+    }
+    else if(action==1716&&page==EFFECT_DURATION)page=EFFECT_EDIT;
+    else if(action==1740&&timed_effects())page=EFFECT_ROUND;
+    else if(action==1741&&page==EFFECT_ROUND)page=EFFECT_LIST;
+    else if(action==1742&&page==EFFECT_ROUND){
+        uint8_t advanced,expired;if(!preview_round(&next,&advanced,&expired))return;
+        if(!advanced){page=EFFECT_LIST;}
+        else if(pd_storage_save(&next)){previous=state;undo_available=true;state=next;invalidate_strike();page=EFFECT_LIST;}
+    }
     else if(action==1709&&page==EFFECT_CONFIRM){
         if(!preview_effect(&next))return;
         bool changed=memcmp(&next,&state,sizeof state)!=0;
@@ -923,15 +939,17 @@ static void render_effects(void) {
         unsigned pages=state.effect_count?(state.effect_count+2)/3:1;
         if(effect_page>=pages)effect_page=pages-1;
         label("Effetti locali",83,99,300,true);
-        snprintf(text,sizeof text,"CA %u | PF massimi %u",pd_armor(&state),pd_max_hp(&state));small_label(text,83,133,300,PD_MINT);
+        snprintf(text,sizeof text,"CA %u | PF max %u | %u/%u",pd_armor(&state),pd_max_hp(&state),effect_page+1,pages);small_label(text,83,133,300,PD_MINT);
         if(!state.effect_count)label("Nessun modificatore locale",83,225,300,false);
         for(unsigned row=0;row<3;row++){
             unsigned i=effect_page*3+row;if(i>=state.effect_count)break;
             const pd_effect *e=&state.effects[i];
-            snprintf(text,sizeof text,"%u. %s %+d | %s",i+1,e->target==PD_EFFECT_ARMOR?"CA":"PF max",e->value,e->active?"si":"no");
-            button(text,83,159+row*48,300,44,1720+i,true);
+            char duration[24];if(!e->timed)snprintf(duration,sizeof duration,"%s",e->active?"si":"no");
+            else if(!e->rounds)strcpy(duration,"scaduto");else snprintf(duration,sizeof duration,"%ur%s",e->rounds,e->active?"":" pausa");
+            snprintf(text,sizeof text,"%u. %s %+d | %s",i+1,e->target==PD_EFFECT_ARMOR?"CA":"PF max",e->value,duration);
+            lv_obj_t *b=button(text,83,159+row*48,300,44,1720+i,true);if(e->timed)lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
         }
-        button("<",83,305,60,44,1706,effect_page>0);snprintf(text,sizeof text,"%u / %u",effect_page+1,pages);small_label(text,155,317,156,PD_MUTED);button(">",323,305,60,44,1707,effect_page+1<pages);
+        button("<",83,305,60,44,1706,effect_page>0);button("1 round",155,305,156,44,1740,timed_effects());button(">",323,305,60,44,1707,effect_page+1<pages);
         button("Stato",83,359,144,48,1500,true);button("Aggiungi",239,359,144,48,1701,state.effect_count<PD_EFFECTS);
     } else if(page==EFFECT_EDIT) {
         snprintf(text,sizeof text,effect_index<state.effect_count?"Effetto locale %u":"Nuovo effetto %u",effect_index+1);label(text,83,107,300,true);
@@ -942,22 +960,51 @@ static void render_effects(void) {
         button(effect_draft.active?"Attivo: si":"Attivo: no",83,291,144,44,1703,true);
         button("Rimuovi",239,291,144,44,1705,effect_index<state.effect_count);
         small_label("Variazioni aggiuntive ai valori base",83,339,300,PD_GOLD);
-        button("Elenco",83,359,144,48,1700,true);button("Anteprima",239,359,144,48,1704,true);
+        const char *actions[]={"Elenco","Durata","Anteprima"};const unsigned codes[]={1700,1710,1704};
+        for(unsigned i=0;i<3;i++){lv_obj_t *b=button(actions[i],83+i*104,359,92,48,codes[i],true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
+    } else if(page==EFFECT_DURATION) {
+        label("Durata dell'effetto",83,111,300,true);
+        button(effect_draft.timed?"Durata: round >":"Durata: manuale >",83,157,300,44,1711,true);
+        if(effect_draft.timed)snprintf(text,sizeof text,"%u round residui",effect_draft.rounds);else strcpy(text,"Senza scadenza");label(text,83,215,300,true);
+        const char *names[]={"-10","-1","+1","+10"};
+        for(unsigned i=0;i<4;i++)button(names[i],83+i*78,263,66,44,1712+i,effect_draft.timed&&(i<2?effect_draft.rounds>0:effect_draft.rounds<99));
+        small_label("Round manuali dal menu Effetti",83,319,300,PD_GOLD);
+        small_label("Disattivato: conteggio in pausa",83,339,300,PD_MUTED);
+        button("Indietro",83,359,144,48,1716,true);button("Anteprima",239,359,144,48,1704,true);
     } else if(page==EFFECT_CONFIRM) {
         bool valid=preview_effect(&scratch);
         label(effect_removing?"Rimuovere l'effetto?":"Confermare l'effetto?",83,107,300,false);
         snprintf(text,sizeof text,"Base: CA %u | PF max %u",state.armor,state.max_hp);small_label(text,83,151,300,PD_GOLD);
         small_label("Aggiungi solo bonus non gia inclusi",83,179,300,PD_GOLD);
+        const pd_effect *e=effect_removing?&state.effects[effect_index]:&effect_draft;
+        if(e->timed)snprintf(text,sizeof text,"Durata: %u round | %s",e->rounds,!e->rounds?"scaduto":e->active?"attivo":"in pausa");else strcpy(text,"Durata: manuale");small_label(text,83,199,300,PD_MUTED);
         if(valid){
             snprintf(text,sizeof text,"CA %u -> %u",pd_armor(&state),pd_armor(&scratch));label(text,83,219,300,false);
             snprintf(text,sizeof text,"PF massimi %u -> %u",pd_max_hp(&state),pd_max_hp(&scratch));label(text,83,251,300,false);
             snprintf(text,sizeof text,"PF correnti %u -> %u",state.hp,scratch.hp);label(text,83,283,300,false);
             small_label(state.hp>scratch.hp?"PF oltre il nuovo massimo: persi":"Il massimo maggiore non cura",83,325,300,state.hp>scratch.hp?PD_DANGER:PD_MUTED);
         } else {
-            label("Valori fuori limite",83,227,300,false);small_label("CA: 1-40 | PF massimi: 1-999",83,267,300,PD_DANGER);
-            small_label("Modifica o disattiva prima gli altri effetti",83,305,300,PD_MUTED);
+            bool expired=e->timed&&e->active&&!e->rounds;
+            label(expired?"Durata da verificare":"Valori fuori limite",83,227,300,false);small_label(expired?"Attivo: serve almeno 1 round":"CA: 1-40 | PF massimi: 1-999",83,267,300,PD_DANGER);
+            small_label(expired?"Imposta la durata prima di riattivare":"Modifica o disattiva gli altri effetti",83,305,300,PD_MUTED);
         }
         button("Indietro",83,359,144,48,1708,true);button("Conferma",239,359,144,48,1709,valid);
+    } else if(page==EFFECT_ROUND) {
+        uint8_t advanced=0,expired=0;bool valid=preview_round(&scratch,&advanced,&expired);
+        label("Avanzare 1 round?",83,107,300,true);
+        small_label("Solo effetti attivi con durata a round",83,151,300,PD_GOLD);
+        if(valid){
+            strcpy(text,"Avanzano:");for(unsigned i=0;i<PD_EFFECTS;i++)if(advanced&(1u<<i)){size_t n=strlen(text);snprintf(text+n,sizeof text-n," %u",i+1);}small_label(text,83,171,300,PD_MUTED);
+            snprintf(text,sizeof text,"CA %u -> %u",pd_armor(&state),pd_armor(&scratch));label(text,83,193,300,false);
+            snprintf(text,sizeof text,"PF massimi %u -> %u",pd_max_hp(&state),pd_max_hp(&scratch));label(text,83,225,300,false);
+            snprintf(text,sizeof text,"PF correnti %u -> %u",state.hp,scratch.hp);label(text,83,257,300,false);
+            strcpy(text,"Scadono:");for(unsigned i=0;i<PD_EFFECTS;i++)if(expired&(1u<<i)){size_t n=strlen(text);snprintf(text+n,sizeof text-n," %u",i+1);}if(!expired)strcat(text," nessuno");small_label(text,83,299,300,PD_MINT);
+            small_label(state.hp>scratch.hp?"PF oltre il nuovo massimo: persi":"Nessuna cura automatica",83,329,300,state.hp>scratch.hp?PD_DANGER:PD_MUTED);
+        } else {
+            label("Scadenze fuori limite",83,211,300,false);small_label("Nessun conteggio viene avanzato",83,259,300,PD_DANGER);
+            small_label("Correggi gli effetti prima di proseguire",83,303,300,PD_MUTED);
+        }
+        button("Indietro",83,359,144,48,1741,true);button("Conferma",239,359,144,48,1742,valid&&advanced);
     }
 }
 
@@ -1148,7 +1195,7 @@ static void shortcut(unsigned gesture) {
     if(dice_animation.active){if(binding==6&&page==DICE)act(16);return;}
     if(binding==6){act(page==DICE?13:14);return;}
     if(binding==1)act(100);else if(binding==2)act(101);else if(binding==3)act(14);
-    else if(binding==4)act(80);else if(binding==5)act(800);else if(binding==7)act(900);else if(binding==8)act(1500);else if(binding==9)act(1600);else if(binding==10)act(1700);
+    else if(binding==4)act(80);else if(binding==5)act(800);else if(binding==7)act(900);else if(binding==8)act(1500);else if(binding==9)act(1600);else if(binding==10)act(1700);else if(binding==11)act(1740);
 }
 static void screen_service(int pwr,int boot){
     bool enabled=pd_screen_keys(&display_screen,pwr,boot,lv_tick_get())&&!import_pending&&!confirmation_open();

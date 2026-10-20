@@ -1,5 +1,8 @@
 # Effetti numerici locali sul dispositivo — v0.26
 
+> Documento della v0.26. La v0.27 aggiunge [durate a round e scadenze](DURATE-EFFETTI.md)
+> e PDD10; i limiti sulle durate riportati sotto sono storici.
+
 Primo incremento del blocco effetti: fino a **otto modificatori numerati**, ciascuno
 con destinazione CA oppure PF massimi, valore positivo/negativo e stato attivo.
 Sono variazioni additive esplicite; il dispositivo non interpreta descrizioni o

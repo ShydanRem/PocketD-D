@@ -56,3 +56,8 @@ PMIC code, dependencies or external artwork is introduced.
 The v0.26 local numeric modifier model, editor and fixtures are original
 PocketD-D code. No rules catalogue, character data, external assets or new
 runtime dependency is introduced.
+
+
+The v0.27 explicit round-duration model, expiry preview and synthetic fixtures
+are original PocketD-D code. No rules text, external assets, private character
+data, new runtime services or dependencies are introduced.

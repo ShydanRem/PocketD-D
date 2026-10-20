@@ -37,3 +37,6 @@ target_include_directories(screen PRIVATE ../core)
 
 add_executable(effects test_effects.c ../core/pocketdd.c ../core/magic.c ../core/checks.c ../core/status.c ../core/combat.c ../core/rest.c ../core/dice_pool.c)
 target_include_directories(effects PRIVATE ../core)
+
+add_executable(durations test_durations.c ../core/pocketdd.c ../core/magic.c ../core/checks.c ../core/rest.c ../core/dice_pool.c)
+target_include_directories(durations PRIVATE ../core)

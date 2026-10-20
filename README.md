@@ -2,11 +2,12 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.26:** fino a otto modificatori locali a CA/PF massimi, con basi conservate, anteprima, conferma, annullamento e scorciatoia Effetti; cure e riposi usano il massimo effettivo. Effetti completi e durate restano successivi. luminosità locale, attenuazione per inattività e risveglio con primo gesto assorbito; nuova scorciatoia Schermo. Registro morte con d20 base animato, stabilizzazione e correzioni confermate; 30 condizioni annotate e Avvelenato come effetto separato. Riposi breve/lungo con anteprima e conferma, dadi vita per classe con cure animate, recupero lungo manuale/2014/2024 e scorciatoia Riposi. Magie/capacità sul dispositivo (120 voci), slot ordinari/patto, utilizzi e concentrazione con conferma. Tasti PWR/BOOT configurabili, con PWR lungo riservato all’alimentazione. Testi oltre 500 caratteri dichiarati come estratti. Inventario fino a 60 voci, armi scegliibili, attacchi/danni animati e critici fino a 18 dadi sul dispositivo. Cure e consumabili con conferma, salvataggio congiunto di PF/quantità e annullamento. Abilità e salvezze con competenza, maestria, mezza competenza, extra e dettaglio dei bonus. Le prove da verificare restano bloccate; le vecchie copie mantengono le prove di caratteristica e richiedono una nuova esportazione per competenze, inventario e magie mancanti. Avatar personale animato con 81 combinazioni, PF/annulla, contatori, dadi poliedrici e salvataggio offline. Supporto PC per importazione Beyond, configurazione, backup ed esportazione USB con anteprima e conferma sul display. Il firmware non è ancora collaudato sulla scheda fisica.
+**Stato v0.27:** durate manuali/a round per gli effetti locali, pausa, scadenze simultanee con anteprima/conferma e scorciatoia Round; fino a otto modificatori locali a CA/PF massimi, con basi conservate, anteprima, conferma, annullamento e scorciatoia Effetti; cure e riposi usano il massimo effettivo. Effetti completi e durate secondo tutte le regole restano successivi. luminosità locale, attenuazione per inattività e risveglio con primo gesto assorbito; nuova scorciatoia Schermo. Registro morte con d20 base animato, stabilizzazione e correzioni confermate; 30 condizioni annotate e Avvelenato come effetto separato. Riposi breve/lungo con anteprima e conferma, dadi vita per classe con cure animate, recupero lungo manuale/2014/2024 e scorciatoia Riposi. Magie/capacità sul dispositivo (120 voci), slot ordinari/patto, utilizzi e concentrazione con conferma. Tasti PWR/BOOT configurabili, con PWR lungo riservato all’alimentazione. Testi oltre 500 caratteri dichiarati come estratti. Inventario fino a 60 voci, armi scegliibili, attacchi/danni animati e critici fino a 18 dadi sul dispositivo. Cure e consumabili con conferma, salvataggio congiunto di PF/quantità e annullamento. Abilità e salvezze con competenza, maestria, mezza competenza, extra e dettaglio dei bonus. Le prove da verificare restano bloccate; le vecchie copie mantengono le prove di caratteristica e richiedono una nuova esportazione per competenze, inventario e magie mancanti. Avatar personale animato con 81 combinazioni, PF/annulla, contatori, dadi poliedrici e salvataggio offline. Supporto PC per importazione Beyond, configurazione, backup ed esportazione USB con anteprima e conferma sul display. Il firmware non è ancora collaudato sulla scheda fisica.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
 - [Direzione visiva: pixel art moderna e anteprime del firmware](docs/DIREZIONE-VISIVA.md)
+- [Durate degli effetti: round, pausa, scadenze e compatibilità](docs/DURATE-EFFETTI.md)
 - [Effetti locali: CA, PF massimi, conferme e limiti](docs/EFFETTI-LOCALI.md)
 - [Schermo: luminosità, inattività, risveglio e limiti energetici](docs/SCHERMO-IMPOSTAZIONI.md)
 - [Stato, condizioni e morte: uso, regole base e limiti](docs/STATO-CONDIZIONI-MORTE.md)
@@ -283,3 +284,19 @@ anche gli effetti locali, con avviso e conferma; raccolta PC conservata.
 UI LVGL, migrazioni, sanitizzatori e build ESP32-S3. Questo non completa il motore
 delle condizioni: durate, resistenze, proprietà speciali e ricalcolo da oggetti
 restano da implementare. Nessun collaudo fisico. [Uso e limiti](docs/EFFETTI-LOCALI.md).
+
+
+## Incremento 0.27 — durate e scadenze
+
+Gli effetti locali CA/PF massimi possono avere una durata manuale oppure 0–99
+round residui. **Effetti → 1 round** mostra anteprima e scadenze prima della
+conferma; i conteggi avanzano soltanto per comando esplicito. Effetti disattivati
+in pausa, scaduti conservati e riattivazione con durata esplicita. Scadenze e
+limite PF salvati insieme, senza cure o limiti intermedi. La scorciatoia **Round**
+apre l'anteprima e conserva la conferma touch. Nessun cronometro o legame
+implicito con concentrazione/condizioni. PDD10 (tag PDDA), lettura PDD1–PDD9;
+USB v7 e layout flash invariati.
+
+40648 nuove verifiche di conteggi/scadenze, regressioni, UI LVGL, migrazioni,
+sanitizzatori e build ESP32-S3. Resistenze, immunità, altre durate/regole e
+collaudo fisico restano aperti. [Uso e limiti](docs/DURATE-EFFETTI.md).

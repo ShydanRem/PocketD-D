@@ -198,3 +198,14 @@ massimo effettivo. Le conferme riusano scratch in PSRAM; nessun tiro RNG.
 PDD9 aggiunge 33 byte a PDD8; USB v7 e backup PC v10 non cambiano. Fixture PDD8
 prodotto dall'encoder 9a5c946 prima della modifica, con dati sintetici. Scorciatoia
 10 Effetti, conferme/import protetti. [Uso e limiti](EFFETTI-LOCALI.md).
+
+
+Incremento 0.27: pd_effect aggiunge timed/rounds, con validazione di pausa,
+scaduto e riattivazione. pd_effect_advance decrementa tutte le voci attive a
+round, valida il totale finale e soltanto allora limita i PF; rollback di tutte
+le voci e maschere intatte su errore, senza grande stato sullo stack. La UI
+riusa scratch in PSRAM per la conferma, ricalcolando dal medesimo stato su retry.
+Nessun orologio o RNG; riposi, zero PF e concentrazione indipendenti. PDD10 con
+tag PDDA aggiunge 16 byte al payload PDD9; fixture v9 dall'encoder 6999e80 prima
+della modifica. Scorciatoia 11 Round apre l'anteprima protetta. USB v7 e layout
+flash invariati. [Schema e limiti](DURATE-EFFETTI.md).

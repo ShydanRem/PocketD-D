@@ -56,12 +56,12 @@ Non fanno parte di questo traguardo: importazione Beyond, editor completo, incan
 
 L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco non impedisce le altre fasi. L'ordine delle fasi 0 e 1 può sovrapporsi se l'hardware non è immediatamente disponibile.
 
-## Punto attuale — v0.26
+## Punto attuale — v0.27
 
 | Blocco | Stato software | Cosa manca |
 | --- | --- | --- |
 | Scheda individuale offline | PF/temporanei, prove, abilità/salvezze, zaino, armi, magie, risorse, riposi e dadi vita nel firmware | Monete, storico persistente, effetti completi e regole speciali; sessione reale |
-| Effetti numerici | Otto modificatori locali a CA/PF massimi, basi separate, anteprima/conferma e cure integrate | Durate, resistenze, proprietà speciali e ricalcolo da equipaggiamento |
+| Effetti numerici | Otto modificatori CA/PF massimi, basi separate, cure integrate e durate manuali/a round con scadenze confermate | Altre durate/regole, resistenze/immunità, proprietà speciali e ricalcolo da equipaggiamento |
 | Stato e morte | Note delle condizioni, Avvelenato separato, d20 morte base e correzioni | Effetti delle altre condizioni, eccezioni e morte istantanea |
 | Grafica e comandi | Tema pixel art, avatar 81 combinazioni, dadi animati, PWR/BOOT configurabili | Leggibilità e precisione touch sulla scheda |
 | Impostazioni schermo | Luminosità, inattività e risveglio protetto nella v0.25 | Consumi misurati, sospensione, batteria e alimentazione |
@@ -155,8 +155,10 @@ Il percorso principale rimane articolato nei quattro blocchi concordati:
 1. **Scheda sul dispositivo:** magie/slot/capacità/concentrazione, riposi, dadi
    vita e tiro morte base implementati; eccezioni e sessione fisica aperte.
 2. **Effetti:** priorità software attuale. La v0.26 aggiunge modificatori locali
-   espliciti a CA/PF massimi; seguono altre interazioni supportate, durate,
-   resistenze e proprietà speciali. Nessuna regola dedotta dai nomi delle note.
+   espliciti a CA/PF massimi; la v0.27 aggiunge round/pausa/scadenze simultanee
+   confermate. Seguono resistenze/immunità, altre interazioni e proprietà
+   speciali; durate di turno/minuti/concentrazione ancora aperte. Nessuna
+   regola dedotta dai nomi delle note.
 3. **Prodotto fisico:** luminosità/attenuazione implementate; batteria,
    sospensione/spegnimento e collaudo di touch, tasti, USB, memoria, fluidità e
    perdita d'alimentazione restano aperti.
@@ -195,3 +197,9 @@ La v0.26 avvia il blocco effetti con CA/PF massimi locali e valori base separati
 Conferma touch, annullamento, cure e riposi rimangono coerenti; i tasti possono
 aprire Effetti senza confermare al posto del giocatore. È un modello numerico
 esplicito, non un ricalcolo generale delle regole D&D. [Dettagli](EFFETTI-LOCALI.md).
+
+
+La v0.27 aggiunge durata manuale/a round, pausa e scadenza degli effetti locali.
+Avanzare un round è esplicito, con anteprima dei PF, salvataggio congiunto e
+annullamento. La nuova assegnazione Round apre soltanto l'anteprima. Non è un
+orologio delle regole o iniziativa automatica. [Dettagli](DURATE-EFFETTI.md).

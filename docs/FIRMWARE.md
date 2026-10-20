@@ -60,6 +60,10 @@ La v0.26 aggiunge [effetti locali CA/PF massimi](EFFETTI-LOCALI.md): otto
 modificatori espliciti, basi conservate, anteprima e conferma, cure/riposi
 integrati e scorciatoia Effetti. PDD9; USB v7 e layout invariati.
 
+La v0.27 aggiunge [durate e scadenze](DURATE-EFFETTI.md) dei modificatori locali,
+con avanzamento manuale dei round, pausa e scorciatoia Round. PDD10 (PDDA);
+USB v7/layout invariati, niente scadenze da orologio o interpretazione dei testi.
+
 Primo percorso: avvio con Elian originale o copia precedentemente salvata →
 Scheda → caratteristica → d20 → risultato → Eroe → PF ±1 → annulla →
 salvataggio locale. Anche PF temporanei e fino a otto contatori manuali.
@@ -217,8 +221,8 @@ reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
 ## Salvataggio e dadi
 
 NVS nel namespace `pocketdd`, nuova partizione `pdd_state`, due chiavi alternate
-`state_a`/`state_b`. Record PDD9 da **7950 + 552 × numero voci** byte, massimo
-74190. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
+`state_a`/`state_b`. Record PDD10 (tag `PDDA`) da **7966 + 552 × numero voci** byte, massimo
+74206. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
 visibile. Nessun dump di struct, erase o fallback distruttivo. Errori I/O o
 allocazioni insufficienti bloccano scritture; CRC e versioni future conservati.
 
@@ -228,14 +232,15 @@ riscritto al boot o al primo salvataggio nuovo. Magie assenti restano dichiarate
 non importate. I record PDD5 della v0.22 sono leggibili dalla nuova partizione;
 i record PDD6 sono leggibili senza creare registri morte. PDD7 mantiene stato
 e contatori; le copie precedenti a PDD8 ricevono 50%/mai senza riscrittura al boot.
-PDD8 conserva le preferenze; le vecchie copie iniziano senza effetti locali. Le nuove
-scritture PDD9 richiedono firmware v0.26 o successivo:
-[compatibilità e downgrade](EFFETTI-LOCALI.md).
+PDD8 conserva le preferenze; le copie precedenti iniziano senza effetti locali.
+PDD9 conserva i modificatori con durata manuale. Le nuove scritture PDD10
+richiedono firmware v0.27 o successivo:
+[compatibilità e downgrade](DURATE-EFFETTI.md).
 Il nuovo uploader supporta USB v1–v7. Preferenze avatar/tasti
 locali conservate durante l'importazione. [Dettagli](MAGIE-TASTI.md).
 
 PF e contatori vengono persistiti ad ogni modifica; “Annulla modifica” ripristina
-l'ultima modifica di sessione a PF/contatori/inventario/magie/recuperi/stato/effetti e la salva, non la vecchia scheda dopo
+l'ultima modifica di sessione a PF/contatori/inventario/magie/recuperi/stato/effetti/durate e la salva, non la vecchia scheda dopo
 un'importazione. I tiri liberi/attacco/danni non scrivono flash; cure e dadi vita salvano PF e consumo; le salvezze morte salvano PF e contatori prima dell’animazione. Non c’è storico persistente.
 L'uso prolungato della flash va misurato prima di cambiare strategia di scrittura.
 
@@ -450,3 +455,19 @@ core/parser, storage, effetti, combattimento, riposi, stato, allocazioni e UI.
 Build v0.26: **852688 byte**, partizione app da 4 MiB **80% libera**;
 ESP-IDF 5.5.5/LVGL 9.4.0, layout flash invariato. Nessun flash, prova fisica,
 nuova lettura personale Beyond o modifica della raccolta personale.
+
+
+## Verifiche v0.27 — durate e scadenze
+
+40648 nuovi avanzamenti/sottoinsiemi verificano durate 1–99, pausa, zero/scaduto,
+riattivazione esplicita e scadenze simultanee di otto effetti. Rifiuti senza
+mutazione su totali finali invalidi, nessun limite PF intermedio e nessuna cura
+implicita. Regressioni 138 JS, build PC, 37751 confronti PC→USB→C e 17266 casi dei
+modificatori; fixture PDD1–PDD9 e NVS con durata salvata/riavvio/scadenza.
+UI LVGL host per bozze, conferme, errori/riprova, annullamento, import busy,
+scorciatoia Round e attenuazione sospesa. ASan/UBSan su core/parser, storage,
+effetti/durate, riposi, stato, allocazioni e UI; leak detector disattivato.
+
+Build v0.27: **855360 byte**, partizione app da 4 MiB **80% libera**;
+ESP-IDF 5.5.5/LVGL 9.4.0, layout flash invariato. Nessun flash o prova fisica.
+Nessuna nuova lettura personale Beyond o modifica della raccolta personale.

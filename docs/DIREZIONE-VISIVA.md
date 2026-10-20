@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.26
+# Direzione visiva del dispositivo — v0.27
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -172,3 +172,11 @@ le bozze non modificano la scheda. La conferma espone CA, PF massimi e correnti
 prima/dopo, senza affidare una perdita di PF a una semplice pressione del tasto.
 Righe numerate e comandi di almeno 44 px; nessun nuovo asset esterno. Anteprima
 host: firmware/tests/out/ui-build/effects-preview.png; leggibilità fisica aperta.
+
+
+La v0.27 mantiene il tema nelle durate: una vista separata evita di comprimere
+l'editor dei bonus. Elenco con round/pausa/scaduto, anteprima con indici degli
+effetti che avanzano e scadono, valori prima/dopo e perdita PF distinta. La
+scorciatoia Round apre la stessa vista senza confermarla. Aree ≥44 px nel cerchio,
+nessun asset esterno; anteprima host durations-preview.png. Il collaudo fisico
+rimane aperto.

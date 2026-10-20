@@ -440,10 +440,39 @@ int main(void) {
     /* Invalid totals cannot be confirmed through touch or synthetic actions. */
     state.armor=38;render();click("Aggiungi");click("+1");click("Anteprima");effects_before=state;effects_saves=save_calls;act(1709);assert(page==EFFECT_CONFIRM&&save_calls==effects_saves&&!memcmp(&state,&effects_before,sizeof state));screenshot("effect-invalid.ppm");
     click("Indietro");click("Elenco");state.armor=16;
-    for(unsigned i=state.effect_count;i<PD_EFFECTS;i++)assert(pd_effect_set(&state,i,(pd_effect){PD_EFFECT_MAX_HP,1,true}));
+    for(unsigned i=state.effect_count;i<PD_EFFECTS;i++)assert(pd_effect_set(&state,i,(pd_effect){.target=PD_EFFECT_MAX_HP,.value=1,.active=true}));
     page=EFFECT_LIST;effect_page=2;render();bounds();screenshot("effects-last.ppm");click("8. PF max +1 | si");assert(effect_index==7);click("Elenco");
     assert(stage_import(&imported_magic)&&pending.effect_count==0);screenshot("effects-import.ppm");click("Annulla");assert(state.effect_count==8);
     state.shortcuts[0]=9;act(850);click("PWR breve: Schermo");assert(state.shortcuts[0]==10);shortcut(0);assert(page==EFFECT_LIST);
     assert(stage_import(&imported_magic));click("Conferma");assert(!state.effect_count&&state.shortcuts[0]==10&&state.max_hp==32&&pd_max_hp(&state)==32);
-    puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects and guarded physical buttons passed");
+    /* Explicit round durations: drafts, expiry preview, protected input and atomic undo. */
+    pd_demo(&state);page=EFFECT_LIST;effect_page=0;render();click("Aggiungi");click("+1");click("+1");click("Durata");
+    assert(page==EFFECT_DURATION&&!state.effect_count);screenshot("duration-manual.ppm");click("Durata: manuale >");click("+1");
+    assert(effect_draft.timed&&effect_draft.rounds==2);screenshot("duration-editor.ppm");click("Anteprima");click("Conferma");assert(state.effects[0].rounds==2&&pd_armor(&state)==18);
+    click("Aggiungi");click("Modifica: CA >");click("+10");click("Durata");click("Durata: manuale >");click("Anteprima");click("Conferma");
+    pd_hp(&state,17);assert(state.hp==41&&pd_max_hp(&state)==42);render();screenshot("duration-list.ppm");effects_before=state;effects_calls=random_calls;effects_saves=save_calls;
+    lv_tick_inc(120000);screen_service(-1,0);assert(!memcmp(&state,&effects_before,sizeof state));
+    click("1 round");assert(page==EFFECT_ROUND&&scratch.hp==32&&scratch.effects[0].rounds==1&&!scratch.effects[1].active);screenshot("duration-round.ppm");
+    shortcut(0);act(100);assert(page==EFFECT_ROUND&&!stage_import(&imported_magic)&&save_calls==effects_saves&&random_calls==effects_calls);
+    state.dim_timeout=1;pd_screen_activity(&display_screen,lv_tick_get());lv_tick_inc(60000);screen_service(-1,0);assert(!display_screen.dimmed&&page==EFFECT_ROUND);state.dim_timeout=0;
+    click("Indietro");assert(!memcmp(&state,&effects_before,sizeof state));click("1 round");fail_save=true;click("Conferma");assert(page==EFFECT_ROUND&&!memcmp(&state,&effects_before,sizeof state));
+    click("Conferma");assert(!memcmp(&state,&effects_before,sizeof state));fail_save=false;click("Conferma");
+    assert(page==EFFECT_LIST&&state.effects[0].rounds==1&&state.effects[0].active&&!state.effects[1].active&&state.effects[1].timed&&!state.effects[1].rounds&&state.hp==32&&random_calls==effects_calls);
+    effects_saves=save_calls;act(1742);assert(save_calls==effects_saves&&state.effects[0].rounds==1);screenshot("duration-expired.ppm");
+    act(100);click("Annulla");assert(state.hp==41&&state.effects[0].rounds==2&&state.effects[1].rounds==1&&state.effects[1].active);
+    /* Round is configurable and always opens a touch confirmation. */
+    state.shortcuts[0]=10;act(850);click("PWR breve: Effetti");assert(state.shortcuts[0]==11);effects_before=state;shortcut(0);assert(page==EFFECT_ROUND&&!memcmp(&state,&effects_before,sizeof state));
+    shortcut(0);assert(page==EFFECT_ROUND);click("Conferma");assert(state.hp==32&&state.effects[0].rounds==1);shortcut(0);click("Conferma");assert(!state.effects[0].active&&pd_armor(&state)==16);screenshot("duration-all-expired.ppm");
+    effects_saves=save_calls;shortcut(0);assert(page==EFFECT_LIST&&save_calls==effects_saves);
+    /* An expired entry cannot be silently re-enabled with a zero timer. */
+    click("2. PF max +10 | scaduto");click("Attivo: no");click("Anteprima");effects_before=state;effects_saves=save_calls;act(1709);assert(page==EFFECT_CONFIRM&&save_calls==effects_saves&&!memcmp(&state,&effects_before,sizeof state));screenshot("duration-zero.ppm");
+    click("Indietro");click("Durata");click("+1");click("Anteprima");click("Conferma");assert(state.effects[1].active&&state.effects[1].rounds==1&&state.hp==32);
+    /* Paused effects retain time; returning to manual is an explicit choice. */
+    click("2. PF max +10 | 1r");click("Attivo: si");click("Anteprima");click("Conferma");effects_before=state;act(1740);assert(page==EFFECT_LIST&&!memcmp(&state,&effects_before,sizeof state));
+    click("2. PF max +10 | 1r pausa");click("Durata");click("Durata: round >");click("Anteprima");click("Conferma");assert(!state.effects[1].timed&&!state.effects[1].rounds);
+    /* Invalid simultaneous expiry leaves every timer and HP unchanged. */
+    pd_demo(&state);assert(pd_effect_set(&state,0,(pd_effect){.target=PD_EFFECT_ARMOR,.value=20,.active=true,.timed=true,.rounds=1}));assert(pd_effect_set(&state,1,(pd_effect){.target=PD_EFFECT_ARMOR,.value=-20,.active=true,.timed=true,.rounds=2}));
+    page=EFFECT_LIST;render();click("1 round");effects_before=state;effects_saves=save_calls;act(1742);assert(page==EFFECT_ROUND&&save_calls==effects_saves&&!memcmp(&state,&effects_before,sizeof state));screenshot("duration-invalid.ppm");click("Indietro");
+    assert(stage_import(&imported_magic));click("Annulla");assert(state.effects[0].rounds==1&&state.effects[1].rounds==2);
+    puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry and guarded physical buttons passed");
 }
