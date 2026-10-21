@@ -60,7 +60,7 @@ int main(void){
   int selected_mode=(int)mode-1;assert(pd_concentration_event_roll(&s,&event,selected_mode,0,rng,NULL,&next,&roll,&report,false)&&calls==(mode==1?1:2)&&report.raw==105&&report.total.adjusted==12&&report.total.concentration_dc==10&&next.temp_hp==87&&!memcmp(&s,&before,sizeof s));
   bool pass=natural+2>=10;assert(next.magic.concentration==(pass?1:0)&&next.hp==(pass?41:32)&&report.total.ended_effects==(pass?0:3)&&pd_defence_flags(&next,5)==(pass?4:0)&&pd_valid(&next));
  }
- /* Aggregate DC, explicit cap 30, manual choice and candidate PDD22 roundtrip. */
+ /* Aggregate DC, explicit cap 30, manual choice and candidate PDD23 roundtrip. */
  concentrate(&s);s.hp=s.max_hp=999;s.temp_hp=999;event=(pd_damage_event){.count=2,.components={{0,80},{5,60}}};face=19;calls=0;
  assert(pd_concentration_event_roll(&s,&event,0,30,rng,NULL,&next,&roll,&report,false)&&calls==1&&report.total.concentration_dc==70&&!next.magic.concentration&&next.temp_hp==859);
  assert(pd_concentration_event_roll(&s,&event,0,30,rng,NULL,&next,&roll,&report,true)&&report.total.concentration_dc==30&&next.magic.concentration==1&&next.temp_hp==859);
@@ -80,5 +80,5 @@ int main(void){
  calls=0;assert(!pd_concentration_event_roll(&s,&event,2,0,rng,NULL,&next,&roll,&report,false)&&!pd_concentration_event_roll(&s,&event,0,31,rng,NULL,&next,&roll,&report,false)&&!pd_concentration_event_roll(&s,&event,0,0,rng,NULL,&s,&roll,&report,false)&&!calls);
  s.training.available=false;assert(!pd_concentration_event_roll(&s,&event,0,0,rng,NULL,&next,&roll,&report,false)&&!calls);s.training.available=true;s.training.blocked=1u<<26;assert(!pd_concentration_event_roll(&s,&event,0,0,rng,NULL,&next,&roll,&report,false)&&!calls);
  assert(!pd_damage_event_preview(NULL,&event,&report)&&!pd_damage_event_preview(&s,NULL,&report)&&!pd_damage_event_preview(&s,&event,NULL)&&!pd_damage_event_apply(&s,&event,NULL));
- printf("Mixed damage: %u independent type/flag/amount pairs, %u split/rounding cases, 720 permutations, impact snapshot, one CON save, aggregate thresholds, unknown/malformed rejection and PDD22 candidate passed\n",cases,splits);
+ printf("Mixed damage: %u independent type/flag/amount pairs, %u split/rounding cases, 720 permutations, impact snapshot, one CON save, aggregate thresholds, unknown/malformed rejection and PDD23 candidate passed\n",cases,splits);
 }

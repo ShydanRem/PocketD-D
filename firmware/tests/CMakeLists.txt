@@ -89,3 +89,6 @@ target_include_directories(multi-costs PRIVATE ../core)
 
 add_executable(recharge test_recharge.c ../core/recharge.c ../core/dice_pool.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
 target_include_directories(recharge PRIVATE ../core)
+
+add_executable(roll-conditions test_roll_conditions.c ../core/status.c ../core/rest.c ../core/combat.c ../core/dice_pool.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
+target_include_directories(roll-conditions PRIVATE ../core)

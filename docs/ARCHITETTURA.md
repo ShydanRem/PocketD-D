@@ -440,3 +440,26 @@ Canvas non disponibile: esito comunque leggibile, senza nuovo tiro.
 Formati PDD22/USB8/backup v11 e layout invariati; solo il saldo esistente viene
 persistito. Nessun timer o riposo chiama la ricarica a dado; eventi e frequenza
 restano scelte del DM. [Contratti e verifiche](RICARICHE-OGGETTI.md).
+
+
+## Effetti di condizione sui tiri — v0.44
+
+`roll_conditions` è una maschera locale di quattro bit, distinta da note e
+Avvelenato. `pd_condition_evaluate` calcola gli effetti di base; i resolver
+di prova/attacco combinano modi manuali, Avvelenato e Ira con semantica booleana.
+Contesto con bit noti/valori per vista richiesta e fonte della paura in vista.
+I fatti non influenti vengono esclusi dai requisiti. Un check che richiede
+vista con Accecato è un fallimento automatico, senza RNG.
+
+`pd_check_roll` e `pd_attack_with_context` validano prima di RNG, mantenendo
+output intatti al rifiuto. `pd_check_mode` è solo una vista del modo: i chiamanti
+devono consultare `allowed` tramite resolver o usare l'API di tiro protetta.
+La UI usa quelle API per ogni prova/attacco; dado libero e morte restano distinti.
+Concentrazione COS non riceve questi svantaggi. Contesto/esclusione transitori,
+nessuna inferenza da nomi, mappe o import. Nuova selezione riparte con dati ignoti.
+
+Configurazione del gruppo con anteprima/conferma/Annulla. PDD23 (`PDDN`) aggiunge
+un byte prima del CRC: `8854+552*N`, max 75094. PDD1–22 con nuovi bit zero e
+Avvelenato conservato, senza scritture al boot. Fixture PDD22 autentica v0.43
+`b340a8c`; USB8/backup v11/layout invariati. Import confermato azzera i bit locali.
+[Limiti e verifiche](CONDIZIONI-TIRI.md).

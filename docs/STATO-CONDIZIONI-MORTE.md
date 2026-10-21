@@ -1,5 +1,10 @@
 # Stato, condizioni e salvezze contro morte — v0.24
 
+**Aggiornamento v0.44:** [effetti espliciti sui tiri](CONDIZIONI-TIRI.md) per
+Accecato, Spaventato, Prono e Trattenuto, separati dalle note, con circostanze
+e blocchi prima di RNG. Non sono condizioni complete. PDD23, USB8/backup v11.
+Le limitazioni e misure storiche sotto si riferiscono alla versione del titolo.
+
 > Documento della v0.24. La v0.25 aggiunge [Schermo](SCHERMO-IMPOSTAZIONI.md),
 > preferenze locali e PDD8; USB v7 e regole di questo blocco rimangono invariati.
 

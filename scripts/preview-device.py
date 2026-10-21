@@ -259,3 +259,13 @@ if all((base/(name+'.ppm')).is_file() for name in recharge):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(recharge):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'item-recharge-preview.png');print(base/'item-recharge-preview.png')
+
+conditions=['roll-conditions-editor','roll-conditions-context-unknown','roll-conditions-auto-fail','roll-conditions-dex-save']
+condition_details=['roll-conditions-confirm','roll-conditions-blind-block','roll-conditions-auto-detail','roll-conditions-no-sight','roll-conditions-exclude','roll-conditions-fear-visible','roll-conditions-fear-roll','roll-conditions-attack','roll-conditions-cancelled','roll-conditions-attack-detail','roll-conditions-import']
+for name in conditions+condition_details:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in conditions):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(conditions):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'roll-conditions-preview.png');print(base/'roll-conditions-preview.png')

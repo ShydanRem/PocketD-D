@@ -37,7 +37,7 @@ int main(void){
   if(reason==0)s.items[2].quantity=0;if(reason==1)s.reaction_spent=true;if(reason==2)s.defences.configured=0;if(reason==3){p.rule=PD_RULE_MAGICAL;e.contexts[0]=(pd_damage_context){0};}
   assert(pd_reduction_profile_set(&s,0,p));before=s;calls=0;pd_roll roll;assert(pd_damage_event_preview(&s,&e,&r)&&!r.total.configured&&!pd_concentration_event_roll(&s,&e,0,0,rng,NULL,&next,&roll,&r,false)&&!calls&&!memcmp(&s,&before,sizeof s));for(unsigned row=0;row<3;row++)assert(r.costs[row].before==r.costs[row].after);
  }
- /* One CON candidate spends all pools, ends bindings and survives PDD22 serialization. */
+ /* One CON candidate spends all pools, ends bindings and survives PDD23 serialization. */
  setup(&s);s.magic.powers[0]=(pd_power){.name="Concentrazione",.flags=PD_PREPARED|PD_CONCENTRATES};s.magic.concentration=1;
  p=(pd_reduction_profile){.value=3,.types=8191,.stage=1,.active=true,.concentration=1,.reaction=true};pd_profile_cost_set(&p,0,(pd_cost){PD_COST_COUNTER,0,2});pd_profile_cost_set(&p,1,(pd_cost){PD_COST_POWER,1,2});pd_profile_cost_set(&p,2,(pd_cost){PD_COST_ITEM,2,2});assert(pd_reduction_profile_set(&s,0,p));before=s;e=(pd_damage_event){.count=1,.components={{0,31}},.profile=1};pd_roll roll;calls=0;
  assert(pd_concentration_event_roll(&s,&e,0,0,rng,NULL,&next,&roll,&r,false)&&calls==1&&!memcmp(&s,&before,sizeof s)&&next.resources[0].current==1&&next.magic.powers[1].remaining==1&&next.items[2].charges.current==1&&next.items[2].quantity==before.items[2].quantity&&next.hp==978&&!next.magic.concentration&&!next.reductions[0].active&&next.reaction_spent);
@@ -48,9 +48,9 @@ int main(void){
  n=pd_encode(&s,220,data);assert(pd_decode(data,n,&out,&gen)&&out.reductions[2].cost_index==119&&out.reductions[2].extra_costs[0].index==59&&out.reductions[2].extra_costs[1].index==8);
  /* All 24 extension bytes checked with valid CRC; maximum record and old L preserved. */
  setup(&s);s.magic.count=120;for(unsigned i=3;i<120;i++)s.magic.powers[i]=(pd_power){.name="Magia",.flags=PD_PREPARED};for(unsigned i=0;i<3;i++){p=(pd_reduction_profile){.cost_kind=PD_COST_COUNTER,.cost=1};pd_profile_cost_set(&p,1,(pd_cost){PD_COST_POWER,1,9});pd_profile_cost_set(&p,2,(pd_cost){PD_COST_ITEM,2,999});assert(pd_reduction_profile_set(&s,i,p));}
- n=pd_encode(&s,220,data);assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDM",4)&&pd_decode(data,n,&out,&gen));
- for(unsigned i=0;i<24;i++){pd_encode(&s,220,data);data[n-28+i]=255;crc(data,n);before=out;gen=5;assert(!pd_decode(data,n,&out,&gen)&&gen==5&&!memcmp(&out,&before,sizeof out));}
- for(unsigned i=0;i<3;i++){pd_encode(&s,220,data);data[n-28+i*8]=PD_COST_COUNTER;data[n-28+i*8+1]=0;data[n-28+i*8+2]=1;crc(data,n);assert(!pd_decode(data,n,&out,&gen));}
- pd_encode(&s,220,data);data[3]='L';size_t old=n-24;crc(data,old);assert(pd_decode(data,old,&out,&gen)&&out.reductions[0].cost_kind==PD_COST_COUNTER&&!out.reductions[0].extra_costs[0].kind&&out.items[2].charges.maximum==999);
- printf("Multiple costs: %u independent type triples/profile/phase/balance/reaction/damage cases, exact atomic debit, holes, duplicate rejection, no RNG on block, CON candidate and strict PDD22 passed\n",cases);
+ n=pd_encode(&s,220,data);assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDN",4)&&pd_decode(data,n,&out,&gen));
+ for(unsigned i=0;i<24;i++){pd_encode(&s,220,data);data[n-29+i]=255;crc(data,n);before=out;gen=5;assert(!pd_decode(data,n,&out,&gen)&&gen==5&&!memcmp(&out,&before,sizeof out));}
+ for(unsigned i=0;i<3;i++){pd_encode(&s,220,data);data[n-29+i*8]=PD_COST_COUNTER;data[n-29+i*8+1]=0;data[n-29+i*8+2]=1;crc(data,n);assert(!pd_decode(data,n,&out,&gen));}
+ pd_encode(&s,220,data);data[3]='L';size_t old=n-25;crc(data,old);assert(pd_decode(data,old,&out,&gen)&&out.reductions[0].cost_kind==PD_COST_COUNTER&&!out.reductions[0].extra_costs[0].kind&&out.items[2].charges.maximum==999);
+ printf("Multiple costs: %u independent type triples/profile/phase/balance/reaction/damage cases, exact atomic debit, holes, duplicate rejection, no RNG on block, CON candidate and strict PDD23 passed\n",cases);
 }

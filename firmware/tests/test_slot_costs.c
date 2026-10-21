@@ -44,11 +44,11 @@ int main(void){
     assert(pd_concentration_event_roll(&s,&e,0,0,rng,NULL,&next,&roll,&r,false)&&calls==1&&!memcmp(&s,&before,sizeof s)&&next.hp==978&&!next.temp_hp&&!next.magic.pact[4].current&&next.magic.slots[4].current==9&&next.reaction_spent&&!next.magic.concentration&&!next.reductions[0].active&&r.costs[0].before==2&&!r.costs[0].after&&!strcmp(r.costs[0].name,"Slot patto livello 5"));
     /* Round/turn do not replenish slots; short/long rest preserve their separate policies. */
     s=next;s.magic.slots[4].current=2;pd_round_summary round;assert(pd_round_advance(&s,&round)&&!s.magic.pact[4].current&&s.magic.slots[4].current==2&&s.reaction_spent);assert(pd_reaction_change(&s,false)&&!s.magic.pact[4].current&&s.magic.slots[4].current==2);assert(pd_rest_apply(&s,&(pd_rest_plan){0})&&s.magic.pact[4].current==2&&s.magic.slots[4].current==2);s.magic.pact[4].current=0;assert(pd_rest_apply(&s,&(pd_rest_plan){.long_rest=true})&&s.magic.pact[4].current==2&&s.magic.slots[4].current==9);
-    /* Strict PDD22 cost enums; old PDD17 rejects new meanings. */
+    /* Strict PDD23 cost enums; old PDD17 rejects new meanings. */
     static uint8_t data[PD_RECORD_SIZE];uint32_t gen;setup(&s);s.magic.count=120;for(unsigned i=1;i<120;i++)s.magic.powers[i]=(pd_power){.name="Magia",.flags=PD_PREPARED};
     for(unsigned i=0;i<3;i++)assert(pd_reduction_profile_set(&s,i,(pd_reduction_profile){.value=3,.types=8191,.active=true,.cost_kind=i==1?PD_COST_PACT:PD_COST_SLOT,.cost_index=i*4,.cost=9,.reaction=true}));
-    size_t n=pd_encode(&s,180,data);assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDM",4)&&pd_decode(data,n,&out,&gen)&&gen==180&&out.reductions[2].cost_index==8);
-    for(unsigned i=0;i<3;i++)for(unsigned field=0;field<4;field++){pd_encode(&s,180,data);data[n-494+i*5+field]=(const unsigned[]){PD_COST_COUNT,9,10,255}[field];crc(data,n);before=out;gen=17;assert(!pd_decode(data,n,&out,&gen)&&!memcmp(&out,&before,sizeof out)&&gen==17);}
-    pd_encode(&s,180,data);size_t old_n=n-474;data[3]='H';crc(data,old_n);assert(pd_record_known(data,old_n)&&!pd_decode(data,old_n,&out,&gen));data[3]='N';crc(data,old_n);assert(!pd_record_known(data,old_n)&&!pd_decode(data,old_n,&out,&gen));
-    printf("Slot costs: %u independent slot/stage/pool/level/cost/balance/reaction/damage cases, capacity validation, no fallback, one CON candidate, rest policies and strict PDD22 passed\n",cases);
+    size_t n=pd_encode(&s,180,data);assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDN",4)&&pd_decode(data,n,&out,&gen)&&gen==180&&out.reductions[2].cost_index==8);
+    for(unsigned i=0;i<3;i++)for(unsigned field=0;field<4;field++){pd_encode(&s,180,data);data[n-495+i*5+field]=(const unsigned[]){PD_COST_COUNT,9,10,255}[field];crc(data,n);before=out;gen=17;assert(!pd_decode(data,n,&out,&gen)&&!memcmp(&out,&before,sizeof out)&&gen==17);}
+    pd_encode(&s,180,data);size_t old_n=n-475;data[3]='H';crc(data,old_n);assert(pd_record_known(data,old_n)&&!pd_decode(data,old_n,&out,&gen));data[3]='O';crc(data,old_n);assert(!pd_record_known(data,old_n)&&!pd_decode(data,old_n,&out,&gen));
+    printf("Slot costs: %u independent slot/stage/pool/level/cost/balance/reaction/damage cases, capacity validation, no fallback, one CON candidate, rest policies and strict PDD23 passed\n",cases);
 }

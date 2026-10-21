@@ -137,3 +137,9 @@ delle modifiche. Nessun dato personale, JSON Beyond, asset o dipendenza esterna.
 La v0.43 aggiunge core, UI e test originali per ricariche parziali delle cariche
 con i dadi pixel art esistenti. Nessun asset, fixture di formato, dato personale,
 JSON Beyond o dipendenza esterna aggiunti.
+
+
+La v0.44 aggiunge core, UI e test originali per quattro effetti di condizione
+sui tiri. Fixture PDD22 sintetica generata dall'encoder originale v0.43
+`b340a8c`, prima delle modifiche. Nessun dato personale, JSON Beyond, asset
+o dipendenza esterna aggiunti.

@@ -32,7 +32,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT } page_t;
 PD_EXT static pd_state state,previous,pending,scratch;
 static bool undo_available,import_pending,has_roll;
 static pd_roll result;
@@ -57,6 +57,11 @@ static page_t page;
 static int ability=-1,mode,resource_index;
 static pd_check_kind check_kind=PD_CHECK;
 static bool ignore_effects;
+static pd_roll_context roll_context,context_draft;
+static bool context_ignore_draft;
+static page_t context_return;
+static unsigned condition_effects_draft;
+static const char *const roll_condition_names[]={"Accecato","Spaventato","Prono","Trattenuto"};
 static int sheet_tab,skill_page;
 static bool pool_view,dice_setup,die_picker,pool_damage;
 static unsigned pool_sides=6,pool_count=1;
@@ -87,7 +92,7 @@ static bool rest_active,hit_rolled;
 PD_EXT static pd_state hit_candidate;
 static pd_pool hit_result;
 static unsigned hit_gained;
-static bool confirmation_open(void){return page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ITEM_RECHARGE_RESULT);}
+static bool confirmation_open(void){return page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
 static pd_damage_plan damage_plan; /* First component + explicit concentration choice. */
 static pd_damage_component damage_extra[PD_DAMAGE_COMPONENTS-1],damage_part_draft;
 static pd_damage_context damage_context,damage_extra_context[PD_DAMAGE_COMPONENTS-1],damage_part_context,source_context_draft;
@@ -169,6 +174,12 @@ static void cost_next(void){
     pd_profile_cost_set(&profile_draft,profile_cost_row,(pd_cost){kind,index,kind?1:0});
 }
 
+static bool context_relevant(unsigned bit){return bit==PD_CONTEXT_SIGHT?(combat_roll!=1&&check_kind!=PD_SAVE&&(state.roll_conditions&PD_BLINDED)):(combat_roll==1||check_kind!=PD_SAVE)&&(state.roll_conditions&PD_FRIGHTENED);}
+static bool current_condition_context(pd_roll_context context,bool ignore,pd_condition_result *out){
+    if(combat_roll==1){pd_attack_resolution r;if(!pd_attack_resolve(&state,mode,context,ignore,&r))return false;*out=(pd_condition_result){.needed=r.needed,.disadvantage=r.mode<0};return true;}
+    pd_check_resolution r;if(ability<0||!pd_check_resolve(&state,check_kind,ability,mode,ignore,context,&r))return false;*out=(pd_condition_result){.needed=r.needed,.automatic_failure=r.automatic_failure,.disadvantage=r.mode<0};return true;
+}
+static const char *context_answer(unsigned bit){return !(context_draft.known&bit)?"?":context_draft.values&bit?"si":"no";}
 static bool recharge_available(void){return state.inventory_available&&item_index<state.item_count&&state.items[item_index].quantity&&state.items[item_index].charges.current<state.items[item_index].charges.maximum;}
 static bool preview_profile(pd_state *s){*s=state;return pd_reduction_profile_set(s,profile_index,profile_draft);}
 static const char *profile_types(unsigned types){if(types==8191)return "Tutti";if(types==7)return "Cont./Perf./Tagl.";if(!types)return "Nessuno";for(unsigned i=0;i<13;i++)if(types==(1u<<i))return pd_damage_name(i);return "Personalizzati";}
@@ -315,6 +326,9 @@ static void act(intptr_t action) {
     if(page==TIME_HOME&&(action<2141||action>2146))return;
     if(page==TIME_CONFIRM&&action!=2147&&action!=2148&&action!=2149)return;
     if(page==TIME_DETAILS&&(action<2150||action>2152))return;
+    if(page==CONDITION_EFFECTS&&(action<2201||action>2206))return;
+    if(page==CONDITION_EFFECTS_CONFIRM&&action!=2207&&action!=2208)return;
+    if(page==ROLL_CONTEXT&&(action<2231||action>2235))return;
     if(page==ITEM_CHARGES&&(action<2161||action>2166)&&action!=2170)return;
     if(page==ITEM_RECHARGE&&(action<2171||action>2177))return;
     if(page==ITEM_RECHARGE_CONFIRM&&(action!=2178&&action!=2179))return;
@@ -341,7 +355,7 @@ static void act(intptr_t action) {
         int index=action-(selected_kind==PD_SAVE?240:selected_kind==PD_SKILL?220:200);
         pd_check_info info;if(!pd_describe_check(&state,selected_kind,index,&info))return;
         combat_roll=0;strike_ready=false;check_kind=selected_kind;ability=index;
-        page=DICE;has_roll=false;mode=0;ignore_effects=false;pool_view=false;dice_setup=false;die_picker=false;
+        page=DICE;has_roll=false;mode=0;ignore_effects=false;roll_context=(pd_roll_context){0};pool_view=false;dice_setup=false;die_picker=false;
         pd_dice_idle(&dice_animation,pd_check_mode(&state,check_kind,ability,mode,false)?2:1);
     }
     else if (action==1) { pd_hp(&next,-1);if(memcmp(&next,&state,sizeof state))apply(&next); }
@@ -355,7 +369,7 @@ static void act(intptr_t action) {
         if (dice_animation.active) { pd_dice_finish(&dice_animation);has_roll=true; }
         else {
             if(combat_roll==1) {
-                if(!pd_attack(&state,target_armor,mode,pd_board_random,NULL,&strike))return;
+                if(!pd_attack_with_context(&state,target_armor,mode,roll_context,ignore_effects,pd_board_random,NULL,&strike))return;
                 result=strike.roll;strike_ready=true;damage_used=false;
                 pd_dice_start(&dice_animation,&result,lv_tick_get());
             } else if(combat_roll>1)return;
@@ -365,10 +379,8 @@ static void act(intptr_t action) {
                 if(!pd_roll_pool(last->sides,last->count,last->bonus,last->damage,pd_board_random,NULL,&next_roll))return;
                 pd_dice_pool_start(&dice_animation,&next_roll,lv_tick_get());
             } else {
-                pd_check_info info={0};
-                if(ability>=0&&(!pd_describe_check(&state,check_kind,ability,&info)||info.blocked))return;
-                int effective=ability<0?mode:pd_check_mode(&state,check_kind,ability,mode,ignore_effects);
-                result=pd_d20(info.total,effective,pd_board_random,NULL);
+                if(ability<0)result=pd_d20(0,mode,pd_board_random,NULL);
+                else if(!pd_check_roll(&state,check_kind,ability,mode,ignore_effects,roll_context,pd_board_random,NULL,&result))return;
                 pd_dice_start(&dice_animation,&result,lv_tick_get());
             }
             page=DICE;
@@ -379,7 +391,7 @@ static void act(intptr_t action) {
         if(!dice_animation.active)return;
         pd_dice_finish(&dice_animation);has_roll=true;
     }
-    else if (action==14) { combat_roll=0;strike_ready=false;ability=-1;page=DICE;has_roll=false;mode=0;ignore_effects=false;pool_view=false;dice_setup=false;die_picker=false;pd_dice_idle(&dice_animation,1); }
+    else if (action==14) { combat_roll=0;strike_ready=false;ability=-1;page=DICE;has_roll=false;mode=0;ignore_effects=false;roll_context=(pd_roll_context){0};pool_view=false;dice_setup=false;die_picker=false;pd_dice_idle(&dice_animation,1); }
     else if (action==40 && !combat_roll) {
         dice_setup=true;die_picker=false;
         if(pool_view) { pool_sides=dice_animation.pool.sides;pool_count=dice_animation.pool.count;pool_bonus=dice_animation.pool.bonus;pool_damage=dice_animation.pool.damage; }
@@ -609,6 +621,17 @@ static void act(intptr_t action) {
     else if(action==2150&&page==TIME_DETAILS)page=TIME_CONFIRM;
     else if(action==2151&&page==TIME_DETAILS&&time_detail_page)time_detail_page--;
     else if(action==2152&&page==TIME_DETAILS){pd_round_summary r;if(preview_time(&next,&r)&&(time_detail_page+1)*3<bit_count(r.effects_advanced)+bit_count(r.defences_advanced))time_detail_page++;}
+    else if(action==2200&&page==CONDITION_LIST){condition_effects_draft=state.roll_conditions;page=CONDITION_EFFECTS;}
+    else if(action>=2201&&action<=2204&&page==CONDITION_EFFECTS)condition_effects_draft^=1u<<(action-2201);
+    else if(action==2205&&page==CONDITION_EFFECTS)page=CONDITION_LIST;
+    else if(action==2206&&page==CONDITION_EFFECTS)page=CONDITION_EFFECTS_CONFIRM;
+    else if(action==2207&&page==CONDITION_EFFECTS_CONFIRM)page=CONDITION_EFFECTS;
+    else if(action==2208&&page==CONDITION_EFFECTS_CONFIRM){if(!pd_condition_effects_set(&next,condition_effects_draft))return;bool changed=memcmp(&next,&state,sizeof state)!=0;if(!changed||pd_storage_save(&next)){if(changed){previous=state;undo_available=true;state=next;invalidate_strike();has_roll=false;roll_context=(pd_roll_context){0};ignore_effects=false;}page=CONDITION_EFFECTS;}}
+    else if(action==2230&&(page==COMBAT||page==COMBAT_DETAIL||page==CHECK_DETAIL||(page==DICE&&(combat_roll==1||(!combat_roll&&!pool_view&&ability>=0))))&&state.roll_conditions&&!dice_animation.active){context_return=page;context_draft=roll_context;context_ignore_draft=ignore_effects;page=ROLL_CONTEXT;}
+    else if(action==2231&&page==ROLL_CONTEXT)page=context_return;
+    else if((action==2232||action==2233)&&page==ROLL_CONTEXT){unsigned bit=action==2232?PD_CONTEXT_SIGHT:PD_CONTEXT_FEAR;pd_condition_result effect;if(current_condition_context(context_draft,context_ignore_draft,&effect)&&context_relevant(bit)){if(!(context_draft.known&bit))context_draft.known|=bit;else if(!(context_draft.values&bit))context_draft.values|=bit;else{context_draft.known&=~bit;context_draft.values&=~bit;}}}
+    else if(action==2234&&page==ROLL_CONTEXT)context_ignore_draft=!context_ignore_draft;
+    else if(action==2235&&page==ROLL_CONTEXT){pd_condition_result effect;if(!current_condition_context(context_draft,context_ignore_draft,&effect)||effect.needed)return;roll_context=context_draft;ignore_effects=context_ignore_draft;has_roll=false;strike_ready=false;damage_used=false;page=context_return;}
     else if(action==2170&&page==ITEM_CHARGES&&recharge_available()){recharge_plan=(pd_recharge_plan){.count=1,.sides=6};recharge_rolled=false;page=ITEM_RECHARGE;}
     else if(action==2171&&page==ITEM_RECHARGE)page=ITEM_CHARGES;
     else if(action==2172&&page==ITEM_RECHARGE){const unsigned sides[]={4,6,8,10,12,20};for(unsigned i=0;i<6;i++)if(recharge_plan.sides==sides[i]){recharge_plan.sides=sides[(i+1)%6];break;}}
@@ -821,6 +844,7 @@ static void act(intptr_t action) {
     else if(action==80)page=INVENTORY;
     else if(action==81||action==85) {
         pd_weapon_info w;if(!pd_weapon_stats(&state,state.equipped,&w))return;
+        if(action==81){roll_context=(pd_roll_context){0};ignore_effects=false;}
         page=COMBAT;combat_roll=1;pool_view=false;has_roll=false;mode=0;strike_ready=false;damage_used=false;
         pd_dice_idle(&dice_animation,pd_attack_mode(&state,mode)?2:1);
     }
@@ -918,18 +942,19 @@ static void render_check_detail(void) {
     snprintf(text,sizeof text,"%s %+d",pd_abilities[info.ability],info.base);label(text,83,194,300,false);
     snprintf(text,sizeof text,"%s %+d",info.half?"Mezza comp.":info.rank==2?"Maestria":info.rank==1?"Competenza":"Non competente",info.trained);
     label(text,83,224,300,false);snprintf(text,sizeof text,"Extra %+d",info.extra);label(text,83,254,300,false);
-    int effective=pd_check_mode(&state,check_kind,ability,mode,ignore_effects);
+    pd_check_resolution gate={0};pd_check_resolve(&state,check_kind,ability,mode,ignore_effects,roll_context,&gate);int effective=gate.mode;
     bool poison=state.training.poisoned&&check_kind!=PD_SAVE;
     bool strength=state.training.strength_advantage&&info.ability==0;
     const char *reason=ignore_effects?"Effetti PC esclusi":poison&&strength?"PC: avvelenato + Ira":poison?"PC: avvelenato":strength?"PC: Ira FOR":"Manuale";
     snprintf(text,sizeof text,"%s | %s",effective>0?"Vantaggio":effective<0?"Svantaggio":"Normale",reason);
-    if(!state.training.available)snprintf(text,sizeof text,"Vecchia copia: solo caratteristica");
+    if(state.roll_conditions)snprintf(text,sizeof text,"%s",gate.needed?"Dichiara le circostanze":gate.automatic_failure?"Vista richiesta: fallisce":ignore_effects?"Effetti tiro esclusi":"Condizioni e modificatori del tiro");
+    else if(!state.training.available)snprintf(text,sizeof text,"Vecchia copia: solo caratteristica");
     small_label(text,83,282,300,PD_MUTED);
     button(mode<0?"Svant":mode>0?"Vant":"Base",83,307,144,44,15,true);
-    lv_obj_t *effects=button(ignore_effects?"Effetti PC: no":"Effetti PC: si",239,307,144,44,73,state.training.available);
+    lv_obj_t *effects=button(state.roll_conditions?(ignore_effects?"Effetti: no":"Effetti: si"):(ignore_effects?"Effetti PC: no":"Effetti PC: si"),239,307,144,44,73,state.training.available||state.roll_conditions);
     lv_obj_set_style_text_font(effects,&lv_font_montserrat_16,0);
-    button("Indietro",83,359,144,48,71,true);
-    button(info.blocked||!known?"Libero":"Lancia",239,359,144,48,info.blocked||!known?14:72,true);
+    if(state.roll_conditions){const char *names[]={"Indietro","Contesto",info.blocked||!known?"Libero":gate.automatic_failure?"Fallisce":"Lancia"};const unsigned actions[]={71,2230,info.blocked||!known?14:72};for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names[i],83+i*104,359,92,48,actions[i],i!=2||info.blocked||!known||gate.allowed);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}}
+    else{button("Indietro",83,359,144,48,71,true);button(info.blocked||!known?"Libero":"Lancia",239,359,144,48,info.blocked||!known?14:72,true);}
 }
 static void render_sheet(void) {
     char text[120];
@@ -1026,13 +1051,13 @@ static void render_combat(void) {
     pd_weapon_info w;char text[160];if(!pd_weapon_stats(&state,state.equipped,&w)) {page=INVENTORY;render_inventory();return;}
     combat_roll=1;pool_view=false;
     const pd_item *v=&state.items[state.equipped];label(v->name,83,111,300,false);
-    snprintf(text,sizeof text,"Attacco %+d >",w.attack_bonus);button(text,83,144,300,44,93,true);
+    snprintf(text,sizeof text,"Attacco %+d >",w.attack_bonus);button(text,83,144,state.roll_conditions?204:300,44,93,true);if(state.roll_conditions){lv_obj_t *c=button("Contesto",299,144,84,44,2230,true);lv_obj_set_style_text_font(c,&lv_font_montserrat_16,0);}
     snprintf(text,sizeof text,"%s %+d / comp. %+d / extra %+d",pd_abilities[v->ability],w.base,w.trained,w.attack_extra);small_label(text,83,193,300,PD_TEXT);
     snprintf(text,sizeof text,"Danni %ud%u %+d | gittata %u q.",w.count,w.sides,w.damage_bonus,w.reach);small_label(text,83,215,300,PD_GOLD);
-    small_label("Effetti PC fotografati; speciali: DM",83,239,300,PD_MUTED);
+    small_label(state.roll_conditions?"Condizioni sui tiri: apri Contesto":"Effetti PC fotografati; speciali: DM",83,239,300,PD_MUTED);
     button("-",83,263,48,44,86,target_armor>1);snprintf(text,sizeof text,"CA bersaglio %u",target_armor);label(text,139,274,188,false);button("+",335,263,48,44,87,target_armor<30);
-    int effective=pd_attack_mode(&state,mode);
-    button(effective>0?"Vantaggio":effective<0?"Svantaggio":"Normale",83,315,144,44,15,true);button("Lancia",239,315,144,44,72,true);
+    pd_attack_resolution gate={0};pd_attack_resolve(&state,mode,roll_context,ignore_effects,&gate);int effective=gate.mode;
+    button(effective>0?"Vantaggio":effective<0?"Svantaggio":"Normale",83,315,144,44,15,true);button("Lancia",239,315,144,44,72,gate.allowed);
     button("Zaino",83,363,144,44,80,true);
     button(state.combat.thrown?"Lancio: si":"Lancio: no",239,363,144,44,92,v->thrown_range>0);
 }
@@ -1276,15 +1301,15 @@ static void render_status(void) {
         unsigned *current=pick?&preset_page:&condition_page;if(*current>=pages)*current=pages-1;
         snprintf(text,sizeof text,"%s %u/%u",pick?"Aggiungi nota":"Condizioni",*current+1,pages);label(text,139,111,188,false);
         button("<",83,99,48,44,pick?1526:1521,*current>0);button(">",335,99,48,44,pick?1527:1522,*current+1<pages);
-        small_label("Annotazioni; effetti manuali",83,151,300,PD_GOLD);
+        small_label("Note; Tiri per effetti espliciti",83,151,300,PD_GOLD);
         if(!count)small_label(state.status.available?"Nessuna condizione annotata":"Dati assenti: importa o aggiungi note",83,231,300,PD_TEXT);
         for(unsigned row=0;row<3;row++) {
             unsigned i=*current*3+row;if(i>=count)break;
             lv_obj_t *b=button(pick?condition_presets[i]:state.status.conditions[i].name,83,183+row*48,300,44,(pick?1300:1200)+i,true);
             lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_width(l,284);lv_obj_set_height(l,lv_font_get_line_height(&lv_font_montserrat_20));lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_center(l);
         }
-        button("Indietro",83,359,pick?300:144,48,pick?1503:1500,true);
-        if(!pick)button("Aggiungi",239,359,144,48,1520,state.status.count<PD_CONDITIONS);
+        if(pick)button("Indietro",83,359,300,48,1503,true);
+        else{const char *names[]={"Indietro","Aggiungi","Tiri"};const unsigned actions[]={1500,1520,2200};for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names[i],83+i*104,359,92,48,actions[i],i!=1||state.status.count<PD_CONDITIONS);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}}
     } else if(page==CONDITION_DETAIL){
         const pd_condition *c=&state.status.conditions[condition_index];lv_obj_t *name=small_label(c->name,83,99,300,PD_TEXT);lv_label_set_long_mode(name,LV_LABEL_LONG_WRAP);lv_obj_set_height(name,80);
         small_label("Nota; Avvelenato si regola da Stato",83,185,300,PD_GOLD);
@@ -1458,7 +1483,20 @@ static void render_recharge(void){
     button("-",83,259,66,44,2175,recharge_plan.bonus>PD_POOL_MIN_BONUS);snprintf(text,sizeof text,"Bonus %+d",recharge_plan.bonus);label(text,161,271,144,false);button("+",317,259,66,44,2176,recharge_plan.bonus<PD_POOL_MAX_BONUS);
     small_label("Minimo zero; limite al massimo",83,309,300,PD_GOLD);small_label("Alba e altre regole: scelta manuale",83,335,300,PD_MUTED);button("Indietro",83,359,144,48,2171,true);button("Anteprima",239,359,144,48,2177,recharge_available());
 }
+static void render_roll_conditions(void){
+    char text[160];
+    if(page==ROLL_CONTEXT){
+        label("Circostanze del tiro",83,111,300,true);snprintf(text,sizeof text,"Richiede vista: %s >",context_answer(PD_CONTEXT_SIGHT));lv_obj_t *b=button(text,83,157,300,44,2232,context_relevant(PD_CONTEXT_SIGHT));lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
+        snprintf(text,sizeof text,"Fonte paura in vista: %s >",context_answer(PD_CONTEXT_FEAR));b=button(text,83,205,300,44,2233,context_relevant(PD_CONTEXT_FEAR));lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
+        b=button(context_ignore_draft?"Effetti tiro: esclusi >":"Effetti tiro: applicati >",83,253,300,44,2234,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
+        pd_condition_result effect={0};bool valid=current_condition_context(context_draft,context_ignore_draft,&effect);small_label(!valid?"Tiro non disponibile":effect.needed?"Dichiara i dati necessari":effect.automatic_failure?"Fallimento automatico: nessun dado":"Dati sufficienti per il tiro",83,309,300,PD_GOLD);small_label("Escludi effetti solo su decisione DM",83,335,300,PD_MUTED);
+        button("Indietro",83,359,144,48,2231,true);lv_obj_t *use=button("Usa contesto",239,359,144,48,2235,valid&&!effect.needed);lv_obj_set_style_text_font(use,&lv_font_montserrat_16,0);return;
+    }
+    if(page==CONDITION_EFFECTS){label("Effetti sui tiri",83,111,300,true);for(unsigned i=0;i<4;i++){snprintf(text,sizeof text,"%s: %s >",roll_condition_names[i],condition_effects_draft&(1u<<i)?"si":"no");button(text,83,157+i*48,300,44,2201+i,true);}button("Indietro",83,359,144,48,2205,true);button("Anteprima",239,359,144,48,2206,true);return;}
+    label("Salvare gli effetti?",83,111,300,false);for(unsigned i=0;i<4;i++){snprintf(text,sizeof text,"%s: %s -> %s",roll_condition_names[i],state.roll_conditions&(1u<<i)?"si":"no",condition_effects_draft&(1u<<i)?"si":"no");small_label(text,83,169+i*38,300,PD_TEXT);}small_label("Note, durate e PF invariati",83,325,300,PD_MUTED);button("Indietro",83,359,144,48,2207,true);button("Conferma",239,359,144,48,2208,true);
+}
 static void render_damage(void) {
+    if(page==CONDITION_EFFECTS||page==CONDITION_EFFECTS_CONFIRM||page==ROLL_CONTEXT){render_roll_conditions();return;}
     if(page==ITEM_RECHARGE||page==ITEM_RECHARGE_CONFIRM||page==ITEM_RECHARGE_RESULT){render_recharge();return;}
     if(page==ITEM_CHARGES||page==ITEM_CHARGE_CONFIRM){render_item_charges();return;}
     char text[180];
@@ -1756,7 +1794,7 @@ static void render(void) {
         if(pending.magic.available)snprintf(powers,sizeof powers,"%u",pending.magic.count);else strcpy(powers,"?");
         snprintf(text,sizeof text,"Zaino %s | magie/usi %s",items,powers);small_label(text,83,216,300,PD_GOLD);
         label("Sostituisce la copia locale.",83,244,300,false);
-        small_label((state.effect_count||local_defences()||state.reaction_spent)?"Stato locale rimosso; PC intatto":"PC: raccolta conservata.",83,279,300,(state.effect_count||local_defences()||state.reaction_spent)?PD_GOLD:PD_TEXT);
+        small_label((state.effect_count||state.roll_conditions||local_defences()||state.reaction_spent)?"Stato locale rimosso; PC intatto":"PC: raccolta conservata.",83,279,300,(state.effect_count||state.roll_conditions||local_defences()||state.reaction_spent)?PD_GOLD:PD_TEXT);
         button("Annulla",83,303,144,54,31,true); button("Conferma",239,303,144,54,30,true);
         return;
     }
@@ -1774,14 +1812,14 @@ static void render(void) {
     if(page==COMBAT) {render_combat();return;}
     if(page==COMBAT_DETAIL) {
         pd_weapon_info w;if(!pd_weapon_stats(&state,state.equipped,&w)){page=INVENTORY;render_inventory();return;}
-        label("Bonus dell'arma",83,111,300,true);
+        label(state.roll_conditions?"Bonus arma":"Bonus dell'arma",83,111,state.roll_conditions?204:300,true);if(state.roll_conditions){lv_obj_t *b=button("Contesto",299,99,84,44,2230,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
         snprintf(text,sizeof text,"Attacco: %+d %+d %+d = %+d",w.base,w.trained,w.attack_extra,w.attack_bonus);label(text,83,155,300,false);
         small_label("Caratteristica / competenza / extra",83,185,300,PD_MUTED);
         snprintf(text,sizeof text,"Danni: base %+d / extra %+d",w.damage_base,w.damage_extra);label(text,83,215,300,false);
         snprintf(text,sizeof text,"Ira %s | potente %s | critico +%ud",state.combat.raging&&w.melee&&state.items[state.equipped].ability==0?"si":"no",w.power_attack?"si":"no",w.critical_dice);small_label(text,83,247,300,PD_GOLD);
         small_label(state.training.poisoned?"PC: avvelenato (svantaggio attacco)":"PC: nessuno svantaggio da veleno",83,277,300,PD_MUTED);
         small_label("Extra include modificatori ed effetti",83,307,300,PD_MUTED);
-        button("Indietro",83,359,144,48,85,true);button("Lancia",239,359,144,48,72,true);return;
+        pd_attack_resolution gate={0};pd_attack_resolve(&state,mode,roll_context,ignore_effects,&gate);button("Indietro",83,359,144,48,85,true);button("Lancia",239,359,144,48,72,gate.allowed);return;
     }
     if(page==DICE && dice_setup) { render_dice_setup();return; }
     if(page==CHECK_DETAIL) { render_check_detail();return; }
@@ -1833,11 +1871,13 @@ static void render(void) {
             lv_obj_t *detail=button(text,83,94,300,44,70,!dice_animation.active);
             if(check_kind==PD_SKILL)lv_obj_set_style_text_font(detail,&lv_font_montserrat_20,0);
         } else label(text,83,105,300,true);
-        pd_check_info selected={0};bool allowed=combat_roll||pool_view||ability<0||(pd_describe_check(&state,check_kind,ability,&selected)&&!selected.blocked);
-        int effective=combat_roll==1?pd_attack_mode(&state,mode):pool_view?0:ability<0?mode:pd_check_mode(&state,check_kind,ability,mode,ignore_effects);
+        pd_check_resolution check_gate={0};pd_attack_resolution attack_gate={0};bool check_known=ability>=0&&pd_check_resolve(&state,check_kind,ability,mode,ignore_effects,roll_context,&check_gate);pd_attack_resolve(&state,mode,roll_context,ignore_effects,&attack_gate);
+        bool allowed=combat_roll==1?attack_gate.allowed:combat_roll>1||pool_view||ability<0||(check_known&&check_gate.allowed);
+        int effective=combat_roll==1?attack_gate.mode:pool_view?0:ability<0?mode:check_gate.mode;
         if(!pool_view&&!has_roll&&!dice_animation.active)pd_dice_idle(&dice_animation,effective?2:1);
         if(!pd_dice_count(&dice_animation))pd_dice_idle(&dice_animation,mode?2:1);
-        dice_pixels=lv_malloc(PD_DICE_PIXELS*sizeof *dice_pixels);
+        bool automatic_failure=!combat_roll&&!pool_view&&check_known&&check_gate.automatic_failure;
+        if(!automatic_failure)dice_pixels=lv_malloc(PD_DICE_PIXELS*sizeof *dice_pixels);
         if(dice_pixels) {
             dice_canvas=lv_canvas_create(root);lv_obj_set_pos(dice_canvas,73,138);
             lv_canvas_set_buffer(dice_canvas,dice_pixels,PD_DICE_WIDTH,PD_DICE_HEIGHT,LV_COLOR_FORMAT_RGB565);
@@ -1862,9 +1902,10 @@ static void render(void) {
             }
             else if(result.count==2)snprintf(text,sizeof text,"%u / %u %+d = %d [%s]",result.dice[0],result.dice[1],result.bonus,result.total,effective>0?"Vant":"Svant");
             else snprintf(text,sizeof text,"%u %+d = %d%s",result.dice[0],result.bonus,result.total,result.natural==20?"  -  20 naturale":"");
-        } else snprintf(text,sizeof text,"%s",!allowed?"Da verificare: apri i dettagli":dice_animation.active?"In volo...":effective>0?"Pronto: vantaggio":effective<0?"Pronto: svantaggio":"Pronto al lancio");
+        } else snprintf(text,sizeof text,"%s",!allowed?(check_gate.automatic_failure?"Fallimento automatico":(check_gate.needed||(combat_roll==1&&attack_gate.needed))?"Dichiara Contesto":"Da verificare: apri i dettagli"):dice_animation.active?"In volo...":effective>0?"Pronto: vantaggio":effective<0?"Pronto: svantaggio":"Pronto al lancio");
         label(text,73,269,320,false);
-        if(!dice_pixels)label("Animazione non disponibile",73,183,320,false);
+        if(automatic_failure)label("Nessun dado",73,183,320,false);
+        else if(!dice_pixels)label("Animazione non disponibile",73,183,320,false);
         if(combat_roll==7){
             button("Zaino",83,296,76,44,80,!dice_animation.active);button(dice_animation.active?"Accelera":"Riepilogo",167,296,132,44,dice_animation.active?16:2180,true);button("Fine",307,296,76,44,100,!dice_animation.active);
         } else if(combat_roll==6){
@@ -1878,7 +1919,7 @@ static void render(void) {
         } else {
         button(pool_view?"Prova":mode==-1?"Svant":mode==1?"Vant":"Base",83,296,76,44,pool_view?14:15,!dice_animation.active);
         button(dice_animation.active?"Accelera":has_roll?"Rilancia":"Lancia",167,296,132,44,13,allowed);
-        button("Altri",307,296,76,44,40,!dice_animation.active);
+        lv_obj_t *more=button(state.roll_conditions&&!pool_view&&ability>=0?"Contesto":"Altri",307,296,76,44,state.roll_conditions&&!pool_view&&ability>=0?2230:40,!dice_animation.active);if(state.roll_conditions&&!pool_view&&ability>=0)lv_obj_set_style_text_font(more,&lv_font_montserrat_16,0);
         }
     } else {
         lv_obj_t *counter=button("Stato",83,99,92,44,1500,true);lv_obj_set_style_text_font(counter,&lv_font_montserrat_16,0);

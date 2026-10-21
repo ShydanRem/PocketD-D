@@ -14,11 +14,19 @@ bool pd_weapon_stats(const pd_state *s,unsigned index,pd_weapon_info *out) {
     w.attack_bonus=w.base+w.trained+w.attack_extra;w.damage_bonus=w.damage_base+w.damage_extra;
     *out=w;return true;
 }
-int pd_attack_mode(const pd_state *s,int requested) { return s->training.poisoned?(requested>0?0:-1):requested; }
-bool pd_attack(const pd_state *s,unsigned armor,int mode,pd_random random,void *context,pd_strike *out) {
+bool pd_attack_resolve(const pd_state *s,int requested,pd_roll_context context,bool ignore,pd_attack_resolution *out){
+    pd_condition_result effect;if(!out||requested< -1||requested>1||!pd_condition_evaluate(s,PD_ROLL_ATTACK,0,context,ignore,&effect))return false;
+    bool advantage=requested>0,disadvantage=requested<0||(!ignore&&s->training.poisoned)||effect.disadvantage;
+    if(disadvantage)effect.needed&=~PD_CONTEXT_FEAR;
+    *out=(pd_attack_resolution){.mode=advantage==disadvantage?0:advantage?1:-1,.allowed=!effect.needed,.needed=effect.needed};return true;
+}
+int pd_attack_mode(const pd_state *s,int requested){pd_attack_resolution r;return pd_attack_resolve(s,requested,(pd_roll_context){0},false,&r)?r.mode:0;}
+bool pd_attack(const pd_state *s,unsigned armor,int mode,pd_random random,void *context,pd_strike *out){return pd_attack_with_context(s,armor,mode,(pd_roll_context){0},false,random,context,out);}
+bool pd_attack_with_context(const pd_state *s,unsigned armor,int mode,pd_roll_context context,bool ignore,pd_random random,void *random_context,pd_strike *out) {
     if(!s||!out||!random||armor<1||armor>30||mode< -1||mode>1)return false;
     pd_strike hit={.armor=armor};if(!pd_weapon_stats(s,s->equipped,&hit.weapon))return false;
-    hit.roll=pd_d20(hit.weapon.attack_bonus,pd_attack_mode(s,mode),random,context);
+    pd_attack_resolution r;if(!pd_attack_resolve(s,mode,context,ignore,&r)||!r.allowed)return false;
+    hit.roll=pd_d20(hit.weapon.attack_bonus,r.mode,random,random_context);
     hit.critical=hit.roll.natural==20;hit.hits=hit.roll.natural!=1&&(hit.critical||hit.roll.total>=(int)armor);
     *out=hit;return true;
 }

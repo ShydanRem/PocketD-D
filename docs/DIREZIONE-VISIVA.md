@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.43
+# Direzione visiva del dispositivo — v0.44
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -315,3 +315,15 @@ marcato Cariche, con saldo, recupero ed eccesso nel riepilogo. Stato pieno o
 oggetto assente disabilitano la ricarica; retry conserva il candidato.
 Anteprime `item-recharge-preview.png` e `recharge-*.png` nell'archivio, render
 LVGL host sintetici, non fotografie hardware. Tasti configurabili conservati.
+
+
+## Effetti sui tiri e circostanze — v0.44
+
+Tiri nel footer delle note apre quattro interruttori locali, con confronto
+prima/dopo. Contesto affianca i dettagli del tiro/arma senza aumentare il numero
+di righe; pagina dedicata per vista, fonte di paura e scelta DM. Il punto
+interrogativo indica dati sconosciuti, i controlli irrilevanti sono disabilitati.
+Fallimento automatico e contesto mancante bloccano Lancia con messaggio visibile;
+nessun dado o esito naturale fittizio. `roll-conditions-preview.png` e singoli
+`roll-conditions-*.png` sono render LVGL host, non fotografie del dispositivo.
+La revisione estetica organica rimane il successivo blocco software concordato.

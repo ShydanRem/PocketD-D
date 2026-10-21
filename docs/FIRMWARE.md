@@ -1,11 +1,11 @@
-# Firmware PocketD-D 0.43 — ricariche a dado
+# Firmware PocketD-D 0.44 — condizioni sui tiri
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
-[Novità v0.43: ricariche a dado](RICARICHE-OGGETTI.md).
-PDD22, USB v8, backup PC v11; layout invariato e lettura dei salvataggi precedenti.
+[Novità v0.44: condizioni sui tiri](CONDIZIONI-TIRI.md).
+PDD23, USB v8, backup PC v11; layout invariato e lettura dei salvataggi precedenti.
 
 ## Stato e perimetro
 
@@ -233,8 +233,8 @@ reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
 ## Salvataggio e dadi
 
 NVS nel namespace `pocketdd`, nuova partizione `pdd_state`, due chiavi alternate
-`state_a`/`state_b`. Record PDD22 (tag `PDDM`) da **8853 + 552 × numero voci** byte, massimo
-75093. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
+`state_a`/`state_b`. Record PDD23 (tag `PDDN`) da **8854 + 552 × numero voci** byte, massimo
+75094. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
 visibile. Nessun dump di struct, erase o fallback distruttivo. Errori I/O o
 allocazioni insufficienti bloccano scritture; CRC e versioni future conservati.
 
@@ -269,8 +269,10 @@ PDD21 aggiunge 300 byte per i pool di cariche (saldo/massimo/recupero), tipo
 costo 5 per gli oggetti; PDD1–20 letti senza pool e senza scritture al boot.
 PDD22 aggiunge 24 byte: due spese aggiuntive per ciascuno dei tre profili;
 PDD1–21 letti con la prima spesa conservata e le altre vuote, senza scritture al boot.
-Le nuove scritture richiedono firmware v0.42 o successivo:
-[compatibilità e downgrade](COSTI-MULTIPLI.md).
+PDD23 aggiunge un byte di effetti locali sui tiri, senza inferenza dalle note;
+PDD1–22 letti con i quattro nuovi effetti disattivati e Avvelenato conservato.
+Le nuove scritture richiedono firmware v0.44 o successivo:
+[compatibilità e downgrade](CONDIZIONI-TIRI.md).
 Il nuovo uploader supporta USB v1–v8. Preferenze avatar/tasti
 locali conservate durante l'importazione. [Dettagli](MAGIE-TASTI.md).
 
@@ -928,3 +930,33 @@ La riprova del nuovo percorso è verificata con errore temporaneo del backend
 host. Il backend NVS resta fail-closed: un errore I/O blocca nuove scritture
 fino al riavvio; non si promette il recupero del tiro in RAM dopo spegnimento.
 Al riavvio vale la banca valida più recente. Nessuna modifica a questa politica.
+
+
+## Verifiche v0.44 — condizioni esplicite sui tiri
+
+Accecato, Spaventato, Prono e Trattenuto hanno effetti locali separati dalle
+annotazioni. Vista richiesta e fonte di paura in linea di vista sono fatti
+dichiarati per il tiro. Si chiedono solo i dati influenti: un fallimento
+automatico non genera dadi, uno svantaggio già certo non richiede anche la
+fonte di paura. Esclusione DM per il singolo tiro, senza aggirare bonus non
+verificati. Movimento, avversari, altre condizioni e durate restano manuali.
+[Uso e contratti](CONDIZIONI-TIRI.md).
+
+107.136 casi C con oracolo indipendente su tutte le combinazioni di quattro
+effetti, tipi di tiro/caratteristiche, modi manuali, Avvelenato, Ira, esclusione
+e contesti parziali. Controllati modi, output e RNG prima dei blocchi; note
+separate, recuperi non dedotti e byte di persistenza. Tutti i 16 valori validi
+e 240 invalidi con CRC valido, record massimo; migrazione PDD1–22 con fixture
+PDD22 dell'encoder originale v0.43 `b340a8c`, vecchia banca intatta e riavvio.
+
+Suite host completa, 41.411 confronti PC → USB → C, 144 test JavaScript e build
+Vite/HTML autonomo passati. LVGL host: configurazione/confronto/errore/Annulla,
+vista, fallimento senza dado, contesto rilevante, paura, cancellazione booleana,
+attacchi, salvezze DES/COS, dado libero, tasti/import protetti e importazione
+annullata/confermata. Sanitizzatori core/parser, NVS, condizioni, prove,
+combattimento, concentrazione e UI passati con leak detector disattivato.
+
+ESP32-S3: **915360 byte**, partizione app 4 MiB **78% libera**, ESP-IDF 5.5.5
+e LVGL 9.4.0. PDD23, USB8/backup v11/layout invariati. Nessun flash, lettura
+Beyond, modifica di raccolte personali o collaudo fisico di display, touch,
+tasti, USB, memoria, batteria o alimentazione.

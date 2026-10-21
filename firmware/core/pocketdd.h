@@ -6,7 +6,7 @@
 #define PD_RESOURCES 8
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
-#define PD_RECORD_SIZE 75093
+#define PD_RECORD_SIZE 75094
 #define PD_POWERS 120
 #define PD_POWER_TEXT_BYTES 501
 #define PD_ITEMS 60
@@ -51,6 +51,7 @@ typedef struct {
 typedef struct { char name[41]; uint8_t die,maximum,used; } pd_hit_die;
 typedef struct { bool available; uint8_t count; pd_hit_die pools[PD_HIT_POOLS]; } pd_recovery;
 #define PD_CONDITIONS 30
+enum { PD_BLINDED=1,PD_FRIGHTENED=2,PD_PRONE=4,PD_RESTRAINED=8,PD_ROLL_CONDITIONS=15 };
 typedef struct { char name[61]; uint8_t level; } pd_condition;
 typedef struct { bool available; uint8_t count,successes,failures; bool stabilized; pd_condition conditions[PD_CONDITIONS]; } pd_status;
 #define PD_EFFECTS 8
@@ -96,6 +97,7 @@ typedef struct {
     uint8_t effect_count;
     pd_effect effects[PD_EFFECTS];
     pd_reduction_profile reductions[PD_REDUCTION_PROFILES];
+    uint8_t roll_conditions; /* Explicit local roll effects; annotations remain separate. */
     bool reaction_spent; /* Explicit turn marker; rounds and rests never reset it. */
     pd_defences defences; /* Explicit local configuration; unknown is not normal. */
     uint8_t brightness,dim_timeout; /* Device-local: 10..100%, off/30/60/120s. */
@@ -146,6 +148,7 @@ unsigned pd_reduction_cost_max(const pd_state *state,unsigned kind,unsigned inde
 unsigned pd_reduction_cost_current(const pd_state *state,unsigned kind,unsigned index);
 const char *pd_reduction_cost_name(const pd_state *state,unsigned kind,unsigned index);
 /* Explicit annotation/reset; already-spent spending rejects, repeated reset succeeds. */
+bool pd_condition_effects_set(pd_state *state,unsigned mask);
 bool pd_reaction_change(pd_state *state,bool spent);
 /* The original flat fields remain expense 0; extra slots are independent, not alternatives.
    Draft edits may be invalid; pd_reduction_profile_set validates all costs together. */
