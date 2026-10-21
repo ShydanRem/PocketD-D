@@ -1,5 +1,10 @@
 # Cariche degli oggetti — v0.41
 
+**Aggiornamento v0.43:** [ricariche parziali a dado](RICARICHE-OGGETTI.md) disponibili
+sul dispositivo come evento esplicito; alba/frequenza/regole restano manuali.
+Formati PDD22/USB8/backup v11 invariati. Le limitazioni storiche sotto si
+riferiscono alla versione del titolo.
+
 **Aggiornamento v0.42:** [spese multiple](COSTI-MULTIPLI.md) disponibili: fino a
 tre fonti distinte per profilo più reazione, confermate insieme. Formato NVS
 corrente PDD22; USB8 e backup PC v11 invariati. Le misure e le limitazioni

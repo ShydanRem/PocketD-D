@@ -421,3 +421,22 @@ spese e senza scritture al boot; fixture PDD21 dell'encoder v0.41 `048ef28` con
 cariche, prime spese e timer conservati. USB8/backup v11/layout invariati.
 Import confermato azzera configurazioni locali, annullato le conserva.
 [Uso e verifiche](COSTI-MULTIPLI.md).
+
+
+## Ricariche esplicite — v0.43
+
+`recharge.c` riceve un piano di dadi, valida stato/pool/presenza/spazio prima
+dell'RNG e produce un candidato che modifica solo il saldo. Formula 1–6 dadi,
+sei facce ammesse, bonus nell'intervallo comune; floor zero e cap al massimo.
+Piano e risultato sono transienti, non nuove regole importate.
+
+La UI riusa il buffer del candidato congelato delle operazioni di recupero;
+formula/risultato/nome/saldi hanno un riepilogo separato. `combat_roll=7` distingue
+l'animazione dalle cure e dai danni. Salvataggio prima della presentazione;
+retry senza estrazioni aggiuntive, nessuna uscita dalla conferma dopo un tiro
+non salvato. Candidato identico: nessuna scrittura o sostituzione di Undo.
+Canvas non disponibile: esito comunque leggibile, senza nuovo tiro.
+
+Formati PDD22/USB8/backup v11 e layout invariati; solo il saldo esistente viene
+persistito. Nessun timer o riposo chiama la ricarica a dado; eventi e frequenza
+restano scelte del DM. [Contratti e verifiche](RICARICHE-OGGETTI.md).

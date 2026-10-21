@@ -56,13 +56,13 @@ Non fanno parte di questo traguardo: importazione Beyond, editor completo, incan
 
 L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco non impedisce le altre fasi. L'ordine delle fasi 0 e 1 può sovrapporsi se l'hardware non è immediatamente disponibile.
 
-## Punto attuale — v0.42
+## Punto attuale — v0.43
 
 | Blocco | Stato software | Cosa manca |
 | --- | --- | --- |
 | Scheda individuale offline | PF/temporanei, prove, abilità/salvezze, zaino/cariche, armi, magie, risorse, riposi e dadi vita nel firmware | Monete, storico persistente, effetti completi e regole speciali; sessione reale |
 | Effetti numerici | Otto modificatori CA/PF massimi, basi separate, cure integrate, durate manuali/a round/inizio-fine turno/minuti-ore e vincolo esplicito alla concentrazione con fine congiunta | Altre durate/regole, proprietà speciali e ricalcolo da equipaggiamento |
-| Danni e difese | Profili manuali per 13 tipi, base/tre extra separati, durate/vincoli e scadenze comuni, PF/temporanei, salvezza COS, sei componenti per colpo, fonte esplicita e riduzioni manuali prima/dopo, tre profili locali con budget, conto completo, fino a tre spese da contatori/usi/slot ordinari-patto/cariche e reazione | Condizioni arbitrarie, più di tre extra per tipo, catalogo/requisiti automatici, oltre tre spese, costi alternativi e ricariche speciali, eccezioni alle salvezze e casi morte bloccati |
+| Danni e difese | Profili manuali per 13 tipi, base/tre extra separati, durate/vincoli e scadenze comuni, PF/temporanei, salvezza COS, sei componenti per colpo, fonte esplicita e riduzioni manuali prima/dopo, tre profili locali con budget, conto completo, fino a tre spese da contatori/usi/slot ordinari-patto/cariche e reazione | Condizioni arbitrarie, più di tre extra per tipo, catalogo/requisiti automatici, oltre tre spese, costi alternativi ed eventi/formule di ricarica automatici, eccezioni alle salvezze e casi morte bloccati |
 | Stato e morte | Note delle condizioni, Avvelenato separato, d20 morte base e correzioni, reazione e inizio turno espliciti | Effetti delle altre condizioni, eccezioni e morte istantanea |
 | Grafica e comandi | Tema pixel art, avatar 81 combinazioni, dadi animati, PWR/BOOT configurabili | Leggibilità e precisione touch sulla scheda |
 | Impostazioni schermo | Luminosità, inattività e risveglio protetto nella v0.25 | Consumi misurati, sospensione, batteria e alimentazione |
@@ -74,20 +74,21 @@ sono portate nel firmware, ma i criteri di completamento richiedono ancora una
 sessione fisica, trasferimento/ripristino e misure. Non sono percentuali di
 completamento né una dichiarazione di collaudo.
 
-## Quattro blocchi concordati — v0.42
+## Quattro blocchi concordati — v0.43
 
 | Blocco | Punto attuale | Prossimo lavoro |
 | --- | --- | --- |
 | 1 — Scheda sul dispositivo | Percorsi base nel firmware: magie/slot/usi, concentrazione, riposi, dadi vita e morte base | Eccezioni e verifica nell'uso reale |
-| 2 — Effetti | Modificatori, round, concentrazione, difese, danni e riduzioni con costi/reazione; v0.38 aggiunge slot ordinari/patto; v0.39 durate del proprio turno; v0.40 minuti/ore; v0.41 cariche distinte dalla quantità; v0.42 tre spese congiunte | Durate di altri soggetti, costi alternativi o oltre tre fonti, ricariche speciali e requisiti/effetti automatici |
+| 2 — Effetti | Modificatori, round, concentrazione, difese, danni e riduzioni con costi/reazione; v0.38 aggiunge slot ordinari/patto; v0.39 durate del proprio turno; v0.40 minuti/ore; v0.41 cariche distinte dalla quantità; v0.42 tre spese congiunte; v0.43 ricarica parziale a dado esplicita | Durate di altri soggetti, costi alternativi o oltre tre fonti, eventi/formule di ricarica automatici e requisiti/effetti automatici |
 | 3 — Prodotto fisico | Luminosità, attenuazione/risveglio, salvataggi, tasti configurabili e firmware compilato | Batteria, sospensione/spegnimento e collaudi reali touch/USB/memoria/alimentazione |
 | 4 — Estetica | Tema pixel art, avatar e dadi animati, UI circolare | Illustrazioni, sprite, icone, transizioni/feedback e leggibilità sul display reale |
 
 Il blocco 2 resta aperto. Le cariche hanno ora un modello distinto dalla quantità,
 configurazione PC, trasferimento, correzione locale, costi e recuperi al riposo.
 Non vengono dedotte automaticamente da Beyond. Tre spese distinte sono ora
-configurabili e addebitate insieme; restano costi alternativi o più di tre fonti,
-ricariche speciali, durate di altri soggetti e condizioni/regole ancora manuali. Hardware e qualità visiva restano
+configurabili e addebitate insieme. La ricarica parziale a dado è disponibile
+come evento manuale. Restano costi alternativi o più di tre fonti, eventi/formule
+automatici, durate di altri soggetti e condizioni/regole ancora manuali. Hardware e qualità visiva restano
 traguardi del dispositivo, senza espandere il PC in un prodotto di gioco separato.
 
 ## Priorità confermata: dispositivo prima del PC
@@ -349,3 +350,10 @@ La v0.42 aggiunge [spese multiple](COSTI-MULTIPLI.md) ai profili: fino a tre
 fonti esatte più reazione, verifica/addebito atomici, confronto e ricevuta
 congelata di tutte le spese. PDD22; USB8, backup PC v11 e layout invariati.
 Nessun flash, collaudo fisico, nuova lettura Beyond o modifica di raccolte personali.
+
+
+La v0.43 aggiunge [ricariche parziali a dado](RICARICHE-OGGETTI.md): formula
+esplicita sul dispositivo, candidato limitato al massimo, salvataggio prima
+dell'animazione, retry congelato, resoconto e Annulla. Zero senza scritture.
+PDD22/USB8/backup v11/layout invariati. Eventi come l'alba restano manuali;
+nessun calendario, lettura Beyond o registro persistente delle ricariche.

@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.42
+# Direzione visiva del dispositivo — v0.43
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -304,3 +304,14 @@ Un blocco conserva tutti i saldi, consultabili per trovare la fonte mancante.
 Nome lungo su più righe, controlli nel cerchio e tasti configurabili protetti.
 `multiple-costs-preview.png` e `multi-cost-*.png` nell'archivio: render LVGL host
 sintetici, nessuna nuova illustrazione o fotografia hardware.
+
+
+## Ricarica con dadi — v0.43
+
+La pagina Cariche conserva nome, saldo e correzioni; il footer a tre pulsanti
+aggiunge Ricarica. Formula e bonus su righe separate, anteprima senza tiro e
+conferma esplicita. Stesso renderer poliedrico pixel art delle cure; risultato
+marcato Cariche, con saldo, recupero ed eccesso nel riepilogo. Stato pieno o
+oggetto assente disabilitano la ricarica; retry conserva il candidato.
+Anteprime `item-recharge-preview.png` e `recharge-*.png` nell'archivio, render
+LVGL host sintetici, non fotografie hardware. Tasti configurabili conservati.

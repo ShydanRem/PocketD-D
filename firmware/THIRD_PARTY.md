@@ -132,3 +132,8 @@ delle modifiche. Nessun dato personale, JSON Beyond, asset o dipendenza esterna.
 La v0.42 aggiunge codice, UI e test originali per tre spese congiunte.
 Fixture PDD21 sintetica dell'encoder originale v0.41 `048ef28`, prodotta prima
 delle modifiche. Nessun dato personale, JSON Beyond, asset o dipendenza esterna.
+
+
+La v0.43 aggiunge core, UI e test originali per ricariche parziali delle cariche
+con i dadi pixel art esistenti. Nessun asset, fixture di formato, dato personale,
+JSON Beyond o dipendenza esterna aggiunti.

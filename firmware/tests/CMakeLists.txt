@@ -5,7 +5,7 @@ set(CONFIG_LV_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(CONFIG_LV_USE_THORVG_INTERNAL OFF CACHE BOOL "" FORCE)
 set(LV_BUILD_CONF_PATH "${CMAKE_CURRENT_LIST_DIR}/lv_conf.h" CACHE PATH "" FORCE)
 add_subdirectory(../.deps/lvgl lvgl)
-add_executable(ui ../core/damage.c ../core/screen.c ../core/status.c ../core/rest.c test_ui.c ../core/buttons.c ../core/pocketdd.c ../core/magic.c ../core/checks.c ../core/combat.c ../core/dice_animation.c ../core/dice_pool.c ../core/avatar.c)
+add_executable(ui ../core/recharge.c ../core/damage.c ../core/screen.c ../core/status.c ../core/rest.c test_ui.c ../core/buttons.c ../core/pocketdd.c ../core/magic.c ../core/checks.c ../core/combat.c ../core/dice_animation.c ../core/dice_pool.c ../core/avatar.c)
 target_include_directories(ui PRIVATE ../core)
 target_link_libraries(ui lvgl m)
 
@@ -85,3 +85,7 @@ target_include_directories(charges PRIVATE ../core)
 
 add_executable(multi-costs test_multi_costs.c ../core/damage.c ../core/rest.c ../core/dice_pool.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
 target_include_directories(multi-costs PRIVATE ../core)
+
+
+add_executable(recharge test_recharge.c ../core/recharge.c ../core/dice_pool.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
+target_include_directories(recharge PRIVATE ../core)

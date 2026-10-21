@@ -9,6 +9,7 @@
 #include "magic.h"
 #include "buttons.h"
 #include "rest.h"
+#include "recharge.h"
 #include "status.h"
 #include "damage.h"
 #ifndef PD_UI_TEST
@@ -31,7 +32,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT } page_t;
 PD_EXT static pd_state state,previous,pending,scratch;
 static bool undo_available,import_pending,has_roll;
 static pd_roll result;
@@ -61,9 +62,14 @@ static bool pool_view,dice_setup,die_picker,pool_damage;
 static unsigned pool_sides=6,pool_count=1;
 static int pool_bonus;
 static unsigned charge_draft;
+static pd_recharge_plan recharge_plan={.count=1,.sides=6};
+static pd_pool recharge_result;
+static bool recharge_rolled;
+static unsigned recharge_gained,recharge_before,recharge_after,recharge_maximum,recharge_index;
+static char recharge_name[PD_ITEM_NAME_BYTES];
 static unsigned inventory_page,item_index,target_armor=15,healing_gained;
 /* 0: checks/pools, 1: attack, 2: damage, 3: item cure, 4: hit die cure,
-   5: committed death save, 6: committed concentration save + incoming damage. */
+   5: committed death save, 6: committed concentration save + incoming damage, 7: item charge recovery. */
 static unsigned combat_roll;
 static pd_strike strike;
 static bool strike_ready,damage_used;
@@ -81,7 +87,7 @@ static bool rest_active,hit_rolled;
 PD_EXT static pd_state hit_candidate;
 static pd_pool hit_result;
 static unsigned hit_gained;
-static bool confirmation_open(void){return page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ITEM_CHARGE_CONFIRM);}
+static bool confirmation_open(void){return page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ITEM_RECHARGE_RESULT);}
 static pd_damage_plan damage_plan; /* First component + explicit concentration choice. */
 static pd_damage_component damage_extra[PD_DAMAGE_COMPONENTS-1],damage_part_draft;
 static pd_damage_context damage_context,damage_extra_context[PD_DAMAGE_COMPONENTS-1],damage_part_context,source_context_draft;
@@ -163,6 +169,7 @@ static void cost_next(void){
     pd_profile_cost_set(&profile_draft,profile_cost_row,(pd_cost){kind,index,kind?1:0});
 }
 
+static bool recharge_available(void){return state.inventory_available&&item_index<state.item_count&&state.items[item_index].quantity&&state.items[item_index].charges.current<state.items[item_index].charges.maximum;}
 static bool preview_profile(pd_state *s){*s=state;return pd_reduction_profile_set(s,profile_index,profile_draft);}
 static const char *profile_types(unsigned types){if(types==8191)return "Tutti";if(types==7)return "Cont./Perf./Tagl.";if(!types)return "Nessuno";for(unsigned i=0;i<13;i++)if(types==(1u<<i))return pd_damage_name(i);return "Personalizzati";}
 static unsigned allocation_sum(void){unsigned n=0;for(unsigned i=0;i<=damage_extra_count;i++)n+=allocation_draft[i];return n;}
@@ -308,7 +315,11 @@ static void act(intptr_t action) {
     if(page==TIME_HOME&&(action<2141||action>2146))return;
     if(page==TIME_CONFIRM&&action!=2147&&action!=2148&&action!=2149)return;
     if(page==TIME_DETAILS&&(action<2150||action>2152))return;
-    if(page==ITEM_CHARGES&&(action<2161||action>2166))return;
+    if(page==ITEM_CHARGES&&(action<2161||action>2166)&&action!=2170)return;
+    if(page==ITEM_RECHARGE&&(action<2171||action>2177))return;
+    if(page==ITEM_RECHARGE_CONFIRM&&(action!=2178&&action!=2179))return;
+    if(page==ITEM_RECHARGE_CONFIRM&&recharge_rolled&&action!=2179)return;
+    if(page==ITEM_RECHARGE_RESULT&&action!=2181&&action!=100)return;
     if(page==ITEM_CHARGE_CONFIRM&&action!=2167&&action!=2168)return;
     if(page==TURN_DETAILS&&(action<2125||action>2127))return;
     if(page==REACTION_CONFIRM&&action!=2121&&action!=2122&&action!=2124)return;
@@ -598,6 +609,24 @@ static void act(intptr_t action) {
     else if(action==2150&&page==TIME_DETAILS)page=TIME_CONFIRM;
     else if(action==2151&&page==TIME_DETAILS&&time_detail_page)time_detail_page--;
     else if(action==2152&&page==TIME_DETAILS){pd_round_summary r;if(preview_time(&next,&r)&&(time_detail_page+1)*3<bit_count(r.effects_advanced)+bit_count(r.defences_advanced))time_detail_page++;}
+    else if(action==2170&&page==ITEM_CHARGES&&recharge_available()){recharge_plan=(pd_recharge_plan){.count=1,.sides=6};recharge_rolled=false;page=ITEM_RECHARGE;}
+    else if(action==2171&&page==ITEM_RECHARGE)page=ITEM_CHARGES;
+    else if(action==2172&&page==ITEM_RECHARGE){const unsigned sides[]={4,6,8,10,12,20};for(unsigned i=0;i<6;i++)if(recharge_plan.sides==sides[i]){recharge_plan.sides=sides[(i+1)%6];break;}}
+    else if(action==2173&&page==ITEM_RECHARGE&&recharge_plan.count>1)recharge_plan.count--;
+    else if(action==2174&&page==ITEM_RECHARGE&&recharge_plan.count<PD_RECHARGE_MAX_DICE)recharge_plan.count++;
+    else if(action==2175&&page==ITEM_RECHARGE&&recharge_plan.bonus>PD_POOL_MIN_BONUS)recharge_plan.bonus--;
+    else if(action==2176&&page==ITEM_RECHARGE&&recharge_plan.bonus<PD_POOL_MAX_BONUS)recharge_plan.bonus++;
+    else if(action==2177&&page==ITEM_RECHARGE&&recharge_available()){recharge_rolled=false;page=ITEM_RECHARGE_CONFIRM;}
+    else if(action==2178&&page==ITEM_RECHARGE_CONFIRM&&!recharge_rolled)page=ITEM_RECHARGE;
+    else if(action==2179&&page==ITEM_RECHARGE_CONFIRM){
+        if(!recharge_rolled){if(!pd_item_recharge(&state,item_index,&recharge_plan,pd_board_random,NULL,&hit_candidate,&recharge_result,&recharge_gained))return;
+            recharge_before=state.items[item_index].charges.current;recharge_after=hit_candidate.items[item_index].charges.current;recharge_maximum=state.items[item_index].charges.maximum;recharge_index=item_index;strcpy(recharge_name,state.items[item_index].name);recharge_rolled=true;}
+        bool changed=memcmp(&hit_candidate,&state,sizeof state)!=0;
+        if(!changed||pd_storage_save(&hit_candidate)){if(changed){previous=state;undo_available=true;state=hit_candidate;invalidate_strike();}
+            recharge_rolled=false;combat_roll=7;pool_view=true;has_roll=false;ability=-1;page=DICE;pd_dice_pool_start(&dice_animation,&recharge_result,lv_tick_get());}
+    }
+    else if(action==2180&&page==DICE&&combat_roll==7&&has_roll&&!dice_animation.active)page=ITEM_RECHARGE_RESULT;
+    else if(action==2181&&page==ITEM_RECHARGE_RESULT){item_index=recharge_index;charge_draft=state.items[item_index].charges.current;page=ITEM_CHARGES;}
     else if(action==2160&&page==ITEM_DETAIL&&state.items[item_index].charges.maximum){charge_draft=state.items[item_index].charges.current;page=ITEM_CHARGES;}
     else if(action==2161&&page==ITEM_CHARGES)page=ITEM_DETAIL;
     else if(action>=2162&&action<=2165&&page==ITEM_CHARGES&&state.items[item_index].quantity){int n=(int)charge_draft+(const int[]){-10,-1,1,10}[action-2162];charge_draft=n<0?0:n>state.items[item_index].charges.maximum?state.items[item_index].charges.maximum:n;}
@@ -1405,9 +1434,32 @@ static void render_item_charges(void){
     snprintf(text,sizeof text,"Recupero: %s",(const char *const[]){"manuale","breve / lungo","lungo"}[v->charges.recovery]);small_label(text,83,200,300,PD_GOLD);
     if(v->quantity)snprintf(text,sizeof text,"Nuovo saldo: %u",charge_draft);else strcpy(text,"Oggetto non disponibile");label(text,83,233,300,false);
     const char *const labels[]={"-10","-1","+1","+10"};for(unsigned i=0;i<4;i++)button(labels[i],83+i*78,277,66,44,2162+i,v->quantity);
-    small_label("Cariche separate dalla quantita",83,331,300,PD_MUTED);button("Indietro",83,359,144,48,2161,true);button("Anteprima",239,359,144,48,2166,v->quantity);
+    small_label("Cariche separate dalla quantita",83,331,300,PD_MUTED);
+    const char *const names[]={"Indietro","Ricarica","Anteprima"};const intptr_t actions[]={2161,2170,2166};for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names[i],83+i*104,359,92,48,actions[i],i==0||(i==1?recharge_available():v->quantity));lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
+}
+static void render_recharge(void){
+    char text[180];bool receipt=page==ITEM_RECHARGE_RESULT;const char *name=receipt?recharge_name:state.items[item_index].name;
+    lv_obj_t *title=small_label(name,83,99,300,PD_TEXT);lv_label_set_long_mode(title,LV_LABEL_LONG_WRAP);lv_obj_set_height(title,58);
+    if(receipt){
+        snprintf(text,sizeof text,"Cariche recuperate: +%u",recharge_gained);label(text,83,164,300,false);
+        snprintf(text,sizeof text,"Tiro %ud%u %+d = %d",recharge_result.count,recharge_result.sides,recharge_result.bonus,recharge_result.total);small_label(text,83,211,300,PD_GOLD);
+        snprintf(text,sizeof text,"Somma dadi: %d",recharge_result.sum);small_label(text,83,245,300,PD_TEXT);
+        snprintf(text,sizeof text,"Saldo %u -> %u / %u",recharge_before,recharge_after,recharge_maximum);label(text,83,279,300,false);
+        if(recharge_result.sum+recharge_result.bonus<0)strcpy(text,"Recupero minimo zero");else snprintf(text,sizeof text,"Eccesso non applicato: %u",(unsigned)recharge_result.total-recharge_gained);small_label(text,83,315,300,PD_MUTED);
+        button("Cariche",83,359,144,48,2181,true);button("Fine",239,359,144,48,100,true);return;
+    }
+    if(page==ITEM_RECHARGE_CONFIRM){
+        label("Ricaricare le cariche?",83,164,300,false);snprintf(text,sizeof text,"%ud%u %+d",recharge_plan.count,recharge_plan.sides,recharge_plan.bonus);label(text,83,207,300,true);
+        snprintf(text,sizeof text,"Saldo %u / %u | spazio %u",state.items[item_index].charges.current,state.items[item_index].charges.maximum,state.items[item_index].charges.maximum-state.items[item_index].charges.current);small_label(text,83,249,300,PD_GOLD);
+        small_label("Evento e regole: decidi col DM",83,283,300,PD_TEXT);small_label(recharge_rolled?"Tiro conservato: riprova il salvataggio":"Dadi dopo il salvataggio del saldo",83,315,300,PD_MUTED);
+        button("Indietro",83,359,144,48,2178,!recharge_rolled);lv_obj_t *b=button(recharge_rolled?"Riprova":"Tira e salva",239,359,144,48,2179,recharge_rolled||recharge_available());lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);return;
+    }
+    label("Ricarica a dado",83,164,300,true);button("-",83,205,66,44,2173,recharge_plan.count>1);snprintf(text,sizeof text,"%ud%u >",recharge_plan.count,recharge_plan.sides);button(text,161,205,144,44,2172,true);button("+",317,205,66,44,2174,recharge_plan.count<PD_RECHARGE_MAX_DICE);
+    button("-",83,259,66,44,2175,recharge_plan.bonus>PD_POOL_MIN_BONUS);snprintf(text,sizeof text,"Bonus %+d",recharge_plan.bonus);label(text,161,271,144,false);button("+",317,259,66,44,2176,recharge_plan.bonus<PD_POOL_MAX_BONUS);
+    small_label("Minimo zero; limite al massimo",83,309,300,PD_GOLD);small_label("Alba e altre regole: scelta manuale",83,335,300,PD_MUTED);button("Indietro",83,359,144,48,2171,true);button("Anteprima",239,359,144,48,2177,recharge_available());
 }
 static void render_damage(void) {
+    if(page==ITEM_RECHARGE||page==ITEM_RECHARGE_CONFIRM||page==ITEM_RECHARGE_RESULT){render_recharge();return;}
     if(page==ITEM_CHARGES||page==ITEM_CHARGE_CONFIRM){render_item_charges();return;}
     char text[180];
     if(page==DAMAGE_HOME){
@@ -1772,6 +1824,7 @@ static void render(void) {
             snprintf(text,sizeof text,"Attacco %+d",strike_ready?strike.roll.bonus:w.attack_bonus);
         }
         else if(combat_roll==3||combat_roll==4)snprintf(text,sizeof text,"Cura %ud%u %+d",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
+        else if(combat_roll==7)snprintf(text,sizeof text,"Ricarica %ud%u %+d",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
         else if(combat_roll==5)snprintf(text,sizeof text,"Salvezza morte");
         else if(combat_roll==6)snprintf(text,sizeof text,"COS %+d | CD %u",result.bonus,incoming_result.concentration_dc);
         else if(pool_view)snprintf(text,sizeof text,"%s %ud%u %+d",dice_animation.pool.damage?"Danni":"Somma",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
@@ -1799,6 +1852,7 @@ static void render(void) {
         if(has_roll) {
             if(combat_roll==1)snprintf(text,sizeof text,"%s %d / CA %u",strike.critical?"Critico!":strike.hits?"Colpito":"Mancato",strike.roll.total,strike.armor);
             else if(combat_roll==3||combat_roll==4)snprintf(text,sizeof text,"Cura %d | PF +%u -> %u/%u",dice_animation.pool.total,healing_gained,state.hp,pd_max_hp(&state));
+            else if(combat_roll==7)snprintf(text,sizeof text,"Cariche +%u | %u/%u",recharge_gained,recharge_after,recharge_maximum);
             else if(combat_roll==5)snprintf(text,sizeof text,"%u | %s",result.natural,state.hp?"Riprendi 1 PF":state.status.failures==3?"Tre fallimenti":state.status.stabilized?"Stabilizzato":result.natural>=10?"Riuscita":"Fallita");
             else if(combat_roll==6)snprintf(text,sizeof text,"%u %+d = %d | %s",result.natural,result.bonus,result.total,incoming_result.ends_concentration?"persa":"mantenuta");
             else if(pool_view) {
@@ -1811,7 +1865,9 @@ static void render(void) {
         } else snprintf(text,sizeof text,"%s",!allowed?"Da verificare: apri i dettagli":dice_animation.active?"In volo...":effective>0?"Pronto: vantaggio":effective<0?"Pronto: svantaggio":"Pronto al lancio");
         label(text,73,269,320,false);
         if(!dice_pixels)label("Animazione non disponibile",73,183,320,false);
-        if(combat_roll==6){
+        if(combat_roll==7){
+            button("Zaino",83,296,76,44,80,!dice_animation.active);button(dice_animation.active?"Accelera":"Riepilogo",167,296,132,44,dice_animation.active?16:2180,true);button("Fine",307,296,76,44,100,!dice_animation.active);
+        } else if(combat_roll==6){
             button("Stato",83,296,76,44,1500,!dice_animation.active);
             button(dice_animation.active?"Accelera":"Riepilogo",167,296,132,44,dice_animation.active?16:1809,true);
             button("Fine",307,296,76,44,100,!dice_animation.active);

@@ -1,10 +1,10 @@
-# Firmware PocketD-D 0.42 — spese multiple
+# Firmware PocketD-D 0.43 — ricariche a dado
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
-[Novità v0.42: spese multiple](COSTI-MULTIPLI.md).
+[Novità v0.43: ricariche a dado](RICARICHE-OGGETTI.md).
 PDD22, USB v8, backup PC v11; layout invariato e lettura dei salvataggi precedenti.
 
 ## Stato e perimetro
@@ -900,3 +900,31 @@ Build ESP32-S3 **907872 byte**, partizione app 4 MiB **78% libera**;
 ESP-IDF 5.5.5/LVGL 9.4.0. PDD22, USB8/backup PC v11/layout invariati.
 Nessun flash, nuova lettura Beyond, modifica di raccolte personali o collaudo
 fisico di display/touch/tasti/USB/batteria/memoria/alimentazione.
+
+
+## Verifiche v0.43 — ricarica parziale delle cariche
+
+Core `recharge.c`: piano esplicito 1–6 dadi d4/d6/d8/d10/d12/d20, bonus −15..+60,
+recupero minimo zero e massimo limitato al saldo disponibile. Requisiti ed evento
+restano manuali. Quantità, PF ed effetti invariati. Nessun RNG a saldo pieno,
+oggetto assente, pool mancante o input invalido. [Uso e limiti](RICARICHE-OGGETTI.md).
+
+103.680 casi C indipendenti: 60 righe, dadi/conteggi/capacità/saldi/bonus/facce;
+candidati completi, rifiuti con tutti gli output intatti e persistenza PDD22.
+Suite host completa, 41.411 confronti PC → USB → C e 144 test JavaScript passati;
+build Vite/HTML autonomo riuscite. Nessuna modifica al modello PC o ai formati.
+LVGL host: bozza/anteprima, annullamento, errore/retry senza rilancio, salvataggio
+prima dell'animazione, recupero cap/pieno/zero/oggetto assente, nome lungo e riga
+60, sei d20 +60, Annulla, tasti/import protetti e fallback senza canvas.
+AddressSanitizer/UndefinedBehaviorSanitizer su ricariche e UI passati con leak
+detector disattivato. Zero recuperato non scrive e conserva l'Undo precedente.
+
+ESP32-S3: **910800 byte**, partizione app 4 MiB **78% libera**, ESP-IDF 5.5.5
+e LVGL 9.4.0. PDD22/USB8/backup PC v11/layout invariati; nessuna nuova migrazione.
+Nessun flash, nuova lettura Beyond, modifica di raccolte personali o collaudo
+fisico di display/touch/tasti/USB/memoria/batteria/alimentazione.
+
+La riprova del nuovo percorso è verificata con errore temporaneo del backend
+host. Il backend NVS resta fail-closed: un errore I/O blocca nuove scritture
+fino al riavvio; non si promette il recupero del tiro in RAM dopo spegnimento.
+Al riavvio vale la banca valida più recente. Nessuna modifica a questa politica.

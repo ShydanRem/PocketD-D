@@ -1,5 +1,10 @@
 # Spese multiple sul dispositivo — v0.42
 
+**Aggiornamento v0.43:** le [ricariche a dado](RICARICHE-OGGETTI.md) sono disponibili
+come evento esplicito, senza rilevare automaticamente alba o frequenza.
+PDD22/USB8/backup v11 invariati. Le limitazioni storiche sotto si riferiscono
+alla versione del titolo.
+
 Un profilo di riduzione può richiedere fino a **tre spese distinte**, oltre
 all'eventuale reazione. Esempio: due cariche dello scudo e un utilizzo di una
 capacità. Il dispositivo verifica e salva l'intera operazione offline.

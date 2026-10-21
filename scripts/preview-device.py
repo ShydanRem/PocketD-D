@@ -249,3 +249,13 @@ if all((base/(name+'.ppm')).is_file() for name in multi):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(multi):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'multiple-costs-preview.png');print(base/'multiple-costs-preview.png')
+
+recharge=['recharge-setup','recharge-confirm','recharge-result','recharge-receipt']
+recharge_details=['recharge-retry','recharge-flight','recharge-full','recharge-zero','recharge-maximum-setup','recharge-maximum-result','recharge-maximum-receipt','recharge-unavailable','recharge-no-canvas']
+for name in recharge+recharge_details:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in recharge):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(recharge):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'item-recharge-preview.png');print(base/'item-recharge-preview.png')
