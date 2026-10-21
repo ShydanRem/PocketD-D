@@ -67,3 +67,6 @@ target_include_directories(reductions PRIVATE ../core)
 
 add_executable(reduction-profiles test_reduction_profiles.c ../core/damage.c ../core/rest.c ../core/dice_pool.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
 target_include_directories(reduction-profiles PRIVATE ../core)
+
+add_executable(profile-costs test_profile_costs.c ../core/damage.c ../core/rest.c ../core/dice_pool.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
+target_include_directories(profile-costs PRIVATE ../core)

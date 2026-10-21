@@ -1,6 +1,7 @@
 # Riduzioni esplicite dei danni — v0.35
 
-> Aggiornamento v0.36: [profili persistenti di riduzione e budget per colpo](PROFILI-RIDUZIONE.md).
+> Aggiornamento v0.37: [costi e reazione](COSTI-REAZIONE.md), PDD17.
+> Base v0.36: [profili persistenti di riduzione e budget per colpo](PROFILI-RIDUZIONE.md).
 > PDD16 con lettura PDD1–PDD15; i valori manuali del colpo restano solo RAM.
 
 Il dispositivo permette di sottrarre quantità esplicite al colpo, distinguendo

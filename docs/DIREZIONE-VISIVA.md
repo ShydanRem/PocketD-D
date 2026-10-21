@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.36
+# Direzione visiva del dispositivo — v0.37
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -253,3 +253,11 @@ Budget e somma assegnata sono visibili; i requisiti completi si confrontano prim
 della conferma. Conto → Profilo conserva il dettaglio all'impatto. Anteprima
 host: `firmware/tests/out/ui-build/reduction-profiles-preview.png`; la cattura
 non prova la leggibilità sul display fisico.
+
+
+La v0.37 aggiunge Costi alla configurazione e al dettaglio del profilo all'impatto:
+fonte leggibile, nome completo, saldo prima/dopo, costo e reazione. Il confronto
+usa una quarta pagina senza comprimere i tre confronti precedenti. Stato offre
+Reazione e una conferma Inizio turno distinta dal round. Gli avvisi spiegano
+spesa a danno zero e mancato recupero al round. Anteprima host:
+`firmware/tests/out/ui-build/profile-costs-preview.png`; nessuna cattura fisica.

@@ -1,11 +1,11 @@
-# Firmware PocketD-D 0.36 — profili locali di riduzione
+# Firmware PocketD-D 0.37 — costi dei profili e reazione
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
-[Novità v0.36: profili persistenti e budget condiviso](PROFILI-RIDUZIONE.md).
-PDD16, USB v7/layout invariati e lettura dei salvataggi precedenti.
+[Novità v0.37: costi dei profili e reazione](COSTI-REAZIONE.md).
+PDD17, USB v7/layout invariati e lettura dei salvataggi precedenti.
 
 ## Stato e perimetro
 
@@ -233,8 +233,8 @@ reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
 ## Salvataggio e dadi
 
 NVS nel namespace `pocketdd`, nuova partizione `pdd_state`, due chiavi alternate
-`state_a`/`state_b`. Record PDD16 (tag `PDDG`) da **8363 + 552 × numero voci** byte, massimo
-74603. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
+`state_a`/`state_b`. Record PDD17 (tag `PDDH`) da **8379 + 552 × numero voci** byte, massimo
+74619. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
 visibile. Nessun dump di struct, erase o fallback distruttivo. Errori I/O o
 allocazioni insufficienti bloccano scritture; CRC e versioni future conservati.
 
@@ -256,8 +256,11 @@ ogni proprietà. Al payload si aggiungono 78 byte di selettori base/extra, prima
 del CRC. PDD15 aggiunge altri 208 byte per due extra indipendenti in più per
 tipo; le copie precedenti mantengono il primo extra e iniziano gli altri vuoti.
 PDD16 aggiunge 30 byte per tre profili di riduzione; copie precedenti con
-profili vuoti, senza perdere gli extra. Le nuove scritture richiedono firmware
-v0.36 o successivo: [compatibilità e downgrade](PROFILI-RIDUZIONE.md).
+profili vuoti, senza perdere gli extra. PDD17 aggiunge 16 byte: tre riferimenti
+fonte/costo/reazione e lo stato globale della reazione. PDD1–PDD16 sono letti
+senza spesa e con reazione pronta, conservando i profili già presenti.
+Le nuove scritture richiedono firmware v0.37 o successivo:
+[compatibilità e downgrade](COSTI-REAZIONE.md).
 Il nuovo uploader supporta USB v1–v7. Preferenze avatar/tasti
 locali conservate durante l'importazione. [Dettagli](MAGIE-TASTI.md).
 
@@ -693,3 +696,35 @@ Firmware v0.36: **891008 byte**, partizione app 4 MiB **79% libera**;
 ESP-IDF 5.5.5/LVGL 9.4.0. PDD16, USB v7/layout invariati. Nessun flash/collaudo
 fisico, lettura Beyond o modifica della raccolta personale.
 [Uso e limiti](PROFILI-RIDUZIONE.md).
+
+
+## Verifiche v0.37 — costi e reazione
+
+354816 combinazioni indipendenti di slot/fase/fonte/costo/saldo/reazione/danno/
+difese, tutti gli 8 contatori e 119 riferimenti a usi testati, pool di magie
+limitate e capacità. Spesa esatta fino a zero, gratis/solo reazione, blocco prima
+del RNG per saldo/reazione e tutti i vincoli del colpo; nessuna spesa parziale.
+Un candidato COS con costo, reazione, PF e fine congiunta; snapshot del nome e
+dei saldi, riprova fissata e annullamento completo. Reset del solo turno,
+reazione invariata al round e ai riposi, recuperi delle capacità conservati.
+PDD17 massimo, tutti i 16 nuovi byte corrotti con CRC valido e fixture PDD16
+originale; migrazione NVS senza scritture al boot, banca originale conservata.
+
+UI LVGL completa: configurazione, quarto confronto, consultazione, saldi e costi
+a danno zero, blocchi, ritorno allo stesso impatto dopo recupero reazione,
+conferma/errore/riprova/annulla, tasti/import protetti, assenza di pool,
+zero/massimo e nomi da 40 caratteri anche con glifi larghi. Verifica dell'altezza
+del testo avvolto, nessuna sovrapposizione e controlli ≥44 px dentro il cerchio.
+Catture host visionate; anteprima `firmware-host-preview/profile-costs-preview.png`
+nell'archivio. Non sono immagini del display fisico.
+
+Suite firmware completa e 37751 confronti PC→USB→C passati; ASan/UBSan su
+costi/profili/riduzioni, extra/condizioni/misti, danni/COS/vincoli/difese,
+effetti/durate, magie/riposi/stato, allocazioni, core/parser, NVS e UI finale;
+leak detector disattivato. 138 test JS e build PC passati.
+
+Firmware v0.37: **894832 byte**, partizione app 4 MiB **79% libera**;
+ESP-IDF 5.5.5/LVGL 9.4.0. PDD17 legge PDD1–PDD16, USB v7/layout invariati.
+Nessun flash/collaudo fisico, nuova lettura Beyond o modifica della raccolta
+personale. Slot/cariche oggetto, costi multipli, requisiti e conseguenze
+automatiche delle capacità restano successivi. [Uso e limiti](COSTI-REAZIONE.md).

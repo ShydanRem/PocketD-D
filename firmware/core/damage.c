@@ -1,4 +1,5 @@
 #include "damage.h"
+#include <string.h>
 const char *pd_damage_name(unsigned type) {
     static const char *const names[]={"Contundente","Perforante","Tagliente","Acido","Freddo","Fuoco","Forza","Fulmine","Necrotico","Veleno","Psichico","Radiante","Tuono"};
     return type<PD_DAMAGE_TYPES?names[type]:NULL;
@@ -48,6 +49,8 @@ bool pd_damage_event_preview(const pd_state *s,const pd_damage_event *event,pd_d
     if(!s||!event||!out||!pd_valid(s)||!event->count||event->count>PD_DAMAGE_COMPONENTS||event->concentration>PD_CONCENTRATION_END||event->reduction_after>9999||event->profile>PD_REDUCTION_PROFILES)return false;
     pd_damage_event_summary report={0};const pd_reduction_profile *profile=event->profile?&s->reductions[event->profile-1]:NULL;
     if(profile){report.profile=event->profile;report.profile_count=event->count;report.profile_snapshot=*profile;report.profile_unavailable=!profile->active;
+        report.reaction_before=s->reaction_spent;report.reaction_after=s->reaction_spent||profile->reaction;report.reaction_missing=profile->reaction&&s->reaction_spent;
+        if(profile->cost_kind){const char *name=profile->cost_kind==PD_COST_COUNTER?s->resources[profile->cost_index].name:s->magic.powers[profile->cost_index].name;size_t length=strlen(name);if(length>40)length=40;memcpy(report.cost_name,name,length);report.cost_before=profile->cost_kind==PD_COST_COUNTER?s->resources[profile->cost_index].current:s->magic.powers[profile->cost_index].remaining;report.cost_missing=report.cost_before<profile->cost;report.cost_after=report.cost_missing?report.cost_before:report.cost_before-profile->cost;}
         for(unsigned i=0;i<event->count;i++){if(event->allocation[i]>9999)return false;report.profile_rows[i]=event->allocation[i];report.profile_requested+=event->allocation[i];}
         if(profile->stage){report.profile_budget=report.profile_requested!=0;report.profile_requested=profile->value;}
         else report.profile_budget=!report.profile_requested||report.profile_requested>profile->value;
@@ -80,10 +83,10 @@ bool pd_damage_event_preview(const pd_state *s,const pd_damage_event *event,pd_d
     }
     unsigned total=0;
     for(unsigned i=0;i<report.count;i++){pd_damage_group *g=&report.groups[i];if(g->configured&&!g->unresolved){g->adjusted=adjusted(g->amount-g->reduction,g->flags);total+=g->adjusted;}}
-    pd_damage_summary *r=&report.total;r->configured=!report.missing&&!report.context_missing&&!report.profile_unavailable&&!report.profile_budget&&!report.profile_ineligible;r->hp_after=s->hp;r->temp_after=s->temp_hp;r->max_hp_after=pd_max_hp(s);
+    pd_damage_summary *r=&report.total;r->configured=!report.missing&&!report.context_missing&&!report.profile_unavailable&&!report.profile_budget&&!report.profile_ineligible&&!report.cost_missing&&!report.reaction_missing;r->hp_after=s->hp;r->temp_after=s->temp_hp;r->max_hp_after=pd_max_hp(s);
     if(report.count==1)r->flags=report.groups[0].flags;
     report.requested_after=event->reduction_after+(profile&&profile->stage?profile->value:0);
-    if(!r->configured){report.profile_applied=0;for(unsigned i=0;i<PD_DAMAGE_COMPONENTS;i++)report.profile_used[i]=0;}
+    if(!r->configured){report.cost_after=report.cost_before;report.reaction_after=report.reaction_before;report.profile_applied=0;for(unsigned i=0;i<PD_DAMAGE_COMPONENTS;i++)report.profile_used[i]=0;}
     if(r->configured){
         report.mitigated=total;report.reduction_after=event->reduction_after<total?event->reduction_after:total;total-=report.reduction_after;
         if(profile&&profile->stage){report.profile_applied=profile->value<total?profile->value:total;report.reduction_after+=report.profile_applied;total-=report.profile_applied;}
@@ -101,6 +104,7 @@ bool pd_damage_event_preview(const pd_state *s,const pd_damage_event *event,pd_d
 }
 bool pd_damage_event_apply(pd_state *s,const pd_damage_event *event,pd_damage_event_summary *out) {
     pd_damage_event_summary report;if(!out||!pd_damage_event_preview(s,event,&report)||!report.total.allowed)return false;
+    if(report.profile){const pd_reduction_profile *p=&report.profile_snapshot;if(p->cost_kind==PD_COST_COUNTER)s->resources[p->cost_index].current-=p->cost;else if(p->cost_kind==PD_COST_POWER)s->magic.powers[p->cost_index].remaining-=p->cost;if(p->reaction)s->reaction_spent=true;}
     if(report.total.adjusted)pd_hp(s,-(int)report.total.adjusted);
     if(report.total.ends_concentration)pd_concentration_end(s);
     *out=report;return true;

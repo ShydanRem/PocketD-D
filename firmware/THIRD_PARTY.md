@@ -102,3 +102,8 @@ prima/dopo e conto del colpo. Nessun nuovo asset esterno o dato personale.
 La v0.36 aggiunge codice/UI e test originali per profili di riduzione. Fixture
 PDD15 sintetica dell'encoder v0.35 `c99bdf0`, senza dati Beyond o informazioni
 personali. Nessun nuovo asset esterno.
+
+
+La v0.37 aggiunge codice, UI e test originali per costi dei profili e reazione.
+Fixture PDD16 sintetica prodotta dall'encoder originale v0.36 `885d9d2`, senza
+JSON Beyond o dati personali. Nessun nuovo asset o dipendenza esterna.

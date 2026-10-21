@@ -325,3 +325,17 @@ interna hanno conferme distinte. Vincoli e round includono i bit 39–41 dei tre
 profili, dopo i 39 extra; tutte le scadenze dipendono dalla validazione numerica
 atomica. PDD16 legge PDD1–PDD15 senza scritture al boot.
 [Dettagli](PROFILI-RIDUZIONE.md).
+
+
+## Costi e reazione — v0.37
+
+Ogni profilo aggiunge fonte/indice/costo/richiede-reazione; lo stato conserva
+reaction_spent. La definizione valida il massimo e il tipo del pool, senza
+richiederne la disponibilità corrente. Preview congela nome/saldi/reazione;
+insufficienza o reazione usata bloccano configured prima di RNG e applicazione.
+Apply scala soltanto dopo allowed, nello stesso candidato di danni e vincoli.
+Selezione esplicita costa anche a danno zero. Il retry COS salva il candidato
+fissato; non richiama apply. pd_reaction_change e la UI Inizio turno modificano
+soltanto la reazione; round/riposo non la recuperano. Il ritorno al danno bloccato
+mantiene la bozza. PDD17 aggiunge 16 byte espliciti e legge PDD1–PDD16 senza
+scritture al boot. USB v7 e schema PC invariati. [Dettagli](COSTI-REAZIONE.md).

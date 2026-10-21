@@ -25,7 +25,7 @@ int main(void){
  for(unsigned i=0;i<30;i++)assert(pd_condition_add(&s,"Nota sintetica",i%7));before=s;assert(!pd_condition_add(&s,"Troppo",0)&&!memcmp(&s,&before,sizeof s));
  s.magic.count=PD_POWERS;for(unsigned i=0;i<PD_POWERS;i++)s.magic.powers[i]=(pd_power){.name="Magia sintetica",.flags=PD_PREPARED};
  static uint8_t data[PD_RECORD_SIZE];uint32_t gen;s.shortcuts[0]=8;size_t length=pd_encode(&s,22,data);assert(length==PD_RECORD_SIZE&&pd_decode(data,length,&next,&gen)&&next.magic.count==PD_POWERS&&gen==22&&next.shortcuts[0]==8&&next.status.count==30&&next.status.conditions[29].level==1);
- unsigned offsets[]={0,1,2,3,4,66},bad[]={2,31,4,4,2,7};size_t start=length-2317;
+ unsigned offsets[]={0,1,2,3,4,66},bad[]={2,31,4,4,2,7};size_t start=length-2333;
  for(unsigned i=0;i<6;i++){length=pd_encode(&s,22,data);data[start+offsets[i]]=bad[i];uint32_t crc=pd_crc32(data,length-4);for(unsigned j=0;j<4;j++)data[length-4+j]=crc>>(8*j);before=next;gen=99;assert(!pd_decode(data,length,&next,&gen)&&gen==99&&!memcmp(&next,&before,sizeof next));}
- puts("Status: base death saves, 1/20, stabilization, explicit corrections, HP recovery/dead guards, poison, 30 notes and strict PDD16 persistence passed");
+ puts("Status: base death saves, 1/20, stabilization, explicit corrections, HP recovery/dead guards, poison, 30 notes and strict PDD17 persistence passed");
 }

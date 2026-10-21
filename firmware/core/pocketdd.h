@@ -6,7 +6,7 @@
 #define PD_RESOURCES 8
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
-#define PD_RECORD_SIZE 74603
+#define PD_RECORD_SIZE 74619
 #define PD_POWERS 120
 #define PD_POWER_TEXT_BYTES 501
 #define PD_ITEMS 60
@@ -72,7 +72,7 @@ typedef struct {
 #define PD_REDUCTION_PROFILES 3
 #define PD_TIMED_DEFENCES (PD_DEFENCE_GRANTS + PD_REDUCTION_PROFILES)
 /* Local reusable budget; applying it to an impact is always explicit. */
-typedef struct { uint16_t value,types; uint8_t stage,rule; bool active,timed; uint8_t rounds,concentration; } pd_reduction_profile;
+typedef struct { uint16_t value,types; uint8_t stage,rule; bool active,timed; uint8_t rounds,concentration,cost_kind,cost_index; uint16_t cost; bool reaction; } pd_reduction_profile;
 typedef struct { uint8_t effects_advanced,effects_expired; uint64_t defences_advanced,defences_expired; /* Extra bits slot*13+type, profile bits 39+index. */ } pd_round_summary;
 typedef struct {
     char name[PD_NAME_BYTES];
@@ -92,6 +92,7 @@ typedef struct {
     uint8_t effect_count;
     pd_effect effects[PD_EFFECTS];
     pd_reduction_profile reductions[PD_REDUCTION_PROFILES];
+    bool reaction_spent; /* Explicit turn marker; rounds and rests never reset it. */
     pd_defences defences; /* Explicit local configuration; unknown is not normal. */
     uint8_t brightness,dim_timeout; /* Device-local: 10..100%, off/30/60/120s. */
     uint8_t shortcuts[3]; /* PWR short, BOOT short, BOOT long; device-local. */
@@ -130,6 +131,10 @@ bool pd_defence_temporary_set(pd_state *state,unsigned type,pd_defence_temporary
 /* Legacy setters above address slot 0; slots are stable and never compacted. */
 const pd_defence_temporary *pd_defence_grant(const pd_state *state,unsigned type,unsigned slot);
 bool pd_defence_grant_set(pd_state *state,unsigned type,unsigned slot,pd_defence_temporary defence);
+enum { PD_COST_NONE,PD_COST_COUNTER,PD_COST_POWER };
+unsigned pd_reduction_cost_max(const pd_state *state,unsigned kind,unsigned index);
+/* Explicit annotation/reset; already-spent spending rejects, repeated reset succeeds. */
+bool pd_reaction_change(pd_state *state,bool spent);
 bool pd_reduction_profile_set(pd_state *state,unsigned index,pd_reduction_profile profile);
 int pd_modifier(int score);
 void pd_hp(pd_state *state, int delta);

@@ -189,3 +189,13 @@ if all((base/(name+'.ppm')).is_file() for name in profiles):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(profiles):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'reduction-profiles-preview.png');print(base/'reduction-profiles-preview.png')
+
+# Resource costs and explicit reaction lifecycle, captured from the host firmware.
+costs=['cost-editor','cost-preview','reaction-turn','cost-snapshot']
+for name in costs+['cost-confirm','cost-view','cost-retry','cost-zero','cost-blocked','reaction-used','reaction-ready','cost-power','cost-long','cost-power-preview','reaction-external','cost-import','cost-wide','cost-wide-confirm','cost-wide-preview']:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in costs):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(costs):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'profile-costs-preview.png');print(base/'profile-costs-preview.png')
