@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.41
+# Direzione visiva del dispositivo — v0.42
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -293,3 +293,14 @@ azioni bloccate. Costi mostrano nome e saldi originali; i riposi separano unità
 di carica recuperate dalle voci con utilizzi. Nessun nuovo gesto o assegnazione
 obbligatoria ai tasti. Anteprima `item-charges-preview.png` e `charges-*.png`
 nell'archivio, render reali LVGL host con dati sintetici, non fotografie hardware.
+
+
+## Tre spese nello stesso spazio — v0.42
+
+Il pulsante Spesa 1/3–3/3 sostituisce la testata dei costi e sfoglia le fonti
+senza aggiungere righe o gesti nascosti. La conferma confronta prima/dopo per
+la spesa selezionata; il resoconto mostra nome, tipo/indice e saldi originali.
+Un blocco conserva tutti i saldi, consultabili per trovare la fonte mancante.
+Nome lungo su più righe, controlli nel cerchio e tasti configurabili protetti.
+`multiple-costs-preview.png` e `multi-cost-*.png` nell'archivio: render LVGL host
+sintetici, nessuna nuova illustrazione o fotografia hardware.

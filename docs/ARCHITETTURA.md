@@ -400,3 +400,24 @@ PDD21 (`PDDL`) aggiunge 300 byte, `8829+552*N`, max 75069; vecchie copie lette
 senza pool e senza scritture al boot, tag precedenti rifiutano il nuovo tipo costo.
 Fixture PDD20 autentica dell'encoder v0.40 `6604bad`; dati esclusivamente sintetici.
 Layout e tasti configurabili conservati. [Contratti e verifiche](CARICHE-OGGETTI.md).
+
+
+## Spese multiple — v0.42
+
+Tre posizioni `pd_cost` per profilo, oltre alla reazione. `pd_profile_cost`
+normalizza la prima posizione storica e le due aggiuntive; il setter della
+bozza non muta lo stato. La validazione del profilo richiede riferimenti validi,
+costi positivi entro capacità e fonti distinte per tipo/indice. Il selettore
+UI salta fonti già usate; buchi conservati, nessun compattamento implicito.
+
+La preview congela tre ricevute nome/saldo/prima/dopo e segnali per posizione.
+I blocchi sono aggregati; se ne manca uno, tutti i saldi dopo restano uguali a
+prima. Apply addebita le tre fonti solo dopo la validazione dell'intero colpo,
+poi PF e concentrazione. Il retry COS salva lo stesso candidato già tirato.
+Costi e ricevute si sfogliano senza letture dai saldi correnti del risultato.
+
+PDD22 (`PDDM`), 24 byte aggiunti, `8853+552*N`, max 75093. PDD1–21 senza nuove
+spese e senza scritture al boot; fixture PDD21 dell'encoder v0.41 `048ef28` con
+cariche, prime spese e timer conservati. USB8/backup v11/layout invariati.
+Import confermato azzera configurazioni locali, annullato le conserva.
+[Uso e verifiche](COSTI-MULTIPLI.md).

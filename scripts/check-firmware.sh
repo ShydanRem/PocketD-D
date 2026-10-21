@@ -24,5 +24,5 @@ cc -std=c11 -Wall -Wextra -Werror -Wno-unused-parameter -Ifirmware/core -Ifirmwa
 firmware/tests/out/storage
 cmake -S firmware/tests -B firmware/tests/out/ui-build -G Ninja
 cmake --build firmware/tests/out/ui-build --parallel 4
-(cd firmware/tests/out/ui-build && ./dice && ./pool && ./avatar && ./checks && ./combat && ./magic && ./rest && ./status && ./effects && ./durations && ./damage && ./concentration && ./links && ./temporary-defences && ./mixed-damage && ./conditional-defences && ./multiple-defences && ./reductions && ./reduction-profiles && ./profile-costs && ./slot-costs && ./turns && ./time && ./charges && ./screen && ./buttons && ./alloc && ./ui)
+(cd firmware/tests/out/ui-build && ./dice && ./pool && ./avatar && ./checks && ./combat && ./magic && ./rest && ./status && ./effects && ./durations && ./damage && ./concentration && ./links && ./temporary-defences && ./mixed-damage && ./conditional-defences && ./multiple-defences && ./reductions && ./reduction-profiles && ./profile-costs && ./slot-costs && ./turns && ./time && ./charges && ./multi-costs && ./screen && ./buttons && ./alloc && ./ui)
 python3 scripts/check-device.py

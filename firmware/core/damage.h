@@ -21,13 +21,14 @@ typedef struct { unsigned count,concentration; pd_damage_component components[PD
     unsigned profile,allocation[PD_DAMAGE_COMPONENTS]; /* 0:none, otherwise index+1. One shared pre-defence budget, or one final budget. */
 } pd_damage_event;
 typedef struct { unsigned type,amount,adjusted,flags,reduction; /* Actual pre-defence subtraction, before grouping/rounding. */ bool configured; uint8_t unresolved; /* Property bits not decided by the known source facts. */ } pd_damage_group;
+typedef struct { unsigned before,after; char name[41]; bool missing,unavailable; } pd_cost_receipt;
 typedef struct {
     pd_damage_summary total; /* flags meaningful only when there is one group. */
     unsigned raw,count;
     unsigned requested_before,requested_after,reduction_before,reduction_after,mitigated; /* mitigated: sum after defences, before final reduction. */
     unsigned profile,profile_count,profile_requested,profile_applied,profile_rows[PD_DAMAGE_COMPONENTS],profile_used[PD_DAMAGE_COMPONENTS]; /* Used/applied are zero when total.configured is false. */
     pd_reduction_profile profile_snapshot;
-    unsigned cost_before,cost_after; char cost_name[41];
+    pd_cost_receipt costs[PD_PROFILE_COSTS]; /* Frozen per-expense names and balances. */
     bool cost_missing,cost_unavailable,reaction_missing,reaction_before,reaction_after; /* Availability blocks configured before RNG. */
     uint8_t profile_ineligible; bool profile_unavailable,profile_budget; /* These block total.configured. */
     uint16_t missing; /* Unconfigured damage-type bits. */

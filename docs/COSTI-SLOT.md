@@ -1,5 +1,10 @@
 # Costi in slot sul dispositivo — v0.38
 
+**Aggiornamento v0.42:** [spese multiple](COSTI-MULTIPLI.md) disponibili: fino a
+tre fonti distinte per profilo più reazione, confermate insieme. Formato NVS
+corrente PDD22; USB8 e backup PC v11 invariati. Le misure e le limitazioni
+storiche sotto si riferiscono alla versione del titolo.
+
 **Aggiornamento v0.41:** [cariche degli oggetti](CARICHE-OGGETTI.md) disponibili
 come saldo distinto dalla quantità, con configurazione PC, gestione sul dispositivo,
 costi e recuperi. Formati correnti: backup PC v11, USB8 e PDD21. Le verifiche

@@ -82,3 +82,6 @@ target_include_directories(time PRIVATE ../core)
 
 add_executable(charges test_charges.c ../core/damage.c ../core/rest.c ../core/dice_pool.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
 target_include_directories(charges PRIVATE ../core)
+
+add_executable(multi-costs test_multi_costs.c ../core/damage.c ../core/rest.c ../core/dice_pool.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
+target_include_directories(multi-costs PRIVATE ../core)

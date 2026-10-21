@@ -25,9 +25,10 @@
 #include "fixtures/state-v18.h"
 #include "fixtures/state-v19.h"
 #include "fixtures/state-v20.h"
+#include "fixtures/state-v21.h"
 static void strip_charges(cJSON *root){cJSON *items=cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(root,"inventory"),"items");cJSON *item; cJSON_ArrayForEach(item,items)cJSON_DeleteItemFromObjectCaseSensitive(item,"charges");}
 static void record_crc(uint8_t *record) {
-    size_t size=8829; /* No powers: PDD21 prefix, recovery, status and CRC. */
+    size_t size=8853; /* No powers: PDD22 prefix, recovery, status and CRC. */
     uint32_t crc=pd_crc32(record,size-4);
     for(int i=0;i<4;i++)record[size-4+i]=crc>>(8*i);
 }
@@ -83,6 +84,8 @@ int main(int argc,char **argv) {
     assert(pd_decode(golden_v19,sizeof golden_v19,&out,&gen)&&gen==191&&out.effects[0].tick==PD_TICK_START&&out.effects[0].rounds==2&&!out.effects[0].minutes&&pd_defence_grant(&out,5,2)->tick==PD_TICK_END&&!pd_defence_grant(&out,5,2)->minutes&&out.reductions[0].cost_kind==PD_COST_PACT&&!out.reductions[0].minutes&&out.reaction_spent&&out.hp==41);
     assert(pd_decode(golden_v20,sizeof golden_v20,&out,&gen)&&gen==201&&out.effects[0].minutes==59&&out.effects[0].tick==PD_TICK_HOURS&&out.reductions[2].minutes==7&&out.reductions[2].cost_kind==PD_COST_COUNTER&&pd_defence_grant(&out,12,2)->tick==PD_TICK_END&&out.reaction_spent);
     for(unsigned i=0;i<PD_ITEMS;i++)assert(!out.items[i].charges.maximum&&!out.items[i].charges.current&&!out.items[i].charges.recovery);
+    assert(pd_decode(golden_v21,sizeof golden_v21,&out,&gen)&&gen==211&&out.items[0].charges.current==3&&out.items[0].charges.maximum==7&&out.reductions[0].cost_kind==PD_COST_ITEM&&out.reductions[1].cost_kind==PD_COST_COUNTER&&out.reductions[2].cost_kind==PD_COST_SLOT&&out.effects[0].minutes==59);
+    for(unsigned i=0;i<3;i++)for(unsigned row=1;row<3;row++){pd_cost c=pd_profile_cost(&out.reductions[i],row);assert(!c.kind&&!c.index&&!c.amount);}
     pd_demo(&s);s.avatar=(pd_avatar){2,1,2,1};s.idle_animation=false;s.brightness=90;s.dim_timeout=2;
     for(int i=0;i<PD_SKILLS;i++) { s.training.ranks[i]=i%3;s.training.skill_bonus[i]=i-8; }
     for(int i=0;i<6;i++) { s.training.save_bonus[i]=i-2;s.training.check_bonus[i]=3-i; }
@@ -94,9 +97,9 @@ int main(int argc,char **argv) {
     assert(pd_select(legacy_v1,sizeof legacy_v1,b,record_size,&out,&gen)==1&&gen==42);
     b[368]=3;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
     pd_encode(&s,42,b);b[372]=2;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
-    pd_encode(&s,42,b);b[record_size-918]=9;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
-    pd_encode(&s,42,b);b[record_size-918]=101;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
-    pd_encode(&s,42,b);b[record_size-917]=4;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
+    pd_encode(&s,42,b);b[record_size-942]=9;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
+    pd_encode(&s,42,b);b[record_size-942]=101;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
+    pd_encode(&s,42,b);b[record_size-941]=4;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
     pd_demo(&s);pd_encode(&s,41,a);s.hp=7;pd_encode(&s,42,b);
     assert(pd_select(a,record_size,b,record_size,&out,&gen)==1&&out.hp==7&&gen==42);
     /* Every header/CRC bit and distributed payload corruption falls back to older bank. */
@@ -229,6 +232,6 @@ int main(int argc,char **argv) {
     }
     const char *invalid[]={"{}","[]","null","{\"format\":\"pocketdd-device\",\"version\":1}","{", "{\"x\":\"\\u0000\"}","1e999"};
     for(size_t i=0;i<sizeof invalid/sizeof invalid[0];i++) assert(!pd_parse_packet(invalid[i],strlen(invalid[i]),&out));
-    puts("C core: HP/temp, counters, d20, CRC/corruption/wrap, golden v1..v20 migration, PDD21 persistence and strict USB v1..v8 passed");
+    puts("C core: HP/temp, counters, d20, CRC/corruption/wrap, golden v1..v21 migration, PDD22 persistence and strict USB v1..v8 passed");
     return 0;
 }

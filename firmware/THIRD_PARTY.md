@@ -127,3 +127,8 @@ modifiche. Nessun dato personale, JSON Beyond, asset o dipendenza esterna.
 La v0.41 aggiunge modello, UI, parser e test originali per cariche degli oggetti.
 Fixture PDD20 sintetica prodotta dall'encoder originale v0.40 `6604bad`, prima
 delle modifiche. Nessun dato personale, JSON Beyond, asset o dipendenza esterna.
+
+
+La v0.42 aggiunge codice, UI e test originali per tre spese congiunte.
+Fixture PDD21 sintetica dell'encoder originale v0.41 `048ef28`, prodotta prima
+delle modifiche. Nessun dato personale, JSON Beyond, asset o dipendenza esterna.

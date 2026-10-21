@@ -1,5 +1,10 @@
 # Cariche degli oggetti — v0.41
 
+**Aggiornamento v0.42:** [spese multiple](COSTI-MULTIPLI.md) disponibili: fino a
+tre fonti distinte per profilo più reazione, confermate insieme. Formato NVS
+corrente PDD22; USB8 e backup PC v11 invariati. Le misure e le limitazioni
+storiche sotto si riferiscono alla versione del titolo.
+
 Un oggetto può avere un saldo di cariche distinto dalla quantità. Il PC configura
 il pool; il dispositivo lo consulta e lo aggiorna offline, senza Foundry.
 Nessuna nuova lettura Beyond è stata eseguita per questo incremento.

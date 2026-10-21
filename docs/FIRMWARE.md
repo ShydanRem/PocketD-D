@@ -1,11 +1,11 @@
-# Firmware PocketD-D 0.41 — cariche degli oggetti
+# Firmware PocketD-D 0.42 — spese multiple
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
-[Novità v0.41: cariche degli oggetti](CARICHE-OGGETTI.md).
-PDD21, USB v8, backup PC v11; layout invariato e lettura dei salvataggi precedenti.
+[Novità v0.42: spese multiple](COSTI-MULTIPLI.md).
+PDD22, USB v8, backup PC v11; layout invariato e lettura dei salvataggi precedenti.
 
 ## Stato e perimetro
 
@@ -233,8 +233,8 @@ reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
 ## Salvataggio e dadi
 
 NVS nel namespace `pocketdd`, nuova partizione `pdd_state`, due chiavi alternate
-`state_a`/`state_b`. Record PDD21 (tag `PDDL`) da **8829 + 552 × numero voci** byte, massimo
-75069. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
+`state_a`/`state_b`. Record PDD22 (tag `PDDM`) da **8853 + 552 × numero voci** byte, massimo
+75093. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
 visibile. Nessun dump di struct, erase o fallback distruttivo. Errori I/O o
 allocazioni insufficienti bloccano scritture; CRC e versioni future conservati.
 
@@ -267,8 +267,10 @@ PDD20 aggiunge 100 byte di residui in minuti e i selettori Minuti/Ore;
 le copie PDD1–PDD19 mantengono i vecchi conteggi e iniziano senza timer di tempo.
 PDD21 aggiunge 300 byte per i pool di cariche (saldo/massimo/recupero), tipo
 costo 5 per gli oggetti; PDD1–20 letti senza pool e senza scritture al boot.
-Le nuove scritture richiedono firmware v0.41 o successivo:
-[compatibilità e downgrade](CARICHE-OGGETTI.md).
+PDD22 aggiunge 24 byte: due spese aggiuntive per ciascuno dei tre profili;
+PDD1–21 letti con la prima spesa conservata e le altre vuote, senza scritture al boot.
+Le nuove scritture richiedono firmware v0.42 o successivo:
+[compatibilità e downgrade](COSTI-MULTIPLI.md).
 Il nuovo uploader supporta USB v1–v8. Preferenze avatar/tasti
 locali conservate durante l'importazione. [Dettagli](MAGIE-TASTI.md).
 
@@ -866,3 +868,35 @@ Build ESP32-S3 con ESP-IDF 5.5.5/LVGL 9.4.0: **906320 byte**, partizione app
 USB8 legge v1–v7 senza cariche. L'uploader blocca v8 verso firmware precedente
 prima di inviare il payload. Nessun flash/collaudo fisico, nuova lettura Beyond,
 credenziale pubblicata o modifica di raccolte personali.
+
+## Verifiche v0.42 — tre spese per profilo
+
+Fino a tre fonti distinte più reazione, configurabili sul dispositivo. Se una
+spesa è insufficiente o il colpo è bloccato, tutti i saldi restano invariati.
+Conferma salva insieme ogni spesa, PF e concentrazione; confronto e ricevuta
+per posizione, retry del candidato senza rilancio e Annulla dell'intero stato.
+[Uso, compatibilità e limiti](COSTI-MULTIPLI.md).
+
+48.000 casi C indipendenti su tutte le terne di tipi, tre profili, due fasi,
+saldi insufficienti, reazione e danno. Controllati stati attesi completi,
+rifiuto senza mutazioni/RNG, buchi, duplicati, quantità zero, riferimenti
+estremi 119/59/8, costi massimi e candidato COS con spesa congiunta.
+Record PDD22 massimo e tutti i 24 byte nuovi corrotti con CRC valido;
+fixture PDD21 autentica dell'encoder v0.41 `048ef28`, senza dati personali.
+Migrazione PDD1–21 senza scritture al boot; vecchia banca intatta e riavvio
+con tre spese conservate dopo il primo salvataggio PDD22.
+
+Suite host completa; 41.411 confronti PC → USB → C, 144 test JavaScript e build
+Vite/HTML autonomo passati. Nessuna modifica al modello PC o al protocollo USB8.
+LVGL host: tre spese, confronto, consultazione protetta, mancata disponibilità
+secondaria, errore/retry senza doppio addebito o rilancio, ricevuta congelata,
+Annulla, nomi lunghi, limiti nel cerchio, tasti/import protetti, import
+annullato/confermato e azzeramento delle nuove configurazioni locali.
+AddressSanitizer/UndefinedBehaviorSanitizer su core/parser, storage, spese
+multiple, cariche, costi profili/slot, tempo, riposi e UI: passati con leak
+detector disattivato. Anteprime generate dal firmware compilato per host.
+
+Build ESP32-S3 **907872 byte**, partizione app 4 MiB **78% libera**;
+ESP-IDF 5.5.5/LVGL 9.4.0. PDD22, USB8/backup PC v11/layout invariati.
+Nessun flash, nuova lettura Beyond, modifica di raccolte personali o collaudo
+fisico di display/touch/tasti/USB/batteria/memoria/alimentazione.

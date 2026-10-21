@@ -6,7 +6,7 @@
 #define PD_RESOURCES 8
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
-#define PD_RECORD_SIZE 75069
+#define PD_RECORD_SIZE 75093
 #define PD_POWERS 120
 #define PD_POWER_TEXT_BYTES 501
 #define PD_ITEMS 60
@@ -73,8 +73,10 @@ typedef struct {
 } pd_defences;
 #define PD_REDUCTION_PROFILES 3
 #define PD_TIMED_DEFENCES (PD_DEFENCE_GRANTS + PD_REDUCTION_PROFILES)
+#define PD_PROFILE_COSTS 3
+typedef struct { uint8_t kind,index; uint16_t amount; } pd_cost;
 /* Local reusable budget; applying it to an impact is always explicit. */
-typedef struct { uint16_t value,types; uint8_t stage,rule; bool active,timed; uint8_t rounds,concentration,cost_kind,cost_index; uint16_t cost; bool reaction; uint8_t tick; uint16_t minutes; } pd_reduction_profile;
+typedef struct { uint16_t value,types; uint8_t stage,rule; bool active,timed; uint8_t rounds,concentration,cost_kind,cost_index; uint16_t cost; bool reaction; uint8_t tick; uint16_t minutes; pd_cost extra_costs[PD_PROFILE_COSTS-1]; } pd_reduction_profile;
 typedef struct { uint8_t effects_advanced,effects_expired; uint64_t defences_advanced,defences_expired; /* Extra bits slot*13+type, profile bits 39+index. */ } pd_round_summary;
 typedef struct {
     char name[PD_NAME_BYTES];
@@ -145,6 +147,10 @@ unsigned pd_reduction_cost_current(const pd_state *state,unsigned kind,unsigned 
 const char *pd_reduction_cost_name(const pd_state *state,unsigned kind,unsigned index);
 /* Explicit annotation/reset; already-spent spending rejects, repeated reset succeeds. */
 bool pd_reaction_change(pd_state *state,bool spent);
+/* The original flat fields remain expense 0; extra slots are independent, not alternatives.
+   Draft edits may be invalid; pd_reduction_profile_set validates all costs together. */
+pd_cost pd_profile_cost(const pd_reduction_profile *profile,unsigned row);
+bool pd_profile_cost_set(pd_reduction_profile *profile,unsigned row,pd_cost cost);
 bool pd_reduction_profile_set(pd_state *state,unsigned index,pd_reduction_profile profile);
 int pd_modifier(int score);
 void pd_hp(pd_state *state, int delta);

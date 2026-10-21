@@ -239,3 +239,13 @@ if all((base/(name+'.ppm')).is_file() for name in charges):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(charges):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'item-charges-preview.png');print(base/'item-charges-preview.png')
+
+multi=['multi-cost-editor-third','multi-cost-confirm-third','multi-cost-preview-third','multi-cost-missing-second']
+multi_details=['multi-cost-editor-second','multi-cost-confirm-first','multi-cost-view','multi-cost-preview-first','multi-cost-preview-second','multi-cost-retry','multi-cost-receipt','multi-cost-blocked','multi-cost-long-name','multi-cost-import']
+for name in multi+multi_details:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in multi):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(multi):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'multiple-costs-preview.png');print(base/'multiple-costs-preview.png')
