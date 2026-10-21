@@ -58,5 +58,5 @@ int main(void){
   if(field<6)e.reductions[field]=0;else e.reduction_after=0;
  }
  setup(&s);for(unsigned i=0;i<6;i++){assert(pd_defence_set(&s,i,true,2));e.components[i].amount=9999;}e.reduction_after=9999;assert(pd_damage_event_preview(&s,&e,&r)&&r.raw==59994&&r.mitigated==119988&&r.total.adjusted==109989&&r.total.massive&&!r.total.allowed);
- printf("Reductions: %u independent type/flags/pre/post/HP cases, %u allocation/split cases, 720 permutations, zero/unknown/malformed guards, one CON DC and frozen PDD20 candidate passed\n",cases,splits);
+ printf("Reductions: %u independent type/flags/pre/post/HP cases, %u allocation/split cases, 720 permutations, zero/unknown/malformed guards, one CON DC and frozen PDD21 candidate passed\n",cases,splits);
 }

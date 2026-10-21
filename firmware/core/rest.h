@@ -5,7 +5,7 @@
 enum { PD_HD_MANUAL, PD_HD_2014, PD_HD_2024 };
 typedef struct { bool long_rest; uint8_t policy,regain[PD_HIT_POOLS]; } pd_rest_plan;
 /* Net HP delta can be negative when a bound maximum ends at long rest. */
-typedef struct { int hp; unsigned ordinary,pact,powers,hit_dice; bool clears_temp,ends_rage,ends_concentration; } pd_rest_summary;
+typedef struct { int hp; unsigned ordinary,pact,powers,hit_dice,charges; bool clears_temp,ends_rage,ends_concentration; } pd_rest_summary;
 unsigned pd_hit_budget(const pd_state *s,unsigned policy);
 /* Validate the entire plan before any mutation; generic counters stay manual. */
 bool pd_rest_apply(pd_state *s,const pd_rest_plan *plan);

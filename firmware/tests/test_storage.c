@@ -22,6 +22,7 @@
 #include "fixtures/state-v17.h"
 #include "fixtures/state-v18.h"
 #include "fixtures/state-v19.h"
+#include "fixtures/state-v20.h"
 static uint8_t blobs[2][2][PD_RECORD_SIZE];static size_t sizes[2][2];
 static int fail_init,fail_set,fail_commit,fail_read,set_calls,missing_layout;
 static int index_of(const char *key){return !strcmp(key,"state_a")?0:1;}
@@ -105,6 +106,9 @@ int main(void){
  assert(pd_storage_load(&s)&&s.hp==41&&s.reaction_spent&&!s.effects[0].tick&&!s.reductions[0].tick&&set_calls==v18_calls);
  pd_effect turn_effect=s.effects[0];turn_effect.tick=PD_TICK_START;assert(pd_effect_set(&s,0,turn_effect)&&pd_storage_save(&s));assert(!memcmp(blobs[1][0],golden_v18,sizeof golden_v18));
  reboot();assert(pd_storage_load(&s)&&s.effects[0].tick==PD_TICK_START&&s.effects[0].rounds==2&&s.reaction_spent&&pd_defence_grant(&s,5,2)->rounds==3&&!s.reductions[0].tick&&s.reductions[0].cost_kind==PD_COST_PACT);
+ memset(sizes,0,sizeof sizes);memcpy(blobs[1][0],golden_v20,sizeof golden_v20);sizes[1][0]=sizeof golden_v20;reboot();int v20_calls=set_calls;
+ assert(pd_storage_load(&s)&&set_calls==v20_calls&&s.effects[0].minutes==59&&s.reductions[2].minutes==7&&!s.items[0].charges.maximum);
+ s.items[0].charges=(pd_charges){3,7,1};assert(pd_storage_save(&s));assert(!memcmp(blobs[1][0],golden_v20,sizeof golden_v20));reboot();assert(pd_storage_load(&s)&&s.items[0].charges.current==3&&s.items[0].charges.maximum==7&&s.items[0].charges.recovery==1&&s.effects[0].minutes==59);
  memset(sizes,0,sizeof sizes);memcpy(blobs[1][0],golden_v19,sizeof golden_v19);sizes[1][0]=sizeof golden_v19;reboot();int v19_calls=set_calls;
  assert(pd_storage_load(&s)&&s.hp==41&&s.reaction_spent&&s.effects[0].tick==PD_TICK_START&&!s.effects[0].minutes&&set_calls==v19_calls);
  pd_effect time_effect=s.effects[0];time_effect.tick=PD_TICK_HOURS;time_effect.rounds=0;time_effect.minutes=119;assert(pd_effect_set(&s,0,time_effect)&&pd_storage_save(&s));assert(!memcmp(blobs[1][0],golden_v19,sizeof golden_v19));
@@ -120,5 +124,5 @@ int main(void){
  sizes[1][1]=pd_encode(&s,100,blobs[1][1]);blobs[1][1][3]='X';uint32_t crc=pd_crc32(blobs[1][1],sizes[1][1]-4);for(int i=0;i<4;i++)blobs[1][1][sizes[1][1]-4+i]=crc>>(8*i);
  reboot();assert(!pd_storage_load(&s)&&blocked);blobs[1][0][0]=0;blobs[1][1][0]=0;reboot();assert(!pd_storage_load(&s));
  fail_init=1;reboot();assert(!pd_storage_load(&s));fail_init=0;fail_read=1;reboot();assert(!pd_storage_load(&s));
- puts("NVS: new/legacy partitions, golden v1..v19 migration without boot writes, missing layout, alternate banks, errors, rollback and future-version preservation passed");
+ puts("NVS: new/legacy partitions, golden v1..v20 migration without boot writes, missing layout, alternate banks, errors, rollback and future-version preservation passed");
 }

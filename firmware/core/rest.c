@@ -31,6 +31,10 @@ bool pd_rest_apply(pd_state *s,const pd_rest_plan *plan) {
             if(!(p->flags&PD_PASSIVE)&&(p->kind||(p->flags&PD_LIMITED))&&(p->recovery==1||(plan->long_rest&&p->recovery==2)))p->remaining=p->maximum;
         }
     }
+    for(unsigned i=0;i<s->item_count;i++) {
+        pd_item *item=&s->items[i];pd_charges *c=&item->charges;
+        if(item->quantity&&c->maximum&&(c->recovery==1||(plan->long_rest&&c->recovery==2)))c->current=c->maximum;
+    }
     if(plan->long_rest&&s->recovery.available)for(unsigned i=0;i<s->recovery.count;i++) {
         pd_hit_die *h=&s->recovery.pools[i];
         if(plan->policy==PD_HD_2024)h->used=0;
@@ -46,6 +50,7 @@ bool pd_rest_preview(const pd_state *s,const pd_rest_plan *plan,pd_state *scratc
     for(unsigned i=0;i<9;i++){result.ordinary+=scratch->magic.slots[i].current-s->magic.slots[i].current;result.pact+=scratch->magic.pact[i].current-s->magic.pact[i].current;}
     for(unsigned i=0;i<s->magic.count;i++)if(scratch->magic.powers[i].remaining>s->magic.powers[i].remaining)result.powers++;
     for(unsigned i=0;i<s->recovery.count;i++)result.hit_dice+=s->recovery.pools[i].used-scratch->recovery.pools[i].used;
+    for(unsigned i=0;i<s->item_count;i++)result.charges+=scratch->items[i].charges.current-s->items[i].charges.current;
     *out=result;return true;
 }
 bool pd_spend_hit_die(const pd_state *s,unsigned index,pd_random random,void *context,pd_state *next,pd_pool *roll,unsigned *gained) {

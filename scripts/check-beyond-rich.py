@@ -39,7 +39,7 @@ try:
    page.locator('.beyond-import').evaluate('(e)=>e.scrollTop=0');page.screenshot(path=str(OUT/f'preview-{width}.png'))
   page.set_viewport_size({'width':1440,'height':1050});page.locator('[data-accept]').check();page.locator('[data-create]').click()
   expect(page.locator('.beyond-import')).to_have_count(0)
-  assert json.loads(raw())['characters'][:-1]==before['characters'];assert active()['version']==10
+  assert json.loads(raw())['characters'][:-1]==before['characters'];assert active()['version']==11
   assert active()['equippedWeaponId']=='beyond-item-2';assert active()['extended']['tempHp']==4
   page.locator('[data-go-page=actions]').click();expect(page.locator('.equipment-status')).to_contain_text('Attacco +4')
   page.locator('[data-action-tab=powers]').click()
@@ -69,7 +69,7 @@ try:
   page.locator('[data-go-page=hero]').click();hp=active()['hp'];page.locator('[data-hp="-1"]').click();assert active()['hp']==hp and active()['extended']['tempHp']==6
   # Profile and inventory edits must preserve schema v10 and imported mechanics.
   page.locator('[data-action=edit]').click();page.locator('[name=title]').fill('Titolo modificato');page.locator('dialog button[type=submit]').click()
-  assert active()['version']==10 and active()['extended']['tempHp']==6
+  assert active()['version']==11 and active()['extended']['tempHp']==6
   page.locator('[data-action=manage-inventory]').first.click();page.locator('[data-edit-item="beyond-item-2"]').click();page.locator('[name=item-name]').fill('Ascia rinominata');page.locator('#item-editor button[type=submit]').click();page.locator('[data-inventory-close]').click()
   assert active()['inventory'][1]['profile']['heavy'] is True
   page.locator('[data-action=manage-powers]').first.click();spellid=next(p['id'] for p in active()['powers'] if p['name']=='Scintilla innata')

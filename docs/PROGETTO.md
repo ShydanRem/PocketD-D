@@ -56,13 +56,13 @@ Non fanno parte di questo traguardo: importazione Beyond, editor completo, incan
 
 L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco non impedisce le altre fasi. L'ordine delle fasi 0 e 1 può sovrapporsi se l'hardware non è immediatamente disponibile.
 
-## Punto attuale — v0.40
+## Punto attuale — v0.41
 
 | Blocco | Stato software | Cosa manca |
 | --- | --- | --- |
-| Scheda individuale offline | PF/temporanei, prove, abilità/salvezze, zaino, armi, magie, risorse, riposi e dadi vita nel firmware | Monete, storico persistente, effetti completi e regole speciali; sessione reale |
+| Scheda individuale offline | PF/temporanei, prove, abilità/salvezze, zaino/cariche, armi, magie, risorse, riposi e dadi vita nel firmware | Monete, storico persistente, effetti completi e regole speciali; sessione reale |
 | Effetti numerici | Otto modificatori CA/PF massimi, basi separate, cure integrate, durate manuali/a round/inizio-fine turno/minuti-ore e vincolo esplicito alla concentrazione con fine congiunta | Altre durate/regole, proprietà speciali e ricalcolo da equipaggiamento |
-| Danni e difese | Profili manuali per 13 tipi, base/tre extra separati, durate/vincoli e scadenze comuni, PF/temporanei, salvezza COS, sei componenti per colpo, fonte esplicita e riduzioni manuali prima/dopo, tre profili locali con budget, conto completo, costi da contatori/usi/slot ordinari-patto e reazione | Condizioni arbitrarie, più di tre extra per tipo, catalogo/requisiti automatici, cariche oggetto e costi multipli, eccezioni alle salvezze e casi morte bloccati |
+| Danni e difese | Profili manuali per 13 tipi, base/tre extra separati, durate/vincoli e scadenze comuni, PF/temporanei, salvezza COS, sei componenti per colpo, fonte esplicita e riduzioni manuali prima/dopo, tre profili locali con budget, conto completo, costi da contatori/usi/slot ordinari-patto/cariche e reazione | Condizioni arbitrarie, più di tre extra per tipo, catalogo/requisiti automatici, costi multipli e ricariche speciali, eccezioni alle salvezze e casi morte bloccati |
 | Stato e morte | Note delle condizioni, Avvelenato separato, d20 morte base e correzioni, reazione e inizio turno espliciti | Effetti delle altre condizioni, eccezioni e morte istantanea |
 | Grafica e comandi | Tema pixel art, avatar 81 combinazioni, dadi animati, PWR/BOOT configurabili | Leggibilità e precisione touch sulla scheda |
 | Impostazioni schermo | Luminosità, inattività e risveglio protetto nella v0.25 | Consumi misurati, sospensione, batteria e alimentazione |
@@ -74,20 +74,19 @@ sono portate nel firmware, ma i criteri di completamento richiedono ancora una
 sessione fisica, trasferimento/ripristino e misure. Non sono percentuali di
 completamento né una dichiarazione di collaudo.
 
-## Quattro blocchi concordati — v0.40
+## Quattro blocchi concordati — v0.41
 
 | Blocco | Punto attuale | Prossimo lavoro |
 | --- | --- | --- |
 | 1 — Scheda sul dispositivo | Percorsi base nel firmware: magie/slot/usi, concentrazione, riposi, dadi vita e morte base | Eccezioni e verifica nell'uso reale |
-| 2 — Effetti | Modificatori, round, concentrazione, difese, danni e riduzioni con costi/reazione; v0.38 aggiunge slot ordinari/patto; v0.39 durate del proprio turno; v0.40 minuti/ore | Durate di altri soggetti, cariche con un modello distinto dalla quantità e requisiti/effetti automatici |
+| 2 — Effetti | Modificatori, round, concentrazione, difese, danni e riduzioni con costi/reazione; v0.38 aggiunge slot ordinari/patto; v0.39 durate del proprio turno; v0.40 minuti/ore; v0.41 cariche distinte dalla quantità | Durate di altri soggetti, costi multipli, ricariche speciali e requisiti/effetti automatici |
 | 3 — Prodotto fisico | Luminosità, attenuazione/risveglio, salvataggi, tasti configurabili e firmware compilato | Batteria, sospensione/spegnimento e collaudi reali touch/USB/memoria/alimentazione |
 | 4 — Estetica | Tema pixel art, avatar e dadi animati, UI circolare | Illustrazioni, sprite, icone, transizioni/feedback e leggibilità sul display reale |
 
-Il blocco 2 resta aperto. Le cariche oggetto non sono rappresentate nella copia
-attuale e non vengono sostituite consumando quantità. Il prossimo incremento
-software deve affrontare cariche e altre regole ancora rappresentate manualmente;
-l'integrazione delle cariche
-richiederà anche modello e trasferimento. Hardware e qualità visiva restano
+Il blocco 2 resta aperto. Le cariche hanno ora un modello distinto dalla quantità,
+configurazione PC, trasferimento, correzione locale, costi e recuperi al riposo.
+Non vengono dedotte automaticamente da Beyond. Restano costi multipli, ricariche
+speciali, durate di altri soggetti e condizioni/regole ancora manuali. Hardware e qualità visiva restano
 traguardi del dispositivo, senza espandere il PC in un prodotto di gioco separato.
 
 ## Priorità confermata: dispositivo prima del PC
@@ -337,3 +336,9 @@ precisi, scadenze cronologiche, limite PF a ogni passaggio e rifiuto atomico
 anche degli intermedi invalidi. Round/turni e risorse restano separati. PDD20
 legge PDD1–PDD19, tasti/USB/layout conservati; durate altrui, cariche e automatismi
 restano successivi. [Dettagli](TEMPO-GIOCO.md).
+
+
+La v0.41 porta le [cariche oggetto](CARICHE-OGGETTI.md) lungo l'intero percorso
+PC → USB → dispositivo, con anteprima/conferma/annulla, spesa dei profili e riposi.
+Backup v11, USB8 e PDD21; lettura delle copie precedenti senza pool inventati.
+Nessun flash, collaudo fisico, lettura Beyond o modifica di raccolte personali.

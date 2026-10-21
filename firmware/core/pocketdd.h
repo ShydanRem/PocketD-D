@@ -6,7 +6,7 @@
 #define PD_RESOURCES 8
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
-#define PD_RECORD_SIZE 74769
+#define PD_RECORD_SIZE 75069
 #define PD_POWERS 120
 #define PD_POWER_TEXT_BYTES 501
 #define PD_ITEMS 60
@@ -25,7 +25,9 @@ typedef struct {
 } pd_training;
 typedef enum { PD_GEAR,PD_CONSUMABLE,PD_HEALING,PD_WEAPON } pd_item_kind;
 /* Flags: proficient, add ability to damage, ranged, heavy. Notes stay on PC. */
+typedef struct { uint16_t current,maximum; uint8_t recovery; } pd_charges;
 typedef struct {
+    pd_charges charges; /* One pool per row, independent of quantity. Zero maximum: absent. */
     char name[PD_ITEM_NAME_BYTES],damage_type[25];
     uint16_t quantity;
     uint8_t kind,ability,count,sides,flags,reach,thrown_range;
@@ -136,7 +138,7 @@ bool pd_defence_temporary_set(pd_state *state,unsigned type,pd_defence_temporary
 /* Legacy setters above address slot 0; slots are stable and never compacted. */
 const pd_defence_temporary *pd_defence_grant(const pd_state *state,unsigned type,unsigned slot);
 bool pd_defence_grant_set(pd_state *state,unsigned type,unsigned slot,pd_defence_temporary defence);
-enum { PD_COST_NONE,PD_COST_COUNTER,PD_COST_POWER,PD_COST_SLOT,PD_COST_PACT,PD_COST_COUNT };
+enum { PD_COST_NONE,PD_COST_COUNTER,PD_COST_POWER,PD_COST_SLOT,PD_COST_PACT,PD_COST_ITEM,PD_COST_COUNT };
 /* Slot indices are zero-based levels 1..9; only existing, imported pools qualify. */
 unsigned pd_reduction_cost_max(const pd_state *state,unsigned kind,unsigned index);
 unsigned pd_reduction_cost_current(const pd_state *state,unsigned kind,unsigned index);
@@ -147,6 +149,8 @@ bool pd_reduction_profile_set(pd_state *state,unsigned index,pd_reduction_profil
 int pd_modifier(int score);
 void pd_hp(pd_state *state, int delta);
 bool pd_resource_change(pd_state *state, unsigned index, int delta);
+/* Manual balance adjustment; absent/zero-quantity objects reject without mutation. */
+bool pd_item_charges_change(pd_state *state,unsigned index,int delta);
 pd_roll pd_d20(int bonus, int mode, pd_random random, void *context);
 uint32_t pd_crc32(const uint8_t *data, size_t size);
 size_t pd_encoded_size(const pd_state *state);
@@ -156,6 +160,6 @@ bool pd_record_known(const uint8_t *data,size_t size);
 /* -1: neither record valid; otherwise newest valid bank, including uint32 wrap. */
 int pd_select(const uint8_t *a, size_t as, const uint8_t *b, size_t bs,
               pd_state *state, uint32_t *generation);
-/* Strict USB projection schema; never accepts a full Beyond response or a backup v9/v10. */
+/* Strict USB projection schema; never accepts a full Beyond response or a PC backup. */
 bool pd_parse_packet(const char *json, size_t size, pd_state *state);
 #endif

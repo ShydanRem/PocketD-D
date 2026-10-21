@@ -1,11 +1,11 @@
-# Firmware PocketD-D 0.40 — tempo di gioco
+# Firmware PocketD-D 0.41 — cariche degli oggetti
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
-[Novità v0.40: durate in minuti e ore](TEMPO-GIOCO.md).
-PDD20, USB v7/layout invariati e lettura dei salvataggi precedenti.
+[Novità v0.41: cariche degli oggetti](CARICHE-OGGETTI.md).
+PDD21, USB v8, backup PC v11; layout invariato e lettura dei salvataggi precedenti.
 
 ## Stato e perimetro
 
@@ -233,8 +233,8 @@ reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
 ## Salvataggio e dadi
 
 NVS nel namespace `pocketdd`, nuova partizione `pdd_state`, due chiavi alternate
-`state_a`/`state_b`. Record PDD20 (tag `PDDK`) da **8529 + 552 × numero voci** byte, massimo
-74769. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
+`state_a`/`state_b`. Record PDD21 (tag `PDDL`) da **8829 + 552 × numero voci** byte, massimo
+75069. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
 visibile. Nessun dump di struct, erase o fallback distruttivo. Errori I/O o
 allocazioni insufficienti bloccano scritture; CRC e versioni future conservati.
 
@@ -265,9 +265,11 @@ PDD19 aggiunge 50 selettori Round/Inizio/Fine per effetti, extra e profili.
 Le copie precedenti mantengono Round senza scritture al boot.
 PDD20 aggiunge 100 byte di residui in minuti e i selettori Minuti/Ore;
 le copie PDD1–PDD19 mantengono i vecchi conteggi e iniziano senza timer di tempo.
-Le nuove scritture richiedono firmware v0.40 o successivo:
-[compatibilità e downgrade](TEMPO-GIOCO.md).
-Il nuovo uploader supporta USB v1–v7. Preferenze avatar/tasti
+PDD21 aggiunge 300 byte per i pool di cariche (saldo/massimo/recupero), tipo
+costo 5 per gli oggetti; PDD1–20 letti senza pool e senza scritture al boot.
+Le nuove scritture richiedono firmware v0.41 o successivo:
+[compatibilità e downgrade](CARICHE-OGGETTI.md).
+Il nuovo uploader supporta USB v1–v8. Preferenze avatar/tasti
 locali conservate durante l'importazione. [Dettagli](MAGIE-TASTI.md).
 
 PF e contatori vengono persistiti ad ogni modifica; “Annulla modifica” ripristina
@@ -831,3 +833,36 @@ ESP-IDF 5.5.5/LVGL 9.4.0. PDD20 legge PDD1–PDD19; USB v7/layout invariati.
 Nessun flash/collaudo fisico, nuova lettura Beyond o modifica della raccolta
 personale. Durate di altri soggetti, cariche oggetto, condizioni complete e
 automatismi ancora successivi. [Uso e limiti](TEMPO-GIOCO.md).
+
+## Verifiche v0.41 — cariche degli oggetti
+
+Modello PC con pool opzionale per riga, configurazione e backup v11; copia USB8
+con saldi esatti e parser rigoroso. Nel firmware: consultazione/correzione,
+anteprima/conferma, Annulla, quantità indipendente, costi di riduzione atomici e
+recuperi al riposo. Il pool non viene dedotto automaticamente da Beyond.
+[Uso, contratti, compatibilità e limiti](CARICHE-OGGETTI.md).
+
+144 test JavaScript e build Vite/HTML autonomo passati. Suite host completa e
+41.411 confronti PC → USB → C, di cui 3.660 nuovi sulle cariche. 17.280 casi
+indipendenti nel core cariche; 60 righe, saldi fino a 999, oggetti assenti,
+recupero fino a 59.940 unità, riferimenti precisi, spesa a danno zero,
+concentrazione/reazione/PF congiunti, clamp e rifiuti senza RNG/modifiche.
+Tutti i 300 byte aggiunti sottoposti a corruzione con CRC valido; record massimo,
+righe inutilizzate e significati vietati nei tag vecchi controllati.
+Fixture PDD20 autentica dell'encoder v0.40 `6604bad` sintetica, migrazione senza
+scritture al boot e riavvio dopo il salvataggio PDD21 con cariche conservate.
+
+LVGL host: correzione, bozza scartata, conferma, errore/retry senza rilancio o
+secondo addebito, Annulla, nome lungo, indice 59, quantità zero, costo esatto,
+snapshot, riposi e protezione da tasti/import. Chromium isolato: form cariche,
+validazione, salvataggio/reload/rimozione, altra scheda identica, viewport
+320/390 px; anteprima/download USB senza mutazioni e importazione estesa
+sintetica con schede precedenti conservate. Nessun errore JavaScript.
+
+AddressSanitizer/UndefinedBehaviorSanitizer su core/parser, storage, cariche,
+riposi, costi slot/profili, tempo e UI: passati, leak detector disattivato.
+Build ESP32-S3 con ESP-IDF 5.5.5/LVGL 9.4.0: **906320 byte**, partizione app
+4 MiB **78% libera**. Layout identico alla v0.40; PDD21 legge PDD1–PDD20,
+USB8 legge v1–v7 senza cariche. L'uploader blocca v8 verso firmware precedente
+prima di inviare il payload. Nessun flash/collaudo fisico, nuova lettura Beyond,
+credenziale pubblicata o modifica di raccolte personali.

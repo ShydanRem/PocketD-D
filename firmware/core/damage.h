@@ -28,7 +28,7 @@ typedef struct {
     unsigned profile,profile_count,profile_requested,profile_applied,profile_rows[PD_DAMAGE_COMPONENTS],profile_used[PD_DAMAGE_COMPONENTS]; /* Used/applied are zero when total.configured is false. */
     pd_reduction_profile profile_snapshot;
     unsigned cost_before,cost_after; char cost_name[41];
-    bool cost_missing,reaction_missing,reaction_before,reaction_after; /* Availability blocks configured before RNG. */
+    bool cost_missing,cost_unavailable,reaction_missing,reaction_before,reaction_after; /* Availability blocks configured before RNG. */
     uint8_t profile_ineligible; bool profile_unavailable,profile_budget; /* These block total.configured. */
     uint16_t missing; /* Unconfigured damage-type bits. */
     uint8_t context_missing,needed[PD_DAMAGE_COMPONENTS]; /* Row bits, then needed trait bits per row. */

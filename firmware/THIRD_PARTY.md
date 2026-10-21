@@ -122,3 +122,8 @@ modifiche. Nessun dato personale, JSON Beyond, asset o dipendenza esterna.
 La v0.40 aggiunge codice, UI e test originali per minuti/ore e tempo di gioco.
 Fixture PDD19 sintetica dell'encoder v0.39 originale `70a194b`, prima delle
 modifiche. Nessun dato personale, JSON Beyond, asset o dipendenza esterna.
+
+
+La v0.41 aggiunge modello, UI, parser e test originali per cariche degli oggetti.
+Fixture PDD20 sintetica prodotta dall'encoder originale v0.40 `6604bad`, prima
+delle modifiche. Nessun dato personale, JSON Beyond, asset o dipendenza esterna.

@@ -1,3 +1,4 @@
+import {recoverItemCharges} from './inventory.js';
 // Local resources and explicit effects; no bundled external catalogue.
 const integer=(n,min,max)=>Number.isInteger(n)&&n>=min&&n<=max;
 const keys=['FOR','DES','COS','INT','SAG','CAR'];
@@ -89,7 +90,7 @@ export function rest(state,kind){
   if(!['short','long'].includes(kind))throw new Error('Riposo non valido');
   if(kind==='long'&&state.hp===0&&state.extended?.deathSaves.failures===3)throw new Error('Tre fallimenti: correzione DM prima del riposo lungo');
   const recover=r=>r&&(r.recovery===kind||(kind==='long'&&r.recovery==='short'))?{...r,remaining:r.maxUses}:r;
-  return {...state,hp:kind==='long'?state.maxHp:state.hp,resolve:kind==='long'&&!state.importInfo?1:state.resolve,concentration:kind==='long'?null:state.concentration,
+  return {...state,inventory:recoverItemCharges(state.inventory,kind),hp:kind==='long'?state.maxHp:state.hp,resolve:kind==='long'&&!state.importInfo?1:state.resolve,concentration:kind==='long'?null:state.concentration,
     slots:kind==='long'?state.slots.map(s=>({...s,current:s.max})):state.slots,
     ...(state.extended?{extended:{...state.extended,tempHp:kind==='long'?0:state.extended.tempHp,deathSaves:kind==='long'?{successes:0,failures:0,stabilized:false}:state.extended.deathSaves,pactSlots:state.extended.pactSlots.map(s=>({...s,current:s.max})),combat:{...state.extended.combat,raging:false,greatWeaponMaster:false}}}:{}),
     powers:state.powers.map(p=>p.type==='feature'&&!p.passive?{...p,...recover(p)}:p.type==='spell'&&p.limited?{...p,limited:recover(p.limited)}:p)};

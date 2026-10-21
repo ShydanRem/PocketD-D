@@ -31,7 +31,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM } page_t;
 PD_EXT static pd_state state,previous,pending,scratch;
 static bool undo_available,import_pending,has_roll;
 static pd_roll result;
@@ -60,6 +60,7 @@ static int sheet_tab,skill_page;
 static bool pool_view,dice_setup,die_picker,pool_damage;
 static unsigned pool_sides=6,pool_count=1;
 static int pool_bonus;
+static unsigned charge_draft;
 static unsigned inventory_page,item_index,target_armor=15,healing_gained;
 /* 0: checks/pools, 1: attack, 2: damage, 3: item cure, 4: hit die cure,
    5: committed death save, 6: committed concentration save + incoming damage. */
@@ -80,7 +81,7 @@ static bool rest_active,hit_rolled;
 PD_EXT static pd_state hit_candidate;
 static pd_pool hit_result;
 static unsigned hit_gained;
-static bool confirmation_open(void){return page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=TIME_DETAILS);}
+static bool confirmation_open(void){return page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ITEM_CHARGE_CONFIRM);}
 static pd_damage_plan damage_plan; /* First component + explicit concentration choice. */
 static pd_damage_component damage_extra[PD_DAMAGE_COMPONENTS-1],damage_part_draft;
 static pd_damage_context damage_context,damage_extra_context[PD_DAMAGE_COMPONENTS-1],damage_part_context,source_context_draft;
@@ -154,14 +155,14 @@ static const char *cost_name(const pd_reduction_profile *p){return pd_reduction_
 static unsigned cost_current(const pd_reduction_profile *p){return pd_reduction_cost_current(&state,p->cost_kind,p->cost_index);}
 static void cost_next(void){
     unsigned kind=profile_draft.cost_kind,index=profile_draft.cost_index;
-    do{if(!kind){kind=PD_COST_COUNTER;index=0;}else if(++index>=(kind==PD_COST_COUNTER?PD_RESOURCES:kind==PD_COST_POWER?PD_POWERS:9)){kind=(kind+1)%PD_COST_COUNT;index=0;}}while(kind&&!pd_reduction_cost_max(&state,kind,index));
+    do{if(!kind){kind=PD_COST_COUNTER;index=0;}else if(++index>=(kind==PD_COST_COUNTER?PD_RESOURCES:kind==PD_COST_POWER?PD_POWERS:kind==PD_COST_ITEM?PD_ITEMS:9)){kind=(kind+1)%PD_COST_COUNT;index=0;}}while(kind&&!pd_reduction_cost_max(&state,kind,index));
     profile_draft.cost_kind=kind;profile_draft.cost_index=index;profile_draft.cost=kind?1:0;
 }
 
 static bool preview_profile(pd_state *s){*s=state;return pd_reduction_profile_set(s,profile_index,profile_draft);}
 static const char *profile_types(unsigned types){if(types==8191)return "Tutti";if(types==7)return "Cont./Perf./Tagl.";if(!types)return "Nessuno";for(unsigned i=0;i<13;i++)if(types==(1u<<i))return pd_damage_name(i);return "Personalizzati";}
 static unsigned allocation_sum(void){unsigned n=0;for(unsigned i=0;i<=damage_extra_count;i++)n+=allocation_draft[i];return n;}
-static const char *profile_problem(const pd_damage_event_summary *r){return r->cost_missing?"Risorsa insufficiente":r->reaction_missing?"Reazione gia usata":r->profile_unavailable?"Profilo non attivo":r->profile_budget?"Budget da verificare":r->profile_ineligible?"Parti escluse dal profilo":NULL;}
+static const char *profile_problem(const pd_damage_event_summary *r){return r->cost_unavailable?"Oggetto non disponibile":r->cost_missing?"Risorsa insufficiente":r->reaction_missing?"Reazione gia usata":r->profile_unavailable?"Profilo non attivo":r->profile_budget?"Budget da verificare":r->profile_ineligible?"Parti escluse dal profilo":NULL;}
 static bool local_defences(void){for(unsigned i=0;i<PD_REDUCTION_PROFILES;i++){const pd_reduction_profile *p=&state.reductions[i];if(p->value||p->types||p->stage||p->rule||p->active||p->timed||p->rounds||p->concentration||p->cost_kind||p->reaction)return true;}if(state.defences.configured)return true;for(unsigned i=0;i<PD_DAMAGE_TYPES;i++)for(unsigned slot=0;slot<PD_DEFENCE_SLOTS;slot++){const pd_defence_temporary *d=pd_defence_grant(&state,i,slot);if(d->flags||d->active||d->timed||d->rounds||d->concentration)return true;}return false;}
 static unsigned bit_count(uint64_t mask){unsigned count=0;while(mask){count+=mask&1u;mask>>=1;}return count;}
 static bool preview_defence(pd_state *next){
@@ -303,6 +304,8 @@ static void act(intptr_t action) {
     if(page==TIME_HOME&&(action<2141||action>2146))return;
     if(page==TIME_CONFIRM&&action!=2147&&action!=2148&&action!=2149)return;
     if(page==TIME_DETAILS&&(action<2150||action>2152))return;
+    if(page==ITEM_CHARGES&&(action<2161||action>2166))return;
+    if(page==ITEM_CHARGE_CONFIRM&&action!=2167&&action!=2168)return;
     if(page==TURN_DETAILS&&(action<2125||action>2127))return;
     if(page==REACTION_CONFIRM&&action!=2121&&action!=2122&&action!=2124)return;
     if(page==CONCENTRATION_SETUP&&(action<1861||action>1866||(concentration_rolled&&action!=1865)))return;
@@ -590,6 +593,12 @@ static void act(intptr_t action) {
     else if(action==2150&&page==TIME_DETAILS)page=TIME_CONFIRM;
     else if(action==2151&&page==TIME_DETAILS&&time_detail_page)time_detail_page--;
     else if(action==2152&&page==TIME_DETAILS){pd_round_summary r;if(preview_time(&next,&r)&&(time_detail_page+1)*3<bit_count(r.effects_advanced)+bit_count(r.defences_advanced))time_detail_page++;}
+    else if(action==2160&&page==ITEM_DETAIL&&state.items[item_index].charges.maximum){charge_draft=state.items[item_index].charges.current;page=ITEM_CHARGES;}
+    else if(action==2161&&page==ITEM_CHARGES)page=ITEM_DETAIL;
+    else if(action>=2162&&action<=2165&&page==ITEM_CHARGES&&state.items[item_index].quantity){int n=(int)charge_draft+(const int[]){-10,-1,1,10}[action-2162];charge_draft=n<0?0:n>state.items[item_index].charges.maximum?state.items[item_index].charges.maximum:n;}
+    else if(action==2166&&page==ITEM_CHARGES&&pd_item_charges_change(&next,item_index,(int)charge_draft-state.items[item_index].charges.current))page=ITEM_CHARGE_CONFIRM;
+    else if(action==2167&&page==ITEM_CHARGE_CONFIRM)page=ITEM_CHARGES;
+    else if(action==2168&&page==ITEM_CHARGE_CONFIRM){if(!pd_item_charges_change(&next,item_index,(int)charge_draft-state.items[item_index].charges.current))return;bool changed=memcmp(&next,&state,sizeof state)!=0;if(!changed||pd_storage_save(&next)){if(changed){previous=state;undo_available=true;state=next;invalidate_strike();}page=ITEM_CHARGES;}}
     else if(action==2117&&(page==STATUS_HOME||page==DAMAGE_CONFIRM)){if(page==DAMAGE_CONFIRM){pd_damage_event e=current_damage_event();pd_damage_event_summary r;if(!pd_damage_event_preview(&state,&e,&r)||!r.reaction_missing)return;}reaction_return=page;page=REACTION_HOME;}
     else if(action==2118&&page==REACTION_HOME)page=reaction_return;
     else if((action==2119||action==2120||action==2123)&&page==REACTION_HOME){if(action==2119&&state.reaction_spent)return;reaction_draft=action==2119;turn_end=action==2123;turn_detail_page=0;page=REACTION_CONFIRM;}
@@ -976,7 +985,8 @@ static void render_item(void) {
         if(v->kind==PD_HEALING) { snprintf(text,sizeof text,"%ud%u %+d PF | limite PF massimi",v->count,v->sides,v->healing_modifier);small_label(text,83,268,300,PD_GOLD); }
         if(v->kind==PD_CONSUMABLE||v->kind==PD_HEALING)button(v->kind==PD_HEALING&&!state.hp&&state.status.available&&state.status.failures==3?"Tre fallimenti: DM":v->kind==PD_HEALING&&state.hp==pd_max_hp(&state)?"PF al massimo":"Usa",83,299,300,44,88,v->quantity&&(v->kind!=PD_HEALING||(state.hp<pd_max_hp(&state)&&(state.hp||!state.status.available||state.status.failures<3))));
     }
-    button("Zaino",83,359,300,48,80,true);
+    button("Zaino",83,359,v->charges.maximum?144:300,48,80,true);
+    if(v->charges.maximum)button("Cariche",239,359,144,48,2160,true);
 }
 static void render_combat(void) {
     pd_weapon_info w;char text[160];if(!pd_weapon_stats(&state,state.equipped,&w)) {page=INVENTORY;render_inventory();return;}
@@ -1155,7 +1165,7 @@ static void render_rest(void) {
         label(rest_plan.long_rest?"Conferma riposo lungo":"Conferma riposo breve",83,107,300,false);
         snprintf(text,sizeof text,"PF %u -> %u | temporanei %u -> %u",state.hp,scratch.hp,state.temp_hp,scratch.temp_hp);small_label(text,83,148,300,PD_MINT);
         snprintf(text,sizeof text,"Slot: +%u ordinari / +%u patto",delta.ordinary,delta.pact);small_label(text,83,175,300,PD_TEXT);
-        snprintf(text,sizeof text,"Voci con utilizzi recuperati: %u",delta.powers);small_label(text,83,202,300,PD_TEXT);
+        snprintf(text,sizeof text,"Utilizzi: %u | cariche: +%u",delta.powers,delta.charges);small_label(text,83,202,300,PD_TEXT);
         if(state.recovery.available)snprintf(text,sizeof text,"Dadi vita recuperati: %u (%s)",delta.hit_dice,(const char *const[]){"manuale","2014","2024"}[rest_plan.policy]);else snprintf(text,sizeof text,"Dadi vita: dati non disponibili");small_label(text,83,229,300,PD_GOLD);
         small_label("Termina Ira e attacco potente",83,260,300,PD_TEXT);
         if(rest_plan.long_rest)snprintf(text,sizeof text,"Concentr.: fine | %u effetti terminati",pd_concentration_effects(&state));else strcpy(text,"Concentrazione: invariata");small_label(text,83,284,300,PD_TEXT);
@@ -1378,7 +1388,22 @@ static void render_effects(void) {
 
 static const char *defence_caption(bool configured,unsigned flags){return !configured?"da configurare":(flags&PD_IMMUNITY)?"immunita":flags==3?"resist. + vulner.":(flags&PD_RESISTANCE)?"resistenza":(flags&PD_VULNERABILITY)?"vulnerabilita":"normale";}
 static const char *defence_profile(const pd_state *s,unsigned type){return !(s->defences.configured&(1u<<type))?"da configurare":pd_defence_conditional(s,type)?"condizionale":defence_caption(true,pd_defence_flags(s,type));}
+static void render_item_charges(void){
+    const pd_item *v=&state.items[item_index];char text[160];
+    lv_obj_t *name=small_label(v->name,83,99,300,PD_TEXT);lv_label_set_long_mode(name,LV_LABEL_LONG_WRAP);lv_obj_set_height(name,58);
+    snprintf(text,sizeof text,"Cariche %u / %u",v->charges.current,v->charges.maximum);label(text,83,164,300,false);
+    if(page==ITEM_CHARGE_CONFIRM){
+        snprintf(text,sizeof text,"Saldo: %u -> %u",v->charges.current,charge_draft);label(text,83,207,300,true);
+        small_label("Quantita ed effetti invariati",83,255,300,PD_GOLD);small_label("Annulla sull'Eroe ripristina il saldo",83,283,300,PD_MUTED);
+        button("Indietro",83,359,144,48,2167,true);button("Conferma",239,359,144,48,2168,v->quantity);return;
+    }
+    snprintf(text,sizeof text,"Recupero: %s",(const char *const[]){"manuale","breve / lungo","lungo"}[v->charges.recovery]);small_label(text,83,200,300,PD_GOLD);
+    if(v->quantity)snprintf(text,sizeof text,"Nuovo saldo: %u",charge_draft);else strcpy(text,"Oggetto non disponibile");label(text,83,233,300,false);
+    const char *const labels[]={"-10","-1","+1","+10"};for(unsigned i=0;i<4;i++)button(labels[i],83+i*78,277,66,44,2162+i,v->quantity);
+    small_label("Cariche separate dalla quantita",83,331,300,PD_MUTED);button("Indietro",83,359,144,48,2161,true);button("Anteprima",239,359,144,48,2166,v->quantity);
+}
 static void render_damage(void) {
+    if(page==ITEM_CHARGES||page==ITEM_CHARGE_CONFIRM){render_item_charges();return;}
     char text[180];
     if(page==DAMAGE_HOME){
         label("Danni ricevuti",83,111,204,false);lv_obj_t *reduce=button("Riduci",299,99,84,44,2040,true);lv_obj_set_style_text_font(reduce,&lv_font_montserrat_16,0);snprintf(text,sizeof text,"Tipo: %s >",pd_damage_name(damage_plan.type));button(text,83,157,300,44,1801,true);
@@ -1548,13 +1573,13 @@ static void render_damage(void) {
         if(r->total.configured)snprintf(text,sizeof text,"Sottratti: %u",p->stage?r->profile_applied:r->profile_used[profile_impact_row]);else strcpy(text,"Profilo/fonte da verificare");label(text,83,249,300,false);
         snprintf(text,sizeof text,"Tipi: %s",profile_types(p->types));small_label(text,83,287,300,PD_TEXT);snprintf(text,sizeof text,"Regola: %s",rule_names[p->rule]);small_label(text,83,325,300,PD_MUTED);button("Indietro",83,359,300,48,2091,true);
     } else if(page==PROFILE_COST){
-        const pd_reduction_profile *p=cost_profile();label("Costi del profilo",83,111,300,true);if(!p->cost_kind)strcpy(text,"Fonte: nessuna >");else snprintf(text,sizeof text,"Fonte: %s %u >",(const char *const[]){"nessuna","contatore","usi voce","slot","patto"}[p->cost_kind],p->cost_index+1);lv_obj_t *b=button(text,83,157,300,44,2101,profile_cost_editing);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
-        if(profile_cost_editing)snprintf(text,sizeof text,"Costo: %u >",p->cost);else snprintf(text,sizeof text,"Costo %u | disponibili %u",p->cost,cost_current(p));b=button(text,83,205,300,44,2102,profile_cost_editing&&p->cost_kind);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
+        const pd_reduction_profile *p=cost_profile();label("Costi del profilo",83,111,300,true);if(!p->cost_kind)strcpy(text,"Fonte: nessuna >");else snprintf(text,sizeof text,"Fonte: %s %u >",(const char *const[]){"nessuna","contatore","usi voce","slot","patto","cariche"}[p->cost_kind],p->cost_index+1);lv_obj_t *b=button(text,83,157,300,44,2101,profile_cost_editing);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
+        if(profile_cost_editing)snprintf(text,sizeof text,"Costo: %u >",p->cost);else snprintf(text,sizeof text,"Costo %u | saldo %u",p->cost,cost_current(p));b=button(text,83,205,300,44,2102,profile_cost_editing&&p->cost_kind);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
         button(p->reaction?"Usa reazione: si >":"Usa reazione: no >",83,253,300,44,2103,profile_cost_editing);
         lv_obj_t *name=small_label(cost_name(p),83,299,300,PD_GOLD);lv_label_set_long_mode(name,LV_LABEL_LONG_WRAP);lv_obj_set_height(name,58);button("Indietro",83,359,300,48,2104,true);
     } else if(page==PROFILE_COST_IMPACT){
         const pd_damage_event_summary *r=&damage_details;const pd_reduction_profile *p=&r->profile_snapshot;label("Costi all'impatto",83,111,300,true);lv_obj_t *name=small_label(p->cost_kind?r->cost_name:"Nessuna risorsa",83,157,300,PD_GOLD);lv_label_set_long_mode(name,LV_LABEL_LONG_WRAP);lv_obj_set_height(name,58);
-        if(r->total.configured)snprintf(text,sizeof text,"Risorsa: %u -> %u",r->cost_before,r->cost_after);else strcpy(text,r->cost_missing?"Risorsa insufficiente":"Costo non applicabile");label(text,83,221,300,false);snprintf(text,sizeof text,"Costo scelto: %u",p->cost);small_label(text,83,259,300,PD_TEXT);
+        if(r->total.configured)snprintf(text,sizeof text,"Risorsa: %u -> %u",r->cost_before,r->cost_after);else strcpy(text,r->cost_unavailable?"Oggetto non disponibile":r->cost_missing?"Risorsa insufficiente":"Costo non applicabile");label(text,83,221,300,false);snprintf(text,sizeof text,"Costo scelto: %u",p->cost);small_label(text,83,259,300,PD_TEXT);
         if(!p->reaction)strcpy(text,"Reazione: invariata");else if(!r->total.configured)strcpy(text,r->reaction_missing?"Reazione gia usata":"Reazione non applicabile");else snprintf(text,sizeof text,"Reazione: %s -> %s",r->reaction_before?"usata":"pronta",r->reaction_after?"usata":"pronta");small_label(text,83,293,300,PD_GOLD);
         small_label("Spesa anche con danno zero",83,325,300,PD_MUTED);button("Indietro",83,359,300,48,2106,true);
     } else if(page==REACTION_HOME){
@@ -1874,7 +1899,7 @@ static void usb_task(void *unused) {
             if(c=='\n') {
                 if(!overflow && used) {
                     line[used]=0;
-                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 7\n");
+                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 8\n");
                     else {
                         pd_state *candidate=malloc(sizeof *candidate);
                         if(!candidate)reply("PDD ERROR memory\n");

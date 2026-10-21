@@ -1,5 +1,10 @@
 # Costi dei profili e reazione — v0.37
 
+**Aggiornamento v0.41:** [cariche degli oggetti](CARICHE-OGGETTI.md) disponibili
+come saldo distinto dalla quantità, con configurazione PC, gestione sul dispositivo,
+costi e recuperi. Formati correnti: backup PC v11, USB8 e PDD21. Le verifiche
+e le limitazioni storiche descritte sotto si riferiscono alla versione del titolo.
+
 **Aggiornamento v0.39:** [durate del proprio turno](DURATE-TURNO.md), PDD19.
 Inizio turno avanza ora anche i timer Inizio; Fine turno è separato dal Round.
 I timer dei salvataggi precedenti mantengono la modalità Round.

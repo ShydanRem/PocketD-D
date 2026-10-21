@@ -132,7 +132,7 @@ function validInteger(value, min, max) {
 }
 export function parseBackup(raw) {
   const s = JSON.parse(raw);
-  if (!s || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10].includes(s.version)) throw new Error('Versione backup non supportata');
+  if (!s || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].includes(s.version)) throw new Error('Versione backup non supportata');
   if(s.version<10&&s.extended!==undefined)throw new Error('I dati estesi richiedono il formato v10');
   const base = initialState();
   if (s.version >= 3) {
@@ -145,34 +145,34 @@ export function parseBackup(raw) {
   }
   if (s.version >= 4) {
     if(!s.skillRanks || !skills.every(skill=>validInteger(s.skillRanks[skill.id],0,2)) || !s.saveProficiencies || !abilityKeys.every(key=>typeof s.saveProficiencies[key]==='boolean'))throw new Error('Competenze non valide');
-    if(!Array.isArray(s.history) || s.history.length>20 || !s.history.every(entry=>validHistoryEntry(entry,s.version===10?18:12,s.version===10?60:30)))throw new Error('Storico non valido');
+    if(!Array.isArray(s.history) || s.history.length>20 || !s.history.every(entry=>validHistoryEntry(entry,s.version>=10?18:12,s.version>=10?60:30)))throw new Error('Storico non valido');
     Object.assign(base,{
       skillRanks:Object.fromEntries(skills.map(skill=>[skill.id,s.skillRanks[skill.id]])),
       saveProficiencies:Object.fromEntries(abilityKeys.map(key=>[key,s.saveProficiencies[key]])),
       history:s.history.map(({label,dice,bonus,total,kind,mode,timestamp,sides})=>({label,dice:[...dice],bonus,total,kind,mode,timestamp,...(kind==='damage'?{sides:sides??8}:{})}))
     });
   }
-  if(s.version>=5)Object.assign(base,validateMagic(s,s.version===10));
+  if(s.version>=5)Object.assign(base,validateMagic(s,s.version>=10));
   if(s.version>=6)base.encounter=validateEncounter(s.encounter,s.version>=7);
   if(s.version===8&&!validInteger(s.weaponReach,1,9))throw new Error('Portata arma non valida');
   if (!validInteger(s.hp, 0, base.maxHp) || !validInteger(s.bonus, -5, 15) || typeof s.condition !== 'boolean' || !['normal', 'advantage', 'disadvantage'].includes(s.mode)) throw new Error('Scheda non valida');
   const core = {hp: s.hp, bonus: s.bonus, condition: s.condition, mode: s.mode};
   if (s.version === 1) return {...base, ...core};
   if(!validInteger(s.resolve,0,1))throw new Error('Risorsa non valida');
-  if(s.version>=9)Object.assign(base,validateInventory(s,s.version===10));
+  if(s.version>=9)Object.assign(base,validateInventory(s,s.version>=10,s.version>=11));
   else {
     if(typeof s.swordEquipped!=='boolean'||!validInteger(s.potions,0,99)||!validInteger(s.torches,0,99))throw new Error('Inventario precedente non valido');
     Object.assign(base,startingInventory({...s,weaponReach:s.version===8?s.weaponReach:1}));
   }
-  if(s.version===10)base.extended=validateExtended(s.extended);
+  if(s.version===10||(s.version===11&&s.extended!==undefined))base.extended=validateExtended(s.extended);
   if(s.importInfo!==undefined){
     const info=s.importInfo;
-    if(!info || info.provider!=='dndbeyond' || typeof info.characterId!=='string' || !/^[1-9]\d{0,14}$/.test(info.characterId) || !['core-v1',...(s.version===10?['extended-v1']:[])].includes(info.scope) || !Array.isArray(info.limitations) || info.limitations.length>30 || info.limitations.some(text=>typeof text!=='string'||text.length>500))throw new Error('Provenienza importazione non valida');
+    if(!info || info.provider!=='dndbeyond' || typeof info.characterId!=='string' || !/^[1-9]\d{0,14}$/.test(info.characterId) || !['core-v1',...(s.version>=10?['extended-v1']:[])].includes(info.scope) || !Array.isArray(info.limitations) || info.limitations.length>30 || info.limitations.some(text=>typeof text!=='string'||text.length>500))throw new Error('Provenienza importazione non valida');
     base.importInfo={provider:info.provider,characterId:info.characterId,scope:info.scope,limitations:[...info.limitations]};
   }
   return {...base,...core,resolve:s.resolve};
 }
-export function serialize(state) { return JSON.stringify({...state, version: state.extended?10:9}, null, 2); }
+export function serialize(state) { return JSON.stringify({...state, version: 11}, null, 2); }
 export function restore(raw) {
   try { return parseBackup(raw); } catch { return initialState(); }
 }

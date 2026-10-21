@@ -63,7 +63,7 @@ with sync_playwright() as p:
     assert download.suggested_filename=='pocketdd-device.json'
     assert packet['hp']==23 and packet['abilities']['DES']==16 and packet['armorClass']==16
     assert packet['resources']==[{'name':'Slancio','current':1,'maximum':1}]
-    assert packet['format']=='pocketdd-device' and packet['version']==7
+    assert packet['format']=='pocketdd-device' and packet['version']==8
     assert packet['training']['skillRanks']['perception']==0
     assert packet['avatar']=={'skin':1,'hair':1,'cloak':1,'style':1}
     assert len(packet['inventory']['items'])==3 and packet['inventory']['items'][0]['kind']==3 and 'importInfo' not in packet

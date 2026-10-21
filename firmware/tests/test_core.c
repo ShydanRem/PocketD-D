@@ -24,8 +24,10 @@
 #include "fixtures/state-v17.h"
 #include "fixtures/state-v18.h"
 #include "fixtures/state-v19.h"
+#include "fixtures/state-v20.h"
+static void strip_charges(cJSON *root){cJSON *items=cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(root,"inventory"),"items");cJSON *item; cJSON_ArrayForEach(item,items)cJSON_DeleteItemFromObjectCaseSensitive(item,"charges");}
 static void record_crc(uint8_t *record) {
-    size_t size=8529; /* No powers: PDD20 prefix, recovery, status and CRC. */
+    size_t size=8829; /* No powers: PDD21 prefix, recovery, status and CRC. */
     uint32_t crc=pd_crc32(record,size-4);
     for(int i=0;i<4;i++)record[size-4+i]=crc>>(8*i);
 }
@@ -79,6 +81,8 @@ int main(int argc,char **argv) {
     assert(pd_decode(golden_v17,sizeof golden_v17,&out,&gen)&&gen==171&&out.reaction_spent&&out.reductions[0].cost_kind==PD_COST_COUNTER&&out.reductions[0].cost==1&&out.reductions[0].reaction&&out.reductions[1].cost_kind==PD_COST_POWER&&out.reductions[1].cost_index==1&&out.reductions[1].cost==2&&out.magic.slots[0].current==2&&out.magic.pact[4].current==1);
     assert(pd_decode(golden_v18,sizeof golden_v18,&out,&gen)&&gen==181&&out.hp==41&&out.reaction_spent&&out.effects[0].rounds==2&&!out.effects[0].tick&&pd_defence_grant(&out,5,2)->rounds==3&&!pd_defence_grant(&out,5,2)->tick&&out.reductions[0].cost_kind==PD_COST_PACT&&!out.reductions[0].tick);
     assert(pd_decode(golden_v19,sizeof golden_v19,&out,&gen)&&gen==191&&out.effects[0].tick==PD_TICK_START&&out.effects[0].rounds==2&&!out.effects[0].minutes&&pd_defence_grant(&out,5,2)->tick==PD_TICK_END&&!pd_defence_grant(&out,5,2)->minutes&&out.reductions[0].cost_kind==PD_COST_PACT&&!out.reductions[0].minutes&&out.reaction_spent&&out.hp==41);
+    assert(pd_decode(golden_v20,sizeof golden_v20,&out,&gen)&&gen==201&&out.effects[0].minutes==59&&out.effects[0].tick==PD_TICK_HOURS&&out.reductions[2].minutes==7&&out.reductions[2].cost_kind==PD_COST_COUNTER&&pd_defence_grant(&out,12,2)->tick==PD_TICK_END&&out.reaction_spent);
+    for(unsigned i=0;i<PD_ITEMS;i++)assert(!out.items[i].charges.maximum&&!out.items[i].charges.current&&!out.items[i].charges.recovery);
     pd_demo(&s);s.avatar=(pd_avatar){2,1,2,1};s.idle_animation=false;s.brightness=90;s.dim_timeout=2;
     for(int i=0;i<PD_SKILLS;i++) { s.training.ranks[i]=i%3;s.training.skill_bonus[i]=i-8; }
     for(int i=0;i<6;i++) { s.training.save_bonus[i]=i-2;s.training.check_bonus[i]=3-i; }
@@ -90,9 +94,9 @@ int main(int argc,char **argv) {
     assert(pd_select(legacy_v1,sizeof legacy_v1,b,record_size,&out,&gen)==1&&gen==42);
     b[368]=3;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
     pd_encode(&s,42,b);b[372]=2;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
-    pd_encode(&s,42,b);b[record_size-618]=9;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
-    pd_encode(&s,42,b);b[record_size-618]=101;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
-    pd_encode(&s,42,b);b[record_size-617]=4;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
+    pd_encode(&s,42,b);b[record_size-918]=9;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
+    pd_encode(&s,42,b);b[record_size-918]=101;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
+    pd_encode(&s,42,b);b[record_size-917]=4;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
     pd_demo(&s);pd_encode(&s,41,a);s.hp=7;pd_encode(&s,42,b);
     assert(pd_select(a,record_size,b,record_size,&out,&gen)==1&&out.hp==7&&gen==42);
     /* Every header/CRC bit and distributed payload corruption falls back to older bank. */
@@ -115,7 +119,7 @@ int main(int argc,char **argv) {
         assert(!pd_parse_packet(json,n-1,&out));
         cJSON *base=cJSON_ParseWithLength(json,n),*v;assert(base);
         const char *numeric_keys[]={"version","level","hp","maxHp","tempHp","armorClass"};
-        double bad[]={8,21,33,0,-1,41};
+        double bad[]={9,21,33,0,-1,41};
         for (int i=0;i<6;i++) {
             v=cJSON_Duplicate(base,true);cJSON_ReplaceItemInObjectCaseSensitive(v,numeric_keys[i],cJSON_CreateNumber(bad[i]));reject(v);
         }
@@ -179,9 +183,9 @@ int main(int argc,char **argv) {
         cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetArrayItem(cJSON_GetObjectItemCaseSensitive(magic,"slots"),0),"current",cJSON_CreateNumber(10));reject(v);
         v=cJSON_Duplicate(base,true);magic=cJSON_GetObjectItemCaseSensitive(v,"magic");
         cJSON_AddItemToArray(cJSON_GetObjectItemCaseSensitive(magic,"powers"),cJSON_CreateObject());reject(v);
-        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),4);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");cJSON_DeleteItemFromObjectCaseSensitive(v,"magic");old=cJSON_PrintUnformatted(v);
+        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),4);strip_charges(v);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");cJSON_DeleteItemFromObjectCaseSensitive(v,"magic");old=cJSON_PrintUnformatted(v);
         assert(pd_parse_packet(old,strlen(old),&out)&&out.inventory_available&&!out.magic.available&&out.shortcuts[1]==3);cJSON_free(old);cJSON_Delete(v);
-        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),5);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");old=cJSON_PrintUnformatted(v);
+        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),5);strip_charges(v);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");old=cJSON_PrintUnformatted(v);
         assert(pd_parse_packet(old,strlen(old),&out)&&out.magic.available&&!out.recovery.available);cJSON_free(old);cJSON_Delete(v);
         v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");reject(v);
         v=cJSON_Duplicate(base,true);cJSON_AddBoolToObject(cJSON_GetObjectItemCaseSensitive(v,"recovery"),"available",true);reject(v);
@@ -193,7 +197,7 @@ int main(int argc,char **argv) {
             cJSON *h=cJSON_Parse("{\"name\":\"Classe\",\"die\":8,\"maximum\":3,\"used\":1}");assert(h);
             cJSON_ReplaceItemInObjectCaseSensitive(h,hit_keys[i],cJSON_CreateNumber(hit_bad[i]));cJSON_AddItemToArray(cJSON_GetObjectItemCaseSensitive(rec,"pools"),h);reject(v);
         }
-        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),6);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");old=cJSON_PrintUnformatted(v);
+        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),6);strip_charges(v);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");old=cJSON_PrintUnformatted(v);
         assert(pd_parse_packet(old,strlen(old),&out)&&!out.status.available);cJSON_free(old);cJSON_Delete(v);
         v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");reject(v);
         const char *status_keys[]={"successes","failures","stabilized","available"};
@@ -210,10 +214,21 @@ int main(int argc,char **argv) {
         resources=cJSON_GetObjectItemCaseSensitive(v,"resources");
         for(int i=0;i<7;i++)cJSON_AddItemToArray(resources,cJSON_Duplicate(cJSON_GetArrayItem(resources,0),true));
         char *encoded=cJSON_PrintUnformatted(v);assert(pd_parse_packet(encoded,strlen(encoded),&out));
-        assert(out.hp==999&&out.temp_hp==999&&out.resource_count==8);cJSON_free(encoded);cJSON_Delete(v);cJSON_Delete(base);
+        assert(out.hp==999&&out.temp_hp==999&&out.resource_count==8);cJSON_free(encoded);cJSON_Delete(v);
+        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),7);strip_charges(v);old=cJSON_PrintUnformatted(v);
+        assert(pd_parse_packet(old,strlen(old),&out)&&!out.items[0].charges.maximum);cJSON_free(old);cJSON_Delete(v);
+        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),7);reject(v);
+        const char *charge_fields[]={"current","maximum","recovery"};
+        for(unsigned i=0;i<3;i++){
+            v=cJSON_Duplicate(base,true);cJSON *item=cJSON_GetArrayItem(cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(v,"inventory"),"items"),0);
+            cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetObjectItemCaseSensitive(item,"charges"),charge_fields[i],cJSON_CreateNumber(i==2?3:1000));reject(v);
+        }
+        v=cJSON_Duplicate(base,true);cJSON *item=cJSON_GetArrayItem(cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(v,"inventory"),"items"),0);
+        cJSON_AddNumberToObject(cJSON_GetObjectItemCaseSensitive(item,"charges"),"current",0);reject(v);
+        cJSON_Delete(base);
     }
     const char *invalid[]={"{}","[]","null","{\"format\":\"pocketdd-device\",\"version\":1}","{", "{\"x\":\"\\u0000\"}","1e999"};
     for(size_t i=0;i<sizeof invalid/sizeof invalid[0];i++) assert(!pd_parse_packet(invalid[i],strlen(invalid[i]),&out));
-    puts("C core: HP/temp, counters, d20, CRC/corruption/wrap, golden v1..v19 migration, PDD20 persistence and strict USB v1..v7 passed");
+    puts("C core: HP/temp, counters, d20, CRC/corruption/wrap, golden v1..v20 migration, PDD21 persistence and strict USB v1..v8 passed");
     return 0;
 }

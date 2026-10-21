@@ -1,5 +1,10 @@
 # Inventario e attacchi sul dispositivo — v0.21
 
+**Aggiornamento v0.41:** [cariche degli oggetti](CARICHE-OGGETTI.md) disponibili
+come saldo distinto dalla quantità, con configurazione PC, gestione sul dispositivo,
+costi e recuperi. Formati correnti: backup PC v11, USB8 e PDD21. Le verifiche
+e le limitazioni storiche descritte sotto si riferiscono alla versione del titolo.
+
 Il firmware funziona offline, senza Foundry o PC al tavolo. Il PC prepara la
 copia e ne mostra inventario, quantità e arma scelta prima del download. Questa
 versione non ripete la lettura del personaggio personale Beyond: verifiche e

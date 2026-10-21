@@ -30,7 +30,7 @@ test('v1–v7 ricevono gli oggetti originali e la portata predefinita',()=>{
 
 test('schema v9 e raccolte conservano armi configurate e inventari vuoti',()=>{
   const state=equipped({notes:'<test> Ω',ability:'CAR',proficient:true,addAbilityToDamage:false});
-  assert.equal(JSON.parse(serialize(state)).version,9);assert.deepEqual(parseBackup(serialize(state)),state);
+  assert.equal(JSON.parse(serialize(state)).version,11);assert.deepEqual(parseBackup(serialize(state)),state);
   const empty={...initialState(),inventory:[],equippedWeaponId:null};assert.deepEqual(parseBackup(serialize(empty)),empty);
   const library=addCharacter(createLibrary(state),empty,'empty');assert.deepEqual(parseLibrary(serializeLibrary(library)),library);
 });

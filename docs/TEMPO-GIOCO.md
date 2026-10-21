@@ -1,5 +1,10 @@
 # Durate in minuti e ore — v0.40
 
+**Aggiornamento v0.41:** [cariche degli oggetti](CARICHE-OGGETTI.md) disponibili
+come saldo distinto dalla quantità, con configurazione PC, gestione sul dispositivo,
+costi e recuperi. Formati correnti: backup PC v11, USB8 e PDD21. Le verifiche
+e le limitazioni storiche descritte sotto si riferiscono alla versione del titolo.
+
 Effetti locali CA/PF massimi, extra difensivi e profili di riduzione possono
 usare durate in **minuti o ore**, con minuti residui conservati anche dopo
 salvataggio e riavvio. Il tempo viene dichiarato sul dispositivo: non avanza

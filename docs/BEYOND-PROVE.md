@@ -1,5 +1,10 @@
 # Beyond: importazione estesa PC v0.14 — 19 ottobre 2026
 
+**Aggiornamento v0.41:** le [cariche oggetto](CARICHE-OGGETTI.md) sono configurabili
+manualmente e trasferibili al dispositivo; la conversione Beyond non le estrae
+ancora automaticamente. Backup correnti v11, USB8. Nessuna nuova lettura reale
+Beyond per questo incremento; i risultati reali sotto restano quelli delle prove datate.
+
 **L'importazione compila ora anche competenze, salvezze, configurazioni delle armi, magie, slot e capacità riconosciute. I dati conservati e gli effetti di gioco automatizzati rimangono distinti.** `conversion.complete` resta `false`: l'app non è un motore completo di tutte le regole Beyond.
 
 ## Prova reale della v0.14

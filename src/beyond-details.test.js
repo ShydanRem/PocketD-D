@@ -93,11 +93,11 @@ test('PF temporanei: assorbimento coerente tra eroe e combattimento, danni appli
   assert.equal(s.hp,hp-2);assert.equal(s.extended.tempHp,0);assert.throws(()=>applyPendingDamage(s));
   assert.equal(adjustParticipantHp(upsertParticipant(state(),{id:'hero',initiative:1}),'hero',-1).hp,hp);
 });
-test('Schema v10: backup e raccolta conservano dati estesi; v9 resta compatibile e schede precedenti identiche',()=>{
-  const s=state(),raw=serialize(s);assert.equal(JSON.parse(raw).version,10);assert.deepEqual(parseBackup(raw),s);
+test('Schema v11: backup e raccolta conservano dati estesi; v9 resta compatibile e schede precedenti identiche',()=>{
+  const s=state(),raw=serialize(s);assert.equal(JSON.parse(raw).version,11);assert.deepEqual(parseBackup(raw),s);
   assert.throws(()=>parseBackup(JSON.stringify({...JSON.parse(raw),version:9})));
   const old=createLibrary(),before=serializeLibrary(old),next=addCharacter(old,s,'rich');assert.equal(serializeLibrary(old),before);
-  const restored=parseLibrary(serializeLibrary(next));assert.deepEqual(restored.characters[0],old.characters[0]);assert.deepEqual(restored.characters[1].state,s);assert.equal(JSON.parse(serialize(initialState())).version,9);
+  const restored=parseLibrary(serializeLibrary(next));assert.deepEqual(restored.characters[0],old.characters[0]);assert.deepEqual(restored.characters[1].state,s);assert.equal(JSON.parse(serialize(initialState())).version,11);
   for(const extended of [{...s.extended,tempHp:-1},{...s.extended,pactSlots:[]},{...s.extended,deathSaves:{successes:4,failures:0,stabilized:false}}])assert.throws(()=>parseBackup(serialize({...s,extended})));
 });
 test('Testi importati: HTML rimosso, entità decodificate, nessuna interpretazione di codice',()=>{

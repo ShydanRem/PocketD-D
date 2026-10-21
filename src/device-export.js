@@ -21,7 +21,7 @@ export function projectDevice(input){
     skillBonuses:map(skills.map(k=>k.id),s.extended?.skillBonuses),saveBonuses:map(abilityKeys,s.extended?.saveBonuses),checkBonuses:map(abilityKeys,s.extended?.checkBonuses),
     halfAbilityChecks:s.extended?.halfAbilityChecks??false,halfSkills:[...(s.extended?.halfSkills??[])],blockedChecks:[...(s.extended?.blockedChecks??[])],
     poisoned:s.condition,strengthAdvantage:Boolean(s.extended?.combat.raging)};
-  const inventory={items:s.inventory.map(v=>({name:ascii(v.name,40),damageType:v.damageType?ascii(v.damageType,24):'',quantity:v.quantity,
+  const inventory={items:s.inventory.map(v=>({name:ascii(v.name,40),damageType:v.damageType?ascii(v.damageType,24):'',quantity:v.quantity,charges:{current:v.charges?.current??0,maximum:v.charges?.max??0,recovery:['manual','short','long'].indexOf(v.charges?.recovery??'manual')},
     kind:['gear','consumable','healing','weapon'].indexOf(v.type),ability:v.type==='weapon'?abilityKeys.indexOf(v.ability):0,
     count:v.diceCount??0,sides:v.dieSides??0,flags:(v.proficient?1:0)|(v.addAbilityToDamage?2:0)|(v.profile?.ranged?4:0)|(v.profile?.heavy?8:0),
     reach:v.reach??0,thrownRange:v.profile?.thrownRange??0,attackModifier:v.attackModifier??0,damageModifier:v.damageModifier??0,healingModifier:v.healingModifier??0})),
@@ -29,6 +29,7 @@ export function projectDevice(input){
     combat:{rageBonus:s.extended?.combat.rageBonus??0,criticalDice:s.extended?.combat.extraMeleeCriticalDice??0,
       raging:s.extended?.combat.raging??false,powerAttack:Boolean(s.extended?.combat.greatWeaponMaster&&s.extended?.combat.greatWeaponMasterAvailable),thrown:s.extended?.combat.thrown??false}};
   warnings.push('Zaino: nomi, quantità, armi e cure riconosciute dal PC. Note e proprietà descrittive restano sul PC; gli oggetti generici non acquisiscono effetti automatici.');
+  warnings.push('Cariche: un saldo esplicito per voce inventario, distinto dalla quantità. Configurazione manuale sul PC, correzione e spesa sul dispositivo; recupero manuale o pieno da riposo breve/lungo. Nessuna carica dedotta automaticamente da Beyond o dalle note.');
   warnings.push('Attacchi: bonus e danni secondo il modello PC, avvelenato, Ira, attacco potente e critico extra fotografati al trasferimento. CA bersaglio manuale. Nessun consumo automatico di munizioni, resistenze, danni aggiuntivi o regole speciali dalle note.');
   warnings.push('Cambiare arma non ricalcola CA o avatar. Cure e consumabili richiedono conferma; Annulla sull’Eroe ripristina PF e quantità insieme. Le modifiche sul dispositivo non ritornano al PC.');
   const magic={powers:s.powers.map(p=>{
@@ -51,7 +52,7 @@ export function projectDevice(input){
     conditions:(s.extended?.conditions??[]).map(c=>({name:ascii(c.name,60),level:c.level}))};
   warnings.push('Stato: fino a 30 condizioni come annotazioni con livello 0–6; nessun effetto dedotto dal nome. Avvelenato è un effetto separato e configurabile sul dispositivo. Rimuovere una nota non disattiva effetti.');
   warnings.push('Morte: contatori trasferiti esattamente; d20 base senza bonus, vantaggi o talenti, con conferma e correzioni DM. Tre fallimenti a zero PF bloccano cure ordinarie e riposo lungo fino a correzione esplicita. Nessuna morte istantanea o gestione automatica dei danni a zero PF.');
-  const packet={format:'pocketdd-device',version:7,name:ascii(s.name,48),level:integer(s.level,1,20,'Livello'),hp:integer(s.hp,0,999,'PF'),
+  const packet={format:'pocketdd-device',version:8,name:ascii(s.name,48),level:integer(s.level,1,20,'Livello'),hp:integer(s.hp,0,999,'PF'),
     maxHp:integer(s.maxHp,1,999,'PF massimi'),tempHp:integer(s.extended?.tempHp??0,0,999,'PF temporanei'),armorClass:integer(s.armorClass,1,40,'CA'),
     avatar:Object.fromEntries(['skin','hair','cloak','style'].map(k=>[k,integer(s.avatar[k],0,2,k)])),
     training,inventory,magic,recovery,status,

@@ -229,3 +229,13 @@ if all((base/(name+'.ppm')).is_file() for name in time):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(time):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'elapsed-time-preview.png');print(base/'elapsed-time-preview.png')
+
+charges=['charges-edit','charges-confirm','charges-cost-preview','charges-rest-short']
+charge_details=['charges-item','charges-retry','charges-unavailable','charges-long-name','charges-cost-editor','charges-cost-receipt','charges-cost-blocked','charges-rest-long']
+for name in charges+charge_details:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in charges):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(charges):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'item-charges-preview.png');print(base/'item-charges-preview.png')

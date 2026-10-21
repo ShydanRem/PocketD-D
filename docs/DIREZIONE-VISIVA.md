@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.40
+# Direzione visiva del dispositivo — v0.41
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -282,3 +282,14 @@ leggibile dell'intervallo h/min, anteprima di scadenze e CA/PF, dettaglio con
 residui in minuti; negli editor Ore i tasti distinguono ore e minuti. Il confronto
 conserva le unità e l'avviso evidenzia i PF persi. Anteprima host:
 `firmware/tests/out/ui-build/elapsed-time-preview.png`; nessuna cattura fisica.
+
+
+## Cariche separate — v0.41
+
+Il dettaglio oggetto conserva il nome completo su più righe e aggiunge Cariche
+accanto a Zaino solo quando il pool è configurato. Pagina dedicata con saldo,
+massimo, recupero e bozza; conferma prima/dopo. Quantità zero consultabile con
+azioni bloccate. Costi mostrano nome e saldi originali; i riposi separano unità
+di carica recuperate dalle voci con utilizzi. Nessun nuovo gesto o assegnazione
+obbligatoria ai tasti. Anteprima `item-charges-preview.png` e `charges-*.png`
+nell'archivio, render reali LVGL host con dati sintetici, non fotografie hardware.

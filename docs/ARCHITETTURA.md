@@ -1,12 +1,12 @@
 # Architettura proposta e verifiche
 
-## Stato implementazione al 19 ottobre 2026
+## Stato implementazione al 21 ottobre 2026
 
 Il dispositivo è il runtime principale; il PC prepara schede e backup.
 La v0.15 introduce `firmware/` con ESP-IDF 5.5.5 e LVGL 9.4.0, display/touch
 ricavati dai sorgenti della scheda esatta. Core C, salvataggio NVS su due copie,
 import USB con conferma e proiezione PC sono separati. Il modello firmware v1
-è un sottoinsieme esplicito del backup PC v9/v10: nessuna equivalenza di regole
+è un sottoinsieme esplicito del backup PC v11 (lettura v1–v10): nessuna equivalenza di regole
 implicita. Dettagli, pin, memoria, compilazione e gate hardware in
 [FIRMWARE.md](FIRMWARE.md). La v0.16 aggiunge il renderer d20 pixel art, con atlas in flash e canvas
 dinamico da 81.920 byte; calcolo del tiro e salvataggi restano separati dalla
@@ -379,3 +379,24 @@ Round/Inizio/Fine e non cambia reazione, risorse o concentrazione. PDD20 aggiung
 100 byte espliciti e legge PDD1–PDD19; il decoder PDD19 resta limitato ai selettori
 0–2. Stato → Tempo usa candidato/commit e dettaglio comune fino a 50 voci.
 [Dettagli](TEMPO-GIOCO.md).
+
+
+## Cariche degli oggetti — v0.41
+
+Pool opzionale per riga in `inventory.js`, validato e copiato nel backup v11,
+configurazione in `inventory-ui.js`; `powers.rest` recupera solo oggetti presenti.
+`device-export.js` proietta i pool in USB8, schema rigoroso in `packet.c` con
+profondità massima 5. Vecchie versioni senza campo cariche, nessun downgrade
+automatico nell'uploader. Nessuna estrazione automatica dal JSON Beyond.
+
+`pd_item` include `pd_charges`; quantità indipendente. Modifica locale e riposi
+producono candidati salvati prima di mostrarne l'esito. Tipo costo ITEM=5 con
+indice stabile 0–59: capacità definisce il riferimento, quantità zero blocca
+l'utilizzo. Il report distingue saldo insufficiente da oggetto assente e congela
+nome/saldi. Addebito in `pd_damage_event_apply` insieme a PF/reazione/concentrazione;
+un retry COS salva il candidato già tirato, senza nuove estrazioni o spese.
+
+PDD21 (`PDDL`) aggiunge 300 byte, `8829+552*N`, max 75069; vecchie copie lette
+senza pool e senza scritture al boot, tag precedenti rifiutano il nuovo tipo costo.
+Fixture PDD20 autentica dell'encoder v0.40 `6604bad`; dati esclusivamente sintetici.
+Layout e tasti configurabili conservati. [Contratti e verifiche](CARICHE-OGGETTI.md).

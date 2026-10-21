@@ -51,7 +51,7 @@ test('backup della raccolta ripristina tutti i personaggi e quello attivo con sc
   const library=addCharacter(createLibrary(session(),'mira'),initialState(),'elian');
   const raw=serializeLibrary(library);
   assert.deepEqual(parseLibrary(raw),library);
-  assert.equal(JSON.parse(raw).characters[0].state.version,9);
+  assert.equal(JSON.parse(raw).characters[0].state.version,11);
   const legacy=JSON.parse(raw);legacy.characters[1].state=legacyBackup(legacy.characters[1].state,7);
   assert.equal(activeCharacter(parseLibrary(JSON.stringify(legacy))).inventory[0].reach,1);
 });

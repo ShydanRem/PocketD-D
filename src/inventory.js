@@ -16,9 +16,14 @@ export function startingInventory(legacy={}) {
   };
 }
 
-export function validateItem(input,extended=false) {
+export function validateItem(input,extended=false,allowCharges=true) {
   if(!input || !validId(input.id) || !['gear','consumable','healing','weapon'].includes(input.type) || typeof input.name!=='string' || !input.name.trim() || input.name.length>40 || typeof input.notes!=='string' || input.notes.length>400 || !integer(input.quantity,0,999)) throw new Error('Oggetto non valido');
   const item={id:input.id,type:input.type,name:input.name.trim(),notes:input.notes,quantity:input.quantity};
+  if(input.charges!==undefined){
+    const c=input.charges;
+    if(!allowCharges||!c||typeof c!=='object'||Array.isArray(c)||Object.keys(c).length!==3||!['current','max','recovery'].every(k=>Object.hasOwn(c,k))||!integer(c.max,1,999)||!integer(c.current,0,c.max)||!['manual','short','long'].includes(c.recovery))throw new Error('Cariche oggetto non valide');
+    item.charges={current:c.current,max:c.max,recovery:c.recovery};
+  }
   if(['weapon','healing'].includes(input.type)) {
     if(!integer(input.diceCount,1,6) || !DIE_SIDES.includes(input.dieSides)) throw new Error('Dadi non validi');
     Object.assign(item,{diceCount:input.diceCount,dieSides:input.dieSides});
@@ -39,9 +44,9 @@ export function validateItem(input,extended=false) {
   return item;
 }
 
-export function validateInventory(input,extended=false) {
+export function validateInventory(input,extended=false,allowCharges=true) {
   if(!input || !Array.isArray(input.inventory) || input.inventory.length>MAX_ITEMS) throw new Error(`Massimo ${MAX_ITEMS} oggetti`);
-  const inventory=input.inventory.map(item=>validateItem(item,extended));
+  const inventory=input.inventory.map(item=>validateItem(item,extended,allowCharges));
   if(new Set(inventory.map(item=>item.id)).size!==inventory.length) throw new Error('Oggetti duplicati');
   if(input.equippedWeaponId!==null && !inventory.some(item=>item.id===input.equippedWeaponId && item.type==='weapon' && item.quantity>0)) throw new Error('Arma equipaggiata non valida');
   return {inventory,equippedWeaponId:input.equippedWeaponId};
@@ -82,4 +87,9 @@ export function adjustQuantity(state,id,delta) {
 export function weaponReach(state){
   const weapon=equippedWeapon(state);
   return state.extended?.combat.thrown&&weapon?.profile?.thrownRange?weapon.profile.thrownRange:weapon?.reach??1;
+}
+
+// One shared charge pool per inventory row; an absent object never recovers.
+export function recoverItemCharges(inventory,kind){
+  return inventory.map(item=>item.quantity>0&&item.charges&&(item.charges.recovery===kind||(kind==='long'&&item.charges.recovery==='short'))?{...item,charges:{...item.charges,current:item.charges.max}}:item);
 }
