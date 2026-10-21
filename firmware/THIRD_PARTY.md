@@ -150,3 +150,10 @@ bisaccia, cristallo, falò), ritocca le maschere avatar e introduce lettere/cifr
 pixel originali, generati da `scripts/generate-device-art.py`. Nessun font,
 illustrazione o dipendenza esterna aggiunti. Le licenze LVGL/ESP-IDF preesistenti
 restano nell'archivio. Nessun dato personale o JSON Beyond.
+
+
+La v0.46 ridisegna scena e maschere avatar originali e aggiunge un alone
+originale I4 con palette alpha, generato dallo stesso script. Nessun asset,
+font o servizio esterno aggiunto. Il confronto usa le catture sintetiche della
+v0.45 approvata e quelle attuali; Pillow è lo strumento host già usato per le
+anteprime, non una dipendenza del firmware. Nessun dato personale o JSON Beyond.

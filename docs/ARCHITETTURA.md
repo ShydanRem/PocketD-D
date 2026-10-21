@@ -475,3 +475,13 @@ Le luci condividono il timer avatar da 200 ms: aggiornamenti sospesi in
 attenuazione, timer eliminato quando si cambia vista, preferenza locale rispettata.
 Nessun RNG o stato di gioco in questo percorso. PDD23/USB8/backup v11 invariati.
 [Asset, memoria e verifiche](RESTYLING-PIXEL-HD.md).
+
+
+## Affinamento della scena — v0.46
+
+Alone I4 40×40 con 16 livelli alpha, due istanze della stessa costante in flash.
+Due riferimenti transitori vengono puliti alla ricostruzione della UI insieme
+alle scintille. Il callback avatar da 200 ms aggiorna l'opacità solo fuori
+attenuazione; eliminazione del timer prima della pulizia degli oggetti.
+Stesso buffer avatar 5824 byte e stati/indici precedenti. Nessun RNG o NVS in
+questo percorso. [Riproducibilità del confronto](AFFINAMENTO-SCENA-AVATAR.md).

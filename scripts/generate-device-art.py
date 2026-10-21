@@ -58,54 +58,95 @@ HD_COLORS=[0x090e1a,0x101c30,0x1c3047,0x2c495d,
 
 def hd_scene():
     a=Art(150,48)
+    # Distance is quieter and cooler; irregular silhouettes replace flat strips.
     for y in range(48):
-        a.rect(0,y,150,1,1 if y<15 else 2 if y<29 else 3)
-    # Layered clouds, crescent, long silhouettes and a broken aqueduct.
-    for x,y,w in [(4,5,32),(80,8,23),(111,2,35),(24,17,42)]:
-        a.rect(x,y,w,1,2);a.rect(x+5,y+1,w-11,1,2)
-    a.ellipse(110,8,7,7,4);a.ellipse(110,8,5,5,9);a.ellipse(107,6,5,5,1)
-    for x,y in [(17,4),(55,6),(87,2),(135,12),(70,10)]:a.rect(x,y,1,1,8)
-    for points,c in [([(0,31),(0,17),(12,10),(27,26),(43,17),(58,31)],2),
-                     ([(49,32),(71,11),(91,30),(111,19),(132,31),(149,20),(149,39)],3),
-                     ([(64,22),(71,11),(78,20),(73,18),(70,18)],4),
-                     ([(0,32),(23,23),(44,31),(62,29),(90,35),(149,29),(149,48),(0,48)],5)]:a.polygon(points,c)
-    a.rect(12,20,39,3,3)
-    for x in [13,26,40]:
-        a.rect(x,23,3,13,3);a.rect(x,23,3,1,4)
-    # Distant haze with ordered dithering, not a runtime filter.
-    for y in range(27,37):
+        a.rect(0,y,150,1,1 if y<15 else 2 if y<30 else 3)
+    for x,y,w in [(3,5,31),(78,8,24),(116,3,27)]:
+        a.rect(x,y,w,1,2);a.rect(x+5,y+1,w-12,1,2)
+    a.ellipse(111,9,8,8,3);a.ellipse(111,9,6,6,4)
+    a.ellipse(111,9,5,5,9);a.ellipse(108,7,5,5,1)
+    for x,y in [(17,4),(54,5),(87,2),(136,12),(72,10)]:a.rect(x,y,1,1,8)
+    ridges=[([(0,29),(0,19),(8,12),(15,15),(20,22),(33,16),(48,29)],2),
+            ([(45,32),(57,23),(62,24),(71,11),(78,20),(85,22),(94,30),
+              (109,19),(119,22),(127,18),(149,28),(149,39)],3)]
+    for points,c in ridges:a.polygon(points,c)
+    a.polygon([(64,22),(71,11),(78,20),(74,18),(72,19),(70,16)],4)
+    a.polygon([(104,25),(109,19),(118,23),(111,22),(110,23)],4)
+    # Broken aqueduct, softened by two discontinuous ribbons of horizon mist.
+    a.rect(10,22,42,2,3)
+    for x in [11,24,38]:
+        a.rect(x,24,3,10,3);a.rect(x,24,1,8,4)
+        a.rect(x+2,24,6,1,2);a.rect(x+3,25,4,1,2)
+    for y in range(28,34):
         for x in range(150):
-            if a.p[y][x] in (2,3,5) and (x+2*y)%7==0:a.p[y][x]=4 if y<31 else 6
-    # Ruined portal; asymmetric masonry and foliage break the rectangular forms.
+            if a.p[y][x] in (2,3) and ((x//11+y)%4!=0) and (x+y)%3==0:a.p[y][x]=4
+    a.polygon([(0,34),(22,27),(36,31),(52,29),(70,34),(95,30),(116,33),
+               (149,27),(149,48),(0,48)],5)
+    # Cut stone, chips, seams and moss; the portal is intentionally asymmetric.
     for x in [40,103]:
-        a.rect(x,13,6,27,5);a.rect(x,13,2,25,7);a.rect(x+2,14,3,24,6)
-        a.rect(x-2,11,10,3,7);a.rect(x-1,11,8,1,8)
-        for y in [17,24,31]:a.rect(x+1,y,4,1,3)
-        a.rect(x-3,37,12,3,6);a.rect(x-2,37,10,1,8)
-    a.rect(43,8,63,4,6);a.rect(45,8,59,1,8)
-    a.rect(51,7,12,1,7);a.rect(78,7,15,1,7);a.rect(66,8,8,4,3)
-    a.rect(68,9,3,3,8);a.rect(69,10,1,1,9)
-    # Broken tiled dais, three depth planes and a central casting shadow.
-    a.polygon([(24,38),(121,38),(137,46),(13,46)],3)
-    a.polygon([(31,37),(117,37),(127,42),(22,42)],6)
-    a.rect(31,37,86,1,8);a.rect(22,42,105,2,2)
-    for x in range(29,127,12):
-        a.rect(x,40,7,1,7);a.rect(x+3,43,8,1,4)
-    a.ellipse(75,40,19,3,15)
-    a.rect(60,41,30,1,5)
-    # Foreground trees, blades and warm lantern pools.
-    for x,top in [(4,10),(139,7)]:
-        a.polygon([(x,top),(x+2,top),(x+5,44),(x-3,44)],15)
-        for y,w in [(top+1,7),(top+8,11),(top+15,14)]:
-            a.polygon([(x,y-5),(x-w,y+5),(x+w,y+5)],5)
-            a.rect(x-w+2,y+4,w-2,1,6)
+        a.polygon([(x,13),(x+5,13),(x+6,36),(x+9,39),(x-3,39),(x-1,35)],5)
+        a.rect(x,14,2,23,7);a.rect(x+2,15,3,22,6)
+        a.rect(x-2,11,10,3,6);a.rect(x-1,11,8,1,8)
+        for y in [18,25,32]:
+            a.rect(x+1,y,4,1,3);a.rect(x+3,y+1,2,1,5)
+        a.rect(x+1,15,1,2,8);a.rect(x+1,22,1,2,8)
+        a.rect(x-3,37,12,3,6);a.rect(x-2,37,10,1,7)
+    a.polygon([(42,9),(49,8),(52,7),(64,8),(68,7),(74,8),(78,7),
+               (92,8),(95,9),(107,9),(106,12),(94,12),(92,11),(81,12),
+               (74,11),(68,12),(59,11),(48,12),(42,11)],6)
+    for x in range(46,105,11):
+        a.rect(x,9,6,1,8);a.rect(x+7,10,1,2,3)
+    a.polygon([(67,8),(74,8),(75,11),(71,14),(67,11)],3)
+    a.rect(70,9,2,3,8);a.rect(70,10,1,1,9)
+    # Ivy descends over the ruin, leaving the center clear for the avatar.
+    for x,y in [(39,12),(106,11),(99,9),(45,18)]:
+        for j in range(8):
+            xx=x+(j//3)%2
+            a.rect(xx,y+j,1,2,6);a.rect(xx-1 if j%2 else xx+1,y+j,2,1,7)
+            if j%3==0:a.rect(xx-1,y+j,1,1,8)
+    # Perspective paving: broad contact shadow and uneven warm/cool edge lights.
+    a.polygon([(24,38),(122,38),(140,47),(10,47)],3)
+    a.polygon([(31,37),(116,37),(130,42),(21,42)],6)
+    a.rect(32,37,25,1,8);a.rect(91,37,25,1,8)
+    a.rect(22,42,108,1,2);a.rect(18,44,115,2,2)
+    for row in range(3):
+        for x in range(23-row*4,132+row*3,13):
+            a.rect(x,39+row*3,9,1,4 if row else 7)
+            a.rect(x+10,38+row*3,1,2,5)
+    a.ellipse(75,40,20,3,15);a.ellipse(75,40,13,2,0)
+    # Near foliage is a set of overlapping leaf clumps, with visible crooked limbs.
+    for x,mirror in [(2,1),(146,-1)]:
+        a.polygon([(x,3),(x+3*mirror,3),(x+5*mirror,44),
+                   (x-3*mirror,44),(x+mirror,22)],15)
+        a.polygon([(x+2*mirror,15),(x+17*mirror,7),(x+12*mirror,12),
+                   (x+4*mirror,20)],15)
+        for dx,dy,rx,ry in [(0,3,12,6),(12,5,10,4),(4,11,11,5),(9,18,7,3)]:
+            cx=x+dx*mirror;a.ellipse(cx,dy,rx,ry,5)
+            a.ellipse(cx-2*mirror,dy-1,max(2,rx-3),max(1,ry-2),6)
+            for k in range(3):a.rect(cx+(k*3-4)*mirror,dy-2+k%2,2,1,7)
+    # Lanterns and reflected light are static art; a small translucent halo is layered above.
     for x in [32,117]:
-        a.ellipse(x,39,10,2,10);a.ellipse(x,38,6,1,11)
+        a.ellipse(x,39,11,2,10);a.ellipse(x,38,7,1,11)
         a.rect(x-1,28,2,11,11);a.rect(x-2,27,4,2,12)
-        a.rect(x-1,24,2,4,13);a.rect(x,24,1,3,14);a.rect(x,23,1,1,14)
-    for x,y in [(6,42),(15,41),(26,44),(131,43),(142,40)]:
-        a.rect(x,y,1,4,6);a.rect(x-1,y,1,1,8);a.rect(x+1,y+1,1,1,7)
+        a.rect(x-2,23,5,5,10);a.rect(x-1,24,3,3,13)
+        a.rect(x,24,1,3,14);a.rect(x-2,23,5,1,12)
+        a.rect(x,21,1,2,12)
+        a.rect(x-5,40,3,1,12);a.rect(x+2,41,4,1,11)
+    for x,y in [(6,43),(16,41),(27,45),(129,44),(140,41)]:
+        a.rect(x,y,1,3,6);a.rect(x-1,y,1,1,8);a.rect(x+1,y+1,2,1,7)
+        a.rect(x+2,y+1,1,1,8)
     for x,y in [(24,20),(125,18),(94,26),(17,34),(130,31)]:a.rect(x,y,1,1,13)
+    return a
+
+
+def lantern_halo():
+    a=Art(20,20)
+    # Baked falloff in an indexed alpha palette, still exact 2x pixel replication.
+    for y in range(20):
+        for x in range(20):
+            radius=((x-9.5)**2+(y-9.5)**2)/91
+            level=max(0,min(15,int((1-radius)*15)))
+            a.p[y][x]=level
     return a
 
 
@@ -208,11 +249,11 @@ PROPS={
         '..9e999999e99...','...99e99e99.....','....999999......','................']}
 
 
-def encode(name, art, scale, transparent=False, colors=COLORS):
+def encode(name, art, scale, transparent=False, colors=COLORS, alphas=None):
     w, h = art.w*scale, art.h*scale
     data = []
     for i, c in enumerate(colors):
-        data += [c & 255, c >> 8 & 255, c >> 16, 0 if transparent and i == 0 else 255]
+        data += [c & 255, c >> 8 & 255, c >> 16, alphas[i] if alphas is not None else 0 if transparent and i == 0 else 255]
     for y in range(h):
         row = [art.p[y//scale][x//scale] for x in range(w)]
         data += [(row[x] << 4) | row[x+1] for x in range(0, w, 2)]
@@ -229,65 +270,64 @@ static const lv_image_dsc_t pd_art_{name} = {{
 
 
 def avatar(style, pose):
-    a = Art(24, 30)
-    # Integer-grid silhouette, cloth, cuirass and boots. No weapon/equipment claim.
-    a.rect(7, 10, 11, 15, 1)
-    a.rect(5, 13, 15, 11, 1)
-    a.rect(4, 20, 17, 6, 1)
-    a.rect(6, 12, 13, 13, 7)
-    a.rect(5, 21, 15, 4, 7)
-    a.rect(16, 13, 3, 12, 6)
-    a.rect(6, 15, 2, 9, 8)
-    a.rect(8, 11, 8, 2, 8)
-    if pose == 1:
-        a.rect(3, 23, 3, 3, 1)
-        a.rect(4, 23, 2, 2, 8)
-        a.rect(6, 22, 1, 3, 7)
-    elif pose == 2:
-        a.rect(19, 22, 3, 3, 1)
-        a.rect(19, 23, 2, 1, 7)
-        a.rect(7, 22, 1, 3, 8)
-    a.rect(8, 23, 3, 5, 13)
-    a.rect(14, 23, 3, 5, 13)
-    a.rect(7, 28, 5, 2, 14)
-    a.rect(14, 28, 5, 2, 14)
-    a.rect(9, 13, 7, 8, 9)
-    a.rect(14, 13, 2, 8, 10)
-    a.rect(8, 12, 9, 1, 11)
-    a.rect(8, 21, 9, 2, 11)
-    a.rect(11, 21, 3, 3, 12)
-    a.rect(5, 16, 3, 4, 3)
-    a.rect(18, 16, 3, 4, 2)
-    # Head, face and three hair silhouettes matching the PC's appearance indices.
-    a.rect(7, 1, 11, 10, 1)
-    a.rect(8, 2, 9, 8, 3)
-    a.rect(9, 10, 7, 2, 2)
-    a.rect(10, 10, 4, 2, 3)
-    a.rect(16, 5, 1, 5, 2)
-    if style in (0, 1):
-        a.rect(8, 1, 9, 3, 4)
-        a.rect(7, 3, 3, 4, 4)
-        a.rect(15, 3, 3, 3, 4)
-        a.rect(8, 2, 6, 1, 5)
-        a.rect(10, 4, 3, 1, 4)
-        if style == 1:
-            a.rect(7, 6, 2, 7, 4)
-            a.rect(17, 5, 2, 9, 4)
-            a.rect(18, 8, 1, 4, 5)
-    else:
-        a.rect(8, 2, 9, 1, 4)
-        a.rect(8, 3, 2, 1, 5)
-        a.rect(16, 3, 1, 2, 4)
-    for x in [10, 14]:
-        a.rect(x, 7 if pose == 3 else 6, 2 if pose == 3 else 1, 1 if pose == 3 else 2, 15)
-    a.rect(11, 9, 3, 1, 2)
-    # Cloth folds, reflected warm trim and cool rim light, still no equipment claim.
-    a.rect(9,14,1,6,12);a.rect(10,15,1,4,9)
-    a.rect(15,14,1,5,10);a.rect(16,12,1,8,8)
-    a.rect(6,21,1,3,6);a.rect(8,23,1,2,8)
-    a.rect(10,24,2,1,6);a.rect(16,24,2,1,6)
+    a=Art(24,30)
+    lift=1 if pose==1 else 0
+    lean=-1 if pose==1 else 1 if pose==2 else 0
+    # Weighted cape silhouette, narrow legs and asymmetric folds. No weapon claim.
+    a.polygon([(9,10),(16,10),(19,13-lift),(20,20),(21+lean,25),
+               (17,27),(12,25),(7,27),(4+lean,25),(6,19),(6,14-lift)],1)
+    a.polygon([(8,12),(16,11),(18,14),(18,21),(20+lean,24),
+               (16,25),(12,23),(7,25),(6+lean,24),(8,18)],7)
+    a.polygon([(16,12),(18,14),(18,21),(20+lean,24),(17,25),(15,22)],6)
+    a.polygon([(8,13),(9,14),(8,21),(7+lean,24),(6+lean,24)],8)
+    a.rect(17,20,1,3,7);a.rect(8+lean,23,2,1,8)
+    a.rect(15,24,2,1,8)
+    # Feet remain planted while the shoulders breathe one logical pixel.
+    a.polygon([(9,22),(12,22),(12,25),(11,28),(8,28)],13)
+    a.polygon([(14,22),(17,22),(17,28),(14,28),(13,25)],13)
+    a.rect(8,25,2,3,14);a.rect(15,25,2,3,14)
+    a.rect(7,28,5,2,1);a.rect(14,28,5,2,1)
     a.rect(8,28,3,1,11);a.rect(15,28,3,1,11)
-    a.rect(8,5,1,3,2);a.rect(11,8,2,1,3)
+    # Tunic, diagonal strap, collar and small clasp.
+    a.polygon([(9,12-lift),(15,12-lift),(17,15-lift),(16,21),
+               (13,23),(9,21),(8,15-lift)],9)
+    a.polygon([(14,13-lift),(16,15-lift),(16,20),(14,21)],10)
+    a.rect(10,16-lift,1,4,10);a.rect(11,15-lift,2,1,9)
+    a.polygon([(8,12-lift),(10,12-lift),(16,20),(14,21)],11)
+    a.rect(10,14-lift,1,2,12);a.rect(13,18,1,2,12)
+    a.rect(9,21,7,1,13);a.rect(12,21,2,2,12)
+    a.rect(12,21,1,1,11)
+    # Rounded shoulders and hands, with reflected warm/cool edges.
+    a.polygon([(7,13-lift),(9,14-lift),(8,18-lift),(6,19-lift),(5,17-lift)],7)
+    a.rect(6,14-lift,1,3,8);a.rect(6,18-lift,2,3,2);a.rect(6,18-lift,1,2,3)
+    a.polygon([(17,13-lift),(19,15-lift),(19,19-lift),(17,19-lift),(16,15-lift)],6)
+    a.rect(17,18-lift,2,3,2);a.rect(17,18-lift,1,2,3)
+    a.polygon([(9,11-lift),(12,10-lift),(16,11-lift),(17,13-lift),
+               (14,14-lift),(10,13-lift),(8,14-lift)],8)
+    a.rect(11,12-lift,2,2,11);a.rect(11,12-lift,1,1,12)
+    # Rounded face, ears, brow, nose and jaw; hair silhouettes retain their indices.
+    a.polygon([(10,1),(15,1),(18,3),(18,7),(16,10),(14,11),
+               (10,10),(8,8),(7,4)],1)
+    a.polygon([(10,3),(15,3),(17,5),(16,9),(14,10),(11,10),(9,8),(9,5)],3)
+    a.rect(8,6,1,2,2);a.rect(17,6,1,2,2)
+    a.rect(15,7,1,2,2);a.rect(11,9,4,1,2)
+    a.rect(12,7,1,1,2);a.rect(13,8,1,1,2)
+    if style in (0,1):
+        a.polygon([(9,1),(15,1),(18,3),(17,5),(15,4),(14,3),
+                   (12,4),(10,3),(9,6),(8,7),(7,4)],4)
+        a.rect(10,2,4,1,5);a.rect(15,3,2,1,5)
+        a.rect(8,4,1,2,5);a.rect(14,2,1,1,4)
+        if style==1:
+            a.polygon([(7,4),(9,4),(8,10),(9,13),(7,15),(6,13),(7,9)],4)
+            a.polygon([(16,4),(18,4),(18,10),(20,13),(18,15),(16,11)],4)
+            a.rect(7,8,1,4,5);a.rect(17,7,1,5,5);a.rect(18,12,1,1,5)
+    else:
+        a.rect(10,2,5,1,5);a.rect(9,3,2,1,4)
+        a.rect(16,3,1,2,5);a.rect(8,4,1,2,5)
+    for x in [10,14]:
+        a.rect(x,5,2,1,2)
+        a.rect(x,6,2 if pose==3 else 1,1 if pose==3 else 2,15)
+    a.rect(12,9,2,1,2)
     return a
 
 
@@ -355,6 +395,7 @@ def main():
     output = '/* Original pixel art. Generated by scripts/generate-device-art.py. */\n#ifndef PD_DEVICE_ART_H\n#define PD_DEVICE_ART_H\n'
     output += encode('scene', scene(), 2)
     output += encode('diorama', hd_scene(), 2, colors=HD_COLORS)
+    output += encode('lantern_halo', lantern_halo(), 2, colors=[0xffcd86]*16, alphas=[i*5 for i in range(16)])
     output += encode('surround', surround(), 2)
     for name, rows in ICONS.items():
         art = Art(12, 12)

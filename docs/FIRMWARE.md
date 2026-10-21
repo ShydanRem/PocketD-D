@@ -1,10 +1,10 @@
-# Firmware PocketD-D 0.45 — restyling RPG pixel art 2D
+# Firmware PocketD-D 0.46 — scena e avatar
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
-[Novità v0.45: restyling RPG pixel art 2D](RESTYLING-PIXEL-HD.md).
+[Novità v0.46: scena e avatar](AFFINAMENTO-SCENA-AVATAR.md).
 PDD23, USB v8, backup PC v11; layout invariato e lettura dei salvataggi precedenti.
 
 ## Stato e perimetro
@@ -979,3 +979,20 @@ per avatar/dadi/pool/UI passati con leak detector disattivato.
 ESP32-S3: **987840 byte**, partizione app 4 MiB **76% libera**, ESP-IDF 5.5.5 e
 LVGL 9.4.0. Nessun flash o collaudo fisico, lettura Beyond o modifica della
 raccolta personale. Memoria, fluidità e consumi sul dispositivo restano da misurare.
+
+
+## Verifiche v0.46 — scena/avatar sulla base approvata
+
+Maschere avatar e diorama ridisegnati, stesso layout e personalizzazioni della
+v0.45 approvata. Alone I4 40×40 (864 byte) in flash, riusato dalle due lanterne
+in Eroe/Aspetto; timer cosmetico esistente, pausa in attenuazione e pulizia
+alla navigazione. [Confronto e contratti](AFFINAMENTO-SCENA-AVATAR.md).
+
+Suite host completa, 41411 confronti PC → USB → C, 144 test JavaScript e build
+PC/HTML autonomo passati. Avatar 81 aspetti × quattro pose con guardie e
+replica 2×/3×/4×; UI con aloni/luci, input, conferme/import/errori e limiti
+del cerchio. ASan/UBSan avatar/UI passati con leak detector disattivato.
+
+ESP32-S3: **988800 byte**, partizione app 4 MiB **76% libera**, ESP-IDF 5.5.5 e
+LVGL 9.4.0. PDD23/USB8/backup v11/layout e tasti configurabili invariati.
+Nessun flash, collaudo fisico, lettura Beyond o modifica della raccolta personale.

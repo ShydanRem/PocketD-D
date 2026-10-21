@@ -111,9 +111,10 @@ int main(void) {
     }
     assert(!memcmp(&state,&animated_before,sizeof state)&&save_calls==idle_saves&&random_calls==idle_rng);
     /* Diorama lights share the existing cosmetic timer, never game state or entropy. */
-    assert(avatar_scale==3&&avatar_image.header.w==72&&avatar_image.header.h==90&&scene_lights[0]);
+    assert(avatar_scale==3&&avatar_image.header.w==72&&avatar_image.header.h==90&&scene_lights[0]&&scene_halos[0]);
     lv_opa_t light_before=lv_obj_get_style_opa(scene_lights[0],0);display_screen.dimmed=true;
-    lv_tick_inc(400);lv_timer_handler();assert(lv_obj_get_style_opa(scene_lights[0],0)==light_before);
+    lv_opa_t halo_before=lv_obj_get_style_opa(scene_halos[0],0);
+    lv_tick_inc(400);lv_timer_handler();assert(lv_obj_get_style_opa(scene_lights[0],0)==light_before&&lv_obj_get_style_opa(scene_halos[0],0)==halo_before);
     display_screen.dimmed=false;
     click("Aspetto");assert(page==APPEARANCE&&avatar_timer);screenshot("appearance.ppm");
     click("Animazione: si");assert(!state.idle_animation&&!avatar_timer);screenshot("appearance-still.ppm");
@@ -139,7 +140,7 @@ int main(void) {
     fail_save=false;render();
     click("-1 PF");assert(state.hp==23&&undo_available);click("Annulla");assert(state.hp==24&&!undo_available);
     fail_save=true;click("-1 PF");assert(state.hp==24);fail_save=false;
-    click("Scheda");assert(!avatar_timer&&!avatar_sprite&&!scene_lights[0]);screenshot("sheet.ppm");click("DES 16\n+3");
+    click("Scheda");assert(!avatar_timer&&!avatar_sprite&&!scene_lights[0]&&!scene_halos[0]);screenshot("sheet.ppm");click("DES 16\n+3");
     unsigned saved_before=save_calls;
     click("Lancia");assert(result.total==13&&result.count==1&&dice_animation.active&&!has_roll);
     unsigned rng_before=random_calls;

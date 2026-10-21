@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.45
+# Direzione visiva del dispositivo — v0.46
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -6,6 +6,9 @@ La qualità visiva è un requisito del prodotto insieme alle funzioni di scheda.
 Il PC rimane lo strumento per importazione, configurazione e backup.
 
 ## Revisione attuale
+
+La v0.45 è la base estetica approvata. La v0.46 ne affina scena e avatar, con
+aloni delle lanterne anche in Aspetto. [Confronto e verifiche](AFFINAMENTO-SCENA-AVATAR.md).
 
 La v0.45 avvia una revisione più videogiocosa, ispirata a un RPG pixel art 2D
 con profondità e luce. [Schermate, contratti, verifiche e lavoro rimasto](RESTYLING-PIXEL-HD.md).
@@ -346,3 +349,14 @@ barre segmentate, oro per selezione e 20 naturale. Luci e scintille condividono
 il timer dell'avatar, senza RNG o salvataggi. PWR/BOOT configurabili conservati.
 La galleria `device-preview.png` e tutte le altre anteprime vengono dal codice
 LVGL host. [Dettagli e limiti](RESTYLING-PIXEL-HD.md); il blocco estetico resta aperto.
+
+
+## Affinamento scena e avatar — v0.46
+
+Pietra irregolare e con edera, fogliame a gruppi e rami, foschia discontinua,
+lastricato in prospettiva e aloni trasparenti condivisi dalle due lanterne.
+Avatar meno squadrato con volto, spalle, mani e mantello ridisegnati; pose di
+respiro e tessuto, stesse 81 personalizzazioni. Layout e carattere generale
+della v0.45 conservati. `pixel-polish-comparison.png` mette a confronto le
+catture firmware host prima/dopo; il timer rispetta animazione e attenuazione.
+[Contratti e limiti](AFFINAMENTO-SCENA-AVATAR.md).

@@ -2,12 +2,13 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.45:** prima revisione verso un'estetica RPG pixel art 2D con profondità e luci: diorama dell'Eroe, avatar ingrandito, cifre pixel, pannelli con rilievo, icone di sezione e tavolo dei dadi. Le anteprime mostrano il firmware LVGL reale su host; il collaudo sulla scheda fisica resta aperto.
+**Stato v0.46:** affinamento della base estetica v0.45 approvata: avatar meno rigido, volto/mantello ridisegnati, vegetazione organica, pietra con edera e lanterne con aloni trasparenti. Restano diorama dell'Eroe, cifre pixel, pannelli con rilievo, icone di sezione e tavolo dei dadi. Le anteprime mostrano il firmware LVGL reale su host; il collaudo sulla scheda fisica resta aperto.
 
 Il firmware comprende scheda, prove/abilità/salvezze, inventario, attacchi e dadi animati, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Le regole non rappresentate restano manuali e documentate. PDD23, USB8 e backup PC v11 invariati; tasti configurabili e raccolta personale conservati.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
+- [Affinamento scena/avatar e confronto con la base approvata](docs/AFFINAMENTO-SCENA-AVATAR.md)
 - [Restyling pixel art: schermate, asset, verifiche e prossimi passi](docs/RESTYLING-PIXEL-HD.md)
 - [Condizioni sui tiri: effetti espliciti, contesto e limiti](docs/CONDIZIONI-TIRI.md)
 - [Ricariche degli oggetti: dadi, limiti, salvataggi e regole manuali](docs/RICARICHE-OGGETTI.md)

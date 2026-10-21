@@ -44,6 +44,7 @@ static lv_timer_t *dice_timer;
 static lv_obj_t *avatar_sprite;
 static lv_timer_t *avatar_timer;
 static lv_obj_t *scene_lights[5];
+static lv_obj_t *scene_halos[2];
 static uint32_t avatar_started;
 static unsigned avatar_phase;
 static unsigned avatar_scale;
@@ -277,15 +278,18 @@ static lv_obj_t *decoration(int x,int y,int w,int h,unsigned color,int radius) {
     lv_obj_set_style_radius(o,radius,0);lv_obj_remove_flag(o,LV_OBJ_FLAG_CLICKABLE|LV_OBJ_FLAG_SCROLLABLE);
     return o;
 }
-static void art(const lv_image_dsc_t *source,int x,int y,lv_obj_t *parent) {
+static lv_obj_t *art(const lv_image_dsc_t *source,int x,int y,lv_obj_t *parent) {
     lv_obj_t *o=lv_image_create(parent);lv_image_set_src(o,source);lv_obj_set_pos(o,x,y);
     lv_obj_remove_flag(o,LV_OBJ_FLAG_CLICKABLE|LV_OBJ_FLAG_SCROLLABLE);
+    return o;
 }
-static void scene_atmosphere(lv_obj_t *stage){
+static void scene_atmosphere(lv_obj_t *stage,int x,int y){
+    scene_halos[0]=art(&pd_art_lantern_halo,x+45,y+30,stage);
+    scene_halos[1]=art(&pd_art_lantern_halo,x+215,y+30,stage);
     const int xy[][2]={{64,48},{234,48},{48,40},{250,36},{188,52}};
     for(unsigned i=0;i<5;i++){
         scene_lights[i]=decoration(xy[i][0],xy[i][1],2,i<2?6:2,PD_GOLD,0);
-        lv_obj_set_parent(scene_lights[i],stage);lv_obj_set_pos(scene_lights[i],xy[i][0],xy[i][1]);
+        lv_obj_set_parent(scene_lights[i],stage);lv_obj_set_pos(scene_lights[i],x+xy[i][0],y+xy[i][1]);
     }
 }
 static void avatar_show(const pd_avatar *appearance,int x,int y,lv_obj_t *parent,unsigned scale,bool animate) {
@@ -1795,7 +1799,7 @@ static void render(void) {
     if(dice_timer) { lv_timer_delete(dice_timer);dice_timer=NULL; }
     if(avatar_timer) { lv_timer_delete(avatar_timer);avatar_timer=NULL; }
     lv_obj_t *root=lv_screen_active();lv_obj_clean(root);
-    avatar_sprite=NULL;memset(scene_lights,0,sizeof scene_lights);lv_image_cache_drop(&avatar_image);
+    avatar_sprite=NULL;memset(scene_lights,0,sizeof scene_lights);memset(scene_halos,0,sizeof scene_halos);lv_image_cache_drop(&avatar_image);
     lv_free(dice_pixels);dice_pixels=NULL;dice_canvas=NULL;
     lv_obj_set_style_bg_color(root,lv_color_hex(PD_INK),0);
     lv_obj_remove_flag(root,LV_OBJ_FLAG_SCROLLABLE);
@@ -1844,6 +1848,7 @@ static void render(void) {
     if(page==APPEARANCE) {
         label("Aspetto",83,111,300,true);
         art(&pd_art_diorama,83,167,root);
+        scene_atmosphere(root,83,167);
         avatar_show(&state.avatar,185,143,root,4,true);
         snprintf(text,sizeof text,"Mantello %s / %s",(const char *const[]){"bosco","vino","notte"}[state.avatar.cloak],
                  (const char *const[]){"corti","lunghi","rasati"}[state.avatar.style]);
@@ -1858,7 +1863,7 @@ static void render(void) {
         lv_obj_t *stage=button("Aspetto",83,153,300,96,50,true);
         lv_obj_set_style_pad_all(stage,0,0);lv_obj_set_style_border_width(stage,0,0);
         lv_obj_set_style_bg_opa(stage,LV_OPA_TRANSP,0);lv_obj_set_style_bg_grad_dir(stage,LV_GRAD_DIR_NONE,0);
-        art(&pd_art_diorama,0,0,stage);scene_atmosphere(stage);avatar_show(&state.avatar,114,2,stage,3,true);
+        art(&pd_art_diorama,0,0,stage);scene_atmosphere(stage,0,0);avatar_show(&state.avatar,114,2,stage,3,true);
         lv_obj_t *hint=lv_obj_get_child(stage,0);lv_obj_set_style_text_font(hint,&lv_font_montserrat_16,0);
         lv_obj_set_style_text_color(hint,lv_color_hex(PD_GOLD),0);
         lv_obj_set_style_bg_color(hint,lv_color_hex(PD_INK),0);lv_obj_set_style_bg_opa(hint,LV_OPA_COVER,0);
@@ -1981,6 +1986,7 @@ static void avatar_frame(lv_timer_t *timer) {
     (void)timer;
     if(display_screen.dimmed)return;
     unsigned step=(lv_tick_get()-avatar_started)/200;
+    for(unsigned i=0;i<2;i++)if(scene_halos[i])lv_obj_set_style_opa(scene_halos[i],(step+i)%3?LV_OPA_COVER:LV_OPA_70,0);
     for(unsigned i=0;i<5;i++)if(scene_lights[i])lv_obj_set_style_opa(scene_lights[i],i<2?((step+i)%3?LV_OPA_COVER:LV_OPA_50):((step+i*3)%8<2?LV_OPA_COVER:LV_OPA_20),0);
     unsigned pose=pd_avatar_pose(lv_tick_get()-avatar_started);
     if(pose==avatar_phase)return;
