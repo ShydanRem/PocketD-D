@@ -143,3 +143,10 @@ La v0.44 aggiunge core, UI e test originali per quattro effetti di condizione
 sui tiri. Fixture PDD22 sintetica generata dall'encoder originale v0.43
 `b340a8c`, prima delle modifiche. Nessun dato personale, JSON Beyond, asset
 o dipendenza esterna aggiunti.
+
+
+La v0.45 aggiunge disegni originali su griglia (diorama, cornice, libro,
+bisaccia, cristallo, falò), ritocca le maschere avatar e introduce lettere/cifre
+pixel originali, generati da `scripts/generate-device-art.py`. Nessun font,
+illustrazione o dipendenza esterna aggiunti. Le licenze LVGL/ESP-IDF preesistenti
+restano nell'archivio. Nessun dato personale o JSON Beyond.

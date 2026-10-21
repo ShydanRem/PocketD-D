@@ -96,8 +96,14 @@ static void star(uint16_t *p,int x,int y,int r,uint16_t c) {
 void pd_dice_paint(const pd_dice_animation *a,uint16_t p[PD_DICE_PIXELS]) {
     uint16_t bg=color(PD_INK);
     for(int i=0;i<PD_DICE_PIXELS;i++)p[i]=bg;
-    /* A restrained pixel tray; all positions are local to the circular safe area. */
-    for(int x=24;x<PD_DICE_WIDTH-24;x+=8)block(p,x,117,4,2,color(PD_EDGE));
+    /* Stepped inlaid tabletop: pure presentation, independent of the roll. */
+    for(int y=14;y<116;y+=2)for(int x=8;x<PD_DICE_WIDTH-8;x+=2){
+        int inset=y<28?(28-y):y>102?(y-102):0;
+        if(x<8+inset||x>=PD_DICE_WIDTH-8-inset)continue;
+        block(p,x,y,2,2,color((x/16+y/12)%2?0x101e2b:0x12212e));
+    }
+    for(int x=24;x<PD_DICE_WIDTH-24;x+=8){block(p,x,117,4,2,color(PD_EDGE));block(p,x,12,4,2,color(0x293e4a));}
+    for(int y=34;y<98;y+=8){block(p,10,y,2,4,color(0x354b50));block(p,PD_DICE_WIDTH-12,y,2,4,color(0x354b50));}
     unsigned selected=a->roll.dice[0]==a->roll.natural?0:1;
     unsigned count=pd_dice_count(a),sides=pd_dice_sides(a);
     for(unsigned d=0;d<count;d++) {

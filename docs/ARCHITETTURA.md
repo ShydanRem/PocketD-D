@@ -463,3 +463,15 @@ un byte prima del CRC: `8854+552*N`, max 75094. PDD1–22 con nuovi bit zero e
 Avvelenato conservato, senza scritture al boot. Fixture PDD22 autentica v0.43
 `b340a8c`; USB8/backup v11/layout invariati. Import confermato azzera i bit locali.
 [Limiti e verifiche](CONDIZIONI-TIRI.md).
+
+
+## Presentazione RPG 2D — v0.45
+
+Asset I4 e font numerici originali generati e verificati da
+`generate-device-art.py --check`. Avatar a scale intere 2/3/4 su un unico buffer
+5824 byte, invalidando la cache prima dell'aggiornamento e alla navigazione.
+Il diorama e i pannelli non introducono un secondo canvas applicativo completo.
+Le luci condividono il timer avatar da 200 ms: aggiornamenti sospesi in
+attenuazione, timer eliminato quando si cambia vista, preferenza locale rispettata.
+Nessun RNG o stato di gioco in questo percorso. PDD23/USB8/backup v11 invariati.
+[Asset, memoria e verifiche](RESTYLING-PIXEL-HD.md).

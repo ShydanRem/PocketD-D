@@ -1,9 +1,17 @@
-# Direzione visiva del dispositivo — v0.44
+# Direzione visiva del dispositivo — v0.45
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
 La qualità visiva è un requisito del prodotto insieme alle funzioni di scheda.
 Il PC rimane lo strumento per importazione, configurazione e backup.
+
+## Revisione attuale
+
+La v0.45 avvia una revisione più videogiocosa, ispirata a un RPG pixel art 2D
+con profondità e luce. [Schermate, contratti, verifiche e lavoro rimasto](RESTYLING-PIXEL-HD.md).
+I paragrafi v0.18–44 sotto descrivono le versioni precedenti. La revisione
+attuale ingrandisce la scena a 300×96 e l'avatar a 72×90, aggiunge cifre pixel,
+cornice illustrata, pannelli con rilievo, oggetti di sezione e luci ambientali.
 
 ## Linguaggio grafico
 
@@ -20,7 +28,7 @@ Il PC rimane lo strumento per importazione, configurazione e backup.
   Nessuna animazione deve consumare risorse, inventare valori o cambiare un tiro.
 
 La palette condivisa è in `firmware/core/visual.h`: inchiostro `#0b101c`,
-superficie `#162333`, testo `#f0eee5`, menta `#76dfc5`, oro `#f2cc81`,
+superficie `#192b3d`, testo `#f0eee5`, menta `#76dfc5`, oro `#f2cc81`,
 viola `#bc9bdb`, avviso `#ffa999`. Il vassoio dei dadi usa lo stesso fondo
 dell'interfaccia, senza un rettangolo di colore diverso.
 
@@ -327,3 +335,14 @@ Fallimento automatico e contesto mancante bloccano Lancia con messaggio visibile
 nessun dado o esito naturale fittizio. `roll-conditions-preview.png` e singoli
 `roll-conditions-*.png` sono render LVGL host, non fotografie del dispositivo.
 La revisione estetica organica rimane il successivo blocco software concordato.
+
+
+## Revisione RPG 2D — v0.45
+
+Distanza fredda, lanterne calde, foschia disegnata su griglia e ombre del
+lastricato danno profondità al diorama. Cifre originali per PF/contatori,
+Montserrat per nomi e descrizioni, pannelli con gradiente e bordi netti,
+barre segmentate, oro per selezione e 20 naturale. Luci e scintille condividono
+il timer dell'avatar, senza RNG o salvataggi. PWR/BOOT configurabili conservati.
+La galleria `device-preview.png` e tutte le altre anteprime vengono dal codice
+LVGL host. [Dettagli e limiti](RESTYLING-PIXEL-HD.md); il blocco estetico resta aperto.

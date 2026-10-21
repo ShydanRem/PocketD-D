@@ -1,10 +1,10 @@
-# Firmware PocketD-D 0.44 — condizioni sui tiri
+# Firmware PocketD-D 0.45 — restyling RPG pixel art 2D
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
-[Novità v0.44: condizioni sui tiri](CONDIZIONI-TIRI.md).
+[Novità v0.45: restyling RPG pixel art 2D](RESTYLING-PIXEL-HD.md).
 PDD23, USB v8, backup PC v11; layout invariato e lettura dei salvataggi precedenti.
 
 ## Stato e perimetro
@@ -960,3 +960,22 @@ ESP32-S3: **915360 byte**, partizione app 4 MiB **78% libera**, ESP-IDF 5.5.5
 e LVGL 9.4.0. PDD23, USB8/backup v11/layout invariati. Nessun flash, lettura
 Beyond, modifica di raccolte personali o collaudo fisico di display, touch,
 tasti, USB, memoria, batteria o alimentazione.
+
+
+## Verifiche v0.45 — restyling RPG 2D
+
+Diorama e cornice I4 in flash, avatar 72×90 con buffer esistente, cifre pixel,
+pannelli con rilievo, icone di sezione, luci cosmetiche e vassoio intarsiato.
+Nomi e descrizioni conservano il font leggibile. Nessun nuovo campo di stato,
+RNG, scrittura o associazione dei tasti. PDD23/USB8/backup v11/layout invariati.
+[Contratti e anteprime](RESTYLING-PIXEL-HD.md).
+
+Suite host completa, 41411 confronti PC → USB → C, 144 test JavaScript e build
+PC/HTML autonomo passati. Replica esatta 2×/3×/4× per 81 aspetti × quattro pose,
+guardie e input invalidi; UI con timer/luci, attenuazione, nomi/valori massimi,
+conferme/import/errori/tasti; dado singolo, doppio e pool fino a 18. ASan/UBSan
+per avatar/dadi/pool/UI passati con leak detector disattivato.
+
+ESP32-S3: **987840 byte**, partizione app 4 MiB **76% libera**, ESP-IDF 5.5.5 e
+LVGL 9.4.0. Nessun flash o collaudo fisico, lettura Beyond o modifica della
+raccolta personale. Memoria, fluidità e consumi sul dispositivo restano da misurare.

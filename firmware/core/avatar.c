@@ -31,3 +31,14 @@ bool pd_avatar_large(const pd_avatar *a,unsigned pose,uint8_t out[PD_AVATAR_LARG
     }
     return true;
 }
+bool pd_avatar_hero(const pd_avatar *a,unsigned pose,uint8_t out[PD_AVATAR_HERO_BYTES]) {
+    if(!pd_avatar_image(a,pose,out))return false;
+    for(int y=89;y>=0;y--)for(int x=35;x>=0;x--) {
+        unsigned sx=(x*4)/3,sy=(y*2)/3;
+        uint8_t left=out[64+sy*24+sx/2];left=(sx&1)?left&15:left>>4;
+        sx=(x*2+1)*2/3;
+        uint8_t right=out[64+sy*24+sx/2];right=(sx&1)?right&15:right>>4;
+        out[64+y*36+x]=(left<<4)|right;
+    }
+    return true;
+}

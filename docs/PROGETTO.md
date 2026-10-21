@@ -56,7 +56,7 @@ Non fanno parte di questo traguardo: importazione Beyond, editor completo, incan
 
 L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco non impedisce le altre fasi. L'ordine delle fasi 0 e 1 può sovrapporsi se l'hardware non è immediatamente disponibile.
 
-## Punto attuale — v0.44
+## Punto attuale — v0.45
 
 | Blocco | Stato software | Cosa manca |
 | --- | --- | --- |
@@ -64,7 +64,7 @@ L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco no
 | Effetti numerici | Otto modificatori CA/PF massimi, basi separate, cure integrate, durate manuali/a round/inizio-fine turno/minuti-ore e vincolo esplicito alla concentrazione con fine congiunta | Altre durate/regole, proprietà speciali e ricalcolo da equipaggiamento |
 | Danni e difese | Profili manuali per 13 tipi, base/tre extra separati, durate/vincoli e scadenze comuni, PF/temporanei, salvezza COS, sei componenti per colpo, fonte esplicita e riduzioni manuali prima/dopo, tre profili locali con budget, conto completo, fino a tre spese da contatori/usi/slot ordinari-patto/cariche e reazione | Condizioni arbitrarie, più di tre extra per tipo, catalogo/requisiti automatici, oltre tre spese, costi alternativi ed eventi/formule di ricarica automatici, eccezioni alle salvezze e casi morte bloccati |
 | Stato e morte | Note separate dagli effetti sui tiri di Avvelenato/Accecato/Spaventato/Prono/Trattenuto, d20 morte base e correzioni, reazione e inizio turno espliciti | Altri effetti/condizioni, durate e fonti multiple, eccezioni e morte istantanea |
-| Grafica e comandi | Tema pixel art, avatar 81 combinazioni, dadi animati, PWR/BOOT configurabili | Leggibilità e precisione touch sulla scheda |
+| Grafica e comandi | Prima revisione RPG 2D: diorama illuminato, avatar 81 combinazioni ingrandito, cifre pixel, pannelli, icone, dadi animati e PWR/BOOT configurabili | Altre illustrazioni/sprite, icone specifiche, transizioni e leggibilità/precisione touch sulla scheda |
 | Impostazioni schermo | Luminosità, inattività e risveglio protetto nella v0.25 | Consumi misurati, sospensione, batteria e alimentazione |
 | Preparazione PC | Importazione Beyond, raccolta, configurazione, backup PC, copia USB con conferma | Trasferimento USB fisico e backup dei progressi aggiornati dal dispositivo al PC |
 | Party e griglia | Prototipi nel browser | Trasporto e interfaccia sul dispositivo |
@@ -74,14 +74,14 @@ sono portate nel firmware, ma i criteri di completamento richiedono ancora una
 sessione fisica, trasferimento/ripristino e misure. Non sono percentuali di
 completamento né una dichiarazione di collaudo.
 
-## Quattro blocchi concordati — v0.44
+## Quattro blocchi concordati — v0.45
 
 | Blocco | Punto attuale | Prossimo lavoro |
 | --- | --- | --- |
 | 1 — Scheda sul dispositivo | Percorsi base nel firmware: magie/slot/usi, concentrazione, riposi, dadi vita e morte base | Eccezioni e verifica nell'uso reale |
 | 2 — Effetti | Modificatori, round, concentrazione, difese, danni e riduzioni con costi/reazione; v0.38 aggiunge slot ordinari/patto; v0.39 durate del proprio turno; v0.40 minuti/ore; v0.41 cariche distinte dalla quantità; v0.42 tre spese congiunte; v0.43 ricarica parziale a dado esplicita; v0.44 quattro effetti di condizione sui tiri | Durate di altri soggetti, costi alternativi o oltre tre fonti, eventi/formule di ricarica automatici e requisiti/effetti automatici |
 | 3 — Prodotto fisico | Luminosità, attenuazione/risveglio, salvataggi, tasti configurabili e firmware compilato | Batteria, sospensione/spegnimento e collaudi reali touch/USB/memoria/alimentazione |
-| 4 — Estetica | Tema pixel art, avatar e dadi animati, UI circolare | Illustrazioni, sprite, icone, transizioni/feedback e leggibilità sul display reale |
+| 4 — Estetica | v0.45: prima revisione RPG 2D con diorama, avatar ingrandito, luci, HUD pixel, pannelli e icone di sezione | Altre illustrazioni/sprite, icone specifiche, transizioni/feedback e leggibilità sul display reale |
 
 Il blocco 2 resta aperto. Le cariche hanno ora un modello distinto dalla quantità,
 configurazione PC, trasferimento, correzione locale, costi e recuperi al riposo.
@@ -364,6 +364,14 @@ nessun calendario, lettura Beyond o registro persistente delle ricariche.
 La v0.44 porta quattro [effetti di condizione sui tiri](CONDIZIONI-TIRI.md),
 con contesto per vista/paura, fallimento automatico senza RNG, cancellazione
 booleana, salvezze DES e configurazione/annullamento. PDD23, USB8/backup v11 e
-layout invariati. Altre parti delle condizioni restano al DM. Il prossimo
-blocco software concordato è una revisione estetica organica delle schermate
-principali; il collaudo fisico rimane separato e necessario.
+layout invariati. Altre parti delle condizioni restano al DM. La revisione estetica organica delle schermate
+principali è iniziata nella v0.45; il collaudo fisico rimane separato e necessario.
+
+
+La v0.45 avvia il [restyling RPG pixel art 2D](RESTYLING-PIXEL-HD.md):
+diorama con profondità e luce, avatar ingrandito, numeri pixel, pannelli e
+illustrazioni coordinate. Mantiene i tasti configurabili e tutti i percorsi
+della scheda; PDD23/USB8/backup v11 invariati. Il blocco 4 resta aperto per
+ulteriori scene, sprite, icone specifiche e transizioni. Il blocco 3 richiede
+ancora batteria, sospensione e verifiche fisiche; i limiti delle regole del
+blocco 2 restano documentati, senza sostituirli con decorazioni.

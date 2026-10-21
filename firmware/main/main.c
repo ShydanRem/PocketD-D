@@ -19,6 +19,7 @@
 #define PD_EXT
 #endif
 #include "../assets/device_art.h"
+#include "../assets/pixel_font.h"
 #include "src/misc/cache/instance/lv_image_cache.h"
 #ifndef PD_UI_TEST
 #include "driver/usb_serial_jtag.h"
@@ -42,9 +43,10 @@ static uint16_t *dice_pixels;
 static lv_timer_t *dice_timer;
 static lv_obj_t *avatar_sprite;
 static lv_timer_t *avatar_timer;
+static lv_obj_t *scene_lights[5];
 static uint32_t avatar_started;
 static unsigned avatar_phase;
-static bool avatar_large;
+static unsigned avatar_scale;
 _Alignas(4) static uint8_t avatar_data[PD_AVATAR_LARGE_BYTES];
 static lv_image_dsc_t avatar_image={
     .header={.magic=LV_IMAGE_HEADER_MAGIC,.cf=LV_COLOR_FORMAT_I4,
@@ -279,35 +281,46 @@ static void art(const lv_image_dsc_t *source,int x,int y,lv_obj_t *parent) {
     lv_obj_t *o=lv_image_create(parent);lv_image_set_src(o,source);lv_obj_set_pos(o,x,y);
     lv_obj_remove_flag(o,LV_OBJ_FLAG_CLICKABLE|LV_OBJ_FLAG_SCROLLABLE);
 }
-static void avatar_show(const pd_avatar *appearance,int x,int y,lv_obj_t *parent,bool large,bool animate) {
-    avatar_large=large;
-    if(large)pd_avatar_large(appearance,0,avatar_data);else pd_avatar_image(appearance,0,avatar_data);
-    avatar_image.header.w=PD_AVATAR_WIDTH*(large?2:1);avatar_image.header.h=PD_AVATAR_HEIGHT*(large?2:1);
+static void scene_atmosphere(lv_obj_t *stage){
+    const int xy[][2]={{64,48},{234,48},{48,40},{250,36},{188,52}};
+    for(unsigned i=0;i<5;i++){
+        scene_lights[i]=decoration(xy[i][0],xy[i][1],2,i<2?6:2,PD_GOLD,0);
+        lv_obj_set_parent(scene_lights[i],stage);lv_obj_set_pos(scene_lights[i],xy[i][0],xy[i][1]);
+    }
+}
+static void avatar_show(const pd_avatar *appearance,int x,int y,lv_obj_t *parent,unsigned scale,bool animate) {
+    avatar_scale=scale;
+    if(scale==4)pd_avatar_large(appearance,0,avatar_data);else if(scale==3)pd_avatar_hero(appearance,0,avatar_data);else pd_avatar_image(appearance,0,avatar_data);
+    avatar_image.header.w=24*scale;avatar_image.header.h=30*scale;
     avatar_image.header.stride=avatar_image.header.w/2;
-    avatar_image.data_size=large?PD_AVATAR_LARGE_BYTES:PD_AVATAR_IMAGE_BYTES;
+    avatar_image.data_size=scale==4?PD_AVATAR_LARGE_BYTES:scale==3?PD_AVATAR_HERO_BYTES:PD_AVATAR_IMAGE_BYTES;
     avatar_phase=0;avatar_started=lv_tick_get();
     avatar_sprite=lv_image_create(parent);lv_image_set_src(avatar_sprite,&avatar_image);
     lv_obj_set_pos(avatar_sprite,x,y);lv_obj_remove_flag(avatar_sprite,LV_OBJ_FLAG_CLICKABLE|LV_OBJ_FLAG_SCROLLABLE);
     if(animate&&state.idle_animation)avatar_timer=lv_timer_create(avatar_frame,200,NULL);
 }
 static void meter(unsigned current,unsigned maximum,int y,unsigned color) {
-    decoration(89,y,288,4,PD_EDGE,0);
-    if(current&&maximum)decoration(89,y,(288*current+maximum-1)/maximum,4,color,0);
+    decoration(87,y-2,292,8,PD_PANEL_LIGHT,0);
+    decoration(89,y,288,4,PD_PANEL_LOW,0);
+    if(current&&maximum){unsigned filled=(288*current+maximum-1)/maximum;decoration(89,y,filled,4,color,0);for(unsigned x=24;x<filled;x+=24)decoration(89+x,y,2,4,PD_PANEL_LOW,0);}
 }
 static void frame(void) {
+    art(&pd_art_surround,0,0,lv_screen_active());
     lv_obj_t *rim=decoration(5,5,456,456,PD_INK,LV_RADIUS_CIRCLE);
     lv_obj_set_style_bg_opa(rim,LV_OPA_TRANSP,0);lv_obj_set_style_border_width(rim,2,0);
     lv_obj_set_style_border_color(rim,lv_color_hex(0x1b2b40),0);
     /* Small pixel marks give the circular housing an identity without a busy HUD. */
-    decoration(229,17,8,4,PD_GOLD,0);decoration(231,15,4,8,PD_GOLD,0);
-    decoration(27,226,3,14,PD_EDGE,0);decoration(436,226,3,14,PD_EDGE,0);
     lv_obj_t *brand=small_label("POCKET D-D",113,37,240,PD_MINT);
-    lv_obj_set_style_text_letter_space(brand,3,0);
+    label_font(brand,&pd_pixel_2);lv_obj_set_style_text_letter_space(brand,3,0);
     const char *status=pd_storage_status();
     unsigned c=strstr(status,"Errore")?PD_DANGER:(strstr(status,"Recuperata")||strstr(status,"Layout"))?PD_GOLD:PD_MUTED;
     small_label(status,78,72,310,c);
-    decoration(203,422,60,2,PD_EDGE,0);
-    decoration(227,422,12,2,PD_GOLD,0);
+    const lv_image_dsc_t *emblem=NULL;
+    if(page==INVENTORY||page==ITEM_DETAIL||page==ITEM_CONFIRM||page==COMBAT||page==COMBAT_DETAIL||page==ITEM_CHARGES||page==ITEM_CHARGE_CONFIRM)emblem=&pd_art_satchel;
+    else if(page>=MAGIC_LIST&&page<=MAGIC_STOP)emblem=&pd_art_grimoire;
+    else if(page>=REST_HOME&&page<=HIT_CONFIRM)emblem=&pd_art_campfire;
+    if(emblem&&!import_pending)art(emblem,43,109,lv_screen_active());
+    decoration(183,422,100,2,PD_EDGE,0);decoration(223,422,20,2,PD_GOLD,0);
 }
 static void act(intptr_t action) {
     if(import_pending&&action!=30&&action!=31)return;
@@ -887,13 +900,18 @@ static void event(lv_event_t *e){act((intptr_t)lv_event_get_user_data(e));}
 static lv_obj_t *button(const char *text,int x,int y,int w,int h,intptr_t action,bool enabled) {
     lv_obj_t *b=lv_button_create(lv_screen_active());lv_obj_set_pos(b,x,y);lv_obj_set_size(b,w,h);
     bool primary=action==13||action==46||action==30;
-    lv_obj_set_style_bg_color(b,lv_color_hex(primary?PD_MINT:PD_PANEL),0);lv_obj_set_style_radius(b,6,0);
-    lv_obj_set_style_border_width(b,1,0);lv_obj_set_style_border_color(b,lv_color_hex(primary?PD_MINT:PD_EDGE),0);
+    lv_obj_set_style_bg_color(b,lv_color_hex(primary?0x9bf2d1:PD_PANEL_LIGHT),0);lv_obj_set_style_radius(b,2,0);
+    lv_obj_set_style_bg_grad_color(b,lv_color_hex(primary?0x53bda8:PD_PANEL_LOW),0);
+    lv_obj_set_style_bg_grad_dir(b,LV_GRAD_DIR_VER,0);
+    lv_obj_set_style_border_width(b,2,0);lv_obj_set_style_border_color(b,lv_color_hex(primary?PD_MINT:PD_EDGE),0);
     lv_obj_set_style_text_color(b,lv_color_hex(primary?PD_INK:PD_TEXT),0);
     lv_obj_set_style_text_align(b,LV_TEXT_ALIGN_CENTER,0);
     lv_obj_set_style_bg_color(b,lv_color_hex(0x273d4f),LV_STATE_PRESSED);
+    lv_obj_set_style_bg_grad_color(b,lv_color_hex(0x3f6073),LV_STATE_PRESSED);
+    lv_obj_set_style_border_color(b,lv_color_hex(PD_GOLD),LV_STATE_PRESSED);
     lv_obj_set_style_text_color(b,lv_color_hex(PD_TEXT),LV_STATE_PRESSED);
     lv_obj_set_style_bg_color(b,lv_color_hex(0x101a28),LV_STATE_DISABLED);
+    lv_obj_set_style_bg_grad_dir(b,LV_GRAD_DIR_NONE,LV_STATE_DISABLED);
     lv_obj_set_style_border_color(b,lv_color_hex(0x243448),LV_STATE_DISABLED);
     lv_obj_set_style_text_color(b,lv_color_hex(0x7b8a9c),LV_STATE_DISABLED);
     lv_obj_set_style_shadow_width(b,0,0);lv_obj_set_style_pad_all(b,4,0);
@@ -1777,7 +1795,7 @@ static void render(void) {
     if(dice_timer) { lv_timer_delete(dice_timer);dice_timer=NULL; }
     if(avatar_timer) { lv_timer_delete(avatar_timer);avatar_timer=NULL; }
     lv_obj_t *root=lv_screen_active();lv_obj_clean(root);
-    avatar_sprite=NULL;lv_image_cache_drop(&avatar_image);
+    avatar_sprite=NULL;memset(scene_lights,0,sizeof scene_lights);lv_image_cache_drop(&avatar_image);
     lv_free(dice_pixels);dice_pixels=NULL;dice_canvas=NULL;
     lv_obj_set_style_bg_color(root,lv_color_hex(PD_INK),0);
     lv_obj_remove_flag(root,LV_OBJ_FLAG_SCROLLABLE);
@@ -1785,7 +1803,7 @@ static void render(void) {
     frame();
     if (import_pending) {
         label("COPIA DA USB",83,112,300,true);
-        avatar_show(&pending.avatar,83,151,root,false,false);
+        avatar_show(&pending.avatar,83,151,root,2,false);
         label(pending.name,139,151,244,true);
         snprintf(text,sizeof text,"Liv %u  PF %u/%u  CA %u",pending.level,pending.hp,pending.max_hp,pending.armor);
         small_label(text,139,190,244,PD_GOLD);
@@ -1825,7 +1843,8 @@ static void render(void) {
     if(page==CHECK_DETAIL) { render_check_detail();return; }
     if(page==APPEARANCE) {
         label("Aspetto",83,111,300,true);
-        avatar_show(&state.avatar,185,143,root,true,true);
+        art(&pd_art_diorama,83,167,root);
+        avatar_show(&state.avatar,185,143,root,4,true);
         snprintf(text,sizeof text,"Mantello %s / %s",(const char *const[]){"bosco","vino","notte"}[state.avatar.cloak],
                  (const char *const[]){"corti","lunghi","rasati"}[state.avatar.style]);
         small_label(text,83,268,300,PD_GOLD);
@@ -1836,24 +1855,24 @@ static void render(void) {
         label(state.name,83,101,300,true);
         snprintf(text,sizeof text,"LIVELLO %02u   /   CA %02u",state.level,pd_armor(&state));
         lv_obj_t *meta=small_label(text,83,133,300,PD_GOLD);lv_obj_set_style_text_letter_space(meta,1,0);
-        lv_obj_t *stage=button("Aspetto",83,153,300,72,50,true);
+        lv_obj_t *stage=button("Aspetto",83,153,300,96,50,true);
         lv_obj_set_style_pad_all(stage,0,0);lv_obj_set_style_border_width(stage,0,0);
-        lv_obj_set_style_bg_opa(stage,LV_OPA_TRANSP,0);
-        art(&pd_art_scene,0,0,stage);avatar_show(&state.avatar,126,0,stage,false,true);
+        lv_obj_set_style_bg_opa(stage,LV_OPA_TRANSP,0);lv_obj_set_style_bg_grad_dir(stage,LV_GRAD_DIR_NONE,0);
+        art(&pd_art_diorama,0,0,stage);scene_atmosphere(stage);avatar_show(&state.avatar,114,2,stage,3,true);
         lv_obj_t *hint=lv_obj_get_child(stage,0);lv_obj_set_style_text_font(hint,&lv_font_montserrat_16,0);
         lv_obj_set_style_text_color(hint,lv_color_hex(PD_GOLD),0);
         lv_obj_set_style_bg_color(hint,lv_color_hex(PD_INK),0);lv_obj_set_style_bg_opa(hint,LV_OPA_COVER,0);
         lv_obj_align(hint,LV_ALIGN_BOTTOM_RIGHT,-2,0);lv_obj_move_foreground(hint);
         snprintf(text,sizeof text,"%u / %u",state.hp,pd_max_hp(&state));
-        lv_obj_t *hp=label(text,133,225,200,true);label_font(hp,&lv_font_montserrat_32);
+        lv_obj_t *hp=label(text,133,253,200,true);label_font(hp,&pd_pixel_4);
         lv_obj_set_style_text_color(hp,lv_color_hex(state.hp?PD_MINT:PD_DANGER),0);
-        small_label("PF",83,236,46,PD_MUTED);
-        snprintf(text,sizeof text,"+%u PF temporanei",state.temp_hp);small_label(text,83,263,300,PD_MUTED);
-        meter(state.hp,pd_max_hp(&state),283,state.hp?PD_MINT:PD_DANGER);
-        button("-1 PF",83,292,92,48,1,state.hp||state.temp_hp);
-        lv_obj_t *undo=button("Annulla",187,292,92,48,3,undo_available);
+        small_label("PF",83,262,46,PD_MUTED);
+        snprintf(text,sizeof text,"Temp +%u",state.temp_hp);lv_obj_t *temp=small_label(text,185,6,110,PD_TEXT);lv_obj_set_parent(temp,stage);lv_obj_set_pos(temp,185,6);lv_obj_set_style_bg_color(temp,lv_color_hex(PD_PANEL_LOW),0);lv_obj_set_style_bg_opa(temp,LV_OPA_90,0);
+        meter(state.hp,pd_max_hp(&state),294,state.hp?PD_MINT:PD_DANGER);
+        button("-1 PF",83,303,92,44,1,state.hp||state.temp_hp);
+        lv_obj_t *undo=button("Annulla",187,303,92,44,3,undo_available);
         lv_obj_set_style_text_font(undo,&lv_font_montserrat_16,0);
-        button("+1 PF",291,292,92,48,2,state.hp<pd_max_hp(&state)&&(state.hp||!state.status.available||state.status.failures<3));
+        button("+1 PF",291,303,92,44,2,state.hp<pd_max_hp(&state)&&(state.hp||!state.status.available||state.status.failures<3));
     } else if (page==SHEET) {
         render_sheet();
     } else if (page==DICE) {
@@ -1903,7 +1922,8 @@ static void render(void) {
             else if(result.count==2)snprintf(text,sizeof text,"%u / %u %+d = %d [%s]",result.dice[0],result.dice[1],result.bonus,result.total,effective>0?"Vant":"Svant");
             else snprintf(text,sizeof text,"%u %+d = %d%s",result.dice[0],result.bonus,result.total,result.natural==20?"  -  20 naturale":"");
         } else snprintf(text,sizeof text,"%s",!allowed?(check_gate.automatic_failure?"Fallimento automatico":(check_gate.needed||(combat_roll==1&&attack_gate.needed))?"Dichiara Contesto":"Da verificare: apri i dettagli"):dice_animation.active?"In volo...":effective>0?"Pronto: vantaggio":effective<0?"Pronto: svantaggio":"Pronto al lancio");
-        label(text,73,269,320,false);
+        if(has_roll){decoration(80,266,306,28,PD_PANEL_LOW,2);decoration(80,266,2,28,combat_roll?PD_MINT:result.natural==20?PD_GOLD:PD_MINT,0);}
+        lv_obj_t *outcome=label(text,73,269,320,false);if(has_roll&&!combat_roll&&!pool_view)lv_obj_set_style_text_color(outcome,lv_color_hex(result.natural==20?PD_GOLD:result.natural==1?PD_DANGER:PD_TEXT),0);
         if(automatic_failure)label("Nessun dado",73,183,320,false);
         else if(!dice_pixels)label("Animazione non disponibile",73,183,320,false);
         if(combat_roll==7){
@@ -1927,7 +1947,8 @@ static void render(void) {
         if(state.resource_count) {
             pd_resource *r=&state.resources[resource_index];label(r->name,83,158,300,false);
             snprintf(text,sizeof text,"%u / %u",r->current,r->maximum);
-            lv_obj_t *value=label(text,83,194,300,true);label_font(value,&lv_font_montserrat_32);
+            art(&pd_art_crystal,113,191,root);
+            lv_obj_t *value=label(text,155,194,228,true);label_font(value,&pd_pixel_4);
             lv_obj_set_style_text_color(value,lv_color_hex(PD_VIOLET),0);meter(r->current,r->maximum,235,PD_VIOLET);
             button("-1",83,247,144,44,20,r->current>0);button("+1",239,247,144,44,21,r->current<r->maximum);
             button("Prossimo",83,299,144,44,22,state.resource_count>1);button("Riposi",239,299,144,44,900,true);
@@ -1942,7 +1963,7 @@ static void render(void) {
         lv_obj_align(lv_obj_get_child(b,0),LV_ALIGN_BOTTOM_MID,0,-2);
         art(icons[i],(nav_w[i]-4-24)/2,2,b);
         if (page==i) {
-            lv_obj_set_style_bg_color(b,lv_color_hex(0x302d29),0);
+            lv_obj_set_style_bg_color(b,lv_color_hex(0x514438),0);lv_obj_set_style_bg_grad_color(b,lv_color_hex(0x241e26),0);
             lv_obj_set_style_border_color(b,lv_color_hex(PD_GOLD),0);
             lv_obj_set_style_text_color(b,lv_color_hex(PD_GOLD),0);
         }
@@ -1959,11 +1980,13 @@ static void dice_frame(lv_timer_t *timer) {
 static void avatar_frame(lv_timer_t *timer) {
     (void)timer;
     if(display_screen.dimmed)return;
+    unsigned step=(lv_tick_get()-avatar_started)/200;
+    for(unsigned i=0;i<5;i++)if(scene_lights[i])lv_obj_set_style_opa(scene_lights[i],i<2?((step+i)%3?LV_OPA_COVER:LV_OPA_50):((step+i*3)%8<2?LV_OPA_COVER:LV_OPA_20),0);
     unsigned pose=pd_avatar_pose(lv_tick_get()-avatar_started);
     if(pose==avatar_phase)return;
     avatar_phase=pose;
     lv_image_cache_drop(&avatar_image);
-    if(avatar_large)pd_avatar_large(&state.avatar,pose,avatar_data);else pd_avatar_image(&state.avatar,pose,avatar_data);
+    if(avatar_scale==4)pd_avatar_large(&state.avatar,pose,avatar_data);else if(avatar_scale==3)pd_avatar_hero(&state.avatar,pose,avatar_data);else pd_avatar_image(&state.avatar,pose,avatar_data);
     lv_obj_invalidate(avatar_sprite);
 }
 static void shortcut(unsigned gesture) {
