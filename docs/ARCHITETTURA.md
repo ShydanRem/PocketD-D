@@ -485,3 +485,15 @@ alle scintille. Il callback avatar da 200 ms aggiorna l'opacità solo fuori
 attenuazione; eliminazione del timer prima della pulizia degli oggetti.
 Stesso buffer avatar 5824 byte e stati/indici precedenti. Nessun RNG o NVS in
 questo percorso. [Riproducibilità del confronto](AFFINAMENTO-SCENA-AVATAR.md).
+
+
+## Feedback dei saldi — v0.47
+
+Snapshot compatto dei saldi prima/dopo per le sole azioni esplicite coperte.
+Priorità ai delta PF/temporanei; per i pool indipendenti si osservano direzioni,
+senza sommare unità diverse. La UI legge solo lo stato effettivamente applicato.
+Messaggio e timer sono transitori, esclusi dai formati di persistenza/USB/backup.
+Un pannello non cliccabile copre per due secondi lo stato del salvataggio, con
+testo e icona; gli errori restano prioritari. Timer ornamenti 66 ms oppure sola
+scadenza in modalità statica, eliminato prima della pulizia del root. Scadenza
+con sottrazione unsigned sicura sul wrap. [Contratti e test](PANNELLI-FEEDBACK.md).

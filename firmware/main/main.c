@@ -43,6 +43,14 @@ static uint16_t *dice_pixels;
 static lv_timer_t *dice_timer;
 static lv_obj_t *avatar_sprite;
 static lv_timer_t *avatar_timer;
+enum { FEEDBACK_HEAL=1,FEEDBACK_HURT,FEEDBACK_RECOVER,FEEDBACK_SPEND,FEEDBACK_MIXED };
+#define FEEDBACK_POOLS (PD_RESOURCES+PD_POWERS+18+PD_ITEMS*2+PD_HIT_POOLS)
+typedef struct { unsigned hp,temp;uint16_t pools[FEEDBACK_POOLS]; } feedback_snapshot;
+static feedback_snapshot feedback_before;
+static struct { bool active;unsigned kind;uint32_t started;char text[64]; } feedback;
+static lv_obj_t *feedback_panel,*feedback_motes[3];
+static lv_timer_t *feedback_timer;
+static void feedback_frame(lv_timer_t *timer);
 static lv_obj_t *scene_lights[5];
 static lv_obj_t *scene_halos[2];
 static uint32_t avatar_started;
@@ -283,6 +291,44 @@ static lv_obj_t *art(const lv_image_dsc_t *source,int x,int y,lv_obj_t *parent) 
     lv_obj_remove_flag(o,LV_OBJ_FLAG_CLICKABLE|LV_OBJ_FLAG_SCROLLABLE);
     return o;
 }
+static bool feedback_action(intptr_t a){
+    return a==1||a==2||a==20||a==21||a==89||a==832||a==840||a==841||a==848||a==849||a==907||a==914||a==1805||a==1865||a==2168||a==2179;
+}
+static void feedback_capture(feedback_snapshot *out){
+    out->hp=state.hp;out->temp=state.temp_hp;unsigned n=0;
+    for(unsigned i=0;i<PD_RESOURCES;i++)out->pools[n++]=i<state.resource_count?state.resources[i].current:0;
+    for(unsigned i=0;i<PD_POWERS;i++)out->pools[n++]=i<state.magic.count&&(state.magic.powers[i].kind||(state.magic.powers[i].flags&PD_LIMITED))?state.magic.powers[i].remaining:0;
+    for(unsigned i=0;i<9;i++){out->pools[n++]=state.magic.slots[i].current;out->pools[n++]=state.magic.pact[i].current;}
+    for(unsigned i=0;i<PD_ITEMS;i++){out->pools[n++]=i<state.item_count?state.items[i].charges.current:0;out->pools[n++]=i<state.item_count?state.items[i].quantity:0;}
+    for(unsigned i=0;i<PD_HIT_POOLS;i++)out->pools[n++]=i<state.recovery.count?state.recovery.pools[i].maximum-state.recovery.pools[i].used:0;
+    assert(n==FEEDBACK_POOLS);
+}
+static void feedback_prepare(void){
+    feedback_snapshot after;feedback_capture(&after);int hp=(int)after.hp-(int)feedback_before.hp,temp=(int)after.temp-(int)feedback_before.temp;
+    if(hp||temp){feedback.kind=hp>0||(!hp&&temp>0)?FEEDBACK_HEAL:FEEDBACK_HURT;
+        if(hp&&temp)snprintf(feedback.text,sizeof feedback.text,"PF %+d | temp %+d",hp,temp);
+        else snprintf(feedback.text,sizeof feedback.text,hp?"PF %+d":"Temp %+d",hp?hp:temp);
+    }else{
+        bool up=false,down=false;for(unsigned i=0;i<FEEDBACK_POOLS;i++){up|=after.pools[i]>feedback_before.pools[i];down|=after.pools[i]<feedback_before.pools[i];}
+        if(!up&&!down)return;
+        feedback.kind=up&&down?FEEDBACK_MIXED:up?FEEDBACK_RECOVER:FEEDBACK_SPEND;
+        snprintf(feedback.text,sizeof feedback.text,"%s",up&&down?"Risorse aggiornate":up?"Risorse recuperate":"Risorse utilizzate");
+    }
+    feedback.active=true;feedback.started=lv_tick_get();
+}
+static void feedback_show(void){
+    if(!feedback.active)return;
+    uint32_t elapsed=lv_tick_get()-feedback.started;
+    if(import_pending||display_screen.dimmed||strstr(pd_storage_status(),"Errore")||elapsed>=2000){feedback.active=false;return;}
+    unsigned color=feedback.kind==FEEDBACK_HURT?PD_DANGER:feedback.kind==FEEDBACK_SPEND?PD_VIOLET:feedback.kind==FEEDBACK_MIXED?PD_GOLD:PD_MINT;
+    feedback_panel=decoration(78,68,310,27,PD_INK,0);
+    lv_obj_set_style_border_color(feedback_panel,lv_color_hex(color),0);lv_obj_set_style_border_width(feedback_panel,1,0);
+    const lv_image_dsc_t *icon=feedback.kind==FEEDBACK_HEAL?&pd_art_heart:feedback.kind==FEEDBACK_HURT?&pd_art_shield:feedback.kind==FEEDBACK_RECOVER?&pd_art_recover:&pd_art_flask;
+    art(icon,5,0,feedback_panel);
+    lv_obj_t *text=small_label(feedback.text,34,3,242,color);lv_obj_set_parent(text,feedback_panel);lv_obj_set_pos(text,34,3);
+    for(unsigned i=0;i<3;i++){feedback_motes[i]=decoration(280+i*7,10,2,2,color,0);lv_obj_set_parent(feedback_motes[i],feedback_panel);lv_obj_set_pos(feedback_motes[i],280+i*7,10);}
+    feedback_timer=lv_timer_create(feedback_frame,state.idle_animation?66:2000-elapsed,NULL);
+}
 static void scene_atmosphere(lv_obj_t *stage,int x,int y){
     scene_halos[0]=art(&pd_art_lantern_halo,x+45,y+30,stage);
     scene_halos[1]=art(&pd_art_lantern_halo,x+215,y+30,stage);
@@ -319,6 +365,7 @@ static void frame(void) {
     const char *status=pd_storage_status();
     unsigned c=strstr(status,"Errore")?PD_DANGER:(strstr(status,"Recuperata")||strstr(status,"Layout"))?PD_GOLD:PD_MUTED;
     small_label(status,78,72,310,c);
+    feedback_show();
     const lv_image_dsc_t *emblem=NULL;
     if(page==INVENTORY||page==ITEM_DETAIL||page==ITEM_CONFIRM||page==COMBAT||page==COMBAT_DETAIL||page==ITEM_CHARGES||page==ITEM_CHARGE_CONFIRM)emblem=&pd_art_satchel;
     else if(page>=MAGIC_LIST&&page<=MAGIC_STOP)emblem=&pd_art_grimoire;
@@ -364,6 +411,7 @@ static void act(intptr_t action) {
     /* Disabled controls also reject queued/synthetic events while dice are in flight. */
     if (dice_animation.active && action!=13 && action!=16) return;
     pd_screen_activity(&display_screen,lv_tick_get());
+    feedback.active=false;bool report_feedback=feedback_action(action);if(report_feedback)feedback_capture(&feedback_before);
     #define next scratch
     next=state;
     if (action>=100 && action<104) { page=action-100;if(combat_roll>=4)invalidate_strike();rest_active=false;dice_setup=false;die_picker=false; }
@@ -897,6 +945,7 @@ static void act(intptr_t action) {
     else if(action==92&&page==COMBAT&&state.equipped!=PD_NO_WEAPON&&state.items[state.equipped].thrown_range) {
         next.combat.thrown=!state.combat.thrown;apply(&next);strike_ready=false;
     }
+    if(report_feedback)feedback_prepare();
     render();
     #undef next
 }
@@ -920,6 +969,7 @@ static lv_obj_t *button(const char *text,int x,int y,int w,int h,intptr_t action
     lv_obj_set_style_text_color(b,lv_color_hex(0x7b8a9c),LV_STATE_DISABLED);
     lv_obj_set_style_shadow_width(b,0,0);lv_obj_set_style_pad_all(b,4,0);
     lv_obj_t *l=lv_label_create(b);lv_label_set_text(l,text);lv_obj_center(l);
+    if(w>=140){lv_obj_t *trim=art(&pd_art_panel_corner,1,1,b);lv_obj_set_style_opa(trim,enabled?LV_OPA_70:LV_OPA_20,0);trim=art(&pd_art_panel_corner_end,w-15,h-15,b);lv_obj_set_style_opa(trim,enabled?LV_OPA_70:LV_OPA_20,0);}
     if (!enabled) lv_obj_add_state(b,LV_STATE_DISABLED);
     lv_obj_add_event_cb(b,event,LV_EVENT_CLICKED,(void*)action);return b;
 }
@@ -1028,12 +1078,15 @@ static void render_inventory(void) {
         do {
             snprintf(text,sizeof text,"%.*s%s%s  x%u",(int)shown,v->name,shown<length?"...":"",i==state.equipped?" *":"",v->quantity);
             lv_text_get_size(&extent,text,&lv_font_montserrat_20,0,0,1000,LV_TEXT_FLAG_NONE);
-            if(extent.x<=284||!shown)break;
+            if(extent.x<=244||!shown)break;
             shown--;
         } while(true);
         lv_obj_t *b=button(text,83,155+row*49,300,44,500+i,true);
-        lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_width(l,284);lv_obj_set_height(l,lv_font_get_line_height(&lv_font_montserrat_20));
-        lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_center(l);
+        lv_obj_set_style_pad_all(b,0,0);
+        const lv_image_dsc_t *icon=v->kind==PD_WEAPON?&pd_art_sword:v->kind==PD_HEALING?&pd_art_flask:v->kind==PD_CONSUMABLE?&pd_art_bundle:&pd_art_pouch;
+        art(icon,7,8,b);
+        lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_width(l,246);lv_obj_set_height(l,lv_font_get_line_height(&lv_font_montserrat_20));
+        lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_align(l,LV_ALIGN_LEFT_MID,40,0);
     }
     small_label("* arma scelta | note sul PC",83,312,300,PD_MUTED);
     button("Usi",83,359,144,48,103,true);
@@ -1124,7 +1177,8 @@ static void render_magic_list(void) {
         int i=visible_power(magic_page*3+row);if(i<0)break;
         const pd_power *p=&state.magic.powers[i];
         lv_obj_t *b=button(p->name,83,199+row*48,300,44,1000+i,true);
-        lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_width(l,284);lv_obj_set_height(l,lv_font_get_line_height(&lv_font_montserrat_20));lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_center(l);
+        lv_obj_set_style_pad_all(b,0,0);art(p->kind?&pd_art_talent:&pd_art_spell,7,8,b);
+        lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_width(l,246);lv_obj_set_height(l,lv_font_get_line_height(&lv_font_montserrat_20));lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_align(l,LV_ALIGN_LEFT_MID,40,0);
     }
     button("Usi",83,359,144,48,103,true);button("Risorse",239,359,144,48,836,state.magic.available);
 }
@@ -1798,6 +1852,8 @@ static void render(void) {
        cancels the old timer; the roll itself remains in the pure presentation state. */
     if(dice_timer) { lv_timer_delete(dice_timer);dice_timer=NULL; }
     if(avatar_timer) { lv_timer_delete(avatar_timer);avatar_timer=NULL; }
+    if(feedback_timer){lv_timer_delete(feedback_timer);feedback_timer=NULL;}
+    feedback_panel=NULL;memset(feedback_motes,0,sizeof feedback_motes);
     lv_obj_t *root=lv_screen_active();lv_obj_clean(root);
     avatar_sprite=NULL;memset(scene_lights,0,sizeof scene_lights);memset(scene_halos,0,sizeof scene_halos);lv_image_cache_drop(&avatar_image);
     lv_free(dice_pixels);dice_pixels=NULL;dice_canvas=NULL;
@@ -1981,6 +2037,16 @@ static void dice_frame(lv_timer_t *timer) {
     }
     pd_dice_paint(&dice_animation,dice_pixels);
     lv_obj_invalidate(dice_canvas);
+}
+static void feedback_frame(lv_timer_t *timer){
+    uint32_t elapsed=lv_tick_get()-feedback.started;
+    if(!feedback.active||elapsed>=2000||display_screen.dimmed){
+        feedback.active=false;feedback_timer=NULL;lv_timer_delete(timer);
+        if(feedback_panel)lv_obj_delete(feedback_panel);
+        feedback_panel=NULL;memset(feedback_motes,0,sizeof feedback_motes);return;
+    }
+    if(!state.idle_animation)return;
+    for(unsigned i=0;i<3;i++){unsigned phase=(elapsed/66+i*3)%12;lv_obj_set_pos(feedback_motes[i],280+i*7,15-phase);lv_obj_set_style_opa(feedback_motes[i],phase<8?LV_OPA_COVER:LV_OPA_30,0);}
 }
 static void avatar_frame(lv_timer_t *timer) {
     (void)timer;

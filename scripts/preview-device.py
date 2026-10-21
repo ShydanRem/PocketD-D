@@ -269,3 +269,21 @@ if all((base/(name+'.ppm')).is_file() for name in conditions):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(conditions):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'roll-conditions-preview.png');print(base/'roll-conditions-preview.png')
+
+
+feedback_names=['feedback-heal','feedback-damage','fantasy-inventory','fantasy-magic']
+feedback_details=['feedback-temporary','feedback-static','feedback-save-error','feedback-spend','feedback-recover','feedback-expired']
+for name in feedback_names+feedback_details:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in feedback_names):
+    sheet=Image.new('RGB',(932,932),'black')
+    for i,name in enumerate(feedback_names):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'fantasy-feedback-preview.png');print(base/'fantasy-feedback-preview.png')
+frames=[Image.open(p).convert('RGB') for p in sorted(base.glob('feedback-frame-*.ppm'))]
+expired=base/'feedback-expired.ppm'
+if frames and expired.is_file():
+    frames += [frames[-1].copy() for _ in range(20)]
+    frames += [Image.open(expired).convert('RGB') for _ in range(8)]
+    frames[0].save(base/'feedback-preview.gif',save_all=True,append_images=frames[1:],duration=66,loop=0,disposal=2,optimize=True)
+    print(base/'feedback-preview.gif')

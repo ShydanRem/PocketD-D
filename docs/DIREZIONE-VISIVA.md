@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.46
+# Direzione visiva del dispositivo — v0.47
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -6,6 +6,9 @@ La qualità visiva è un requisito del prodotto insieme alle funzioni di scheda.
 Il PC rimane lo strumento per importazione, configurazione e backup.
 
 ## Revisione attuale
+
+La v0.47 porta toni da grimorio e dettagli bronzo ai pannelli, icone nelle
+liste e feedback dei saldi applicati. [Uso, anteprime e verifiche](PANNELLI-FEEDBACK.md).
 
 La v0.45 è la base estetica approvata. La v0.46 ne affina scena e avatar, con
 aloni delle lanterne anche in Aspetto. [Confronto e verifiche](AFFINAMENTO-SCENA-AVATAR.md).
@@ -31,7 +34,7 @@ cornice illustrata, pannelli con rilievo, oggetti di sezione e luci ambientali.
   Nessuna animazione deve consumare risorse, inventare valori o cambiare un tiro.
 
 La palette condivisa è in `firmware/core/visual.h`: inchiostro `#0b101c`,
-superficie `#192b3d`, testo `#f0eee5`, menta `#76dfc5`, oro `#f2cc81`,
+superficie `#252536`, testo `#f0eee5`, menta `#76dfc5`, oro `#f2cc81`,
 viola `#bc9bdb`, avviso `#ffa999`. Il vassoio dei dadi usa lo stesso fondo
 dell'interfaccia, senza un rettangolo di colore diverso.
 
@@ -360,3 +363,13 @@ respiro e tessuto, stesse 81 personalizzazioni. Layout e carattere generale
 della v0.45 conservati. `pixel-polish-comparison.png` mette a confronto le
 catture firmware host prima/dopo; il timer rispetta animazione e attenuazione.
 [Contratti e limiti](AFFINAMENTO-SCENA-AVATAR.md).
+
+
+## Pannelli e feedback — v0.47
+
+Superfici indaco/calde, bordi bronzo e angoli pixel nei pulsanti larghi; icone
+in base al tipo esplicito di oggetto o magia/capacità. Nomi completi nel
+dettaglio. Il messaggio sotto il marchio usa icona, testo e colore per i saldi
+applicati, con ornamenti brevi e modalità statica. Layout della scena e tasti
+configurabili conservati. `fantasy-feedback-preview.png` e `feedback-preview.gif`
+sono catture LVGL host, non riprese del dispositivo. [Dettagli](PANNELLI-FEEDBACK.md).

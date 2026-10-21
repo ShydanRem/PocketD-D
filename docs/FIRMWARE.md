@@ -1,10 +1,10 @@
-# Firmware PocketD-D 0.46 — scena e avatar
+# Firmware PocketD-D 0.47 — pannelli, icone e feedback
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
-[Novità v0.46: scena e avatar](AFFINAMENTO-SCENA-AVATAR.md).
+[Novità v0.47: pannelli e feedback](PANNELLI-FEEDBACK.md).
 PDD23, USB v8, backup PC v11; layout invariato e lettura dei salvataggi precedenti.
 
 ## Stato e perimetro
@@ -996,3 +996,20 @@ del cerchio. ASan/UBSan avatar/UI passati con leak detector disattivato.
 ESP32-S3: **988800 byte**, partizione app 4 MiB **76% libera**, ESP-IDF 5.5.5 e
 LVGL 9.4.0. PDD23/USB8/backup v11/layout e tasti configurabili invariati.
 Nessun flash, collaudo fisico, lettura Beyond o modifica della raccolta personale.
+
+
+## Verifiche v0.47 — pannelli, icone e feedback
+
+Pannelli con bordi bronzo, icone di lista e messaggi transitori dei PF/risorse
+applicati. Osservazione dei saldi prima/dopo sulle azioni coperte, senza
+chiamate RNG/salvataggi aggiuntive. Scadenza a due secondi, ornamenti o modalità
+statica, rimozione alla navigazione/importazione/attenuazione. Errori di memoria
+con precedenza; pannello non cliccabile. [Uso e limiti](PANNELLI-FEEDBACK.md).
+
+Suite host completa e 41411 confronti PC → USB → C; 144 test JavaScript, build
+PC/HTML autonomo e ASan/UBSan UI passati (leak detector disattivato). Coperti
+PF/temporanei, errore/no variazioni, risorse/slot/capacità, timer/movimento
+statico/wrap/pulizia, liste con nomi lunghi e controlli nel cerchio.
+ESP32-S3: **994112 byte**, app 4 MiB **76% libera**, ESP-IDF 5.5.5/LVGL 9.4.0.
+PDD23/USB8/backup v11/layout e tasti invariati. Nessun flash, collaudo fisico,
+lettura Beyond o modifica della raccolta personale.

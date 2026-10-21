@@ -157,3 +157,10 @@ originale I4 con palette alpha, generato dallo stesso script. Nessun asset,
 font o servizio esterno aggiunto. Il confronto usa le catture sintetiche della
 v0.45 approvata e quelle attuali; Pillow è lo strumento host già usato per le
 anteprime, non una dipendenza del firmware. Nessun dato personale o JSON Beyond.
+
+
+La v0.47 aggiunge nove icone e due angoli pixel originali, generati dallo
+script esistente, oltre a UI e test originali per il feedback transitorio dei
+saldi. Nessun asset/font/servizio esterno o dipendenza del firmware aggiunti.
+Le catture e la GIF del feedback usano dati sintetici. Nessun dato personale
+o JSON Beyond incluso.
