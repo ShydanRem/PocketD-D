@@ -1,11 +1,11 @@
-# Firmware PocketD-D 0.39 — durate del proprio turno
+# Firmware PocketD-D 0.40 — tempo di gioco
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
-[Novità v0.39: durate a inizio/fine turno](DURATE-TURNO.md).
-PDD19, USB v7/layout invariati e lettura dei salvataggi precedenti.
+[Novità v0.40: durate in minuti e ore](TEMPO-GIOCO.md).
+PDD20, USB v7/layout invariati e lettura dei salvataggi precedenti.
 
 ## Stato e perimetro
 
@@ -233,8 +233,8 @@ reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
 ## Salvataggio e dadi
 
 NVS nel namespace `pocketdd`, nuova partizione `pdd_state`, due chiavi alternate
-`state_a`/`state_b`. Record PDD19 (tag `PDDJ`) da **8429 + 552 × numero voci** byte, massimo
-74669. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
+`state_a`/`state_b`. Record PDD20 (tag `PDDK`) da **8529 + 552 × numero voci** byte, massimo
+74769. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
 visibile. Nessun dump di struct, erase o fallback distruttivo. Errori I/O o
 allocazioni insufficienti bloccano scritture; CRC e versioni future conservati.
 
@@ -263,8 +263,10 @@ PDD18 conserva la dimensione e aggiunge i tipi fonte 3 (slot ordinari) e 4
 (patto), indice livello 0–8; i costi/reazione PDD17 restano conservati.
 PDD19 aggiunge 50 selettori Round/Inizio/Fine per effetti, extra e profili.
 Le copie precedenti mantengono Round senza scritture al boot.
-Le nuove scritture richiedono firmware v0.39 o successivo:
-[compatibilità e downgrade](DURATE-TURNO.md).
+PDD20 aggiunge 100 byte di residui in minuti e i selettori Minuti/Ore;
+le copie PDD1–PDD19 mantengono i vecchi conteggi e iniziano senza timer di tempo.
+Le nuove scritture richiedono firmware v0.40 o successivo:
+[compatibilità e downgrade](TEMPO-GIOCO.md).
 Il nuovo uploader supporta USB v1–v7. Preferenze avatar/tasti
 locali conservate durante l'importazione. [Dettagli](MAGIE-TASTI.md).
 
@@ -797,3 +799,35 @@ ESP-IDF 5.5.5/LVGL 9.4.0. PDD19 legge PDD1–PDD18; USB v7/layout invariati.
 Nessun flash/collaudo fisico, nuova lettura Beyond o modifica della raccolta
 personale. Altri soggetti/minuti/ore, cariche oggetto e automatismi ancora
 successivi. [Uso e limiti](DURATE-TURNO.md).
+
+
+## Verifiche v0.40 — tempo di gioco
+
+57600 combinazioni indipendenti di 50 posizioni/famiglie, Minuti/Ore, residuo,
+intervallo, pausa, reazione e concentrazione. 13122 sequenze di otto effetti
+confrontate con un riferimento separato minuto per minuto: scadenze simultanee,
+ordine, perdite PF non restituite e rifiuti intermedi anche con finale valido.
+Rollback dopo un cap PF già proposto; 50 scadenze, ore parziali serializzate,
+round/turni/riposi separati e limiti di avanzamento. PDD20 massimo, tutti i 100
+nuovi byte corrotti con CRC valido e selettori temporali respinti nei record
+PDD19. Fixture PDD19 dell'encoder v0.39 originale, nessuna scrittura al boot,
+prima banca alternata e riavvio con minuti residui conservati.
+
+UI LVGL dei tre editor, minuti/ore e precisione, comando Tempo, anteprima/dettaglio,
+PF e rifiuti cronologici, errore/riprova/annulla, nessuna spesa di risorse o
+reazione, limiti/no-op, 17 pagine e import. Tasti configurabili conservati e
+modali protette; controlli ≥44 px dentro il cerchio, testi senza sovrapposizioni.
+Catture host visionate, incluse nell'archivio come
+`firmware-host-preview/elapsed-time-preview.png`; nessuna cattura fisica.
+
+Suite firmware completa e 37751 confronti PC→USB→C passati; regressioni di
+turni/slot/costi/profili/difese/danni/effetti conservate. ASan/UBSan su tempo/
+turni/slot/costi/profili/riduzioni, extra/condizioni/misti, danni/COS/vincoli/
+difese, effetti/durate, magie/riposi/stato, allocazioni, core/parser, NVS e UI;
+leak detector disattivato. 138 test JS e build PC passati.
+
+Firmware v0.40: **903600 byte**, partizione app 4 MiB **78% libera**;
+ESP-IDF 5.5.5/LVGL 9.4.0. PDD20 legge PDD1–PDD19; USB v7/layout invariati.
+Nessun flash/collaudo fisico, nuova lettura Beyond o modifica della raccolta
+personale. Durate di altri soggetti, cariche oggetto, condizioni complete e
+automatismi ancora successivi. [Uso e limiti](TEMPO-GIOCO.md).

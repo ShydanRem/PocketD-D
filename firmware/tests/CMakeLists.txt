@@ -76,3 +76,6 @@ target_include_directories(slot-costs PRIVATE ../core)
 
 add_executable(turns test_turns.c ../core/rest.c ../core/dice_pool.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
 target_include_directories(turns PRIVATE ../core)
+
+add_executable(time test_time.c ../core/rest.c ../core/dice_pool.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
+target_include_directories(time PRIVATE ../core)

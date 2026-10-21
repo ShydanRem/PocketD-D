@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.39
+# Direzione visiva del dispositivo — v0.40
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -275,3 +275,10 @@ passaggi e pausa. Il menu Reazione contiene entrambi i comandi; il riepilogo
 mostra scadenze, reazione e CA/PF prima/dopo, con evidenza dei PF eventualmente
 persi. Scadenze elenca fino a 50 voci su 17 pagine, senza comprimere le righe.
 Anteprima host: `firmware/tests/out/ui-build/turn-durations-preview.png`.
+
+
+La v0.40 aggiunge Tempo nella testata Stato, conservando Reazione. Scelta
+leggibile dell'intervallo h/min, anteprima di scadenze e CA/PF, dettaglio con
+residui in minuti; negli editor Ore i tasti distinguono ore e minuti. Il confronto
+conserva le unità e l'avviso evidenzia i PF persi. Anteprima host:
+`firmware/tests/out/ui-build/elapsed-time-preview.png`; nessuna cattura fisica.

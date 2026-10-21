@@ -60,8 +60,8 @@ int main(void){
  pd_demo(&s);for(unsigned i=0;i<PD_EFFECTS;i++)assert(pd_effect_set(&s,i,(pd_effect){.target=PD_EFFECT_MAX_HP,.value=1,.active=i%2!=0,.timed=true,.rounds=i?99:0}));
  s.magic.count=PD_POWERS;for(unsigned i=0;i<PD_POWERS;i++)s.magic.powers[i]=(pd_power){.name="Magia",.flags=PD_PREPARED};s.shortcuts[0]=11;
  static uint8_t data[PD_RECORD_SIZE];size_t n=pd_encode(&s,129,data);uint32_t gen;
- assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDJ",4)&&pd_decode(data,n,&next,&gen)&&gen==129&&next.effects[7].rounds==99&&next.effects[0].timed&&!next.effects[0].active&&!next.effects[0].rounds&&next.shortcuts[0]==11);
- size_t start=n-483;const unsigned offsets[]={0,1,2,3};const unsigned values[]={2,100,0,0};
+ assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDK",4)&&pd_decode(data,n,&next,&gen)&&gen==129&&next.effects[7].rounds==99&&next.effects[0].timed&&!next.effects[0].active&&!next.effects[0].rounds&&next.shortcuts[0]==11);
+ size_t start=n-583;const unsigned offsets[]={0,1,2,3};const unsigned values[]={2,100,0,0};
  for(unsigned i=0;i<4;i++){pd_encode(&s,129,data);data[start+offsets[i]]=values[i];crc(data,n);before=next;gen=99;assert(!pd_decode(data,n,&next,&gen)&&gen==99&&!memcmp(&next,&before,sizeof next));}
- printf("Durations: %u independent advances/subsets, pause/expiry, simultaneous caps, atomic rejection, explicit reactivation, death/rest isolation and strict PDD19 persistence passed\n",cases);
+ printf("Durations: %u independent advances/subsets, pause/expiry, simultaneous caps, atomic rejection, explicit reactivation, death/rest isolation and strict PDD20 persistence passed\n",cases);
 }

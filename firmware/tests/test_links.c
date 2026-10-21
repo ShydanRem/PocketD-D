@@ -74,8 +74,8 @@ int main(void){
  setup(&s);s.magic.count=PD_POWERS;for(unsigned i=4;i<PD_POWERS;i++)s.magic.powers[i]=(pd_power){.name="Magia",.flags=PD_PREPARED};
  for(unsigned i=0;i<PD_EFFECTS;i++)assert(pd_effect_set(&s,i,(pd_effect){.value=1,.active=i%2,.concentration=1}));
  static uint8_t data[PD_RECORD_SIZE];size_t n=pd_encode(&s,133,data);uint32_t gen;
- assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDJ",4)&&pd_decode(data,n,&decoded,&gen)&&gen==133&&decoded.effects[7].concentration==1&&decoded.effects[0].concentration==1);
- for(unsigned i=0;i<PD_EFFECTS;i++){pd_encode(&s,133,data);data[n-459+i]=2;crc(data,n);before=decoded;gen=77;assert(!pd_decode(data,n,&decoded,&gen)&&gen==77&&!memcmp(&decoded,&before,sizeof decoded));}
- setup(&s);n=pd_encode(&s,1,data);data[n-459]=1;crc(data,n);assert(!pd_decode(data,n,&decoded,&gen));
- printf("Links: %u independent subsets/targets/end triggers, same-spell recast, costs, caps, rolls, preserved paths, expiration, stale links, invariant rejection and strict PDD19 persistence passed\n",cases);
+ assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDK",4)&&pd_decode(data,n,&decoded,&gen)&&gen==133&&decoded.effects[7].concentration==1&&decoded.effects[0].concentration==1);
+ for(unsigned i=0;i<PD_EFFECTS;i++){pd_encode(&s,133,data);data[n-559+i]=2;crc(data,n);before=decoded;gen=77;assert(!pd_decode(data,n,&decoded,&gen)&&gen==77&&!memcmp(&decoded,&before,sizeof decoded));}
+ setup(&s);n=pd_encode(&s,1,data);data[n-559]=1;crc(data,n);assert(!pd_decode(data,n,&decoded,&gen));
+ printf("Links: %u independent subsets/targets/end triggers, same-spell recast, costs, caps, rolls, preserved paths, expiration, stale links, invariant rejection and strict PDD20 persistence passed\n",cases);
 }

@@ -365,3 +365,17 @@ Il report riusa le maschere numeriche/42 bit difensivi. La UI costruisce un solo
 candidato per CA/PF/timer/reazione e protegge riepilogo/dettaglio da altri input.
 PDD19 aggiunge 50 byte espliciti, conservando gli offset e leggendo PDD1–PDD18.
 [Dettagli](DURATE-TURNO.md).
+
+
+## Tempo di gioco — v0.40
+
+Tick 3/4 identifica Minuti/Ore; un uint16 minutes separato conserva il residuo
+normalizzato, con rounds zero e limiti 99/5940. Gli altri timer richiedono minutes
+zero. Il motore del tempo risolve le scadenze numeriche per istanti distinti,
+raggruppando quelle simultanee e validando totali/cap PF a ogni istante.
+Rollback di effetti/PF prima di avanzare qualunque difesa/profilo su errore;
+solo dopo aggiorna i residui di tutti i timer temporali. Non avanza i timer
+Round/Inizio/Fine e non cambia reazione, risorse o concentrazione. PDD20 aggiunge
+100 byte espliciti e legge PDD1–PDD19; il decoder PDD19 resta limitato ai selettori
+0–2. Stato → Tempo usa candidato/commit e dettaglio comune fino a 50 voci.
+[Dettagli](TEMPO-GIOCO.md).

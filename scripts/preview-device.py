@@ -219,3 +219,13 @@ if all((base/(name+'.ppm')).is_file() for name in turns):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(turns):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'turn-durations-preview.png');print(base/'turn-durations-preview.png')
+
+# Explicit elapsed game time with minute precision; actual host LVGL frames.
+time=['time-home','time-defence-hours','time-cap-preview','time-details']
+for name in time+['time-effect-editor','time-profile-confirm','time-preview','time-maximum','time-invalid','time-wide-details','time-last-details','time-import']:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in time):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(time):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'elapsed-time-preview.png');print(base/'elapsed-time-preview.png')

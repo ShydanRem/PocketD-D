@@ -117,3 +117,8 @@ delle modifiche; nessun dato personale, JSON Beyond, asset o dipendenza esterna.
 La v0.39 aggiunge codice, UI e test originali per timer del proprio turno.
 Fixture PDD18 sintetica dell'encoder v0.38 originale `807ccff`, prima delle
 modifiche. Nessun dato personale, JSON Beyond, asset o dipendenza esterna.
+
+
+La v0.40 aggiunge codice, UI e test originali per minuti/ore e tempo di gioco.
+Fixture PDD19 sintetica dell'encoder v0.39 originale `70a194b`, prima delle
+modifiche. Nessun dato personale, JSON Beyond, asset o dipendenza esterna.

@@ -56,12 +56,12 @@ Non fanno parte di questo traguardo: importazione Beyond, editor completo, incan
 
 L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco non impedisce le altre fasi. L'ordine delle fasi 0 e 1 può sovrapporsi se l'hardware non è immediatamente disponibile.
 
-## Punto attuale — v0.39
+## Punto attuale — v0.40
 
 | Blocco | Stato software | Cosa manca |
 | --- | --- | --- |
 | Scheda individuale offline | PF/temporanei, prove, abilità/salvezze, zaino, armi, magie, risorse, riposi e dadi vita nel firmware | Monete, storico persistente, effetti completi e regole speciali; sessione reale |
-| Effetti numerici | Otto modificatori CA/PF massimi, basi separate, cure integrate, durate manuali/a round/inizio-fine turno e vincolo esplicito alla concentrazione con fine congiunta | Altre durate/regole, proprietà speciali e ricalcolo da equipaggiamento |
+| Effetti numerici | Otto modificatori CA/PF massimi, basi separate, cure integrate, durate manuali/a round/inizio-fine turno/minuti-ore e vincolo esplicito alla concentrazione con fine congiunta | Altre durate/regole, proprietà speciali e ricalcolo da equipaggiamento |
 | Danni e difese | Profili manuali per 13 tipi, base/tre extra separati, durate/vincoli e scadenze comuni, PF/temporanei, salvezza COS, sei componenti per colpo, fonte esplicita e riduzioni manuali prima/dopo, tre profili locali con budget, conto completo, costi da contatori/usi/slot ordinari-patto e reazione | Condizioni arbitrarie, più di tre extra per tipo, catalogo/requisiti automatici, cariche oggetto e costi multipli, eccezioni alle salvezze e casi morte bloccati |
 | Stato e morte | Note delle condizioni, Avvelenato separato, d20 morte base e correzioni, reazione e inizio turno espliciti | Effetti delle altre condizioni, eccezioni e morte istantanea |
 | Grafica e comandi | Tema pixel art, avatar 81 combinazioni, dadi animati, PWR/BOOT configurabili | Leggibilità e precisione touch sulla scheda |
@@ -74,18 +74,19 @@ sono portate nel firmware, ma i criteri di completamento richiedono ancora una
 sessione fisica, trasferimento/ripristino e misure. Non sono percentuali di
 completamento né una dichiarazione di collaudo.
 
-## Quattro blocchi concordati — v0.39
+## Quattro blocchi concordati — v0.40
 
 | Blocco | Punto attuale | Prossimo lavoro |
 | --- | --- | --- |
 | 1 — Scheda sul dispositivo | Percorsi base nel firmware: magie/slot/usi, concentrazione, riposi, dadi vita e morte base | Eccezioni e verifica nell'uso reale |
-| 2 — Effetti | Modificatori, round, concentrazione, difese, danni e riduzioni con costi/reazione; v0.38 aggiunge slot ordinari/patto; v0.39 durate del proprio turno | Durate di altri soggetti/minuti/ore, cariche con un modello distinto dalla quantità e requisiti/effetti automatici |
+| 2 — Effetti | Modificatori, round, concentrazione, difese, danni e riduzioni con costi/reazione; v0.38 aggiunge slot ordinari/patto; v0.39 durate del proprio turno; v0.40 minuti/ore | Durate di altri soggetti, cariche con un modello distinto dalla quantità e requisiti/effetti automatici |
 | 3 — Prodotto fisico | Luminosità, attenuazione/risveglio, salvataggi, tasti configurabili e firmware compilato | Batteria, sospensione/spegnimento e collaudi reali touch/USB/memoria/alimentazione |
 | 4 — Estetica | Tema pixel art, avatar e dadi animati, UI circolare | Illustrazioni, sprite, icone, transizioni/feedback e leggibilità sul display reale |
 
 Il blocco 2 resta aperto. Le cariche oggetto non sono rappresentate nella copia
 attuale e non vengono sostituite consumando quantità. Il prossimo incremento
-software deve affrontare le altre durate; l'integrazione delle cariche
+software deve affrontare cariche e altre regole ancora rappresentate manualmente;
+l'integrazione delle cariche
 richiederà anche modello e trasferimento. Hardware e qualità visiva restano
 traguardi del dispositivo, senza espandere il PC in un prodotto di gioco separato.
 
@@ -329,3 +330,10 @@ Inizio/Fine offrono scadenze e CA/PF/reazione prima/dopo, un solo candidato,
 rifiuto atomico e annullamento; fino a 50 scadenze su 17 pagine. PDD19 legge
 PDD1–PDD18, tasti/USB/layout conservati. Il blocco effetti resta aperto per
 altre durate, condizioni, cariche e automatismi. [Dettagli](DURATE-TURNO.md).
+
+
+La v0.40 aggiunge minuti/ore e Stato → Tempo, intervalli espliciti con residui
+precisi, scadenze cronologiche, limite PF a ogni passaggio e rifiuto atomico
+anche degli intermedi invalidi. Round/turni e risorse restano separati. PDD20
+legge PDD1–PDD19, tasti/USB/layout conservati; durate altrui, cariche e automatismi
+restano successivi. [Dettagli](TEMPO-GIOCO.md).

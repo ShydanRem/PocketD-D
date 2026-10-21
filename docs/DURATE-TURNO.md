@@ -1,5 +1,8 @@
 # Durate del proprio turno — v0.39
 
+**Aggiornamento v0.40:** [minuti/ore e tempo di gioco](TEMPO-GIOCO.md), PDD20.
+Le limitazioni sui minuti/ore e il formato PDD19 sotto descrivono la v0.39.
+
 Effetti locali CA/PF massimi, extra difensivi e profili di riduzione possono
 scadere a **inizio o fine del proprio turno**. Round, inizio turno e fine turno
 sono tre avanzamenti distinti, scelti esplicitamente sul dispositivo.
