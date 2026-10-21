@@ -6,24 +6,16 @@ set(CONFIG_LV_USE_THORVG_INTERNAL OFF CACHE BOOL "" FORCE)
 set(LV_BUILD_CONF_PATH "${CMAKE_CURRENT_LIST_DIR}/lv_conf.h" CACHE PATH "" FORCE)
 add_subdirectory(../.deps/lvgl lvgl)
 add_executable(ui ../core/recharge.c ../core/damage.c ../core/screen.c ../core/status.c ../core/rest.c test_ui.c ../core/buttons.c ../core/pocketdd.c ../core/magic.c ../core/checks.c ../core/combat.c ../core/dice_animation.c ../core/dice_pool.c ../core/avatar.c)
-target_include_directories(ui PRIVATE ../core)
+target_sources(ui PRIVATE ../ui/companion/companion.c ../ui/companion/companion_assets.c)
+target_include_directories(ui PRIVATE ../core ../ui/companion)
 target_link_libraries(ui lvgl m)
 
-# Isolated visual experiment; does not replace or link into the shipping UI.
-option(PD_BUILD_COMPANION_PROTOTYPE "Build the optional native companion UI prototype" OFF)
+# Standalone view harness, using the same production renderer and committed assets.
+option(PD_BUILD_COMPANION_PROTOTYPE "Build the companion view harness" OFF)
 if(PD_BUILD_COMPANION_PROTOTYPE)
-    find_package(Python3 REQUIRED COMPONENTS Interpreter)
-    set(COMPANION_DIR "${CMAKE_CURRENT_LIST_DIR}/../prototypes/companion")
-    set(COMPANION_ASSETS "${CMAKE_CURRENT_BINARY_DIR}/companion-assets")
-    add_custom_command(
-        OUTPUT "${COMPANION_ASSETS}/companion_assets.c" "${COMPANION_ASSETS}/companion_assets.h"
-        COMMAND ${Python3_EXECUTABLE} "${COMPANION_DIR}/build_assets.py" "${COMPANION_ASSETS}"
-        DEPENDS "${COMPANION_DIR}/build_assets.py" "${COMPANION_DIR}/source/camp.png"
-                "${COMPANION_DIR}/source/hero.png" "${COMPANION_DIR}/source/icons.png"
-        VERBATIM)
-    add_executable(companion "${COMPANION_DIR}/companion.c" "${COMPANION_DIR}/test_companion.c"
-        "${COMPANION_ASSETS}/companion_assets.c" ../core/pocketdd.c ../core/magic.c ../core/checks.c)
-    target_include_directories(companion PRIVATE ../core "${COMPANION_DIR}" "${COMPANION_ASSETS}")
+    add_executable(companion ../ui/companion/companion.c ../ui/companion/companion_assets.c
+        ../prototypes/companion/test_companion.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
+    target_include_directories(companion PRIVATE ../core ../ui/companion)
     target_compile_options(companion PRIVATE -Wall -Wextra -Werror)
     target_link_libraries(companion lvgl m)
 endif()

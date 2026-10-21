@@ -1,0 +1,91 @@
+{
+  "images": [
+    {
+      "name": "companion_camp",
+      "width": 466,
+      "height": 466,
+      "format": "RGB565",
+      "bytes": 434312,
+      "sha256": "45da9a1bc33058d6ca0ed27e418ede421b0bb1a74cfdb6adbc7f0d8a396b1b53"
+    },
+    {
+      "name": "companion_hero",
+      "width": 104,
+      "height": 128,
+      "format": "RGB565A8",
+      "bytes": 39936,
+      "sha256": "ab070fde932ae98b4e1ff86bb76910c29013e3620025d7dc0496c2de71552abf"
+    },
+    {
+      "name": "companion_sword",
+      "width": 64,
+      "height": 64,
+      "format": "RGB565A8",
+      "bytes": 12288,
+      "sha256": "8fa7d78dcb9339ad491fc7a7078885e407697da32b876e39b3b5d02bc4c3b891"
+    },
+    {
+      "name": "companion_dice",
+      "width": 64,
+      "height": 64,
+      "format": "RGB565A8",
+      "bytes": 12288,
+      "sha256": "6ba9d4205408bd409178301b94b257a57cf9bf85f15736107481aec1fc15b948"
+    },
+    {
+      "name": "companion_magic",
+      "width": 64,
+      "height": 64,
+      "format": "RGB565A8",
+      "bytes": 12288,
+      "sha256": "c518e4fd85d56bccd6a3ff311e507969dc49c18f723c2086ae3fc8975a490322"
+    },
+    {
+      "name": "companion_pack",
+      "width": 64,
+      "height": 64,
+      "format": "RGB565A8",
+      "bytes": 12288,
+      "sha256": "98e362fbb4c301bb81a8b27d62eb11c6fcf9b5edf29b80c0b4bec4ebe4a05aed"
+    },
+    {
+      "name": "companion_rest",
+      "width": 64,
+      "height": 64,
+      "format": "RGB565A8",
+      "bytes": 12288,
+      "sha256": "87b755897e4a2cfb30d44c5358e93459f8b0bc0bb3c625b939ddb817a625aabe"
+    },
+    {
+      "name": "companion_sheet",
+      "width": 64,
+      "height": 64,
+      "format": "RGB565A8",
+      "bytes": 12288,
+      "sha256": "0b405a6e33f0523b3bde33737818c8957e8ec6ca0eda28a4ab920a7c2559812a"
+    },
+    {
+      "name": "companion_dock_dice",
+      "width": 48,
+      "height": 48,
+      "format": "RGB565A8",
+      "bytes": 6912,
+      "sha256": "f2217193489a482416c5e52fa8faa3eb2d27851038bd034c29e54fa11acce33d"
+    },
+    {
+      "name": "companion_dock_pack",
+      "width": 48,
+      "height": 48,
+      "format": "RGB565A8",
+      "bytes": 6912,
+      "sha256": "94c7c5a608b909da1ab356a2cb4ad9876fe170043b6516fb4ca45e9e064e4b54"
+    }
+  ],
+  "image_bytes": 561800,
+  "sources": {
+    "camp.png": "67a9dd1d60e3c305e3b0e01cd211f8b8a2679047e2b4678906bf0494c54b565b",
+    "hero.png": "ad53ba654a4ff02c65dff909be9fc402495d7a5379360706f815751e36ffafbe",
+    "icons.png": "09909120ec7d031cf0338ba115e8e5c01f653b953bf2893d3ba5061e97adb2bb"
+  },
+  "tool": "Version: ImageMagick 7.1.1-43 Q16 x86_64 22550 https://imagemagick.org"
+}

@@ -4,6 +4,7 @@
 #include "dice_animation.h"
 #include "visual.h"
 #include "avatar.h"
+#include "companion.h"
 #include "checks.h"
 #include "combat.h"
 #include "magic.h"
@@ -33,7 +34,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS } page_t;
 PD_EXT static pd_state state,previous,pending,scratch;
 static bool undo_available,import_pending,has_roll;
 static pd_roll result;
@@ -47,7 +48,7 @@ enum { FEEDBACK_HEAL=1,FEEDBACK_HURT,FEEDBACK_RECOVER,FEEDBACK_SPEND,FEEDBACK_MI
 #define FEEDBACK_POOLS (PD_RESOURCES+PD_POWERS+18+PD_ITEMS*2+PD_HIT_POOLS)
 typedef struct { unsigned hp,temp;uint16_t pools[FEEDBACK_POOLS]; } feedback_snapshot;
 static feedback_snapshot feedback_before;
-static struct { bool active;unsigned kind;uint32_t started;char text[64]; } feedback;
+static struct { bool active;unsigned kind;uint32_t started;int hp_delta,temp_delta;char text[64]; } feedback;
 static lv_obj_t *feedback_panel,*feedback_motes[3];
 static lv_timer_t *feedback_timer;
 static void feedback_frame(lv_timer_t *timer);
@@ -247,6 +248,7 @@ static TickType_t import_started;
 PD_EXT static char line[PD_PACKET_MAX+1];
 #endif
 static void render(void);
+static void render_companion(void);
 #ifndef PD_UI_TEST
 static void reply(const char *text) { usb_serial_jtag_write_bytes(text,strlen(text),pdMS_TO_TICKS(100)); }
 #else
@@ -305,6 +307,7 @@ static void feedback_capture(feedback_snapshot *out){
 }
 static void feedback_prepare(void){
     feedback_snapshot after;feedback_capture(&after);int hp=(int)after.hp-(int)feedback_before.hp,temp=(int)after.temp-(int)feedback_before.temp;
+    feedback.hp_delta=hp;feedback.temp_delta=temp;
     if(hp||temp){feedback.kind=hp>0||(!hp&&temp>0)?FEEDBACK_HEAL:FEEDBACK_HURT;
         if(hp&&temp)snprintf(feedback.text,sizeof feedback.text,"PF %+d | temp %+d",hp,temp);
         else snprintf(feedback.text,sizeof feedback.text,hp?"PF %+d":"Temp %+d",hp?hp:temp);
@@ -338,13 +341,16 @@ static void scene_atmosphere(lv_obj_t *stage,int x,int y){
         lv_obj_set_parent(scene_lights[i],stage);lv_obj_set_pos(scene_lights[i],x+xy[i][0],y+xy[i][1]);
     }
 }
-static void avatar_show(const pd_avatar *appearance,int x,int y,lv_obj_t *parent,unsigned scale,bool animate) {
+static void avatar_prepare(const pd_avatar *appearance,unsigned scale) {
     avatar_scale=scale;
     if(scale==4)pd_avatar_large(appearance,0,avatar_data);else if(scale==3)pd_avatar_hero(appearance,0,avatar_data);else pd_avatar_image(appearance,0,avatar_data);
     avatar_image.header.w=24*scale;avatar_image.header.h=30*scale;
     avatar_image.header.stride=avatar_image.header.w/2;
     avatar_image.data_size=scale==4?PD_AVATAR_LARGE_BYTES:scale==3?PD_AVATAR_HERO_BYTES:PD_AVATAR_IMAGE_BYTES;
     avatar_phase=0;avatar_started=lv_tick_get();
+}
+static void avatar_show(const pd_avatar *appearance,int x,int y,lv_obj_t *parent,unsigned scale,bool animate) {
+    avatar_prepare(appearance,scale);
     avatar_sprite=lv_image_create(parent);lv_image_set_src(avatar_sprite,&avatar_image);
     lv_obj_set_pos(avatar_sprite,x,y);lv_obj_remove_flag(avatar_sprite,LV_OBJ_FLAG_CLICKABLE|LV_OBJ_FLAG_SCROLLABLE);
     if(animate&&state.idle_animation)avatar_timer=lv_timer_create(avatar_frame,200,NULL);
@@ -374,6 +380,7 @@ static void frame(void) {
     decoration(183,422,100,2,PD_EDGE,0);decoration(223,422,20,2,PD_GOLD,0);
 }
 static void act(intptr_t action) {
+    if((action==2300||action==2301)&&(import_pending||confirmation_open()))return;
     if(import_pending&&action!=30&&action!=31)return;
     if(page==MAGIC_STOP&&action!=852&&action!=853)return;
     if(page==MAGIC_CONFIRM&&action!=832&&action!=833)return;
@@ -423,6 +430,8 @@ static void act(intptr_t action) {
         page=DICE;has_roll=false;mode=0;ignore_effects=false;roll_context=(pd_roll_context){0};pool_view=false;dice_setup=false;die_picker=false;
         pd_dice_idle(&dice_animation,pd_check_mode(&state,check_kind,ability,mode,false)?2:1);
     }
+    else if(action==2300)page=HOME_MENU;
+    else if(action==2301)page=HOME_VITALS;
     else if (action==1) { pd_hp(&next,-1);if(memcmp(&next,&state,sizeof state))apply(&next); }
     else if (action==2) { pd_hp(&next,1);if(memcmp(&next,&state,sizeof state))apply(&next); }
     else if (action==3 && undo_available) {
@@ -946,6 +955,7 @@ static void act(intptr_t action) {
         next.combat.thrown=!state.combat.thrown;apply(&next);strike_ready=false;
     }
     if(report_feedback)feedback_prepare();
+    if(page==HOME_VITALS&&(action==1||action==2||action==3)&&!strstr(pd_storage_status(),"Errore"))page=HERO;
     render();
     #undef next
 }
@@ -969,7 +979,6 @@ static lv_obj_t *button(const char *text,int x,int y,int w,int h,intptr_t action
     lv_obj_set_style_text_color(b,lv_color_hex(0x7b8a9c),LV_STATE_DISABLED);
     lv_obj_set_style_shadow_width(b,0,0);lv_obj_set_style_pad_all(b,4,0);
     lv_obj_t *l=lv_label_create(b);lv_label_set_text(l,text);lv_obj_center(l);
-    if(w>=140){lv_obj_t *trim=art(&pd_art_panel_corner,1,1,b);lv_obj_set_style_opa(trim,enabled?LV_OPA_70:LV_OPA_20,0);trim=art(&pd_art_panel_corner_end,w-15,h-15,b);lv_obj_set_style_opa(trim,enabled?LV_OPA_70:LV_OPA_20,0);}
     if (!enabled) lv_obj_add_state(b,LV_STATE_DISABLED);
     lv_obj_add_event_cb(b,event,LV_EVENT_CLICKED,(void*)action);return b;
 }
@@ -1847,6 +1856,53 @@ static void render_damage(void) {
     }
 }
 
+/* Route the new views through the same guarded actions/storage as every other
+ * screen. No game mutation or random draw lives in the companion renderer. */
+static void companion_event(companion_action selected,void *unused) {
+    (void)unused;
+    if(import_pending||confirmation_open()||display_screen.dimmed||dice_animation.active||
+       (page!=HERO&&page!=HOME_MENU&&page!=HOME_VITALS))return;
+    intptr_t action;
+    switch(selected){
+        case COMPANION_OPEN_MENU:action=2300;break;
+        case COMPANION_OPEN_HOME:action=100;break;
+        case COMPANION_OPEN_VITALS:action=2301;break;
+        case COMPANION_ATTACK:{pd_weapon_info weapon;action=pd_weapon_stats(&state,state.equipped,&weapon)?81:80;break;}
+        case COMPANION_DICE:action=102;break;
+        case COMPANION_MAGIC:action=800;break;
+        case COMPANION_PACK:action=80;break;
+        case COMPANION_REST:action=900;break;
+        case COMPANION_SHEET:action=101;break;
+        case COMPANION_APPEARANCE:action=50;break;
+        case COMPANION_RESOURCES:action=103;break;
+        case COMPANION_MINUS:if(page!=HOME_VITALS)return;action=1;break;
+        case COMPANION_PLUS:if(page!=HOME_VITALS)return;action=2;break;
+        case COMPANION_UNDO:if(page!=HOME_VITALS)return;action=3;break;
+        default:return;
+    }
+    act(action);
+}
+static void render_companion(void){
+    const char *status=pd_storage_status();
+    bool error=strstr(status,"Errore")!=NULL;
+    uint32_t age=lv_tick_get()-feedback.started;
+    if(error||display_screen.dimmed||age>=2000)feedback.active=false;
+    if(page==HERO)avatar_prepare(&state.avatar,4);
+    companion_view view={
+        .page=page==HERO?COMPANION_HOME:page==HOME_MENU?COMPANION_MENU:COMPANION_VITALS,
+        .name=state.name,.level=state.level,.hp=state.hp,.maximum=pd_max_hp(&state),
+        .temporary=state.temp_hp,.armor=pd_armor(&state),.motion=state.idle_animation,
+        .paused=display_screen.dimmed,.storage_error=error,.can_undo=undo_available,
+        .can_hurt=state.hp||state.temp_hp,
+        .can_heal=state.hp<pd_max_hp(&state)&&(state.hp||!state.status.available||state.status.failures<3),
+        .applied_hp=feedback.active?feedback.hp_delta:0,.applied_temporary=feedback.active?feedback.temp_delta:0,
+        .feedback_age=age,.notice=strcmp(status,"Salvato offline")?status:NULL,.avatar=&avatar_image
+    };
+    companion_show(lv_screen_active(),&view,companion_event,NULL);
+    avatar_sprite=companion_avatar_object();
+    if(avatar_sprite&&state.idle_animation)avatar_timer=lv_timer_create(avatar_frame,200,NULL);
+    if(feedback.active)feedback_timer=lv_timer_create(feedback_frame,2000-age,NULL);
+}
 static void render(void) {
     /* Destroy the LVGL image/cache before freeing its pixel buffer. A root redraw
        cancels the old timer; the roll itself remains in the pure presentation state. */
@@ -1854,12 +1910,14 @@ static void render(void) {
     if(avatar_timer) { lv_timer_delete(avatar_timer);avatar_timer=NULL; }
     if(feedback_timer){lv_timer_delete(feedback_timer);feedback_timer=NULL;}
     feedback_panel=NULL;memset(feedback_motes,0,sizeof feedback_motes);
+    companion_close();
     lv_obj_t *root=lv_screen_active();lv_obj_clean(root);
     avatar_sprite=NULL;memset(scene_lights,0,sizeof scene_lights);memset(scene_halos,0,sizeof scene_halos);lv_image_cache_drop(&avatar_image);
     lv_free(dice_pixels);dice_pixels=NULL;dice_canvas=NULL;
     lv_obj_set_style_bg_color(root,lv_color_hex(PD_INK),0);
     lv_obj_remove_flag(root,LV_OBJ_FLAG_SCROLLABLE);
     char text[160];
+    if(!import_pending&&(page==HERO||page==HOME_MENU||page==HOME_VITALS)){render_companion();return;}
     frame();
     if (import_pending) {
         label("COPIA DA USB",83,112,300,true);
@@ -1912,29 +1970,7 @@ static void render(void) {
         button(state.idle_animation?"Animazione: si":"Animazione: no",83,299,300,48,51,true);
         button("Indietro",83,359,92,48,52,true);lv_obj_t *settings=button("Schermo",187,359,92,48,1600,true);lv_obj_set_style_text_font(settings,&lv_font_montserrat_16,0);button("Tasti",291,359,92,48,850,true);return;
     }
-    if (page==HERO) {
-        label(state.name,83,101,300,true);
-        snprintf(text,sizeof text,"LIVELLO %02u   /   CA %02u",state.level,pd_armor(&state));
-        lv_obj_t *meta=small_label(text,83,133,300,PD_GOLD);lv_obj_set_style_text_letter_space(meta,1,0);
-        lv_obj_t *stage=button("Aspetto",83,153,300,96,50,true);
-        lv_obj_set_style_pad_all(stage,0,0);lv_obj_set_style_border_width(stage,0,0);
-        lv_obj_set_style_bg_opa(stage,LV_OPA_TRANSP,0);lv_obj_set_style_bg_grad_dir(stage,LV_GRAD_DIR_NONE,0);
-        art(&pd_art_diorama,0,0,stage);scene_atmosphere(stage,0,0);avatar_show(&state.avatar,114,2,stage,3,true);
-        lv_obj_t *hint=lv_obj_get_child(stage,0);lv_obj_set_style_text_font(hint,&lv_font_montserrat_16,0);
-        lv_obj_set_style_text_color(hint,lv_color_hex(PD_GOLD),0);
-        lv_obj_set_style_bg_color(hint,lv_color_hex(PD_INK),0);lv_obj_set_style_bg_opa(hint,LV_OPA_COVER,0);
-        lv_obj_align(hint,LV_ALIGN_BOTTOM_RIGHT,-2,0);lv_obj_move_foreground(hint);
-        snprintf(text,sizeof text,"%u / %u",state.hp,pd_max_hp(&state));
-        lv_obj_t *hp=label(text,133,253,200,true);label_font(hp,&pd_pixel_4);
-        lv_obj_set_style_text_color(hp,lv_color_hex(state.hp?PD_MINT:PD_DANGER),0);
-        small_label("PF",83,262,46,PD_MUTED);
-        snprintf(text,sizeof text,"Temp +%u",state.temp_hp);lv_obj_t *temp=small_label(text,185,6,110,PD_TEXT);lv_obj_set_parent(temp,stage);lv_obj_set_pos(temp,185,6);lv_obj_set_style_bg_color(temp,lv_color_hex(PD_PANEL_LOW),0);lv_obj_set_style_bg_opa(temp,LV_OPA_90,0);
-        meter(state.hp,pd_max_hp(&state),294,state.hp?PD_MINT:PD_DANGER);
-        button("-1 PF",83,303,92,44,1,state.hp||state.temp_hp);
-        lv_obj_t *undo=button("Annulla",187,303,92,44,3,undo_available);
-        lv_obj_set_style_text_font(undo,&lv_font_montserrat_16,0);
-        button("+1 PF",291,303,92,44,2,state.hp<pd_max_hp(&state)&&(state.hp||!state.status.available||state.status.failures<3));
-    } else if (page==SHEET) {
+    if (page==SHEET) {
         render_sheet();
     } else if (page==DICE) {
         if(combat_roll==1) {
@@ -2043,9 +2079,9 @@ static void feedback_frame(lv_timer_t *timer){
     if(!feedback.active||elapsed>=2000||display_screen.dimmed){
         feedback.active=false;feedback_timer=NULL;lv_timer_delete(timer);
         if(feedback_panel)lv_obj_delete(feedback_panel);
-        feedback_panel=NULL;memset(feedback_motes,0,sizeof feedback_motes);return;
+        feedback_panel=NULL;memset(feedback_motes,0,sizeof feedback_motes);companion_clear_feedback();return;
     }
-    if(!state.idle_animation)return;
+    if(!state.idle_animation||!feedback_panel)return;
     for(unsigned i=0;i<3;i++){unsigned phase=(elapsed/66+i*3)%12;lv_obj_set_pos(feedback_motes[i],280+i*7,15-phase);lv_obj_set_style_opa(feedback_motes[i],phase<8?LV_OPA_COVER:LV_OPA_30,0);}
 }
 static void avatar_frame(lv_timer_t *timer) {
@@ -2075,6 +2111,8 @@ static void screen_service(int pwr,int boot){
     for(unsigned i=0;i<3;i++)if(gestures&(1u<<i))shortcut(i);
     bool failed=display_screen.failed;
     pd_screen_step(&display_screen,state.brightness,state.dim_timeout,import_pending||confirmation_open()||dice_animation.active,lv_tick_get(),pd_board_brightness,NULL);
+    companion_pause(display_screen.dimmed);
+    if(display_screen.dimmed){feedback.active=false;if(feedback_timer){lv_timer_delete(feedback_timer);feedback_timer=NULL;}if(feedback_panel){lv_obj_delete(feedback_panel);feedback_panel=NULL;}memset(feedback_motes,0,sizeof feedback_motes);}
     if(failed!=display_screen.failed&&page==DEVICE_SETTINGS)render();
 }
 static bool stage_import(const pd_state *candidate) {

@@ -1,10 +1,10 @@
-# Firmware PocketD-D 0.47 — pannelli, icone e feedback
+# Firmware PocketD-D 0.48 — home e menu del compagno
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
-[Novità v0.47: pannelli e feedback](PANNELLI-FEEDBACK.md).
+[Novità v0.48: home, menu, PF e tasti collegati](HOME-COMPAGNO.md).
 PDD23, USB v8, backup PC v11; layout invariato e lettura dei salvataggi precedenti.
 
 ## Stato e perimetro

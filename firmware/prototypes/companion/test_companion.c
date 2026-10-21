@@ -103,7 +103,7 @@ int main(void) {
     for(unsigned i=0;i<6;i++){tap(125+(i%3)*108,158+(i/3)*120);assert(last_action==routes[i]&&mutations==before);}
     companion_focus_step(1);companion_focus_step(1);assert(companion_focus_index()==1);
     screenshot("companion-focus.ppm");companion_activate();assert(last_action==COMPANION_DICE);
-    tap(233,389);assert(view.page==COMPANION_HOME);tap(210,105);assert(view.page==COMPANION_VITALS);
+    tap(310,389);assert(view.page==COMPANION_HOME);tap(210,105);assert(view.page==COMPANION_VITALS);
     screenshot("companion-vitals.ppm");tap(302,251);assert(state.hp==25&&view.applied_hp==1&&view.page==COMPANION_HOME);
     tap(210,105);tap(230,326);assert(state.hp==24&&!undo_available);
     apply_hp(4);show();assert(state.hp==28&&view.applied_hp==4);screenshot("companion-heal.ppm");
@@ -125,7 +125,7 @@ int main(void) {
     static uint16_t static_frame[466*466];memcpy(static_frame,pixels,sizeof pixels);
     before=mutations;lv_tick_inc(400);lv_timer_handler();screenshot("companion-static-400.ppm");
     assert(!memcmp(static_frame,pixels,sizeof pixels)&&mutations==before);
-    lv_tick_inc(1400);lv_timer_handler();screenshot("companion-static-expired.ppm");
+    lv_tick_inc(1800);lv_timer_handler();screenshot("companion-static-expired.ppm");
     assert(memcmp(static_frame,pixels,sizeof pixels)&&mutations==before);
     /* Disabled events and configurable-focus hooks never bypass availability. */
     state.hp=pd_max_hp(&state);state.temp_hp=0;view.page=COMPANION_VITALS;show();before=mutations;

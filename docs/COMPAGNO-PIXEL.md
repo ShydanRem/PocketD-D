@@ -1,5 +1,11 @@
 # Un piccolo mondo — prototipo nativo della nuova UI
 
+**Documento storico del commit `66625ff`.** La successiva
+[v0.48](HOME-COMPAGNO.md) integra home/menu/PF nel firmware. Il renderer, i PNG
+e il generatore sono stati spostati in `firmware/ui/companion/`; il programma di
+prova resta in `firmware/prototypes/companion/`. Le descrizioni qui sotto
+documentano lo stato della prima proposta, con un unico avatar dimostrativo.
+
 Il riferimento del 21 ottobre 2026 è un **compagno fantasy simile a un Tamagotchi**:
 avatar intero nella home, ambiente pixel art con profondità e luce, grandi icone
 riconoscibili e reazioni visive. La nuova proposta ha ricevuto un riscontro

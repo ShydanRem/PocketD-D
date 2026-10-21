@@ -287,3 +287,13 @@ if frames and expired.is_file():
     frames += [Image.open(expired).convert('RGB') for _ in range(8)]
     frames[0].save(base/'feedback-preview.gif',save_all=True,append_images=frames[1:],duration=66,loop=0,disposal=2,optimize=True)
     print(base/'feedback-preview.gif')
+
+# Production v0.48 views; separate from the standalone companion demonstration.
+home_views=['hero','home-menu','home-vitals','feedback-heal']
+for name in home_views+['home-no-weapon','home-import-error','home-imported','home-effects','home-vitals-effects','home-keys','home-zero']:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in home_views):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(home_views):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'home-integration-preview.png');print(base/'home-integration-preview.png')

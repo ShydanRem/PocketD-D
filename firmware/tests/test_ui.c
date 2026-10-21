@@ -37,7 +37,7 @@ static lv_obj_t *button_label(lv_obj_t *button) {
     for(unsigned i=0;i<lv_obj_get_child_count(button);i++) {
         lv_obj_t *o=lv_obj_get_child(button,i);if(lv_obj_check_type(o,&lv_label_class))return o;
     }
-    assert(!"button label missing");return NULL;
+    return NULL; /* Avatar and icon-only controls have no visible text label. */
 }
 static void bounds(void) {
     lv_obj_t *root=lv_screen_active();lv_obj_update_layout(root);
@@ -65,7 +65,7 @@ static void bounds(void) {
         }
         int xs[]={a.x1,a.x2},ys[]={a.y1,a.y2};
         for(int x=0;x<2;x++)for(int y=0;y<2;y++)assert((xs[x]-233)*(xs[x]-233)+(ys[y]-233)*(ys[y]-233)<=233*233);
-        lv_obj_t *l=button_label(o);lv_area_t text;lv_obj_get_coords(l,&text);
+        lv_obj_t *l=button_label(o);if(!l)continue;lv_area_t text;lv_obj_get_coords(l,&text);
         if(!(text.x1>=a.x1&&text.x2<=a.x2&&text.y1>=a.y1&&text.y2<=a.y2)) { fprintf(stderr,"Overflow %s: button %d,%d,%d,%d text %d,%d,%d,%d\n",lv_label_get_text(l),a.x1,a.y1,a.x2,a.y2,text.x1,text.y1,text.x2,text.y2); abort(); }
     }
 }
@@ -78,15 +78,27 @@ static void wrapped_fits(void){
         if(size.y>lv_obj_get_content_height(l)){fprintf(stderr,"Wrapped text clipped (%d > %d): %s\n",size.y,(int)lv_obj_get_content_height(l),lv_label_get_text(l));abort();}
     }
 }
+static void tap(int x,int y);
 static void click(const char *name) {
-    lv_obj_t *root=lv_screen_active();
+    /* Existing rule scenarios now take the real touch path through home/menu/PF.
+     * No calls to act() stand in for the newly introduced navigation controls. */
+    if(!import_pending&&(page==HERO||page==HOME_VITALS)){
+        bool hp=!strcmp(name,"-1 PF")||!strcmp(name,"+1 PF")||!strcmp(name,"Annulla");
+        if(hp&&page==HERO){tap(200,104);assert(page==HOME_VITALS);}
+        if(!hp&&page==HOME_VITALS){tap(233,388);assert(page==HERO);}
+        if(!hp&&!strcmp(name,"Aspetto")){tap(233,264);assert(page==APPEARANCE);return;}
+        if(!hp&&(!strcmp(name,"Scheda")||!strcmp(name,"Usi"))){tap(233,375);assert(page==HOME_MENU);}
+    }
+    lv_obj_t *root=lv_screen_active();lv_obj_update_layout(root);
     for(unsigned i=0;i<lv_obj_get_child_count(root);i++) {
         lv_obj_t *o=lv_obj_get_child(root,i);
-        if(lv_obj_check_type(o,&lv_button_class)&&!strcmp(lv_label_get_text(button_label(o)),name)) {
+        if(lv_obj_check_type(o,&lv_button_class)&&button_label(o)&&!strcmp(lv_label_get_text(button_label(o)),name)) {
             assert(!lv_obj_has_state(o,LV_STATE_DISABLED));lv_obj_send_event(o,LV_EVENT_CLICKED,NULL);bounds();return;
         }
     }
-    fprintf(stderr,"Button not found: %s\n",name);assert(!"button not found");
+    fprintf(stderr,"Button not found: %s (page=%u, import=%d, dice=%d)\n",name,page,import_pending,dice_animation.active);
+    for(unsigned i=0;i<lv_obj_get_child_count(root);i++){lv_obj_t *o=lv_obj_get_child(root,i);if(lv_obj_check_type(o,&lv_button_class))fprintf(stderr,"  button: %s\n",button_label(o)?lv_label_get_text(button_label(o)):"(icon)");}
+    assert(!"button not found");
 }
 /* Exercise hit coordinates when the form has multiple + and - buttons. */
 static void tap(int x,int y) {
@@ -110,13 +122,15 @@ int main(void) {
         screenshot(name);lv_tick_inc(200);lv_timer_handler();
     }
     assert(!memcmp(&state,&animated_before,sizeof state)&&save_calls==idle_saves&&random_calls==idle_rng);
-    /* Diorama lights share the existing cosmetic timer, never game state or entropy. */
-    assert(avatar_scale==3&&avatar_image.header.w==72&&avatar_image.header.h==90&&scene_lights[0]&&scene_halos[0]);
+    /* The live personalized avatar replaces the demonstration illustration. */
+    assert(avatar_scale==4&&avatar_image.header.w==96&&avatar_image.header.h==120);
+    assert(avatar_sprite==companion_avatar_object()&&!scene_lights[0]&&!scene_halos[0]);
+    click("Aspetto");assert(page==APPEARANCE&&avatar_timer);screenshot("appearance.ppm");
+    /* Appearance still uses the original scene lighting; dimming freezes it. */
     lv_opa_t light_before=lv_obj_get_style_opa(scene_lights[0],0);display_screen.dimmed=true;
     lv_opa_t halo_before=lv_obj_get_style_opa(scene_halos[0],0);
     lv_tick_inc(400);lv_timer_handler();assert(lv_obj_get_style_opa(scene_lights[0],0)==light_before&&lv_obj_get_style_opa(scene_halos[0],0)==halo_before);
     display_screen.dimmed=false;
-    click("Aspetto");assert(page==APPEARANCE&&avatar_timer);screenshot("appearance.ppm");
     click("Animazione: si");assert(!state.idle_animation&&!avatar_timer);screenshot("appearance-still.ppm");
     uint8_t still[PD_AVATAR_LARGE_BYTES];memcpy(still,avatar_data,sizeof still);
     lv_tick_inc(2000);lv_timer_handler();assert(!memcmp(still,avatar_data,sizeof still));
@@ -784,27 +798,61 @@ int main(void) {
     /* Cancelled import preserves local flags; confirmed import clears only the device copy. */
     act(100);effects_before=state;assert(stage_import(&imported_magic));screenshot("roll-conditions-import.ppm");click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));assert(stage_import(&imported_magic));click("Conferma");assert(!state.roll_conditions);
 
-    /* Feedback observes saved balances, never changes them or consumes entropy. */
+    /* Feedback observes committed balances in the new home, never requested deltas. */
     pd_demo(&state);page=HERO;combat_roll=0;act(100);effects_calls=random_calls;effects_saves=save_calls;
-    click("-1 PF");assert(feedback.active&&feedback.kind==FEEDBACK_HURT&&!strcmp(feedback.text,"PF -1")&&feedback_panel&&feedback_timer&&save_calls==effects_saves+1&&random_calls==effects_calls);
-    assert(!lv_obj_has_flag(feedback_panel,LV_OBJ_FLAG_CLICKABLE));bounds();screenshot("feedback-damage.ppm");effects_before=state;lv_tick_inc(66);lv_timer_handler();assert(lv_obj_get_y(feedback_motes[0])!=10);
-    for(unsigned i=0;i<10;i++){lv_tick_inc(66);lv_timer_handler();char frame[48];snprintf(frame,sizeof frame,"feedback-frame-%02u.ppm",i);screenshot(frame);}
-    lv_tick_inc(2100);lv_timer_handler();assert(!feedback.active&&!feedback_panel&&!feedback_timer&&!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves+1&&random_calls==effects_calls);screenshot("feedback-expired.ppm");
-    click("+1 PF");assert(feedback.active&&feedback.kind==FEEDBACK_HEAL&&!strcmp(feedback.text,"PF +1"));screenshot("feedback-heal.ppm");
-    effects_before=state;fail_save=true;click("-1 PF");assert(!feedback.active&&!feedback_panel&&!memcmp(&state,&effects_before,sizeof state));screenshot("feedback-save-error.ppm");fail_save=false;
-    state.temp_hp=3;act(100);click("-1 PF");assert(feedback.kind==FEEDBACK_HURT&&!strcmp(feedback.text,"Temp -1")&&state.hp==effects_before.hp);screenshot("feedback-temporary.ppm");
+    click("-1 PF");assert(page==HERO&&feedback.active&&feedback.kind==FEEDBACK_HURT&&!strcmp(feedback.text,"PF -1")&&companion_feedback_visible()&&!feedback_panel&&feedback_timer&&save_calls==effects_saves+1&&random_calls==effects_calls);
+    bounds();screenshot("feedback-damage.ppm");effects_before=state;int hero_initial_x=lv_obj_get_x(avatar_sprite);lv_tick_inc(160);lv_timer_handler();assert(lv_obj_get_x(avatar_sprite)!=hero_initial_x);
+    for(unsigned i=0;i<10;i++){lv_tick_inc(80);lv_timer_handler();char frame[48];snprintf(frame,sizeof frame,"feedback-frame-%02u.ppm",i);screenshot(frame);}
+    lv_tick_inc(2100);lv_timer_handler();assert(!feedback.active&&!companion_feedback_visible()&&!feedback_timer&&!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves+1&&random_calls==effects_calls);screenshot("feedback-expired.ppm");
+    click("+1 PF");assert(feedback.active&&feedback.kind==FEEDBACK_HEAL&&!strcmp(feedback.text,"PF +1")&&companion_feedback_visible());screenshot("feedback-heal.ppm");
+    effects_before=state;fail_save=true;click("-1 PF");assert(page==HOME_VITALS&&!feedback.active&&!companion_feedback_visible()&&!memcmp(&state,&effects_before,sizeof state));screenshot("feedback-save-error.ppm");fail_save=false;
+    state.temp_hp=3;act(100);click("-1 PF");assert(feedback.kind==FEEDBACK_HURT&&!strcmp(feedback.text,"Temp -1")&&state.hp==effects_before.hp&&companion_feedback_visible());screenshot("feedback-temporary.ppm");
     /* Reduced animation keeps a static receipt, with the same automatic expiry. */
-    state.idle_animation=false;act(100);click("+1 PF");assert(feedback.active&&feedback_timer&&!avatar_timer);lv_tick_inc(500);lv_timer_handler();assert(lv_obj_get_y(feedback_motes[0])==10);screenshot("feedback-static.ppm");lv_tick_inc(1600);lv_timer_handler();assert(!feedback.active&&!feedback_panel);
+    state.idle_animation=false;act(100);click("+1 PF");assert(feedback.active&&feedback_timer&&!avatar_timer);int static_hero_y=lv_obj_get_y(avatar_sprite);lv_tick_inc(500);lv_timer_handler();assert(lv_obj_get_y(avatar_sprite)==static_hero_y&&companion_feedback_visible());screenshot("feedback-static.ppm");lv_tick_inc(1600);lv_timer_handler();assert(!feedback.active&&!companion_feedback_visible());
     state.hp=state.max_hp;effects_saves=save_calls;act(2);assert(!feedback.active&&save_calls==effects_saves);
     /* Independent pools give an update receipt, rather than a sum of unlike units. */
     pd_demo(&state);act(103);click("-1");assert(feedback.kind==FEEDBACK_SPEND&&!strcmp(feedback.text,"Risorse utilizzate"));screenshot("feedback-spend.ppm");click("+1");assert(feedback.kind==FEEDBACK_RECOVER&&!strcmp(feedback.text,"Risorse recuperate"));screenshot("feedback-recover.ppm");effects_saves=save_calls;act(21);assert(!feedback.active&&save_calls==effects_saves+1);
     /* Capabilities can be limited by kind even without the spell-only LIMITED flag. */
     act(100);state.magic.count=1;state.magic.powers[0]=(pd_power){.name="Capacita sintetica",.kind=1,.remaining=2,.maximum=2};power_index=0;page=MAGIC_CONFIRM;act(832);assert(feedback.active&&feedback.kind==FEEDBACK_SPEND&&state.magic.powers[0].remaining==1);page=MAGIC_RECOVER;act(849);assert(feedback.kind==FEEDBACK_RECOVER&&state.magic.powers[0].remaining==2);
     slot_index=0;slot_pact=false;state.magic.slots[0]=(pd_slot){1,2};page=MAGIC_SLOTS;act(841);assert(feedback.kind==FEEDBACK_RECOVER);act(840);assert(feedback.kind==FEEDBACK_SPEND);
-    /* Navigation/import/dimming clean up cosmetic objects without confirming anything. */
-    act(100);click("-1 PF");act(80);assert(!feedback_panel&&!feedback_timer);screenshot("fantasy-inventory.ppm");state=imported_magic;state.magic.count=3;state.magic.powers[0]=(pd_power){.name="Luce sintetica",.flags=PD_PREPARED};state.magic.powers[1]=(pd_power){.name="Scudo sintetico",.flags=PD_PREPARED|PD_USES_SLOT,.level=1};state.magic.powers[2]=(pd_power){.name="Slancio sintetico",.kind=1,.flags=PD_LIMITED,.remaining=1,.maximum=2};magic_filter=2;act(800);screenshot("fantasy-magic.ppm");act(100);act(1);assert(feedback_panel);assert(stage_import(&imported_magic)&&!feedback.active&&!feedback_panel);click("Annulla");act(1);assert(feedback_panel);display_screen.dimmed=true;lv_tick_inc(66);lv_timer_handler();assert(!feedback_panel&&!feedback_timer);display_screen.dimmed=false;
-    /* Expiry is safe across the uint32 clock wrap and still never writes or rolls. */
-    lv_tick_inc(UINT32_MAX-lv_tick_get()-100);act(1);assert(feedback_panel);effects_before=state;effects_saves=save_calls;effects_calls=random_calls;lv_tick_inc(2100);lv_timer_handler();assert(!feedback_panel&&!feedback_timer&&!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves&&random_calls==effects_calls);
+    /* Navigation/import/dimming clean cosmetic objects without confirming anything. */
+    act(100);click("-1 PF");act(80);assert(!feedback_panel&&!feedback_timer&&!companion_feedback_visible());screenshot("fantasy-inventory.ppm");state=imported_magic;state.magic.count=3;state.magic.powers[0]=(pd_power){.name="Luce sintetica",.flags=PD_PREPARED};state.magic.powers[1]=(pd_power){.name="Scudo sintetico",.flags=PD_PREPARED|PD_USES_SLOT,.level=1};state.magic.powers[2]=(pd_power){.name="Slancio sintetico",.kind=1,.flags=PD_LIMITED,.remaining=1,.maximum=2};magic_filter=2;act(800);screenshot("fantasy-magic.ppm");act(100);act(1);assert(companion_feedback_visible());assert(stage_import(&imported_magic)&&!feedback.active&&!companion_feedback_visible());click("Annulla");act(1);assert(companion_feedback_visible());
+    state.dim_timeout=1;state.brightness=50;display_screen.touch_down=false;display_screen.activity=lv_tick_get()-30001;screen_service(-1,0);assert(display_screen.dimmed&&!companion_feedback_visible()&&!feedback_timer);pd_screen_activity(&display_screen,lv_tick_get());screen_service(-1,0);assert(!display_screen.dimmed);
+    /* Expiry is safe across uint32 clock wrap and still never writes or rolls. */
+    lv_tick_inc(UINT32_MAX-lv_tick_get()-100);act(1);assert(companion_feedback_visible());effects_before=state;effects_saves=save_calls;effects_calls=random_calls;lv_tick_inc(2100);lv_timer_handler();assert(!companion_feedback_visible()&&!feedback_timer&&!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves&&random_calls==effects_calls);
+
+    /* Every main-menu icon reaches its real production destination without a roll/save. */
+    pd_demo(&state);page=HERO;combat_roll=0;pd_dice_idle(&dice_animation,1);act(100);
+    const char *menu_names[]={"Attacco","Dadi","Magie","Zaino","Riposo","Scheda","Usi"};
+    const page_t menu_pages[]={COMBAT,DICE,MAGIC_LIST,INVENTORY,REST_HOME,SHEET,RESOURCES};
+    effects_saves=save_calls;effects_calls=random_calls;
+    for(unsigned i=0;i<7;i++){act(100);click("Menu");assert(page==HOME_MENU);if(!i)screenshot("home-menu.ppm");click(menu_names[i]);assert(page==menu_pages[i]&&save_calls==effects_saves&&random_calls==effects_calls);}
+    state.equipped=PD_NO_WEAPON;act(100);click("Menu");click("Attacco");assert(page==INVENTORY);screenshot("home-no-weapon.ppm");
+    act(100);tap(200,104);assert(page==HOME_VITALS);screenshot("home-vitals.ppm");tap(233,388);
+    /* The existing 13 bindings keep their meanings on all three new views. */
+    const page_t bound_pages[]={HERO,HERO,SHEET,DICE,INVENTORY,MAGIC_LIST,DICE,REST_HOME,STATUS_HOME,DEVICE_SETTINGS,EFFECT_LIST,EFFECT_ROUND,DAMAGE_HOME};
+    for(unsigned screen=0;screen<3;screen++)for(unsigned binding=0;binding<13;binding++)for(unsigned gesture=0;gesture<3;gesture++){
+        page=(const page_t[]){HERO,HOME_MENU,HOME_VITALS}[screen];state.shortcuts[gesture]=binding;render();
+        page_t expected=binding&&(binding!=11||timed_effects())?bound_pages[binding]:page;shortcut(gesture);
+        if(page!=expected||save_calls!=effects_saves||random_calls!=effects_calls)fprintf(stderr,"Shortcut screen=%u binding=%u gesture=%u got=%u expected=%u saves=%u/%u rng=%u/%u\n",screen,binding,gesture,page,expected,save_calls,effects_saves,random_calls,effects_calls);
+        assert(page==expected&&save_calls==effects_saves&&random_calls==effects_calls);
+    }
+    /* Pending import, item confirmation and in-flight dice cannot be bypassed by new events. */
+    page=HERO;render();click("Menu");effects_before=state;assert(stage_import(&imported_magic));companion_event(COMPANION_OPEN_HOME,NULL);act(2300);act(2301);assert(import_pending&&page==HOME_MENU);click("Annulla");assert(page==HOME_MENU&&!memcmp(&state,&effects_before,sizeof state));
+    assert(stage_import(&imported_magic));fail_save=true;click("Conferma");assert(!import_pending&&page==HOME_MENU&&!memcmp(&state,&effects_before,sizeof state));screenshot("home-import-error.ppm");fail_save=false;
+    assert(stage_import(&imported_magic));click("Conferma");assert(page==HERO&&!memcmp(state.shortcuts,effects_before.shortcuts,3));screenshot("home-imported.ppm");
+    page=ITEM_CONFIRM;item_index=1;render();effects_saves=save_calls;companion_event(COMPANION_OPEN_HOME,NULL);act(2300);act(2301);assert(page==ITEM_CONFIRM&&save_calls==effects_saves);page=HERO;render();click("Dadi");act(14);click("Lancia");effects_calls=random_calls;companion_event(COMPANION_OPEN_MENU,NULL);act(2300);assert(page==DICE&&dice_animation.active&&random_calls==effects_calls);click("Accelera");
+    /* New PF controls use adjusted maximum/armor, preserve undo, and reject disabled saves. */
+    pd_demo(&state);state.effects[0]=(pd_effect){.active=true,.target=PD_EFFECT_MAX_HP,.value=10};state.effects[1]=(pd_effect){.active=true,.target=PD_EFFECT_ARMOR,.value=2};state.effect_count=2;state.hp=41;act(100);screenshot("home-effects.ppm");tap(200,104);assert(page==HOME_VITALS);screenshot("home-vitals-effects.ppm");click("+1 PF");assert(state.hp==42&&pd_armor(&state)==18);click("Annulla");assert(state.hp==41);tap(233,264);assert(page==APPEARANCE);click("Tasti");assert(page==KEY_SETTINGS);screenshot("home-keys.ppm");
+    act(100);state.status.available=true;state.status.failures=3;state.hp=state.temp_hp=0;render();tap(200,104);effects_saves=save_calls;
+    bool found_disabled_heal=false;root=lv_screen_active();lv_obj_update_layout(root);
+    for(unsigned i=0;i<lv_obj_get_child_count(root);i++){
+        lv_obj_t *b=lv_obj_get_child(root,i);
+        if(lv_obj_check_type(b,&lv_button_class)&&button_label(b)&&!strcmp(lv_label_get_text(button_label(b)),"+1 PF")){
+            assert(lv_obj_has_state(b,LV_STATE_DISABLED));lv_obj_send_event(b,LV_EVENT_CLICKED,NULL);found_disabled_heal=true;break;
+        }
+    }
+    assert(found_disabled_heal);assert(page==HOME_VITALS&&!state.hp&&save_calls==effects_saves);screenshot("home-zero.ppm");
 
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

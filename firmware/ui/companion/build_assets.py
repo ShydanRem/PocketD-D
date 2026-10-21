@@ -3,7 +3,7 @@
 
 ImageMagick performs deterministic atlas extraction and nearest-neighbour fitting
 to the native pixel grid. This is a build-time asset export, never runtime scaling.
-Outputs are disposable; the source PNGs and provenance.json are authoritative.
+Runtime C outputs are versioned; source PNGs and provenance.json retain the originals.
 """
 import argparse
 import hashlib
@@ -11,6 +11,8 @@ import json
 from pathlib import Path
 import shutil
 import subprocess
+import re
+import tempfile
 
 ROOT = Path(__file__).resolve().parent
 
@@ -83,7 +85,34 @@ def encode(out):
     print(f"Companion: {len(records)} images, {manifest['image_bytes']} image bytes (excludes LVGL heap)")
 
 
+def verify():
+    manifest = json.loads((ROOT/'assets.json').read_text())
+    for name, digest in manifest['sources'].items():
+        assert hashlib.sha256((ROOT/'source'/name).read_bytes()).hexdigest() == digest, name
+    source = (ROOT/'companion_assets.c').read_text()
+    arrays = dict(re.findall(r'static const uint8_t (\w+)_data\[\] = \{(.*?)\};', source, re.S))
+    assert len(arrays) == len(manifest['images'])
+    for record in manifest['images']:
+        data = bytes(int(value, 16) for value in re.findall(r'0x([0-9a-f]{2})', arrays[record['name']]))
+        assert len(data) == record['bytes'] and hashlib.sha256(data).hexdigest() == record['sha256'], record['name']
+    assert sum(record['bytes'] for record in manifest['images']) == manifest['image_bytes']
+    print('Committed companion assets: source and encoded hashes verified')
+
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('output', type=Path)
-    encode(parser.parse_args().output)
+    parser.add_argument('output', type=Path, nargs='?', default=ROOT)
+    parser.add_argument('--verify', action='store_true', help='Check committed hashes; no ImageMagick needed')
+    parser.add_argument('--check', action='store_true', help='Re-export to a temporary directory and compare raster C/header')
+    args = parser.parse_args()
+    if args.verify:
+        verify()
+    elif args.check:
+        verify()
+        with tempfile.TemporaryDirectory(prefix='pocketdd-companion-') as directory:
+            destination = Path(directory)
+            encode(destination)
+            for name in ('companion_assets.c', 'companion_assets.h'):
+                assert (destination/name).read_bytes() == (ROOT/name).read_bytes(), name
+    else:
+        encode(args.output)

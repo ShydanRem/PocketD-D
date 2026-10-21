@@ -1,11 +1,12 @@
 # Third-party sources
 
-The optional `prototypes/companion/source/` PNGs were generated with OpenAI
+The `ui/companion/source/` PNGs were generated with OpenAI
 ImageGen for the new companion UI direction. Their prompts and provenance are
-retained in `prototypes/companion/source/provenance.json`; original bytes are
-kept intact. They are not the procedurally authored assets described below and
-are not linked into the shipping firmware. ImageMagick 7 is used at build time
-to export the prototype raster data; it is not a runtime dependency. No provider
+retained in `ui/companion/source/provenance.json`; original bytes are
+kept intact. They are not the procedurally authored assets described below.
+The scene and icons are linked into the v0.48 firmware; its avatar uses the
+existing personalized renderer. ImageMagick 7 is used only to regenerate the
+committed raster C data, not to build or run the firmware. No provider
 credentials or personal character files are included.
 
 `main/board.c` adapts the display command sequence and GPIO/touch initialization

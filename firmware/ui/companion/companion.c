@@ -16,6 +16,7 @@ static companion_handler receiver;
 static void *receiver_context;
 static unsigned target_count, focused;
 static uint32_t started;
+static int hero_x,hero_y;
 
 static lv_obj_t *block(lv_obj_t *parent,int x,int y,int w,int h,unsigned color,lv_opa_t opacity,int radius) {
     lv_obj_t *o=lv_obj_create(parent);lv_obj_remove_style_all(o);
@@ -70,7 +71,7 @@ static void heart(lv_obj_t *parent,int x,int y) {
 }
 static void status(void) {
     char value[80];
-    text(surface,current.name,116,38,234,&lv_font_montserrat_20,IVORY);
+    text(surface,current.name,116,34,234,&lv_font_montserrat_20,IVORY);
     snprintf(value,sizeof value,"LIVELLO %u",current.level);
     text(surface,value,148,59,170,&lv_font_montserrat_16,GOLD);
     lv_obj_t *hp=control("",90,81,218,46,COMPANION_OPEN_VITALS,INK);
@@ -95,7 +96,9 @@ static void home(void) {
     block(surface,197,324,72,13,0x06161c,180,LV_RADIUS_CIRCLE);
     lv_obj_t *appearance=control("",177,200,112,132,COMPANION_APPEARANCE,INK);
     lv_obj_set_style_bg_opa(appearance,LV_OPA_TRANSP,0);lv_obj_set_style_border_width(appearance,0,0);
-    hero=sprite(appearance,&companion_hero,4,0);
+    const lv_image_dsc_t *image=current.avatar?current.avatar:&companion_hero;
+    hero_x=(112-(int)image->header.w)/2;hero_y=128-(int)image->header.h;
+    hero=sprite(appearance,image,hero_x,hero_y);
     const lv_image_dsc_t *images[]={&companion_dock_dice,NULL,&companion_dock_pack};
     const char *names[]={"Dadi","Menu","Zaino"};
     companion_action actions[]={COMPANION_DICE,COMPANION_OPEN_MENU,COMPANION_PACK};
@@ -105,7 +108,7 @@ static void home(void) {
         else for(int row=0;row<2;row++)for(int col=0;col<2;col++)
             block(b,20+19*col,12+19*row,14,14,IVORY,255,2);
     }
-    if(!current.storage_error&&!current.paused&&(current.applied_hp||current.applied_temporary)) {
+    if(!current.storage_error&&!current.paused&&current.feedback_age<2000&&(current.applied_hp||current.applied_temporary)) {
         char value[80];
         if(current.applied_hp&&current.applied_temporary)snprintf(value,sizeof value,"PF %+d\nTemp %+d",current.applied_hp,current.applied_temporary);
         else snprintf(value,sizeof value,current.applied_hp?"%+d PF":"Temp %+d",current.applied_hp?current.applied_hp:current.applied_temporary);
@@ -115,14 +118,17 @@ static void home(void) {
         lv_obj_set_style_bg_color(feedback_label,lv_color_hex(INK),0);lv_obj_set_style_bg_opa(feedback_label,220,0);
         for(unsigned i=0;i<3;i++)motes[i]=block(surface,168+i*61,232+i*15,4,4,color,255,0);
     }
-    if(current.storage_error) {
+    if(current.storage_error||current.notice) {
         lv_obj_t *warning=block(surface,100,163,266,37,INK,245,6);
-        text(warning,"Errore memoria: non salvato",6,10,254,&lv_font_montserrat_16,RED);
+        text(warning,current.notice?current.notice:"Errore memoria: non salvato",6,10,254,&lv_font_montserrat_16,current.storage_error?RED:GOLD);
     }
 }
 static void menu(void) {
     block(surface,0,0,466,466,INK,210,0);
-    text(surface,"AZIONI",133,56,200,&lv_font_montserrat_26,IVORY);
+    if(current.storage_error||current.notice){
+        lv_obj_t *warning=text(surface,current.notice?current.notice:"Errore memoria: non salvato",104,49,258,&lv_font_montserrat_16,current.storage_error?RED:GOLD);
+        lv_label_set_long_mode(warning,LV_LABEL_LONG_WRAP);lv_obj_set_height(warning,44);
+    }else text(surface,"AZIONI",133,56,200,&lv_font_montserrat_26,IVORY);
     const char *names[]={"Attacco","Dadi","Magie","Zaino","Riposo","Scheda"};
     const lv_image_dsc_t *images[]={&companion_sword,&companion_dice,&companion_magic,&companion_pack,&companion_rest,&companion_sheet};
     const unsigned colors[]={0x5b322c,0x164553,0x493353,0x54412b,0x253b57,0x284d41};
@@ -131,8 +137,10 @@ static void menu(void) {
         lv_obj_t *b=control(names[i],81+108*(i%3),113+120*(i/3),88,100,actions[i],colors[i]);
         sprite(b,images[i],12,5);
     }
-    lv_obj_t *back=control("",201,361,64,56,COMPANION_OPEN_HOME,INK);
-    text(back,LV_SYMBOL_LEFT,2,15,60,&lv_font_montserrat_26,IVORY);
+    lv_obj_t *uses=control("",99,361,112,56,COMPANION_RESOURCES,INK);
+    text(uses,"Usi",2,16,108,&lv_font_montserrat_20,IVORY);
+    lv_obj_t *back=control("",255,361,112,56,COMPANION_OPEN_HOME,INK);
+    text(back,"Eroe",2,16,108,&lv_font_montserrat_20,IVORY);
 }
 static void vitals(void) {
     char value[80];block(surface,0,0,466,466,INK,220,0);
@@ -156,22 +164,22 @@ static void vitals(void) {
 static void tick(lv_timer_t *unused) {
     (void)unused;if(current.paused)return;
     uint32_t elapsed=lv_tick_get()-started;
+    uint32_t receipt_age=elapsed+current.feedback_age;
     if(hero) {
         int y=current.motion&&((elapsed/480)%2)?-2:0;
-        if(feedback_label&&current.motion&&current.applied_hp>0&&elapsed<600)
-            y=elapsed<300?-(int)(elapsed/50):-(int)((600-elapsed)/50);
-        if(feedback_label&&current.motion&&current.applied_hp<0&&elapsed<300)
-            lv_obj_set_x(hero,4+(elapsed/60%2?2:-2));
-        else lv_obj_set_x(hero,4);
-        lv_obj_set_y(hero,y);
+        if(feedback_label&&current.motion&&current.applied_hp>0&&receipt_age<600)
+            y=receipt_age<300?-(int)(receipt_age/50):-(int)((600-receipt_age)/50);
+        if(feedback_label&&current.motion&&current.applied_hp<0&&receipt_age<300)
+            lv_obj_set_x(hero,hero_x+(receipt_age/60%2?2:-2));
+        else lv_obj_set_x(hero,hero_x);
+        lv_obj_set_y(hero,hero_y+y);
     }
     if(feedback_label) {
-        if(elapsed>=1600) {
-            lv_obj_delete(feedback_label);feedback_label=NULL;
-            for(unsigned i=0;i<3;i++){lv_obj_delete(motes[i]);motes[i]=NULL;}
+        if(receipt_age>=2000) {
+            companion_clear_feedback();
         }else if(current.motion) {
-            lv_obj_set_y(feedback_label,226-(int)(elapsed/160));
-            for(unsigned i=0;i<3;i++)lv_obj_set_y(motes[i],232+i*15-(elapsed/80)%12);
+            lv_obj_set_y(feedback_label,226-(int)(receipt_age/160));
+            for(unsigned i=0;i<3;i++)lv_obj_set_y(motes[i],232+i*15-(receipt_age/80)%12);
         }
     }
     if(!current.motion&&!feedback_label){lv_timer_delete(timer);timer=NULL;}
@@ -194,13 +202,13 @@ void companion_show(lv_obj_t *root,const companion_view *view,companion_handler 
     if(current.paused&&timer)lv_timer_pause(timer);
 }
 void companion_pause(bool paused) {
+    if(!surface||current.paused==paused)return;
     current.paused=paused;
     if(paused) {
         if(timer)lv_timer_pause(timer);
         /* Expire cosmetic feedback at sleep; never replay it on wake. */
-        if(feedback_label){lv_obj_delete(feedback_label);feedback_label=NULL;}
-        for(unsigned i=0;i<3;i++)if(motes[i]){lv_obj_delete(motes[i]);motes[i]=NULL;}
-        if(hero){lv_obj_set_x(hero,4);lv_obj_set_y(hero,0);}
+        companion_clear_feedback();
+        if(hero){lv_obj_set_x(hero,hero_x);lv_obj_set_y(hero,hero_y);}
     }else if(timer){started=lv_tick_get();lv_timer_resume(timer);}
 }
 void companion_focus_step(int direction) {
@@ -218,3 +226,9 @@ void companion_activate(void) {
         lv_obj_send_event(targets[focused],LV_EVENT_CLICKED,NULL);
 }
 unsigned companion_focus_index(void){return focused;}
+lv_obj_t *companion_avatar_object(void){return hero;}
+bool companion_feedback_visible(void){return feedback_label!=NULL;}
+void companion_clear_feedback(void){
+    if(feedback_label){lv_obj_delete(feedback_label);feedback_label=NULL;}
+    for(unsigned i=0;i<3;i++)if(motes[i]){lv_obj_delete(motes[i]);motes[i]=NULL;}
+}
