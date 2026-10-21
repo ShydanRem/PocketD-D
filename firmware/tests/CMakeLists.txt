@@ -9,6 +9,25 @@ add_executable(ui ../core/recharge.c ../core/damage.c ../core/screen.c ../core/s
 target_include_directories(ui PRIVATE ../core)
 target_link_libraries(ui lvgl m)
 
+# Isolated visual experiment; does not replace or link into the shipping UI.
+option(PD_BUILD_COMPANION_PROTOTYPE "Build the optional native companion UI prototype" OFF)
+if(PD_BUILD_COMPANION_PROTOTYPE)
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    set(COMPANION_DIR "${CMAKE_CURRENT_LIST_DIR}/../prototypes/companion")
+    set(COMPANION_ASSETS "${CMAKE_CURRENT_BINARY_DIR}/companion-assets")
+    add_custom_command(
+        OUTPUT "${COMPANION_ASSETS}/companion_assets.c" "${COMPANION_ASSETS}/companion_assets.h"
+        COMMAND ${Python3_EXECUTABLE} "${COMPANION_DIR}/build_assets.py" "${COMPANION_ASSETS}"
+        DEPENDS "${COMPANION_DIR}/build_assets.py" "${COMPANION_DIR}/source/camp.png"
+                "${COMPANION_DIR}/source/hero.png" "${COMPANION_DIR}/source/icons.png"
+        VERBATIM)
+    add_executable(companion "${COMPANION_DIR}/companion.c" "${COMPANION_DIR}/test_companion.c"
+        "${COMPANION_ASSETS}/companion_assets.c" ../core/pocketdd.c ../core/magic.c ../core/checks.c)
+    target_include_directories(companion PRIVATE ../core "${COMPANION_DIR}" "${COMPANION_ASSETS}")
+    target_compile_options(companion PRIVATE -Wall -Wextra -Werror)
+    target_link_libraries(companion lvgl m)
+endif()
+
 add_executable(dice test_dice.c ../core/dice_animation.c ../core/pocketdd.c ../core/magic.c ../core/checks.c ../core/dice_pool.c)
 target_include_directories(dice PRIVATE ../core)
 add_executable(pool test_pool.c ../core/dice_pool.c ../core/dice_animation.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)

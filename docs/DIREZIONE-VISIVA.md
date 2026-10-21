@@ -1,11 +1,20 @@
-# Direzione visiva del dispositivo — v0.47
+# Direzione visiva del dispositivo
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
 La qualità visiva è un requisito del prodotto insieme alle funzioni di scheda.
 Il PC rimane lo strumento per importazione, configurazione e backup.
 
-## Revisione attuale
+## Nuovo riferimento — compagno fantasy
+
+La direzione riparte da un avatar intero che abita nella home, come un piccolo
+Tamagotchi fantasy: pixel art con profondità e luce, grandi icone e feedback
+legato al personaggio. La revisione estetica v0.47 non è piaciuta e non è la base
+da ampliare. La [prima prova nativa](COMPAGNO-PIXEL.md) esegue home, menu e PF
+su LVGL a 466×466, separatamente dal codice di produzione. Un solo avatar di
+prova; personalizzazioni, pose e collegamento completo ancora da sviluppare.
+
+## Revisione precedente, ancora nel firmware v0.47
 
 La v0.47 porta toni da grimorio e dettagli bronzo ai pannelli, icone nelle
 liste e feedback dei saldi applicati. [Uso, anteprime e verifiche](PANNELLI-FEEDBACK.md).

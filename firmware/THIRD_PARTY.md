@@ -1,5 +1,13 @@
 # Third-party sources
 
+The optional `prototypes/companion/source/` PNGs were generated with OpenAI
+ImageGen for the new companion UI direction. Their prompts and provenance are
+retained in `prototypes/companion/source/provenance.json`; original bytes are
+kept intact. They are not the procedurally authored assets described below and
+are not linked into the shipping firmware. ImageMagick 7 is used at build time
+to export the prototype raster data; it is not a runtime dependency. No provider
+credentials or personal character files are included.
+
 `main/board.c` adapts the display command sequence and GPIO/touch initialization
 of Waveshare's Apache-2.0 BSP in
 https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.75/tree/e4344e70c2fa78a13e8a06566507f1ba8af6672a/firmware/brookesia/components/waveshare__esp32_s3_touch_amoled_1_75

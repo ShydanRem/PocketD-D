@@ -2,13 +2,14 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.47:** pannelli con toni da grimorio e dettagli bronzo, icone specifiche per le liste di zaino/magie/capacità, feedback temporaneo dei PF e delle risorse dopo le modifiche salvate. Mantiene scena e avatar v0.46 sulla base estetica v0.45 approvata. Le anteprime mostrano il firmware LVGL reale su host; il collaudo sulla scheda fisica resta aperto.
+**Nuova direzione grafica:** compagno fantasy in pixel art, con avatar intero nella home, mondo illustrato e grandi icone. È disponibile una [prima prova LVGL a 466×466](docs/COMPAGNO-PIXEL.md), separata dal firmware di produzione, con sorgenti e catture native. Il codice di produzione resta **v0.47**; la sua ultima revisione estetica non è il riferimento da estendere. Integrazione della nuova UI e collaudo fisico restano aperti.
 
 Il firmware comprende scheda, prove/abilità/salvezze, inventario, attacchi e dadi animati, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Le regole non rappresentate restano manuali e documentate. PDD23, USB8 e backup PC v11 invariati; tasti configurabili e raccolta personale conservati.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
-- [Pannelli, icone e feedback: uso e verifiche](docs/PANNELLI-FEEDBACK.md)
+- [Compagno pixel: prototipo nativo, anteprime e limiti](docs/COMPAGNO-PIXEL.md)
+- [Pannelli, icone e feedback v0.47: revisione precedente](docs/PANNELLI-FEEDBACK.md)
 - [Affinamento scena/avatar e confronto con la base approvata](docs/AFFINAMENTO-SCENA-AVATAR.md)
 - [Restyling pixel art: schermate, asset, verifiche e prossimi passi](docs/RESTYLING-PIXEL-HD.md)
 - [Condizioni sui tiri: effetti espliciti, contesto e limiti](docs/CONDIZIONI-TIRI.md)

@@ -58,6 +58,13 @@ L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco no
 
 ## Punto attuale — v0.47
 
+**Aggiornamento grafico:** la revisione estetica v0.47 non è stata gradita.
+Il nuovo riferimento è un compagno fantasy con avatar intero, home ambientata
+e grandi icone. La [prima prova LVGL a 466×466](COMPAGNO-PIXEL.md) è separata
+dal firmware di produzione: include home/menu/PF, non ancora le destinazioni
+complete, le personalizzazioni o il collegamento ai tasti configurati. Le righe
+qui sotto descrivono le funzioni del firmware v0.47, non un'approvazione estetica.
+
 | Blocco | Stato software | Cosa manca |
 | --- | --- | --- |
 | Scheda individuale offline | PF/temporanei, prove, abilità/salvezze, zaino/cariche, armi, magie, risorse, riposi e dadi vita nel firmware | Monete, storico persistente, effetti completi e regole speciali; sessione reale |
@@ -81,7 +88,7 @@ completamento né una dichiarazione di collaudo.
 | 1 — Scheda sul dispositivo | Percorsi base nel firmware: magie/slot/usi, concentrazione, riposi, dadi vita e morte base | Eccezioni e verifica nell'uso reale |
 | 2 — Effetti | Modificatori, round, concentrazione, difese, danni e riduzioni con costi/reazione; v0.38 aggiunge slot ordinari/patto; v0.39 durate del proprio turno; v0.40 minuti/ore; v0.41 cariche distinte dalla quantità; v0.42 tre spese congiunte; v0.43 ricarica parziale a dado esplicita; v0.44 quattro effetti di condizione sui tiri | Durate di altri soggetti, costi alternativi o oltre tre fonti, eventi/formule di ricarica automatici e requisiti/effetti automatici |
 | 3 — Prodotto fisico | Luminosità, attenuazione/risveglio, salvataggi, tasti configurabili e firmware compilato | Batteria, sospensione/spegnimento e collaudi reali touch/USB/memoria/alimentazione |
-| 4 — Estetica | v0.45 approvata; v0.46 affina diorama, avatar e luci; v0.47 pannelli, icone di lista e feedback PF/risorse | Altre illustrazioni/sprite, icone specifiche, transizioni/feedback e leggibilità sul display reale |
+| 4 — Estetica | Nuovo riferimento: compagno fantasy con avatar intero. Prototipo nativo separato home/menu/PF; v0.47 resta nel firmware, ma la sua revisione estetica non è stata gradita | Rifinire sprite/personalizzazioni, collegare la nuova UI alle funzioni e ai tasti configurati, estendere alle altre viste, verificare sul display reale |
 
 Il blocco 2 resta aperto. Le cariche hanno ora un modello distinto dalla quantità,
 configurazione PC, trasferimento, correzione locale, costi e recuperi al riposo.

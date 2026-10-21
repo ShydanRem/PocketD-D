@@ -1,0 +1,27 @@
+{
+  "date": "2026-10-21",
+  "provider": "OpenAI image_gen (host capability)",
+  "reference": "PocketD-D · Un piccolo mondo, generated concept 2026-10-21",
+  "purpose": "Standalone native LVGL prototype, synthetic character only; not production avatar customization",
+  "license_note": "Project-generated AI artwork; no downloaded asset pack or third-party license asserted. Human review and final art cleanup pending.",
+  "assets": [
+    {
+      "name": "camp.png",
+      "prompt": "Produce a standalone game BACKGROUND asset for a 466x466 ROUND AMOLED fantasy handheld UI, based on the forest campsite in the attached reference. Entire SQUARE canvas filled with art, NO circular rim or mask, NO text, NO UI, NO icons, NO people/characters, NO animals. Authentic hand-pixelled HD-2D RPG scene, visible 2-pixel style clusters, rich but restrained teal and warm amber palette. Match the forest/castle camp of the reference: ancient stone and hanging warm lantern along LEFT margin, leafy branches at top corners, distant small castle and arched bridge beyond a river in upper-mid right, cream canvas tent and tiny campfire along RIGHT middle edge. Keep CENTRAL bottom-middle ground a clearly EMPTY stone/grass patch for a separate character standing at native x233,y327; nothing tall or bright directly behind character. Frame in depth with foliage, readable mossy stone walkway, sparse warm fireflies. Top 30% dark calm blue-green atmosphere for future text overlay, dark quiet bottom 25% for future controls. Composition useful INSIDE an inscribed circle: lantern at about x85,y200 and tent at x380,y250 in 466 coordinates; don't put important landmarks in square corners. The world is charming, intimate, tactile, meticulous pixel clusters, 2D sprites with soft baked atmospheric light, NOT vector, NOT smooth painted illustration. No hero or UI baked in. Square game asset only.",
+      "transparent_background": false,
+      "sha256": "67a9dd1d60e3c305e3b0e01cd211f8b8a2679047e2b4678906bf0494c54b565b"
+    },
+    {
+      "name": "hero.png",
+      "prompt": "Extract/recreate the appealing SMALL FULL-BODY fantasy pixel hero from the attached PocketD-D concept as ONE standalone game sprite on TRANSPARENT background. One character only, centered, whole head and boots visible, neutral front-facing three-quarter idle pose, arms relaxed, no floor, no vignette, no shadow, no text, no frame, no icon button. Chestnut tousled hair, short jade/teal cape with a small golden clasp, ivory tunic with brown belt, brown gloves and leather boots, small expressive eyes. Chibi proportions like a premium JRPG handheld pet, about 2.5 heads tall. AUTHENTIC crisp pixel art with visible deliberate chunky pixel clusters, reduced palette highlights and stepped outlines, NOT smooth 3D, NOT vector, NOT an anime portrait. The character must look good as a 88x116 native sprite, so no minuscule detail. Warm upper-left rimlight, cool shadows. Fill most of canvas vertically with transparent padding about 8%; preserve the exact character identity and clothes of the reference. This is the avatar in the HOME screen, with feet.",
+      "transparent_background": true,
+      "sha256": "ad53ba654a4ff02c65dff909be9fc402495d7a5379360706f815751e36ffafbe"
+    },
+    {
+      "name": "icons.png",
+      "prompt": "Create a precision sprite ATLAS for the PocketD-D premium fantasy pixel-art handheld, following the reference menu objects. TRANSPARENT background, square canvas, 3 columns by 2 rows, six separate sprites. Each sprite centered within its equal-sized cell with at least 20% padding on every cell edge. NO text, NO labels, NO button tiles, NO frames, NO circular backgrounds, NO shadow on background, NO extra objects. Reading order: top left a silver sword pointing upper right with bronze crossguard, top middle a faceted glowing pale cyan D20 icosahedron with dark teal facets and readable pale facet lines (no numbers), top right an open ivory spellbook with violet cover and one small golden sparkle attached above it; bottom left a leather adventurer BACKPACK with two shoulder straps/flap/golden buckle, bottom middle a small blue BLANKET BED with a pale yellow crescent beside headboard (one icon), bottom right an ivory SCROLL with a simple teal head-and-shoulders silhouette. All six icons same apparent size and pixel density, designed to remain immediately readable at 48x48 native pixels. AUTHENTIC highly crafted 16-bit game inventory PIXEL ART with chunky clear stepped outlines, rich 3-tone material shading, light from upper-left. Distinct silhouettes, generous transparent separation, no vector curves or 3D render. These are actual object sprites to place in touch controls. Exactly six evenly aligned icons and nothing else.",
+      "transparent_background": true,
+      "sha256": "09909120ec7d031cf0338ba115e8e5c01f653b953bf2893d3ba5061e97adb2bb"
+    }
+  ]
+}
