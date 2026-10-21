@@ -68,12 +68,12 @@ int main(void){
  event.contexts[0]=(pd_damage_context){.known=16};assert(!pd_damage_event_preview(&s,&event,&report));event.contexts[0]=(pd_damage_context){.values=1};assert(!pd_damage_event_preview(&s,&event,&report));
  assert(!pd_defence_rule_set(&s,0,false,1,1)&&!pd_defence_rule_set(&s,0,false,0,7)&&!pd_defence_rule_set(&s,13,false,0,1));d=(pd_defence_temporary){.conditions={1}};assert(!pd_defence_temporary_set(&s,0,d));
  assert(pd_defence_set(&s,0,true,3)&&s.defences.conditions[0][0]==PD_RULE_NEITHER_ATTACK&&!s.defences.conditions[0][1]);assert(pd_defence_set(&s,0,true,2)&&!s.defences.conditions[0][0]);
- /* Largest PDD17 and all 78 selector bytes, both scopes, CRC-valid corruption. */
+ /* Largest PDD18 and all 78 selector bytes, both scopes, CRC-valid corruption. */
  setup(&s);for(unsigned type=0;type<13;type++){assert(pd_defence_set(&s,type,true,7));d=(pd_defence_temporary){.flags=7,.active=true,.concentration=1};for(unsigned i=0;i<3;i++)d.conditions[i]=(type+i)%7;assert(pd_defence_temporary_set(&s,type,d));for(unsigned i=0;i<3;i++)assert(pd_defence_rule_set(&s,type,false,i,(type+i+1)%7));}
  s.magic.count=PD_POWERS;for(unsigned i=1;i<PD_POWERS;i++)s.magic.powers[i]=(pd_power){.name="Magia",.flags=PD_PREPARED};static uint8_t data[PD_RECORD_SIZE];size_t n=pd_encode(&s,138,data);uint32_t gen;
- assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDH",4)&&pd_decode(data,n,&decoded,&gen)&&gen==138);
+ assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDI",4)&&pd_decode(data,n,&decoded,&gen)&&gen==138);
  for(unsigned type=0;type<13;type++)for(unsigned i=0;i<3;i++)assert(decoded.defences.conditions[type][i]==(type+i+1)%7&&decoded.defences.temporary[type].conditions[i]==(type+i)%7);
  for(unsigned i=0;i<78;i++){pd_encode(&s,138,data);data[n-336+i]=7;crc(data,n);before=decoded;gen=99;assert(!pd_decode(data,n,&decoded,&gen)&&gen==99&&!memcmp(&decoded,&before,sizeof decoded));}
  setup(&s);n=pd_encode(&s,1,data);data[n-336]=1;crc(data,n);assert(!pd_decode(data,n,&decoded,&gen));
- printf("Conditional defences: %u independent rule/source/property/partial-context cases, complementary grants, immunity, grouping, frozen impact, lifecycle and strict PDD17 passed\n",cases);
+ printf("Conditional defences: %u independent rule/source/property/partial-context cases, complementary grants, immunity, grouping, frozen impact, lifecycle and strict PDD18 passed\n",cases);
 }

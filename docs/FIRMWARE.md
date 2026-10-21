@@ -1,11 +1,11 @@
-# Firmware PocketD-D 0.37 — costi dei profili e reazione
+# Firmware PocketD-D 0.38 — costi in slot
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
-[Novità v0.37: costi dei profili e reazione](COSTI-REAZIONE.md).
-PDD17, USB v7/layout invariati e lettura dei salvataggi precedenti.
+[Novità v0.38: slot ordinari e del patto come costi](COSTI-SLOT.md).
+PDD18, USB v7/layout invariati e lettura dei salvataggi precedenti.
 
 ## Stato e perimetro
 
@@ -233,7 +233,7 @@ reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
 ## Salvataggio e dadi
 
 NVS nel namespace `pocketdd`, nuova partizione `pdd_state`, due chiavi alternate
-`state_a`/`state_b`. Record PDD17 (tag `PDDH`) da **8379 + 552 × numero voci** byte, massimo
+`state_a`/`state_b`. Record PDD18 (tag `PDDI`) da **8379 + 552 × numero voci** byte, massimo
 74619. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
 visibile. Nessun dump di struct, erase o fallback distruttivo. Errori I/O o
 allocazioni insufficienti bloccano scritture; CRC e versioni future conservati.
@@ -259,8 +259,10 @@ PDD16 aggiunge 30 byte per tre profili di riduzione; copie precedenti con
 profili vuoti, senza perdere gli extra. PDD17 aggiunge 16 byte: tre riferimenti
 fonte/costo/reazione e lo stato globale della reazione. PDD1–PDD16 sono letti
 senza spesa e con reazione pronta, conservando i profili già presenti.
-Le nuove scritture richiedono firmware v0.37 o successivo:
-[compatibilità e downgrade](COSTI-REAZIONE.md).
+PDD18 conserva la dimensione e aggiunge i tipi fonte 3 (slot ordinari) e 4
+(patto), indice livello 0–8; i costi/reazione PDD17 restano conservati.
+Le nuove scritture richiedono firmware v0.38 o successivo:
+[compatibilità e downgrade](COSTI-SLOT.md).
 Il nuovo uploader supporta USB v1–v7. Preferenze avatar/tasti
 locali conservate durante l'importazione. [Dettagli](MAGIE-TASTI.md).
 
@@ -728,3 +730,35 @@ ESP-IDF 5.5.5/LVGL 9.4.0. PDD17 legge PDD1–PDD16, USB v7/layout invariati.
 Nessun flash/collaudo fisico, nuova lettura Beyond o modifica della raccolta
 personale. Slot/cariche oggetto, costi multipli, requisiti e conseguenze
 automatiche delle capacità restano successivi. [Uso e limiti](COSTI-REAZIONE.md).
+
+
+## Verifiche v0.38 — costi in slot
+
+233280 combinazioni indipendenti di tre profili/due fasi/pool ordinari-patto/
+nove livelli/costo/saldo/reazione/danno/immunità. Massimi 0–9, costi 0–10,
+dati Magie mancanti, riferimenti fuori range, saldo esatto a zero, blocco prima
+del RNG e nessuna sostituzione di livello/pool. Candidato COS unico con spesa,
+reazione e fine dei vincoli; round/turno senza recupero slot e riposi distinti.
+PDD18 massimo, corruzioni con CRC valido di tipo/indice/costo, nuove fonti
+rifiutate nei record PDD17. Fixture PDD17 dell'encoder v0.37 originale, lettura
+senza scritture al boot, prima banca alternata e riavvio con costi conservati.
+
+UI LVGL di editor e confronto, consultazione, pool esaurito e livello 9,
+slot ordinari/patto, costo a danno zero, errore/riprova con e senza COS,
+annullamento completo, snapshot all'impatto, riposi e import. Tasti configurabili
+conservati e bozze protette; controlli ≥44 px nel cerchio e testi senza
+sovrapposizioni. Anteprima host visionata, inclusa nell'archivio come
+`firmware-host-preview/slot-costs-preview.png`; non è una cattura fisica.
+
+Suite firmware completa e 37751 confronti PC→USB→C passati; regressioni
+354816 costi contatori/usi, 176904 profili e suite difese/danni/effetti precedenti.
+ASan/UBSan su slot/costi/profili/riduzioni, extra/condizioni/misti, danni/COS/
+vincoli/difese, effetti/durate, magie/riposi/stato, allocazioni, core/parser,
+NVS e UI finale; leak detector disattivato. 138 test JS e build PC passati.
+
+Firmware v0.38: **895744 byte**, partizione app 4 MiB **79% libera**;
+ESP-IDF 5.5.5/LVGL 9.4.0. PDD18 legge PDD1–PDD17 senza aumentare la dimensione;
+USB v7/layout invariati. Nessun flash/collaudo fisico, nuova lettura Beyond o
+modifica della raccolta personale. Cariche oggetto distinte dalla quantità,
+costi multipli, requisiti/effetti automatici e durate di turno/minuti ancora
+successivi. [Uso e limiti](COSTI-SLOT.md).

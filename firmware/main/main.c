@@ -133,9 +133,13 @@ static pd_reduction_profile profile_draft;
 static bool profile_number_rounds,profile_number_cost,profile_cost_editing,reaction_draft;
 static page_t reaction_return;
 static const pd_reduction_profile *cost_profile(void){return profile_cost_editing?&profile_draft:&state.reductions[profile_index];}
-static const char *cost_name(const pd_reduction_profile *p){return p->cost_kind==PD_COST_COUNTER?state.resources[p->cost_index].name:p->cost_kind==PD_COST_POWER?state.magic.powers[p->cost_index].name:"Nessuna risorsa";}
-static unsigned cost_current(const pd_reduction_profile *p){return p->cost_kind==PD_COST_COUNTER?state.resources[p->cost_index].current:p->cost_kind==PD_COST_POWER?state.magic.powers[p->cost_index].remaining:0;}
-static void cost_next(void){unsigned token=profile_draft.cost_kind==PD_COST_COUNTER?profile_draft.cost_index+1:profile_draft.cost_kind==PD_COST_POWER?PD_RESOURCES+profile_draft.cost_index+1:0;do{token=(token+1)%(PD_RESOURCES+PD_POWERS+1);}while(token&&!pd_reduction_cost_max(&state,token<=PD_RESOURCES?PD_COST_COUNTER:PD_COST_POWER,token<=PD_RESOURCES?token-1:token-PD_RESOURCES-1));profile_draft.cost_kind=!token?PD_COST_NONE:token<=PD_RESOURCES?PD_COST_COUNTER:PD_COST_POWER;profile_draft.cost_index=!token?0:token<=PD_RESOURCES?token-1:token-PD_RESOURCES-1;profile_draft.cost=token?1:0;}
+static const char *cost_name(const pd_reduction_profile *p){return pd_reduction_cost_name(&state,p->cost_kind,p->cost_index);}
+static unsigned cost_current(const pd_reduction_profile *p){return pd_reduction_cost_current(&state,p->cost_kind,p->cost_index);}
+static void cost_next(void){
+    unsigned kind=profile_draft.cost_kind,index=profile_draft.cost_index;
+    do{if(!kind){kind=PD_COST_COUNTER;index=0;}else if(++index>=(kind==PD_COST_COUNTER?PD_RESOURCES:kind==PD_COST_POWER?PD_POWERS:9)){kind=(kind+1)%PD_COST_COUNT;index=0;}}while(kind&&!pd_reduction_cost_max(&state,kind,index));
+    profile_draft.cost_kind=kind;profile_draft.cost_index=index;profile_draft.cost=kind?1:0;
+}
 
 static bool preview_profile(pd_state *s){*s=state;return pd_reduction_profile_set(s,profile_index,profile_draft);}
 static const char *profile_types(unsigned types){if(types==8191)return "Tutti";if(types==7)return "Cont./Perf./Tagl.";if(!types)return "Nessuno";for(unsigned i=0;i<13;i++)if(types==(1u<<i))return pd_damage_name(i);return "Personalizzati";}
@@ -1508,7 +1512,7 @@ static void render_damage(void) {
         if(r->total.configured)snprintf(text,sizeof text,"Sottratti: %u",p->stage?r->profile_applied:r->profile_used[profile_impact_row]);else strcpy(text,"Profilo/fonte da verificare");label(text,83,249,300,false);
         snprintf(text,sizeof text,"Tipi: %s",profile_types(p->types));small_label(text,83,287,300,PD_TEXT);snprintf(text,sizeof text,"Regola: %s",rule_names[p->rule]);small_label(text,83,325,300,PD_MUTED);button("Indietro",83,359,300,48,2091,true);
     } else if(page==PROFILE_COST){
-        const pd_reduction_profile *p=cost_profile();label("Costi del profilo",83,111,300,true);if(!p->cost_kind)strcpy(text,"Fonte: nessuna >");else snprintf(text,sizeof text,"Fonte: %s %u >",p->cost_kind==PD_COST_COUNTER?"contatore":"usi voce",p->cost_index+1);lv_obj_t *b=button(text,83,157,300,44,2101,profile_cost_editing);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
+        const pd_reduction_profile *p=cost_profile();label("Costi del profilo",83,111,300,true);if(!p->cost_kind)strcpy(text,"Fonte: nessuna >");else snprintf(text,sizeof text,"Fonte: %s %u >",(const char *const[]){"nessuna","contatore","usi voce","slot","patto"}[p->cost_kind],p->cost_index+1);lv_obj_t *b=button(text,83,157,300,44,2101,profile_cost_editing);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
         if(profile_cost_editing)snprintf(text,sizeof text,"Costo: %u >",p->cost);else snprintf(text,sizeof text,"Costo %u | disponibili %u",p->cost,cost_current(p));b=button(text,83,205,300,44,2102,profile_cost_editing&&p->cost_kind);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
         button(p->reaction?"Usa reazione: si >":"Usa reazione: no >",83,253,300,44,2103,profile_cost_editing);
         lv_obj_t *name=small_label(cost_name(p),83,299,300,PD_GOLD);lv_label_set_long_mode(name,LV_LABEL_LONG_WRAP);lv_obj_set_height(name,58);button("Indietro",83,359,300,48,2104,true);

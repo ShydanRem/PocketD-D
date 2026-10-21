@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.37
+# Direzione visiva del dispositivo — v0.38
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -261,3 +261,10 @@ usa una quarta pagina senza comprimere i tre confronti precedenti. Stato offre
 Reazione e una conferma Inizio turno distinta dal round. Gli avvisi spiegano
 spesa a danno zero e mancato recupero al round. Anteprima host:
 `firmware/tests/out/ui-build/profile-costs-preview.png`; nessuna cattura fisica.
+
+
+La v0.38 usa la pagina Costi esistente per fonti Slot/Patto con livello visibile
+nel selettore e nome completo sotto. Il dettaglio conserva pool/livello e saldi
+all'impatto; pool esauriti dichiarati senza sostituzioni implicite. Confronto e
+riposi mostrano costi/recuperi distinti. Anteprima host:
+`firmware/tests/out/ui-build/slot-costs-preview.png`; collaudo fisico ancora aperto.

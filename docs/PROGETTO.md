@@ -56,13 +56,13 @@ Non fanno parte di questo traguardo: importazione Beyond, editor completo, incan
 
 L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco non impedisce le altre fasi. L'ordine delle fasi 0 e 1 può sovrapporsi se l'hardware non è immediatamente disponibile.
 
-## Punto attuale — v0.37
+## Punto attuale — v0.38
 
 | Blocco | Stato software | Cosa manca |
 | --- | --- | --- |
 | Scheda individuale offline | PF/temporanei, prove, abilità/salvezze, zaino, armi, magie, risorse, riposi e dadi vita nel firmware | Monete, storico persistente, effetti completi e regole speciali; sessione reale |
 | Effetti numerici | Otto modificatori CA/PF massimi, basi separate, cure integrate, durate manuali/a round e vincolo esplicito alla concentrazione con fine congiunta | Altre durate/regole, proprietà speciali e ricalcolo da equipaggiamento |
-| Danni e difese | Profili manuali per 13 tipi, base/tre extra separati, durate/vincoli e scadenze comuni, PF/temporanei, salvezza COS, sei componenti per colpo, fonte esplicita e riduzioni manuali prima/dopo, tre profili locali con budget, conto completo, costi da contatori/usi e reazione | Condizioni arbitrarie, più di tre extra per tipo, catalogo/requisiti automatici, costi slot/cariche oggetto, eccezioni alle salvezze e casi morte bloccati |
+| Danni e difese | Profili manuali per 13 tipi, base/tre extra separati, durate/vincoli e scadenze comuni, PF/temporanei, salvezza COS, sei componenti per colpo, fonte esplicita e riduzioni manuali prima/dopo, tre profili locali con budget, conto completo, costi da contatori/usi/slot ordinari-patto e reazione | Condizioni arbitrarie, più di tre extra per tipo, catalogo/requisiti automatici, cariche oggetto e costi multipli, eccezioni alle salvezze e casi morte bloccati |
 | Stato e morte | Note delle condizioni, Avvelenato separato, d20 morte base e correzioni, reazione e inizio turno espliciti | Effetti delle altre condizioni, eccezioni e morte istantanea |
 | Grafica e comandi | Tema pixel art, avatar 81 combinazioni, dadi animati, PWR/BOOT configurabili | Leggibilità e precisione touch sulla scheda |
 | Impostazioni schermo | Luminosità, inattività e risveglio protetto nella v0.25 | Consumi misurati, sospensione, batteria e alimentazione |
@@ -73,6 +73,21 @@ Le fasi hardware 0 e 2 restano aperte. Le funzioni individuali delle fasi 3–4
 sono portate nel firmware, ma i criteri di completamento richiedono ancora una
 sessione fisica, trasferimento/ripristino e misure. Non sono percentuali di
 completamento né una dichiarazione di collaudo.
+
+## Quattro blocchi concordati — v0.38
+
+| Blocco | Punto attuale | Prossimo lavoro |
+| --- | --- | --- |
+| 1 — Scheda sul dispositivo | Percorsi base nel firmware: magie/slot/usi, concentrazione, riposi, dadi vita e morte base | Eccezioni e verifica nell'uso reale |
+| 2 — Effetti | Modificatori, round, concentrazione, difese, danni e riduzioni con costi/reazione; v0.38 aggiunge slot ordinari/patto | Durate legate al turno; poi altre durate, cariche con un modello distinto dalla quantità e requisiti/effetti automatici |
+| 3 — Prodotto fisico | Luminosità, attenuazione/risveglio, salvataggi, tasti configurabili e firmware compilato | Batteria, sospensione/spegnimento e collaudi reali touch/USB/memoria/alimentazione |
+| 4 — Estetica | Tema pixel art, avatar e dadi animati, UI circolare | Illustrazioni, sprite, icone, transizioni/feedback e leggibilità sul display reale |
+
+Il blocco 2 resta aperto. Le cariche oggetto non sono rappresentate nella copia
+attuale e non vengono sostituite consumando quantità. Il prossimo incremento
+software affronta le durate legate al turno; l'integrazione delle cariche
+richiederà anche modello e trasferimento. Hardware e qualità visiva restano
+traguardi del dispositivo, senza espandere il PC in un prodotto di gioco separato.
 
 ## Priorità confermata: dispositivo prima del PC
 
@@ -300,3 +315,10 @@ blocco prima del RNG e ripristino completo. Inizio turno recupera soltanto la
 reazione: round e riposi restano distinti. PDD17 legge PDD1–PDD16; tasti/USB/layout
 conservati. Restano slot/cariche e costi multipli, requisiti/effetti automatici,
 altre durate e blocco fisico. [Dettagli](COSTI-REAZIONE.md).
+
+
+La v0.38 aggiunge costi da slot ordinari o del patto, con livello fissato nella
+definizione, saldi in anteprima, spesa congiunta e nessuna sostituzione automatica.
+Recuperi nei riposi distinti; nessun consumo al salvataggio della configurazione.
+PDD18 legge PDD1–PDD17, dimensione/USB/layout invariati. Cariche oggetto,
+costi multipli e altre durate restano successivi. [Dettagli](COSTI-SLOT.md).

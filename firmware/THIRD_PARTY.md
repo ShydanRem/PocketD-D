@@ -107,3 +107,8 @@ personali. Nessun nuovo asset esterno.
 La v0.37 aggiunge codice, UI e test originali per costi dei profili e reazione.
 Fixture PDD16 sintetica prodotta dall'encoder originale v0.36 `885d9d2`, senza
 JSON Beyond o dati personali. Nessun nuovo asset o dipendenza esterna.
+
+
+La v0.38 aggiunge codice, UI e test originali per costi in slot ordinari/patto.
+Fixture PDD17 sintetica generata dall'encoder v0.37 originale `1274857`, prima
+delle modifiche; nessun dato personale, JSON Beyond, asset o dipendenza esterna.

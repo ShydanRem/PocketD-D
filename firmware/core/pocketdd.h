@@ -131,8 +131,11 @@ bool pd_defence_temporary_set(pd_state *state,unsigned type,pd_defence_temporary
 /* Legacy setters above address slot 0; slots are stable and never compacted. */
 const pd_defence_temporary *pd_defence_grant(const pd_state *state,unsigned type,unsigned slot);
 bool pd_defence_grant_set(pd_state *state,unsigned type,unsigned slot,pd_defence_temporary defence);
-enum { PD_COST_NONE,PD_COST_COUNTER,PD_COST_POWER };
+enum { PD_COST_NONE,PD_COST_COUNTER,PD_COST_POWER,PD_COST_SLOT,PD_COST_PACT,PD_COST_COUNT };
+/* Slot indices are zero-based levels 1..9; only existing, imported pools qualify. */
 unsigned pd_reduction_cost_max(const pd_state *state,unsigned kind,unsigned index);
+unsigned pd_reduction_cost_current(const pd_state *state,unsigned kind,unsigned index);
+const char *pd_reduction_cost_name(const pd_state *state,unsigned kind,unsigned index);
 /* Explicit annotation/reset; already-spent spending rejects, repeated reset succeeds. */
 bool pd_reaction_change(pd_state *state,bool spent);
 bool pd_reduction_profile_set(pd_state *state,unsigned index,pd_reduction_profile profile);

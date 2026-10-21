@@ -50,9 +50,9 @@ int main(void){
  setup(&s);before=s;assert(!pd_defence_grant(&s,0,3)&&!pd_defence_grant(&s,13,0)&&!pd_defence_grant(NULL,0,0));assert(!pd_defence_grant_set(&s,0,3,(pd_defence_temporary){0})&&!memcmp(&s,&before,sizeof s));
  s.magic.count=120;for(unsigned i=1;i<120;i++)s.magic.powers[i]=(pd_power){.name="Magia",.flags=PD_PREPARED};
  for(unsigned type=0;type<13;type++)for(unsigned slot=0;slot<3;slot++){pd_defence_temporary d={.flags=7,.active=true,.timed=true,.rounds=99,.concentration=1,.conditions={1,2,6}};assert(pd_defence_grant_set(&s,type,slot,d));}
- static uint8_t data[PD_RECORD_SIZE];size_t n=pd_encode(&s,142,data);uint32_t gen;assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDH",4)&&pd_decode(data,n,&decoded,&gen)&&gen==142);
+ static uint8_t data[PD_RECORD_SIZE];size_t n=pd_encode(&s,142,data);uint32_t gen;assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDI",4)&&pd_decode(data,n,&decoded,&gen)&&gen==142);
  for(unsigned type=0;type<13;type++)for(unsigned slot=0;slot<3;slot++)assert(!memcmp(pd_defence_grant(&s,type,slot),pd_defence_grant(&decoded,type,slot),sizeof(pd_defence_temporary)));
  unsigned bad[]={8,2,2,100,2,7,7,7};for(unsigned i=0;i<208;i++){pd_encode(&s,142,data);data[n-258+i]=bad[i%8];crc(data,n);before=decoded;gen=17;assert(!pd_decode(data,n,&decoded,&gen)&&gen==17&&!memcmp(&decoded,&before,sizeof before));}
  setup(&s);n=pd_encode(&s,1,data);data[n-258+5]=1;crc(data,n);assert(!pd_decode(data,n,&decoded,&gen));
- printf("Multiple defences: %u flag/type/expiry cases, %u conditional partial contexts, 39 timers, bound/unbound endings, atomic rollback, strict PDD17 and 208 malformed appended fields passed\n",cases,partial);
+ printf("Multiple defences: %u flag/type/expiry cases, %u conditional partial contexts, 39 timers, bound/unbound endings, atomic rollback, strict PDD18 and 208 malformed appended fields passed\n",cases,partial);
 }

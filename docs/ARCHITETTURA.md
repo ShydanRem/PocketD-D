@@ -339,3 +339,16 @@ fissato; non richiama apply. pd_reaction_change e la UI Inizio turno modificano
 soltanto la reazione; round/riposo non la recuperano. Il ritorno al danno bloccato
 mantiene la bozza. PDD17 aggiunge 16 byte espliciti e legge PDD1–PDD16 senza
 scritture al boot. USB v7 e schema PC invariati. [Dettagli](COSTI-REAZIONE.md).
+
+
+## Slot come costi dei profili — v0.38
+
+PD_COST_SLOT/PD_COST_PACT indicizzano i pool livelli 1–9 (indice 0–8).
+Massimo, saldo e nome condividono gli helper del core fra preview e UI; dati
+Magie assenti o massimo nullo escludono la fonte, saldo insufficiente blocca
+configured prima del RNG. Apply scala il solo pool scelto dopo allowed,
+all'interno del candidato PF/reazione/COS esistente. Nessuna scelta automatica
+di un livello superiore o dell'altro pool; nessun lancio automatico della magia.
+PDD18 cambia tag e significato dei tipi fonte senza aumentare il payload.
+Il decoder PDD17 rifiuta esplicitamente le nuove fonti; PDD1–PDD17 leggibili,
+nessuna scrittura al boot. [Dettagli](COSTI-SLOT.md).

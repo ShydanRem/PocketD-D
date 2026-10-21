@@ -21,8 +21,9 @@
 #include "fixtures/state-v14.h"
 #include "fixtures/state-v15.h"
 #include "fixtures/state-v16.h"
+#include "fixtures/state-v17.h"
 static void record_crc(uint8_t *record) {
-    size_t size=8379; /* No powers: PDD17 prefix, recovery, status and CRC. */
+    size_t size=8379; /* No powers: PDD18 prefix, recovery, status and CRC. */
     uint32_t crc=pd_crc32(record,size-4);
     for(int i=0;i<4;i++)record[size-4+i]=crc>>(8*i);
 }
@@ -73,6 +74,7 @@ int main(int argc,char **argv) {
     for(unsigned i=0;i<3;i++){const pd_reduction_profile empty={0};assert(!memcmp(&out.reductions[i],&empty,sizeof empty));}
     assert(pd_decode(golden_v16,sizeof golden_v16,&out,&gen)&&gen==161&&out.temp_hp==7&&out.reductions[0].value==3&&out.reductions[0].concentration==1&&out.reductions[0].rounds==2&&out.reductions[1].value==5&&out.reductions[1].stage==1&&!out.reaction_spent&&out.magic.powers[1].remaining==2);
     for(unsigned i=0;i<3;i++)assert(!out.reductions[i].cost_kind&&!out.reductions[i].cost_index&&!out.reductions[i].cost&&!out.reductions[i].reaction);
+    assert(pd_decode(golden_v17,sizeof golden_v17,&out,&gen)&&gen==171&&out.reaction_spent&&out.reductions[0].cost_kind==PD_COST_COUNTER&&out.reductions[0].cost==1&&out.reductions[0].reaction&&out.reductions[1].cost_kind==PD_COST_POWER&&out.reductions[1].cost_index==1&&out.reductions[1].cost==2&&out.magic.slots[0].current==2&&out.magic.pact[4].current==1);
     pd_demo(&s);s.avatar=(pd_avatar){2,1,2,1};s.idle_animation=false;s.brightness=90;s.dim_timeout=2;
     for(int i=0;i<PD_SKILLS;i++) { s.training.ranks[i]=i%3;s.training.skill_bonus[i]=i-8; }
     for(int i=0;i<6;i++) { s.training.save_bonus[i]=i-2;s.training.check_bonus[i]=3-i; }
@@ -208,6 +210,6 @@ int main(int argc,char **argv) {
     }
     const char *invalid[]={"{}","[]","null","{\"format\":\"pocketdd-device\",\"version\":1}","{", "{\"x\":\"\\u0000\"}","1e999"};
     for(size_t i=0;i<sizeof invalid/sizeof invalid[0];i++) assert(!pd_parse_packet(invalid[i],strlen(invalid[i]),&out));
-    puts("C core: HP/temp, counters, d20, CRC/corruption/wrap, golden v1..v16 migration, PDD17 persistence and strict USB v1..v7 passed");
+    puts("C core: HP/temp, counters, d20, CRC/corruption/wrap, golden v1..v17 migration, PDD18 persistence and strict USB v1..v7 passed");
     return 0;
 }

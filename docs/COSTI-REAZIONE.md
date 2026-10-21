@@ -1,5 +1,9 @@
 # Costi dei profili e reazione — v0.37
 
+**Aggiornamento v0.38:** [costi in slot ordinari/patto](COSTI-SLOT.md), PDD18
+con lettura PDD1–PDD17. I limiti sugli slot e il formato PDD17 qui descritti
+si riferiscono alla v0.37; cariche oggetto ancora successive.
+
 Il dispositivo può collegare ciascuno dei tre [profili di riduzione](PROFILI-RIDUZIONE.md)
 a **un contatore oppure agli usi limitati di una magia/capacità**, con quantità
 esplicita e reazione facoltativa. Risorsa, reazione, PF/temporanei e fine della

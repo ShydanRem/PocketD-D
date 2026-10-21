@@ -199,3 +199,13 @@ if all((base/(name+'.ppm')).is_file() for name in costs):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(costs):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'profile-costs-preview.png');print(base/'profile-costs-preview.png')
+
+# Fixed-level ordinary/pact costs; actual LVGL host frames, not hardware captures.
+slots=['slot-cost-editor','slot-cost-preview','slot-cost-pact','slot-cost-short-rest']
+for name in slots+['slot-cost-confirm','slot-cost-view','slot-cost-retry','slot-cost-snapshot','slot-cost-ninth','slot-cost-blocked','slot-cost-empty','slot-cost-zero','slot-cost-long-rest','slot-cost-import']:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in slots):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(slots):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'slot-costs-preview.png');print(base/'slot-costs-preview.png')

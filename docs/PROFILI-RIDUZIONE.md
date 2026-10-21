@@ -1,7 +1,8 @@
 # Profili locali di riduzione — v0.36
 
-**Aggiornamento v0.37:** [costi espliciti e reazione](COSTI-REAZIONE.md), quarto
-confronto Costi e formato corrente PDD17. Questa pagina documenta la base v0.36;
+**Aggiornamento v0.38:** [costi in slot ordinari/patto](COSTI-SLOT.md), PDD18.
+**Base v0.37:** [costi espliciti e reazione](COSTI-REAZIONE.md), quarto
+confronto Costi e formato PDD17 della v0.37. Questa pagina documenta la base v0.36;
 la frase sulla mancata spesa e il formato PDD16 descrivono quella versione.
 
 Il dispositivo conserva **tre profili riutilizzabili**, ciascuno con quantità,

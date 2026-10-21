@@ -57,5 +57,5 @@ int main(void){
  for(unsigned i=0;i<4;i++){pd_encode(&s,127,data);data[start+offsets[i]]=corrupt[i];crc(data,size);before=next;generation=99;assert(!pd_decode(data,size,&next,&generation)&&generation==99&&!memcmp(&next,&before,sizeof next));}
  pd_encode(&s,127,data);data[57]=231;data[58]=3;crc(data,size);assert(!pd_decode(data,size,&next,&generation));
  pd_demo(&s);s.effect_count=1;s.effects[0]=(pd_effect){.target=PD_EFFECT_ARMOR,.value=-20,.active=true};pd_encode(&s,1,data);size=pd_encoded_size(&s);assert(!pd_decode(data,size,&next,&generation));
- printf("Effects: %u independent base/delta cases, atomic limits, caps without healing, item/hit-die/rest integration, death guards, annotation separation, 8 effects and strict PDD17 roundtrip/corruption passed\n",comparisons);
+ printf("Effects: %u independent base/delta cases, atomic limits, caps without healing, item/hit-die/rest integration, death guards, annotation separation, 8 effects and strict PDD18 roundtrip/corruption passed\n",comparisons);
 }
