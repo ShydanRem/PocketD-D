@@ -1,5 +1,9 @@
 # Costi in slot sul dispositivo — v0.38
 
+**Aggiornamento v0.39:** [durate del proprio turno](DURATE-TURNO.md), PDD19.
+Inizio turno avanza ora anche i timer Inizio; Fine turno è separato dal Round.
+I timer dei salvataggi precedenti mantengono la modalità Round.
+
 I [profili di riduzione](PROFILI-RIDUZIONE.md) possono spendere anche slot
 **ordinari oppure del patto**, oltre ai contatori e agli usi limitati della
 [v0.37](COSTI-REAZIONE.md). Il pool e il livello sono espliciti. Funziona offline;

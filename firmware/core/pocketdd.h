@@ -6,7 +6,7 @@
 #define PD_RESOURCES 8
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
-#define PD_RECORD_SIZE 74619
+#define PD_RECORD_SIZE 74669
 #define PD_POWERS 120
 #define PD_POWER_TEXT_BYTES 501
 #define PD_ITEMS 60
@@ -54,7 +54,7 @@ typedef struct { bool available; uint8_t count,successes,failures; bool stabiliz
 #define PD_EFFECTS 8
 enum { PD_EFFECT_ARMOR,PD_EFFECT_MAX_HP };
 /* Explicit additive deltas to the imported bases; no rule inferred from a label. */
-typedef struct { uint8_t target; int16_t value; bool active,timed; uint8_t rounds,concentration; /* 0 or current magic index + 1; cleared on end/recast. */ } pd_effect;
+typedef struct { uint8_t target; int16_t value; bool active,timed; uint8_t rounds,concentration,tick; /* concentration: 0 or current magic index + 1; tick: PD_TICK_*. */ } pd_effect;
 #define PD_DAMAGE_TYPES 13
 enum { PD_RESISTANCE=1,PD_VULNERABILITY=2,PD_IMMUNITY=4 };
 enum { PD_RULE_ALWAYS,PD_RULE_MAGICAL,PD_RULE_NONMAGICAL,PD_RULE_NONMAGICAL_ATTACK,
@@ -62,7 +62,7 @@ enum { PD_RULE_ALWAYS,PD_RULE_MAGICAL,PD_RULE_NONMAGICAL,PD_RULE_NONMAGICAL_ATTA
 /* Three independent grants per type. Equal flags do not stack; base stays separate. */
 #define PD_DEFENCE_SLOTS 3
 #define PD_DEFENCE_GRANTS (PD_DAMAGE_TYPES * PD_DEFENCE_SLOTS)
-typedef struct { uint8_t flags; bool active,timed; uint8_t rounds,concentration,conditions[3]; } pd_defence_temporary;
+typedef struct { uint8_t flags; bool active,timed; uint8_t rounds,concentration,conditions[3],tick; } pd_defence_temporary;
 typedef struct {
     uint16_t configured,resistance,vulnerability,immunity;
     pd_defence_temporary temporary[PD_DAMAGE_TYPES];
@@ -72,7 +72,7 @@ typedef struct {
 #define PD_REDUCTION_PROFILES 3
 #define PD_TIMED_DEFENCES (PD_DEFENCE_GRANTS + PD_REDUCTION_PROFILES)
 /* Local reusable budget; applying it to an impact is always explicit. */
-typedef struct { uint16_t value,types; uint8_t stage,rule; bool active,timed; uint8_t rounds,concentration,cost_kind,cost_index; uint16_t cost; bool reaction; } pd_reduction_profile;
+typedef struct { uint16_t value,types; uint8_t stage,rule; bool active,timed; uint8_t rounds,concentration,cost_kind,cost_index; uint16_t cost; bool reaction; uint8_t tick; } pd_reduction_profile;
 typedef struct { uint8_t effects_advanced,effects_expired; uint64_t defences_advanced,defences_expired; /* Extra bits slot*13+type, profile bits 39+index. */ } pd_round_summary;
 typedef struct {
     char name[PD_NAME_BYTES];
@@ -121,6 +121,9 @@ bool pd_effect_advance(pd_state *state,uint8_t *advanced,uint8_t *expired);
 /* A single explicit round for all timed numeric effects and temporary defences.
    A rejected numeric expiry leaves all timers and output unchanged. */
 bool pd_round_advance(pd_state *state,pd_round_summary *summary);
+enum { PD_TICK_ROUND,PD_TICK_START,PD_TICK_END,PD_TICK_COUNT };
+/* Explicit own-turn edge; start also resets reaction, atomically with expiry. */
+bool pd_turn_advance(pd_state *state,bool start,pd_round_summary *summary);
 unsigned pd_defence_base_flags(const pd_state *state,unsigned type);
 /* Only explicit ALWAYS grants; conditional profiles need impact evaluation. */
 unsigned pd_defence_flags(const pd_state *state,unsigned type);

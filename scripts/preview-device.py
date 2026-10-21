@@ -209,3 +209,13 @@ if all((base/(name+'.ppm')).is_file() for name in slots):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(slots):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'slot-costs-preview.png');print(base/'slot-costs-preview.png')
+
+# Explicit own-turn expiry, including atomic reaction/HP changes; host LVGL only.
+turns=['turn-effect-editor','turn-start-preview','turn-end-details','turn-last-details']
+for name in turns+['turn-effect-confirm','turn-defence-editor','turn-profile-editor','turn-profile-confirm','turn-home','turn-start-details','turn-start-applied','turn-end-preview','turn-invalid','turn-import','turn-pending-impact']:
+    source=base/(name+'.ppm')
+    if source.is_file():Image.open(source).save(base/(name+'.png'))
+if all((base/(name+'.ppm')).is_file() for name in turns):
+    sheet=Image.new('RGB',(466*2,466*2),'black')
+    for i,name in enumerate(turns):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
+    sheet.save(base/'turn-durations-preview.png');print(base/'turn-durations-preview.png')

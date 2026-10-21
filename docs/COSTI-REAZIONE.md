@@ -1,5 +1,9 @@
 # Costi dei profili e reazione — v0.37
 
+**Aggiornamento v0.39:** [durate del proprio turno](DURATE-TURNO.md), PDD19.
+Inizio turno avanza ora anche i timer Inizio; Fine turno è separato dal Round.
+I timer dei salvataggi precedenti mantengono la modalità Round.
+
 **Aggiornamento v0.38:** [costi in slot ordinari/patto](COSTI-SLOT.md), PDD18
 con lettura PDD1–PDD17. I limiti sugli slot e il formato PDD17 qui descritti
 si riferiscono alla v0.37; cariche oggetto ancora successive.

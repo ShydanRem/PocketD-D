@@ -1,11 +1,11 @@
-# Firmware PocketD-D 0.38 — costi in slot
+# Firmware PocketD-D 0.39 — durate del proprio turno
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
-[Novità v0.38: slot ordinari e del patto come costi](COSTI-SLOT.md).
-PDD18, USB v7/layout invariati e lettura dei salvataggi precedenti.
+[Novità v0.39: durate a inizio/fine turno](DURATE-TURNO.md).
+PDD19, USB v7/layout invariati e lettura dei salvataggi precedenti.
 
 ## Stato e perimetro
 
@@ -233,8 +233,8 @@ reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
 ## Salvataggio e dadi
 
 NVS nel namespace `pocketdd`, nuova partizione `pdd_state`, due chiavi alternate
-`state_a`/`state_b`. Record PDD18 (tag `PDDI`) da **8379 + 552 × numero voci** byte, massimo
-74619. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
+`state_a`/`state_b`. Record PDD19 (tag `PDDJ`) da **8429 + 552 × numero voci** byte, massimo
+74669. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
 visibile. Nessun dump di struct, erase o fallback distruttivo. Errori I/O o
 allocazioni insufficienti bloccano scritture; CRC e versioni future conservati.
 
@@ -261,8 +261,10 @@ fonte/costo/reazione e lo stato globale della reazione. PDD1–PDD16 sono letti
 senza spesa e con reazione pronta, conservando i profili già presenti.
 PDD18 conserva la dimensione e aggiunge i tipi fonte 3 (slot ordinari) e 4
 (patto), indice livello 0–8; i costi/reazione PDD17 restano conservati.
-Le nuove scritture richiedono firmware v0.38 o successivo:
-[compatibilità e downgrade](COSTI-SLOT.md).
+PDD19 aggiunge 50 selettori Round/Inizio/Fine per effetti, extra e profili.
+Le copie precedenti mantengono Round senza scritture al boot.
+Le nuove scritture richiedono firmware v0.39 o successivo:
+[compatibilità e downgrade](DURATE-TURNO.md).
 Il nuovo uploader supporta USB v1–v7. Preferenze avatar/tasti
 locali conservate durante l'importazione. [Dettagli](MAGIE-TASTI.md).
 
@@ -762,3 +764,36 @@ USB v7/layout invariati. Nessun flash/collaudo fisico, nuova lettura Beyond o
 modifica della raccolta personale. Cariche oggetto distinte dalla quantità,
 costi multipli, requisiti/effetti automatici e durate di turno/minuti ancora
 successivi. [Uso e limiti](COSTI-SLOT.md).
+
+
+## Verifiche v0.39 — durate del proprio turno
+
+10800 combinazioni indipendenti di 50 posizioni/famiglie, fase Round/Inizio/Fine,
+conteggio 1/2/99, attivazione/pausa, reazione e concentrazione. Cinquanta
+scadenze simultanee con 8 bit numerici e 42 difensivi, limite PF senza cura,
+nessun avanzamento nelle fasi diverse, riposi senza tick e fine dei vincoli.
+Scadenza numerica fuori limite respinta prima di difese/profili/reazione;
+stato e report immutati. Massimo PDD19, tutti i 50 selettori corrotti con CRC
+valido, combinazioni senza timer e selettori numerici inutilizzati respinti.
+Fixture PDD18 dell'encoder v0.38 originale, nessuna scrittura al boot,
+prima banca alternata e riavvio con timer/costi/reazione conservati.
+
+UI LVGL dei tre editor, modalità e conteggio, anteprime di inizio/fine con
+reazione/CA/PF prima/dopo, dettaglio, errore/riprova/annulla, rifiuti atomici,
+17 pagine per 50 voci e profilo scaduto nel colpo ancora preparato. Import e
+tasti protetti, scorciatoia Stato conservata, PWR lungo hardware; controlli
+≥44 px nel cerchio e testi senza sovrapposizioni. Catture host visionate:
+`firmware-host-preview/turn-durations-preview.png` nell'archivio, nessuna
+cattura del display fisico.
+
+Suite firmware completa e 37751 confronti PC→USB→C passati, incluse le regressioni
+233280 slot, 354816 costi contatori/usi e 176904 profili. ASan/UBSan su turni/
+slot/costi/profili/riduzioni, extra/condizioni/misti, danni/COS/vincoli/difese,
+effetti/durate, magie/riposi/stato, allocazioni, core/parser, NVS e UI finale;
+leak detector disattivato. 138 test JS e build PC passati.
+
+Firmware v0.39: **899008 byte**, partizione app 4 MiB **79% libera**;
+ESP-IDF 5.5.5/LVGL 9.4.0. PDD19 legge PDD1–PDD18; USB v7/layout invariati.
+Nessun flash/collaudo fisico, nuova lettura Beyond o modifica della raccolta
+personale. Altri soggetti/minuti/ore, cariche oggetto e automatismi ancora
+successivi. [Uso e limiti](DURATE-TURNO.md).

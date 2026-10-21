@@ -112,3 +112,8 @@ JSON Beyond o dati personali. Nessun nuovo asset o dipendenza esterna.
 La v0.38 aggiunge codice, UI e test originali per costi in slot ordinari/patto.
 Fixture PDD17 sintetica generata dall'encoder v0.37 originale `1274857`, prima
 delle modifiche; nessun dato personale, JSON Beyond, asset o dipendenza esterna.
+
+
+La v0.39 aggiunge codice, UI e test originali per timer del proprio turno.
+Fixture PDD18 sintetica dell'encoder v0.38 originale `807ccff`, prima delle
+modifiche. Nessun dato personale, JSON Beyond, asset o dipendenza esterna.

@@ -1,4 +1,4 @@
-# Direzione visiva del dispositivo — v0.38
+# Direzione visiva del dispositivo — v0.39
 
 PocketD-D deve essere bello da tenere sul tavolo e da guardare tra un turno e
 l'altro: un piccolo RPG fantasy contemporaneo sul display AMOLED circolare.
@@ -268,3 +268,10 @@ nel selettore e nome completo sotto. Il dettaglio conserva pool/livello e saldi
 all'impatto; pool esauriti dichiarati senza sostituzioni implicite. Confronto e
 riposi mostrano costi/recuperi distinti. Anteprima host:
 `firmware/tests/out/ui-build/slot-costs-preview.png`; collaudo fisico ancora aperto.
+
+
+La v0.39 distingue Inizio/Fine turno nel selettore Durata, con conteggio dei
+passaggi e pausa. Il menu Reazione contiene entrambi i comandi; il riepilogo
+mostra scadenze, reazione e CA/PF prima/dopo, con evidenza dei PF eventualmente
+persi. Scadenze elenca fino a 50 voci su 17 pagine, senza comprimere le righe.
+Anteprima host: `firmware/tests/out/ui-build/turn-durations-preview.png`.

@@ -352,3 +352,16 @@ di un livello superiore o dell'altro pool; nessun lancio automatico della magia.
 PDD18 cambia tag e significato dei tipi fonte senza aumentare il payload.
 Il decoder PDD17 rifiuta esplicitamente le nuove fonti; PDD1–PDD17 leggibili,
 nessuna scrittura al boot. [Dettagli](COSTI-SLOT.md).
+
+
+## Timer del proprio turno — v0.39
+
+Tick 0/1/2 su effetti, extra e profili identifica Round/Inizio/Fine. I setter
+validano fase e combinazioni anche in pausa; senza timer tick deve essere zero.
+Il motore condiviso avanza prima i soli effetti numerici pertinenti, valida i
+totali e ripristina su errore; soltanto dopo avanza extra/profili. Inizio azzera
+la reazione dopo il successo della stessa operazione, Fine e Round la conservano.
+Il report riusa le maschere numeriche/42 bit difensivi. La UI costruisce un solo
+candidato per CA/PF/timer/reazione e protegge riepilogo/dettaglio da altri input.
+PDD19 aggiunge 50 byte espliciti, conservando gli offset e leggendo PDD1–PDD18.
+[Dettagli](DURATE-TURNO.md).
