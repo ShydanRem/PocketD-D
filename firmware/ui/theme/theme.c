@@ -18,6 +18,7 @@ static const pd_theme_spec themes[]={
     [PD_THEME_KEYS]={"Tasti",0xb5d4da,&theme_gear,&theme_room_study},
     [PD_THEME_WALLET]={"Monete",0xe7c389,&theme_pack,&theme_room_pack},
     [PD_THEME_HISTORY]={"Storico",0xe3c487,&theme_notes,&theme_room_study},
+    [PD_THEME_BACKUP]={"Backup",0x8ad9e2,&theme_usb,&theme_room_study},
     [PD_THEME_IMPORT]={"Copia USB",0x8ad9e2,&theme_usb,&theme_room_study}
 };
 static const pd_theme_spec *current;

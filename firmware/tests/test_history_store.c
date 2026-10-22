@@ -25,6 +25,7 @@ static void fix_crc(uint8_t *p,size_t n){uint32_t crc=pd_crc32(p,n-4);for(unsign
 int main(void){
     pd_history h,next,out;assert(pd_history_store_load(5,&h)&&!h.count&&h.epoch==5&&!writes);
     pd_history_entry e=entry(20);assert(pd_history_append(&h,&e)&&pd_history_store_save(&h)&&writes==1&&commits==1);
+    assert(!memcmp(blobs[history_bank],"PDH2",4));
     unsigned first=history_bank;uint8_t original[PD_HISTORY_RECORD];size_t original_size=lengths[first];memcpy(original,blobs[first],original_size);
     assert(pd_history_store_load(5,&out)&&out.count==1&&out.entries[0].total==20&&writes==1);
     next=out;e=entry(1);assert(pd_history_append(&next,&e));
@@ -37,7 +38,7 @@ int main(void){
     unsigned saved_writes=writes;blobs[history_bank][20]^=1;
     assert(pd_history_store_load(5,&out)&&out.sequence==1&&writes==saved_writes&&!strcmp(pd_history_store_status(),"Storico recuperato"));
     /* Future valid formats are retained, even if an older bank is readable. */
-    unsigned future=1-history_bank;lengths[future]=pd_history_encode(&h,99,blobs[future]);blobs[future][3]='2';fix_crc(blobs[future],lengths[future]);
+    unsigned future=1-history_bank;lengths[future]=pd_history_encode(&h,99,blobs[future]);blobs[future][3]='3';fix_crc(blobs[future],lengths[future]);
     assert(!pd_history_store_load(5,&out)&&!out.count&&!pd_history_store_save(&h)&&writes==saved_writes);
     memset(lengths,0,sizeof lengths);assert(pd_history_store_load(5,&out));h=out;assert(pd_history_append(&h,&e)&&pd_history_store_save(&h));
     /* An import epoch starts empty; its first write leaves the previous bank. */

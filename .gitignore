@@ -8,3 +8,6 @@ firmware/sdkconfig.old
 firmware/managed_components/
 firmware/tests/out/
 __pycache__/
+/device-backups/
+/pocketdd-device-backup.json
+/.pocketdd-*

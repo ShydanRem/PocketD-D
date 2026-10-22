@@ -78,6 +78,8 @@ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as out:
                  ('unknown','zero','edit','confirm','save-error','home','gold','maximum','import','confirm-zero')]
     ui_files += ['history-preview.png']+[f'history-{name}.png' for name in
                  ('empty','detail','unsaved-roll','pending','unsaved-detail','discard','eighteen','last-dice','full','oldest','key','import-empty')]
+    ui_files += ['backup-preview.png']+[f'backup-{name}.png' for name in
+                 ('home','send','send-error','sent','timeout','restore','history-error','state-error','restored')]
     for name in ui_files:
         image=preview/name
         if not image.is_file():raise SystemExit(f'Missing UI capture: {name}')

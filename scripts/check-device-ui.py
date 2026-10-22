@@ -2,7 +2,7 @@
 import json
 import argparse
 from pathlib import Path
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import sync_playwright, expect
 parser=argparse.ArgumentParser(description=__doc__)
 parser.add_argument('--url',default='http://127.0.0.1:5173')
 args=parser.parse_args()
@@ -58,6 +58,8 @@ with sync_playwright() as p:
     dialog.locator('[data-device-status] summary').click()
     assert '1/3 riuscite, 2/3 fallite' in dialog.locator('[data-device-status]').inner_text()
     assert 'Poisoned · livello 2' in dialog.locator('[data-device-status]').inner_text()
+    dialog.locator('[data-device-wallet] summary').click()
+    assert 'Oro (MO): 12' in dialog.locator('[data-device-wallet]').inner_text()
     with page.expect_download() as info:
         page.locator('[data-device-download]').click()
     download=info.value
@@ -68,7 +70,6 @@ with sync_playwright() as p:
     assert packet['format']=='pocketdd-device' and packet['version']==9
     assert packet['training']['skillRanks']['perception']==0
     assert packet['wallet']=={'available':True,'cp':0,'sp':0,'ep':0,'gp':12,'pp':0}
-    assert 'Oro (MO): 12' in dialog.locator('[data-device-wallet]').inner_text()
     assert packet['avatar']=={'skin':1,'hair':1,'cloak':1,'style':1}
     assert len(packet['inventory']['items'])==3 and packet['inventory']['items'][0]['kind']==3 and 'importInfo' not in packet
     assert page.evaluate('localStorage.getItem("pocketdd-library-v1")')==before
@@ -78,5 +79,23 @@ with sync_playwright() as p:
     assert packet['recovery']=={'available':True,'pools':[{'name':'Classe sonda','die':8,'maximum':3,'used':1}]}
     assert packet['status']=={'available':True,'successes':1,'failures':2,'stabilized':False,'conditions':[{'name':'Poisoned','level':2}]}
     assert not errors, errors
+    expect(page.locator('dialog')).to_have_count(0)
+    page.locator('[data-action="device-backup"]').click()
+    native=page.locator('dialog')
+    fixture=Path(__file__).resolve().parents[1]/'firmware/tests/fixtures/device-backup-v1.synthetic.json'
+    native.locator('[data-native-file]').set_input_files(fixture)
+    assert 'PF 17/42 (+7 temporanei) · CA 18' in native.locator('[data-native-values]').inner_text()
+    assert 'PP 999999999' in native.inner_text()
+    native.locator('[data-native-history] summary').click()
+    assert native.locator('[data-native-history] li').count()==20
+    with page.expect_download() as info:
+        native.locator('[data-native-download]').click()
+    assert Path(info.value.path()).read_bytes()==fixture.read_bytes()
+    assert page.evaluate('localStorage.getItem("pocketdd-library-v1")')==before
+    native.locator('[data-native-file]').set_input_files({'name':'invalid.json','mimeType':'application/json','buffer':b'{}'})
+    assert native.locator('[data-native-download]').is_disabled()
+    expect(native.locator('[data-error]')).to_contain_text('non valido')
+    assert page.evaluate('localStorage.getItem("pocketdd-library-v1")')==before
+    assert not errors, errors
     browser.close()
-print('PC support: preview, omissions, download, unchanged collection passed (synthetic demo)')
+print('PC support: projection and native backup previews, exact download, invalid-file rejection, unchanged collection passed (synthetic demo)')

@@ -56,7 +56,7 @@ Non fanno parte di questo traguardo: importazione Beyond, editor completo, incan
 
 L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco non impedisce le altre fasi. L'ordine delle fasi 0 e 1 può sovrapporsi se l'hardware non è immediatamente disponibile.
 
-## Punto attuale — v0.52
+## Punto attuale — v0.53
 
 La [home del compagno](HOME-COMPAGNO.md) è integrata: menu a icone, PF,
 salvataggi e accesso alle funzioni esistenti, con tasti configurati conservati.
@@ -69,7 +69,9 @@ La [v0.51](BORSELLO.md) riprende il blocco 1 con le monete: cinque saldi,
 configurazione locale, anteprima, conferma, salvataggio e annullamento.
 La [v0.52](STORICO-TIRI.md) aggiunge gli ultimi 20 tiri in un registro locale
 persistente, con dettaglio dei dadi e accesso assegnabile ai tasti.
-Le tre nuove viste portano la copertura host a 94/94, nella stessa direzione grafica.
+La [v0.53](BACKUP-DISPOSITIVO.md) aggiunge backup nativo USB, anteprima PC e
+ripristino di scheda/storico/preferenze, con conferme sul display.
+Le tre nuove viste portano la copertura host a 97/97, nella stessa direzione grafica.
 
 | Blocco | Stato software | Cosa manca |
 | --- | --- | --- |
@@ -79,7 +81,7 @@ Le tre nuove viste portano la copertura host a 94/94, nella stessa direzione gra
 | Stato e morte | Note separate dagli effetti sui tiri di Avvelenato/Accecato/Spaventato/Prono/Trattenuto, d20 morte base e correzioni, reazione e inizio turno espliciti | Altri effetti/condizioni, durate e fonti multiple, eccezioni e morte istantanea |
 | Grafica e comandi | v0.50: home, menu e tutte le 85 viste interne coerenti, avatar con 81 aspetti/quattro pose, transizioni e PWR/BOOT configurabili | Resa, fluidità e touch sul pannello reale (blocco 3) |
 | Impostazioni schermo | Luminosità, inattività e risveglio protetto nella v0.25 | Consumi misurati, sospensione, batteria e alimentazione |
-| Preparazione PC | Importazione Beyond, raccolta, configurazione, backup PC, copia USB con conferma | Trasferimento USB fisico e backup dei progressi aggiornati dal dispositivo al PC |
+| Preparazione PC | Importazione Beyond, raccolta, configurazione, backup PC, copia USB con conferma e backup nativo dispositivo → PC con ripristino | USB fisico; sincronizzazione dei progressi con la raccolta PC |
 | Party e griglia | Prototipi nel browser | Trasporto e interfaccia sul dispositivo |
 
 Le fasi hardware 0 e 2 restano aperte. Le funzioni individuali delle fasi 3–4
@@ -87,7 +89,7 @@ sono portate nel firmware, ma i criteri di completamento richiedono ancora una
 sessione fisica, trasferimento/ripristino e misure. Non sono percentuali di
 completamento né una dichiarazione di collaudo.
 
-## Quattro blocchi concordati — v0.52
+## Quattro blocchi concordati — v0.53
 
 | Blocco | Punto attuale | Prossimo lavoro |
 | --- | --- | --- |
@@ -200,9 +202,10 @@ Il percorso principale rimane articolato nei quattro blocchi concordati:
    condividono ora la stessa grafica, portando la suite a 94/94 viste. Collaudo
    sul pannello nel blocco 3; ulteriori revisioni artistiche sono evoluzioni.
 
-Il backup/ripristino dei progressi dal dispositivo verso PC rimane supporto
-necessario alla conservazione dei dati e ancora da completare. Non sostituisce
-il blocco effetti né sposta il prodotto sul PC. Importazione autonoma,
+Il backup/ripristino nativo dei progressi dal dispositivo verso PC è ora nel
+software v0.53, con collaudo USB fisico ancora aperto. La sincronizzazione
+con una scheda della raccolta PC resta separata e non è automatica. Il supporto
+PC conserva i dati del prodotto sul dispositivo, senza sostituire il blocco effetti. Importazione autonoma,
 party/griglia fra dispositivi e scrittura Beyond rimangono successivi.
 
 
@@ -223,8 +226,8 @@ La scorciatoia Stato si aggiunge alle assegnazioni fisiche esistenti.
 
 La v0.25 aggiunge impostazioni locali e prima gestione dell'inattività del
 pannello. Non completa la fase hardware/energia: niente percentuali batteria
-inventate o promesse d'autonomia. Il backup dei progressi dal dispositivo al PC rimane aperto, senza sovrascrivere
-in silenzio la raccolta originale. Importazione autonoma e comunicazione fra dispositivi
+inventate o promesse d'autonomia. Il backup nativo v0.53 conserva ora i progressi
+dal dispositivo al PC senza sovrascrivere la raccolta originale. Importazione autonoma e comunicazione fra dispositivi
 rimangono successivi. [Dettagli](SCHERMO-IMPOSTAZIONI.md).
 
 

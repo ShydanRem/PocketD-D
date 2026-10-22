@@ -47,7 +47,7 @@ size_t pd_history_encode(const pd_history *h,uint32_t generation,uint8_t out[PD_
     size_t payload=p-out;put32(&p,pd_crc32(out,payload));return p-out;
 }
 bool pd_history_decode(const uint8_t *data,size_t size,pd_history *h,uint32_t *generation){
-    if(!data||!h||!generation||size<21||size>PD_HISTORY_RECORD||memcmp(data,"PDH1",4))return false;
+    if(!data||!h||!generation||size<21||size>PD_HISTORY_RECORD||(memcmp(data,"PDH1",4)&&memcmp(data,"PDH2",4)))return false;
     unsigned count=data[16];if(count>PD_HISTORY_LIMIT||size!=21u+123u*count)return false;
     const uint8_t *crc=data+size-4;if(pd_crc32(data,size-4)!=get32(&crc))return false;
     pd_history candidate;const uint8_t *p=data+4;uint32_t gen=get32(&p);pd_history_reset(&candidate,get32(&p));candidate.sequence=get32(&p);candidate.count=*p++;

@@ -1,5 +1,10 @@
 # Formato scheda locale — v9 e v10
 
+Il [backup nativo del dispositivo v0.53](BACKUP-DISPOSITIVO.md) è un formato
+separato (`pocketdd-device-backup` v1), per ripristinare lo stato firmware e lo
+storico. Si apre da **Backup del dispositivo**; non si aggiunge alla raccolta
+come una scheda PC e non modifica questi formati.
+
 Il backup individuale è un singolo JSON UTF-8. Non è un formato D&D Beyond. Dalla versione 0.9 l'app conserva una raccolta di fino a 20 personaggi, uno attivo alla volta. Dalla versione 0.10 lo schema individuale è v9; il formato della raccolta è descritto in fondo al documento.
 
 | Campo | Significato e limiti |

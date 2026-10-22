@@ -12,14 +12,24 @@ static unsigned brightness_calls,brightness_last;
 bool pd_board_brightness(unsigned percent,void *unused){(void)unused;brightness_calls++;brightness_last=percent;return !fail_brightness;}
 static void *ui_malloc(size_t size) { return fail_canvas?NULL:lv_malloc(size); }
 static unsigned random_calls,save_calls,history_save_calls,history_seen;
-static bool fail_history;static pd_history persisted_history;
-bool pd_history_store_load(uint32_t epoch,pd_history *h){if(persisted_history.epoch==epoch)*h=persisted_history;else pd_history_reset(h,epoch);return true;}
-bool pd_history_store_save(const pd_history *h){history_save_calls++;if(fail_history)return false;persisted_history=*h;history_seen|=1u<<h->entries[0].kind;return true;}
+static bool fail_history,history_quarantined;static pd_history persisted_history;
+bool pd_history_store_load(uint32_t epoch,pd_history *h){history_quarantined=false;if(persisted_history.epoch==epoch)*h=persisted_history;else pd_history_reset(h,epoch);return true;}
+bool pd_history_store_save(const pd_history *h){history_save_calls++;if(fail_history||history_quarantined)return false;persisted_history=*h;history_seen|=1u<<h->entries[0].kind;return true;}
 const char *pd_history_store_status(void){return fail_history?"Storico non salvato":"Storico salvato";}
+static pd_history prepared_history;static bool prepared_ready;
+static bool fail_backup_send;
+bool pd_history_store_available(void){return !history_quarantined;}
+bool pd_history_store_next_epoch(uint32_t current,uint32_t *next){if(history_quarantined||current==UINT32_MAX)return false;*next=current+1;return true;}
+bool pd_history_store_prepare_restore(const pd_history *h){if(fail_history||history_quarantined)return false;prepared_history=*h;prepared_ready=true;return true;}
+void pd_history_store_finish_restore(void){assert(prepared_ready);persisted_history=prepared_history;prepared_ready=false;}
+void pd_history_store_cancel_restore(void){prepared_ready=false;}
+void pd_history_store_uncertain_restore(void){prepared_ready=false;history_quarantined=true;}
+bool pd_ui_backup_send(const pd_state *s,const pd_history *h){size_t size;char *json=pd_backup_encode(s,h,&size);assert(json);pd_backup *check=malloc(sizeof *check);assert(check&&pd_backup_decode(json,size,check));free(json);free(check);return !fail_backup_send;}
 static uint32_t random_values[2]={9,9};
 uint32_t pd_board_random(void *unused) { return random_values[(random_calls++)%2]; }
 bool pd_storage_save(const pd_state *s) { save_calls++;return !fail_save; }
 const char *pd_storage_status(void) { return fail_save?"Errore memoria: riavvia":"Salvato offline"; }
+bool pd_storage_writable(void){return !fail_save;}
 static uint16_t pixels[466*466];
 static void paint(lv_display_t *d,const lv_area_t *a,uint8_t *data) {
     uint16_t *p=(uint16_t*)data;
@@ -975,13 +985,30 @@ int main(void) {
     assert(stage_import(&history_import));click("Annulla");assert(history.sequence==old_sequence&&state.history_epoch==old_epoch);
     assert(stage_import(&history_import));fail_save=true;click("Conferma");assert(history.sequence==old_sequence&&state.history_epoch==old_epoch);fail_save=false;
     assert(stage_import(&history_import));click("Conferma");assert(!history.count&&state.history_epoch==old_epoch+1&&state.shortcuts[0]==13);act(14);click("Storico");screenshot("history-import-empty.ppm");bounds();state.history_epoch=UINT32_MAX;assert(!stage_import(&history_import));
+    /* Native backup never changes state on export, cancel, timeout or prepare failure. */
+    pd_demo(&state);pd_history_reset(&history,state.history_epoch);persisted_history=history;history_pending=false;page=HERO;render();act(1600);click("Backup");assert(page==BACKUP_HOME);screenshot("backup-home.ppm");bounds();
+    static pd_backup snapshot;pd_demo(&snapshot.state);snapshot.state.hp=7;snapshot.state.temp_hp=3;snapshot.state.shortcuts[0]=13;snapshot.state.brightness=80;snapshot.state.history_epoch=123;
+    snapshot.state.wallet=(pd_wallet){.available=true,.coins={5,4,3,2,1}};pd_history_reset(&snapshot.history,123);
+    pd_history_entry archived={.kind=PD_H_FREE,.count=1,.sides=20,.dice={20},.total=20,.label="Tiro archiviato"};assert(pd_history_append(&snapshot.history,&archived));
+    effects_saves=save_calls;effects_calls=random_calls;effects_before=state;unsigned before_journal=history_save_calls;
+    assert(stage_backup(NULL)&&page==BACKUP_SEND_CONFIRM);screenshot("backup-send.ppm");bounds();act(1);shortcut(0);assert(page==BACKUP_SEND_CONFIRM&&!stage_import(&snapshot.state)&&!stage_backup(&snapshot)&&!memcmp(&effects_before,&state,sizeof state));click("Annulla");
+    assert(save_calls==effects_saves&&history_save_calls==before_journal&&random_calls==effects_calls);
+    assert(stage_backup(NULL));fail_backup_send=true;click("Invia");assert(page==BACKUP_HOME&&strstr(backup_notice,"fallito")&&!memcmp(&state,&effects_before,sizeof state));screenshot("backup-send-error.ppm");fail_backup_send=false;
+    assert(stage_backup(NULL));click("Invia");assert(page==BACKUP_HOME&&save_calls==effects_saves&&history_save_calls==before_journal&&random_calls==effects_calls&&!memcmp(&state,&effects_before,sizeof state));screenshot("backup-sent.ppm");
+    lv_tick_inc(UINT32_MAX-lv_tick_get()-60000);assert(stage_backup(NULL));lv_tick_inc(119999);backup_service();assert(page==BACKUP_SEND_CONFIRM);lv_tick_inc(1);backup_service();assert(page==BACKUP_HOME&&save_calls==effects_saves);screenshot("backup-timeout.ppm");
+    snapshot.history.epoch=124;assert(!stage_backup(&snapshot));snapshot.history.epoch=123;
+    assert(stage_backup(&snapshot));assert(page==BACKUP_RESTORE_CONFIRM&&pending.history_epoch==state.history_epoch+1&&backup_history.epoch==pending.history_epoch);screenshot("backup-restore.ppm");bounds();click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));
+    assert(stage_backup(&snapshot));fail_history=true;click("Ripristina");assert(page==BACKUP_RESTORE_CONFIRM&&!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves);screenshot("backup-history-error.ppm");fail_history=false;
+    fail_save=true;click("Ripristina");assert(page==BACKUP_RESTORE_CONFIRM&&!prepared_ready&&!memcmp(&state,&effects_before,sizeof state));screenshot("backup-state-error.ppm");assert(history_quarantined);click("Annulla");assert(!stage_backup(&snapshot));fail_save=false;pd_history_store_load(state.history_epoch,&history);assert(stage_backup(&snapshot));
+    uint32_t restored_epoch=state.history_epoch+1;click("Ripristina");assert(page==HERO&&state.hp==7&&state.temp_hp==3&&state.shortcuts[0]==13&&state.brightness==80&&state.wallet.coins[0]==5&&state.history_epoch==restored_epoch&&history.epoch==restored_epoch&&history.count==1&&history.entries[0].total==20&&!undo_available&&random_calls==effects_calls);screenshot("backup-restored.ppm");
+    pd_history_entry not_saved=archived;history_unsaved=not_saved;history_pending=true;assert(!stage_backup(NULL)&&!stage_backup(&snapshot));history_pending=false;
     unsigned covered=0;
-    for(unsigned p=0;p<=HISTORY_DISCARD;p++){
+    for(unsigned p=0;p<=BACKUP_RESTORE_CONFIRM;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)HISTORY_DISCARD+1);
-    assert(covered==HISTORY_DISCARD+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)BACKUP_RESTORE_CONFIRM+1);
+    assert(covered==BACKUP_RESTORE_CONFIRM+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

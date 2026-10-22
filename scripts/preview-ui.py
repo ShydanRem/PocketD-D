@@ -49,6 +49,13 @@ history_gallery=Image.new('RGB',(466*2,466*2),'black')
 for i,name in enumerate(('full','detail','eighteen','pending')):
     history_gallery.paste(Image.open(BASE/f'history-{name}.png'),(i%2*466,i//2*466))
 history_gallery.save(BASE/'history-preview.png')
+backup_views=('home','send','send-error','sent','timeout','restore','history-error','state-error','restored')
+for name in backup_views:
+    Image.open(BASE/f'backup-{name}.ppm').save(BASE/f'backup-{name}.png')
+backup_gallery=Image.new('RGB',(466*2,466*2),'black')
+for i,name in enumerate(('send','restore','state-error','restored')):
+    backup_gallery.paste(Image.open(BASE/f'backup-{name}.png'),(i%2*466,i//2*466))
+backup_gallery.save(BASE/'backup-preview.png')
 frames=[Image.open(BASE/f'ux-transition-{i:02d}.ppm').convert('RGB') for i in range(5)]
 frames[0].save(BASE/'ui-transition.gif',save_all=True,append_images=frames[1:],duration=[40,40,40,40,1000],loop=0,disposal=2,optimize=True)
 print(f'UI: {len(records)} production views, overview, offline catalog and transition exported')

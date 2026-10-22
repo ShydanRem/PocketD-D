@@ -1,15 +1,16 @@
-# Firmware PocketD-D 0.52 — storico dei tiri
+# Firmware PocketD-D 0.53 — backup nativo USB
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
-[Novità v0.52: storico persistente, tasti e limiti](STORICO-TIRI.md).
+[Novità v0.53: backup nativo, ripristino e garanzie](BACKUP-DISPOSITIVO.md).
+[Storico v0.52: storico persistente, tasti e limiti](STORICO-TIRI.md).
 [Borsello v0.51: monete, conferme e compatibilità](BORSELLO.md).
 [Grafica v0.50: grafica e UX di tutte le viste, catalogo e verifiche](UI-COMPAGNO.md).
 [Avatar illustrato v0.49: 81 aspetti e reazioni](AVATAR-ILLUSTRATO.md).
 [Integrazione home, menu, PF e tasti v0.48](HOME-COMPAGNO.md).
-PDD25 + registro PDH1, USB v9, backup PC v11; layout invariato e lettura dei salvataggi precedenti.
+PDD25 + registro NVS PDH2 (lettura PDH1), USB v9, backup PC v11; layout invariato e lettura dei salvataggi precedenti.
 
 ## Stato e perimetro
 
@@ -92,7 +93,8 @@ riconosciuti e trasferiti; i contesti da verificare restano bloccati. Le istanta
 usa bonus zero. CA/PF massimi effettivi sono basi esportate più modificatori
 locali espliciti; non si ricostruiscono automaticamente dall'equipaggiamento.
 I contatori sono manuali: usarli non attiva effetti né riposi automatici.
-Il firmware tiene una sola scheda attiva; non sincronizza modifiche al PC.
+Il firmware tiene una sola scheda attiva. La copia nativa USB conserva i
+progressi sul PC per il ripristino sul dispositivo; non sincronizza la raccolta PC.
 
 ## Hardware e fonti verificate
 
@@ -235,6 +237,20 @@ Il firmware rifiuta chiavi sconosciute/duplicate, valori frazionari, Unicode
 nel formato USB, strutture troppo annidate, payload troppo grandi e versioni
 incompatibili. Prove sintetiche non equivalgono alla conversione del personaggio
 reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
+
+## Backup dal dispositivo al PC
+
+La [procedura completa](BACKUP-DISPOSITIVO.md) acquisisce e ripristina uno stato
+nativo, compresi effetti/difese locali, preferenze e storico. È distinta dalla
+proiezione scheda USB9 sopra e dal backup PC v11. Richiede firmware e strumento
+v0.53 o successivi, conferma sul display e `scripts/device-backup.py`. Nel PC,
+**Backup del dispositivo** apre l'anteprima del file senza cambiare la raccolta.
+
+```sh
+mkdir device-backups
+python3 scripts/device-backup.py read --port /dev/ttyACM0 --output device-backups/eroe-dispositivo.json
+python3 scripts/device-backup.py restore device-backups/eroe-dispositivo.json --port /dev/ttyACM0
+```
 
 ## Salvataggio e dadi
 
@@ -1044,3 +1060,15 @@ quattordicesima scelta dei tasti (incluso Spento). USB9, backup PC v11 e layout
 invariati; 94/94 viste native esercitate. Scheda e registro non costituiscono
 un'unica transazione resistente a ogni interruzione di alimentazione. Nessun
 flash o collaudo fisico, lettura Beyond o modifica della raccolta personale.
+
+## Incremento v0.53 — backup e ripristino
+
+[Formato, USB e verifiche](BACKUP-DISPOSITIVO.md). Backup nativo v1 con record
+PDD25 e PDH1 canonici; nuovo registro fisico NVS PDH2, stesso contenuto con
+recupero per identità. Vecchi registri PDH1 leggibili senza scritture al boot.
+Acquisizione senza scritture NVS; file PC nuovo e completo, senza sovrascritture.
+Ripristino dello storico nell'altro banco prima della scheda; errori incerti
+impediscono altre scritture al registro fino al riavvio. Nuove conferme protette
+e timeout, anteprima PC, raccolta conservata e 97/97 viste native esercitate.
+Scheda PDD25, USB9, backup PC v11 e layout invariati. Nessun trasferimento USB
+fisico, flash, lettura Beyond o modifica della raccolta personale.

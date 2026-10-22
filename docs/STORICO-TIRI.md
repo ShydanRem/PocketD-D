@@ -1,9 +1,13 @@
 # Storico dei tiri sul dispositivo — v0.52
 
+**Aggiornamento v0.53:** [backup nativo USB](BACKUP-DISPOSITIVO.md) disponibile,
+compreso lo storico. I nuovi registri NVS sono PDH2; i PDH1 restano leggibili.
+Il file nativo esportato conserva PDH1 canonico, indipendente dai banchi NVS.
+
 La v0.52 continua il blocco 1 della roadmap. Dopo le monete, il dispositivo
 conserva gli **ultimi 20 tiri registrati**, anche al riavvio. Il blocco 1 resta
-aperto per regole speciali ed eccezioni. Il backup dei progressi dal dispositivo
-al PC è ancora da implementare; le prove fisiche appartengono al blocco 3.
+aperto per regole speciali ed eccezioni. Il backup nativo v0.53 conserva ora i progressi sul PC; la sincronizzazione
+con la raccolta PC resta separata; le prove fisiche appartengono al blocco 3.
 
 ## Uso e contenuto
 
@@ -79,10 +83,11 @@ La conferma di una nuova copia USB avvia uno storico distinto, anche per un
 personaggio con lo stesso nome. L'anteprima segnala il nuovo storico; Annulla
 o un salvataggio della scheda fallito conservano quello precedente. La raccolta
 PC, le monete importate e le assegnazioni locali dei tasti restano conservate.
-Non si trasferisce il registro PC al dispositivo né quello locale al PC.
+Il registro locale è incluso nel backup nativo v0.53; il registro della
+raccolta PC rimane separato.
 
 - **USB9 e backup PC v11 invariati.** L'identità dello storico è locale e non
-  viene accettata dal pacchetto USB. Nessuna lettura o scrittura Beyond in
+  viene accettata dal pacchetto USB9 ordinario. Nessuna lettura o scrittura Beyond in
   questo incremento; i dati delle prove sono originali o sintetici.
 - Nuova scheda **PDD25**, tag `PDDP`: aggiunge quattro byte little-endian di
   identità locale prima del CRC. Dimensione `8879 + 552 × numero magie/capacità`,
@@ -112,7 +117,7 @@ Non si trasferisce il registro PC al dispositivo né quello locale al PC.
 Lo storico non registra correzioni manuali di PF/monete, riposi senza dadi,
 annullamenti o ogni evento di gioco. I fallimenti automatici senza estrazione
 non sono tiri di dado e non entrano nel registro. Non fornisce un annullamento
-persistente, ricostruzione della scheda, esportazione, orari reali o tutte le
+persistente, ricostruzione della scheda, esportazione selettiva, orari reali o tutte le
 regole D&D. Questi limiti non sono risolti dall'esito HTTP di Beyond.
 
 ## Verifiche software e anteprime

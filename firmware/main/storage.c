@@ -65,3 +65,4 @@ bool pd_storage_save(const pd_state *s) {
     bank=next;generation++;status="Salvato offline";return true;
 }
 const char *pd_storage_status(void){return status;}
+bool pd_storage_writable(void){return !blocked;}

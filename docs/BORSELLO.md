@@ -1,5 +1,8 @@
 # Borsello offline — v0.51
 
+**Aggiornamento v0.53:** monete e storico sono inclusi nel
+[backup nativo del dispositivo](BACKUP-DISPOSITIVO.md), con ripristino confermato.
+
 **Aggiornamento v0.52:** lo [storico dei tiri](STORICO-TIRI.md) è ora persistente.
 Le nuove scritture della scheda sono PDD25; USB9 e backup PC v11 restano gli stessi.
 I dettagli PDD24 sotto descrivono il rilascio v0.51.

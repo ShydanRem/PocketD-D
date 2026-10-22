@@ -8,7 +8,7 @@ export function projectDevice(input){
     'Firmware iniziale: una sola scheda attiva. La conferma sul display sostituisce la copia sul dispositivo; la raccolta PC resta conservata.',
     'Trasferisce nome, livello, aspetto dell’avatar, PF, PF temporanei, CA, caratteristiche, abilità, salvezze, inventario (60 voci), attacchi, magie/capacità, dadi vita, condizioni e contatori morte e fino a 8 contatori manuali. Non trasferisce la risposta originale di Beyond.',
     'Avatar originale: carnagione, colore/taglio dei capelli e mantello scelti sul PC. Non rappresenta equipaggiamento o immagini di Beyond. Animazione disattivabile dal dispositivo in Aspetto.',
-    'Non disponibili sul dispositivo: gestione completa degli effetti delle condizioni, mappa e party. Lo storico locale degli ultimi 20 tiri richiede firmware v0.52 e non torna al PC.',
+    'Non disponibili sul dispositivo: gestione completa degli effetti delle condizioni, mappa e party. Lo storico locale degli ultimi 20 tiri richiede firmware v0.52 ed è incluso nel backup nativo dalla v0.53.',
     'Prove con competenze, maestrie, bonus extra e mezza competenza riconosciuti dal PC. Le prove da verificare restano bloccate; per eccezioni del DM è disponibile il dado libero.',
     'Avvelenato e vantaggio FOR da Ira sono fotografati al trasferimento. Ira riconosciuta attivabile dalla capacità; altre condizioni e durate restano manuali. Effetti PC disattivabili per il singolo tiro; altri effetti restano da gestire con il DM.',
     'CA fotografata al momento dell’esportazione; non ricalcolata cambiando equipaggiamento. I contatori non applicano recuperi o effetti automatici.',
@@ -31,7 +31,7 @@ export function projectDevice(input){
   warnings.push('Zaino: nomi, quantità, armi e cure riconosciute dal PC. Note e proprietà descrittive restano sul PC; gli oggetti generici non acquisiscono effetti automatici.');
   warnings.push('Cariche: un saldo esplicito per voce inventario, distinto dalla quantità. Configurazione manuale sul PC, correzione e spesa sul dispositivo; recupero manuale o pieno da riposo breve/lungo. Nessuna carica dedotta automaticamente da Beyond o dalle note.');
   warnings.push('Attacchi: bonus e danni secondo il modello PC, avvelenato, Ira, attacco potente e critico extra fotografati al trasferimento. CA bersaglio manuale. Nessun consumo automatico di munizioni, resistenze, danni aggiuntivi o regole speciali dalle note.');
-  warnings.push('Cambiare arma non ricalcola CA o avatar. Cure e consumabili richiedono conferma; Annulla sull’Eroe ripristina PF e quantità insieme. Le modifiche sul dispositivo non ritornano al PC.');
+  warnings.push('Cambiare arma non ricalcola CA o avatar. Cure e consumabili richiedono conferma; Annulla sull’Eroe ripristina PF e quantità insieme. I progressi possono essere conservati come backup nativo USB; la raccolta PC non viene sincronizzata automaticamente.');
   const magic={powers:s.powers.map(p=>{
     const description=String(p.description).normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').replace(/[^\x20-\x7e]/g,'?').trim();
     const excerpt=description.length>500;
