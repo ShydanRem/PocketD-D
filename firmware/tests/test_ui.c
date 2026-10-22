@@ -144,6 +144,20 @@ int main(void) {
         state.avatar=presets[i];render();char name[40];snprintf(name,sizeof name,"avatar-preset-%d.ppm",i);screenshot(name);
     }
     state.avatar=presets[0];render();
+    /* Production poses: committed deltas, fixed deadlines across redraws. */
+    for(unsigned i=0;i<3;i++) {
+        pd_demo(&state);state.avatar=presets[i];feedback.active=false;render();
+        unsigned writes=save_calls,random=random_calls;char file[64];
+        assert(avatar_phase==0);snprintf(file,sizeof file,"avatar-live-%u-idle.ppm",i);screenshot(file);
+        lv_tick_inc(800);lv_timer_handler();assert(avatar_phase==1);
+        snprintf(file,sizeof file,"avatar-live-%u-blink.ppm",i);screenshot(file);
+        click("-1 PF");assert(avatar_phase==3);snprintf(file,sizeof file,"avatar-live-%u-hurt.ppm",i);screenshot(file);
+        lv_tick_inc(600);lv_timer_handler();assert(avatar_phase==0);
+        click("+1 PF");assert(avatar_phase==2);snprintf(file,sizeof file,"avatar-live-%u-heal.ppm",i);screenshot(file);
+        lv_tick_inc(900);render();assert(avatar_phase==2);lv_tick_inc(100);avatar_frame(NULL);assert(avatar_phase==0);
+        assert(save_calls==writes+2&&random_calls==random&&state.hp==24);
+    }
+    pd_demo(&state);feedback.active=false;render();
     /* Long names and maximum supported values must remain usable in the new layout. */
     pd_state demo=state;
     memset(state.name,'W',PD_NAME_BYTES-1);state.name[PD_NAME_BYTES-1]=0;
@@ -806,9 +820,9 @@ int main(void) {
     lv_tick_inc(2100);lv_timer_handler();assert(!feedback.active&&!companion_feedback_visible()&&!feedback_timer&&!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves+1&&random_calls==effects_calls);screenshot("feedback-expired.ppm");
     click("+1 PF");assert(feedback.active&&feedback.kind==FEEDBACK_HEAL&&!strcmp(feedback.text,"PF +1")&&companion_feedback_visible());screenshot("feedback-heal.ppm");
     effects_before=state;fail_save=true;click("-1 PF");assert(page==HOME_VITALS&&!feedback.active&&!companion_feedback_visible()&&!memcmp(&state,&effects_before,sizeof state));screenshot("feedback-save-error.ppm");fail_save=false;
-    state.temp_hp=3;act(100);click("-1 PF");assert(feedback.kind==FEEDBACK_HURT&&!strcmp(feedback.text,"Temp -1")&&state.hp==effects_before.hp&&companion_feedback_visible());screenshot("feedback-temporary.ppm");
+    state.temp_hp=3;act(100);click("-1 PF");assert(feedback.kind==FEEDBACK_HURT&&!strcmp(feedback.text,"Temp -1")&&state.hp==effects_before.hp&&companion_feedback_visible()&&avatar_phase==3);screenshot("feedback-temporary.ppm");
     /* Reduced animation keeps a static receipt, with the same automatic expiry. */
-    state.idle_animation=false;act(100);click("+1 PF");assert(feedback.active&&feedback_timer&&!avatar_timer);int static_hero_y=lv_obj_get_y(avatar_sprite);lv_tick_inc(500);lv_timer_handler();assert(lv_obj_get_y(avatar_sprite)==static_hero_y&&companion_feedback_visible());screenshot("feedback-static.ppm");lv_tick_inc(1600);lv_timer_handler();assert(!feedback.active&&!companion_feedback_visible());
+    state.idle_animation=false;act(100);click("+1 PF");assert(feedback.active&&feedback_timer&&!avatar_timer&&avatar_phase==0);int static_hero_y=lv_obj_get_y(avatar_sprite);lv_tick_inc(500);lv_timer_handler();assert(lv_obj_get_y(avatar_sprite)==static_hero_y&&companion_feedback_visible());screenshot("feedback-static.ppm");lv_tick_inc(1600);lv_timer_handler();assert(!feedback.active&&!companion_feedback_visible());
     state.hp=state.max_hp;effects_saves=save_calls;act(2);assert(!feedback.active&&save_calls==effects_saves);
     /* Independent pools give an update receipt, rather than a sum of unlike units. */
     pd_demo(&state);act(103);click("-1");assert(feedback.kind==FEEDBACK_SPEND&&!strcmp(feedback.text,"Risorse utilizzate"));screenshot("feedback-spend.ppm");click("+1");assert(feedback.kind==FEEDBACK_RECOVER&&!strcmp(feedback.text,"Risorse recuperate"));screenshot("feedback-recover.ppm");effects_saves=save_calls;act(21);assert(!feedback.active&&save_calls==effects_saves+1);
@@ -817,7 +831,7 @@ int main(void) {
     slot_index=0;slot_pact=false;state.magic.slots[0]=(pd_slot){1,2};page=MAGIC_SLOTS;act(841);assert(feedback.kind==FEEDBACK_RECOVER);act(840);assert(feedback.kind==FEEDBACK_SPEND);
     /* Navigation/import/dimming clean cosmetic objects without confirming anything. */
     act(100);click("-1 PF");act(80);assert(!feedback_panel&&!feedback_timer&&!companion_feedback_visible());screenshot("fantasy-inventory.ppm");state=imported_magic;state.magic.count=3;state.magic.powers[0]=(pd_power){.name="Luce sintetica",.flags=PD_PREPARED};state.magic.powers[1]=(pd_power){.name="Scudo sintetico",.flags=PD_PREPARED|PD_USES_SLOT,.level=1};state.magic.powers[2]=(pd_power){.name="Slancio sintetico",.kind=1,.flags=PD_LIMITED,.remaining=1,.maximum=2};magic_filter=2;act(800);screenshot("fantasy-magic.ppm");act(100);act(1);assert(companion_feedback_visible());assert(stage_import(&imported_magic)&&!feedback.active&&!companion_feedback_visible());click("Annulla");act(1);assert(companion_feedback_visible());
-    state.dim_timeout=1;state.brightness=50;display_screen.touch_down=false;display_screen.activity=lv_tick_get()-30001;screen_service(-1,0);assert(display_screen.dimmed&&!companion_feedback_visible()&&!feedback_timer);pd_screen_activity(&display_screen,lv_tick_get());screen_service(-1,0);assert(!display_screen.dimmed);
+    state.dim_timeout=1;state.brightness=50;display_screen.touch_down=false;display_screen.activity=lv_tick_get()-30001;screen_service(-1,0);assert(display_screen.dimmed&&!companion_feedback_visible()&&!feedback_timer&&avatar_phase==0);pd_screen_activity(&display_screen,lv_tick_get());screen_service(-1,0);assert(!display_screen.dimmed&&avatar_phase==0);
     /* Expiry is safe across uint32 clock wrap and still never writes or rolls. */
     lv_tick_inc(UINT32_MAX-lv_tick_get()-100);act(1);assert(companion_feedback_visible());effects_before=state;effects_saves=save_calls;effects_calls=random_calls;lv_tick_inc(2100);lv_timer_handler();assert(!companion_feedback_visible()&&!feedback_timer&&!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves&&random_calls==effects_calls);
 

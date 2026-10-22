@@ -4,8 +4,9 @@ The `ui/companion/source/` PNGs were generated with OpenAI
 ImageGen for the new companion UI direction. Their prompts and provenance are
 retained in `ui/companion/source/provenance.json`; original bytes are
 kept intact. They are not the procedurally authored assets described below.
-The scene and icons are linked into the v0.48 firmware; its avatar uses the
-existing personalized renderer. ImageMagick 7 is used only to regenerate the
+The scene and icons are linked into the firmware since v0.48. The v0.49
+personalized avatar source is separately retained in `assets/avatar-source/`,
+with seed/output hashes and generation request summaries in its provenance file. ImageMagick 7 is used only to regenerate the
 committed raster C data, not to build or run the firmware. No provider
 credentials or personal character files are included.
 
@@ -37,10 +38,12 @@ are original PocketD-D pixel art authored by `scripts/generate-device-art.py`.
 No third-party artwork or imported character appearance is used.
 
 The personalized avatar masks in `assets/avatar_atlas.h` and
-`src/device-avatar-masks.json` are original integer-grid artwork from the same
-generator. `src/avatar-palette.json` preserves the existing PocketD-D palettes.
-The PC export preview and firmware share these masks and colors; no third-party
-avatar images or D&D Beyond portraits are embedded.
+`src/device-avatar-masks.json` are exported from the generated source by
+`scripts/generate-avatar-art.py`. The exporter shares one sampling scale and
+foot anchor across twelve frames and assigns skin/hair/cloak material shades.
+`src/avatar-palette.json` preserves the existing appearance choices. C and JS
+share the exported masks and computed colors; no D&D Beyond portraits are embedded.
+The older procedurally authored avatar is retained in Git history.
 
 The v0.22 physical-key mapping was checked against HARDWARE_REFERENCE.md and
 firmware/brookesia/components/ButtonTest/ButtonTest.cpp at the same pinned

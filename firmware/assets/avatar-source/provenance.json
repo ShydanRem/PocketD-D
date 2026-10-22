@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-22",
+  "provider": "OpenAI ImageGen",
+  "purpose": "PocketD-D customizable illustrated avatar; three hairstyles and idle/blink/heal/hurt poses",
+  "seed": {
+    "path": "../../ui/companion/source/hero.png",
+    "sha256": "ad53ba654a4ff02c65dff909be9fc402495d7a5379360706f815751e36ffafbe"
+  },
+  "source": {
+    "path": "poses.png",
+    "sha256": "b79e8903e7a3a9e326774729d68bc93d3a17709770cf66c0572f0fa32bc0784b",
+    "width": 1448,
+    "height": 1086,
+    "transparent": true
+  },
+  "requests": [
+    {
+      "output": "exec-d46f2da2-4ae3-435a-a4aa-0ebe134da230.png",
+      "prompt_summary": "One transparent 4-column by 3-row sprite sheet from the approved full-body hero. Rows: short tousled, shoulder-length, shaved hair. Columns: idle, blink, smiling healing, hurt. Same scale, foot baseline, facing right, cream tunic, brown leather, gold clasp and teal cape. No weapons, scenery, labels or effects."
+    },
+    {
+      "output": "exec-d5fc4bb8-ae94-4365-b85c-6d304edacf2d.png",
+      "prompt_summary": "Preserve the 4x3 sheet, all poses, outfit and first two rows. Correct the bottom row to a closely shaved buzz cut with exposed forehead, thin chestnut scalp cap, no tufts or fringe. Preserve true transparency."
+    }
+  ],
+  "export": "scripts/generate-avatar-art.py --export; shared 58/357 sampling scale, boot-center anchor [27,59], 48x60 I8 masks. Material/luminance classification preserves configurable skin/hair/cloak; fixed linen/leather/gold/eyes. Source bytes are unmodified.",
+  "limits": "Four drawn poses per hairstyle; idle uses the blink plus existing gentle movement, not a walk cycle or eight-direction animation. No equipment or game statistics inferred."
+}

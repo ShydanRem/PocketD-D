@@ -297,3 +297,17 @@ if all((base/(name+'.ppm')).is_file() for name in home_views):
     sheet=Image.new('RGB',(466*2,466*2),'black')
     for i,name in enumerate(home_views):sheet.paste(Image.open(base/(name+'.ppm')),((i%2)*466,(i//2)*466))
     sheet.save(base/'home-integration-preview.png');print(base/'home-integration-preview.png')
+
+# v0.49 illustrated avatar: captures exercise committed PF changes in main.c.
+pose_names=['idle','blink','heal','hurt']
+pose_gallery=Image.new('RGB',(466*4,466*3),'black')
+for style in range(3):
+    for pose,name in enumerate(pose_names):
+        frame=Image.open(base/f'avatar-live-{style}-{name}.ppm').convert('RGB')
+        frame.save(base/f'avatar-live-{style}-{name}.png')
+        pose_gallery.paste(frame,(pose*466,style*466))
+pose_gallery.save(base/'avatar-illustrated-preview.png')
+reaction_frames=[Image.open(base/f'avatar-live-0-{name}.ppm').convert('RGB') for name in ['idle','blink','idle','hurt','heal','idle']]
+reaction_frames[0].save(base/'avatar-reactions.gif',save_all=True,append_images=reaction_frames[1:],duration=[800,200,600,600,1000,800],loop=0,disposal=2,optimize=True)
+print(base/'avatar-illustrated-preview.png')
+print(base/'avatar-reactions.gif')

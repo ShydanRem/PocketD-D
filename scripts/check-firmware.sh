@@ -5,6 +5,7 @@ cd "$(dirname "$0")/.."
 : "${IDF_PATH:?Activate ESP-IDF v5.5.5 first}"
 mkdir -p firmware/tests/out
 python3 scripts/generate-device-art.py --check
+python3 scripts/generate-avatar-art.py --check
 python3 firmware/ui/companion/build_assets.py --verify
 node --input-type=module -e "import {initialState} from './src/model.js';import {projectDevice,serializeDevice} from './src/device-export.js';process.stdout.write(serializeDevice(projectDevice({...initialState(),avatar:{skin:2,hair:1,cloak:2,style:1}}).packet))" > firmware/tests/out/demo.json
 cc -std=c11 -Wall -Wextra -Werror -Ifirmware/core -I"$IDF_PATH/components/json/cJSON" firmware/core/pocketdd.c firmware/core/magic.c firmware/core/checks.c firmware/core/combat.c firmware/core/dice_pool.c firmware/core/packet.c firmware/tests/test_core.c "$IDF_PATH/components/json/cJSON/cJSON.c" -lm -o firmware/tests/out/core
@@ -26,4 +27,6 @@ firmware/tests/out/storage
 cmake -S firmware/tests -B firmware/tests/out/ui-build -G Ninja
 cmake --build firmware/tests/out/ui-build --parallel 4
 (cd firmware/tests/out/ui-build && ./dice && ./pool && ./avatar && ./checks && ./combat && ./magic && ./rest && ./status && ./effects && ./durations && ./damage && ./concentration && ./links && ./temporary-defences && ./mixed-damage && ./conditional-defences && ./multiple-defences && ./reductions && ./reduction-profiles && ./profile-costs && ./slot-costs && ./turns && ./time && ./charges && ./multi-costs && ./recharge && ./roll-conditions && ./screen && ./buttons && ./alloc && ./ui)
+firmware/tests/out/ui-build/avatar --hashes > firmware/tests/out/avatar-hashes.txt
+node scripts/check-avatar.js
 python3 scripts/check-device.py

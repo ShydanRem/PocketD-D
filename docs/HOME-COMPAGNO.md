@@ -1,5 +1,9 @@
 # Home del compagno integrata — v0.48
 
+**Stato storico della v0.48.** La [v0.49](AVATAR-ILLUSTRATO.md) sostituisce lo sprite
+procedurale con le varianti illustrate e introduce pose di cura/danno. Dimensioni
+dei buffer, asset e verifiche aggiornati sono nel documento successivo.
+
 La home ambientata, il menu a icone e il pannello PF sono ora collegati al
 **firmware ESP32-S3**, attraverso le stesse azioni e gli stessi salvataggi usati
 dalle altre schermate. La prova separata del commit `66625ff` resta un riferimento

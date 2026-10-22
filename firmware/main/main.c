@@ -59,8 +59,8 @@ static unsigned avatar_phase;
 static unsigned avatar_scale;
 _Alignas(4) static uint8_t avatar_data[PD_AVATAR_LARGE_BYTES];
 static lv_image_dsc_t avatar_image={
-    .header={.magic=LV_IMAGE_HEADER_MAGIC,.cf=LV_COLOR_FORMAT_I4,
-             .w=PD_AVATAR_WIDTH,.h=PD_AVATAR_HEIGHT,.stride=PD_AVATAR_WIDTH/2},
+    .header={.magic=LV_IMAGE_HEADER_MAGIC,.cf=LV_COLOR_FORMAT_I8,
+             .w=PD_AVATAR_WIDTH,.h=PD_AVATAR_HEIGHT,.stride=PD_AVATAR_WIDTH},
     .data_size=PD_AVATAR_IMAGE_BYTES,.data=avatar_data
 };
 static void avatar_frame(lv_timer_t *timer);
@@ -341,13 +341,23 @@ static void scene_atmosphere(lv_obj_t *stage,int x,int y){
         lv_obj_set_parent(scene_lights[i],stage);lv_obj_set_pos(scene_lights[i],x+xy[i][0],y+xy[i][1]);
     }
 }
+static unsigned avatar_current_pose(void) {
+    if(!state.idle_animation||display_screen.dimmed)return 0;
+    unsigned reaction=page==HERO&&feedback.active?pd_avatar_reaction(feedback.hp_delta,feedback.temp_delta,lv_tick_get()-feedback.started):0;
+    return reaction?reaction:pd_avatar_pose(lv_tick_get()-avatar_started);
+}
+static void avatar_set_pose(const pd_avatar *appearance,unsigned pose) {
+    lv_image_cache_drop(&avatar_image);
+    if(avatar_scale==4)pd_avatar_large(appearance,pose,avatar_data);else if(avatar_scale==3)pd_avatar_hero(appearance,pose,avatar_data);else pd_avatar_image(appearance,pose,avatar_data);
+    avatar_phase=pose;
+    if(avatar_sprite)lv_obj_invalidate(avatar_sprite);
+}
 static void avatar_prepare(const pd_avatar *appearance,unsigned scale) {
     avatar_scale=scale;
-    if(scale==4)pd_avatar_large(appearance,0,avatar_data);else if(scale==3)pd_avatar_hero(appearance,0,avatar_data);else pd_avatar_image(appearance,0,avatar_data);
     avatar_image.header.w=24*scale;avatar_image.header.h=30*scale;
-    avatar_image.header.stride=avatar_image.header.w/2;
+    avatar_image.header.stride=avatar_image.header.w;
     avatar_image.data_size=scale==4?PD_AVATAR_LARGE_BYTES:scale==3?PD_AVATAR_HERO_BYTES:PD_AVATAR_IMAGE_BYTES;
-    avatar_phase=0;avatar_started=lv_tick_get();
+    avatar_started=lv_tick_get();avatar_set_pose(appearance,avatar_current_pose());
 }
 static void avatar_show(const pd_avatar *appearance,int x,int y,lv_obj_t *parent,unsigned scale,bool animate) {
     avatar_prepare(appearance,scale);
@@ -2090,12 +2100,9 @@ static void avatar_frame(lv_timer_t *timer) {
     unsigned step=(lv_tick_get()-avatar_started)/200;
     for(unsigned i=0;i<2;i++)if(scene_halos[i])lv_obj_set_style_opa(scene_halos[i],(step+i)%3?LV_OPA_COVER:LV_OPA_70,0);
     for(unsigned i=0;i<5;i++)if(scene_lights[i])lv_obj_set_style_opa(scene_lights[i],i<2?((step+i)%3?LV_OPA_COVER:LV_OPA_50):((step+i*3)%8<2?LV_OPA_COVER:LV_OPA_20),0);
-    unsigned pose=pd_avatar_pose(lv_tick_get()-avatar_started);
+    unsigned pose=avatar_current_pose();
     if(pose==avatar_phase)return;
-    avatar_phase=pose;
-    lv_image_cache_drop(&avatar_image);
-    if(avatar_scale==4)pd_avatar_large(&state.avatar,pose,avatar_data);else if(avatar_scale==3)pd_avatar_hero(&state.avatar,pose,avatar_data);else pd_avatar_image(&state.avatar,pose,avatar_data);
-    lv_obj_invalidate(avatar_sprite);
+    avatar_set_pose(&state.avatar,pose);
 }
 static void shortcut(unsigned gesture) {
     if(gesture>=3||import_pending||confirmation_open())return;
@@ -2112,6 +2119,7 @@ static void screen_service(int pwr,int boot){
     bool failed=display_screen.failed;
     pd_screen_step(&display_screen,state.brightness,state.dim_timeout,import_pending||confirmation_open()||dice_animation.active,lv_tick_get(),pd_board_brightness,NULL);
     companion_pause(display_screen.dimmed);
+    if(display_screen.dimmed&&avatar_sprite&&avatar_phase)avatar_set_pose(&state.avatar,0);
     if(display_screen.dimmed){feedback.active=false;if(feedback_timer){lv_timer_delete(feedback_timer);feedback_timer=NULL;}if(feedback_panel){lv_obj_delete(feedback_panel);feedback_panel=NULL;}memset(feedback_motes,0,sizeof feedback_motes);}
     if(failed!=display_screen.failed&&page==DEVICE_SETTINGS)render();
 }

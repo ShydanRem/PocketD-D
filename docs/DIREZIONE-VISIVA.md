@@ -13,9 +13,11 @@ legato al personaggio. La revisione estetica v0.47 non è piaciuta e non è la b
 da ampliare. Dopo la [prima prova nativa](COMPAGNO-PIXEL.md), la
 [v0.48 collega home, menu e PF al firmware](HOME-COMPAGNO.md), preservando
 salvataggi, importazione, tasti e le 81 personalizzazioni con lo sprite attuale.
-Il nuovo avatar illustrato con le relative varianti, le pose espressive e il
-restyling delle altre viste restano da sviluppare. Gli asset di scena/menu
-generati e quelli procedurali dell'avatar hanno provenienza distinta e documentata.
+La [v0.49](AVATAR-ILLUSTRATO.md) porta il nuovo avatar illustrato nelle 81
+combinazioni esistenti, con pose neutra, battito delle palpebre, cura e danno.
+Restano la revisione delle viste interne e animazioni più articolate. Scena,
+icone e avatar generati hanno sorgenti/provenienza distinti dagli asset
+procedurali delle altre viste.
 
 ## Storia delle revisioni precedenti
 

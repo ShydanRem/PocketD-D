@@ -3,42 +3,35 @@
 #include <string.h>
 
 unsigned pd_avatar_pose(uint32_t elapsed) {
-    static const uint8_t poses[]={0,0,0,0,1,1,0,0,2,2,0,0,3,0,0,0};
-    return poses[(elapsed/200)%16];
+    unsigned phase=elapsed%3200;
+    return phase>=800&&phase<1000?1:0;
 }
-static uint32_t shade(uint32_t color) {
-    return ((((color>>16)&255)*3/4)<<16)|((((color>>8)&255)*3/4)<<8)|((color&255)*3/4);
+unsigned pd_avatar_reaction(int hp,int temp,uint32_t age) {
+    int delta=hp?hp:temp;
+    if(delta>0&&age<1000)return 2;
+    if(delta<0&&age<600)return 3;
+    return 0;
 }
 bool pd_avatar_image(const pd_avatar *a,unsigned pose,uint8_t out[PD_AVATAR_IMAGE_BYTES]) {
     if(!a||!out||pose>3||a->skin>2||a->hair>2||a->cloak>2||a->style>2)return false;
-    uint32_t skin=pd_avatar_skin[a->skin],hair=pd_avatar_hair[a->hair];
-    const uint32_t *cloak=pd_avatar_cloak[a->cloak];
-    const uint32_t colors[]={0,0x081711,shade(skin),skin,hair,shade(hair),
-        cloak[2],cloak[0],cloak[1],0xb8c2a3,0x647967,0xd0ae68,0xf1d590,0x73543b,0x352e28,0x172621};
-    for(unsigned i=0;i<16;i++) {
-        out[4*i]=colors[i]&255;out[4*i+1]=(colors[i]>>8)&255;
-        out[4*i+2]=colors[i]>>16;out[4*i+3]=i?255:0;
+    const unsigned choices[]={a->skin,a->hair,a->cloak};
+    for(unsigned i=0;i<256;i++) {
+        uint32_t color=i>=1&&i<=48?pd_avatar_materials[(i-1)/16][choices[(i-1)/16]][(i-1)%16]:pd_avatar_fixed[i];
+        out[4*i]=color&255;out[4*i+1]=(color>>8)&255;
+        out[4*i+2]=color>>16;out[4*i+3]=i?255:0;
     }
-    memcpy(out+64,pd_avatar_masks[a->style][pose],PD_AVATAR_IMAGE_BYTES-64);return true;
+    memcpy(out+1024,pd_avatar_masks[a->style][pose],PD_AVATAR_WIDTH*PD_AVATAR_HEIGHT);return true;
 }
 bool pd_avatar_large(const pd_avatar *a,unsigned pose,uint8_t out[PD_AVATAR_LARGE_BYTES]) {
     if(!pd_avatar_image(a,pose,out))return false;
     /* Expand backwards in place so the packed source remains intact until read. */
-    for(int y=PD_AVATAR_HEIGHT*2-1;y>=0;y--)for(int x=PD_AVATAR_WIDTH-1;x>=0;x--) {
-        uint8_t source=out[64+(y/2)*(PD_AVATAR_WIDTH/2)+x/2];
-        unsigned pixel=(x&1)?source&15:source>>4;
-        out[64+y*PD_AVATAR_WIDTH+x]=pixel*17;
-    }
+    for(int y=119;y>=0;y--)for(int x=95;x>=0;x--)
+        out[1024+y*96+x]=out[1024+(y/2)*48+x/2];
     return true;
 }
 bool pd_avatar_hero(const pd_avatar *a,unsigned pose,uint8_t out[PD_AVATAR_HERO_BYTES]) {
     if(!pd_avatar_image(a,pose,out))return false;
-    for(int y=89;y>=0;y--)for(int x=35;x>=0;x--) {
-        unsigned sx=(x*4)/3,sy=(y*2)/3;
-        uint8_t left=out[64+sy*24+sx/2];left=(sx&1)?left&15:left>>4;
-        sx=(x*2+1)*2/3;
-        uint8_t right=out[64+sy*24+sx/2];right=(sx&1)?right&15:right>>4;
-        out[64+y*36+x]=(left<<4)|right;
-    }
+    for(int y=89;y>=0;y--)for(int x=71;x>=0;x--)
+        out[1024+y*72+x]=out[1024+(y*2/3)*48+x*2/3];
     return true;
 }
