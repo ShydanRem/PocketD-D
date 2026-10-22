@@ -189,6 +189,7 @@ Le nuove importazioni usano v10; le schede senza `extended` continuano a seriali
 | `deathSaves` | Successi/fallimenti 0–3 e `stabilized` booleano; gestione manuale |
 | `hitDice` | Fino a 20 `{name,die,max,used}`; d6/8/10/12, massimi 1–20 e usati entro massimo |
 | `currencies` | cp/sp/ep/gp/pp interi 0–999999999 |
+| `currenciesAvailable` | Booleano opzionale da v0.51: cinque saldi verificati, anche se tutti zero. Se assente nei vecchi backup: vero solo se almeno un saldo è non zero. Gli importi restano conservati; [borsello e trasferimento USB9](BORSELLO.md) |
 | `pactSlots` | Nove livelli `{max,current}`, riserva distinta dagli slot ordinari |
 | `skillBonuses`, `saveBonuses`, `checkBonuses` | Bonus additivi interi −30…30 per identificatore |
 | `halfSkills`, `halfAbilityChecks` | Mezza competenza riconosciuta, senza sommarla a competenza/maestria |

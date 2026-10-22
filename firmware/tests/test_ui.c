@@ -907,13 +907,52 @@ int main(void) {
     click("Menu");click("Magie");assert(lv_anim_count_running()>0);render();assert(!lv_anim_count_running());
     state.idle_animation=false;page=INVENTORY;render();assert(!lv_anim_count_running());state.idle_animation=true;
     page=MAGIC_LIST;render();assert(lv_anim_count_running()>0);pd_theme_pause();assert(!lv_anim_count_running());
+    /* Money: unknown is distinct from verified zero; drafts never spend/save. */
+    pd_demo(&state);feedback.active=false;combat_roll=0;act(80);click("Monete");assert(page==WALLET_HOME&&!state.wallet.available);screenshot("wallet-unknown.ppm");
+    effects_saves=save_calls;effects_calls=random_calls;effects_before=state;
+    click("Configura saldo");click("+");assert(page==WALLET_EDIT&&wallet_draft.coins[0]==1);
+    shortcut(0);act(100);act(2400);assert(page==WALLET_EDIT&&!stage_import(&effects_before)&&!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves&&random_calls==effects_calls);
+    click("Annulla");assert(page==WALLET_HOME&&!state.wallet.available);click("Configura saldo");click("Anteprima");assert(page==WALLET_CONFIRM);screenshot("wallet-confirm-zero.ppm");
+    click("Conferma");assert(state.wallet.available&&page==WALLET_HOME&&feedback.kind==FEEDBACK_WALLET&&save_calls==effects_saves+1&&wallet_can_undo());screenshot("wallet-zero.ppm");
+    fail_save=true;click("Annulla monete");assert(state.wallet.available&&wallet_can_undo()&&!feedback.active);fail_save=false;
+    click("Annulla monete");assert(!state.wallet.available&&page==WALLET_HOME&&save_calls==effects_saves+3&&!undo_available);
+    effects_before=state;effects_saves=save_calls;
+    click("Configura saldo");const unsigned balances[]={5,2,0,12,1};
+    for(unsigned coin=0;coin<5;coin++){
+        for(unsigned amount=0;amount<balances[coin];amount++)click("+");
+        if(coin<4)click(">");
+    }
+    screenshot("wallet-edit.ppm");click("Anteprima");screenshot("wallet-confirm.ppm");
+    fail_save=true;click("Conferma");assert(page==WALLET_CONFIRM&&!state.wallet.available&&!memcmp(&state,&effects_before,sizeof state)&&!feedback.active);screenshot("wallet-save-error.ppm");fail_save=false;
+    click("Indietro");assert(wallet_draft.coins[3]==12);click("Anteprima");click("Conferma");assert(page==WALLET_HOME&&state.wallet.available&&pd_wallet_copper(&state.wallet)==2225&&feedback.kind==FEEDBACK_WALLET&&random_calls==effects_calls);
+    for(unsigned i=0;i<5;i++)assert(state.wallet.coins[i]==balances[i]);
+    screenshot("wallet-home.ppm");click(">");screenshot("wallet-gold.ppm");
+    /* No-op confirmations and a stale last-game undo never write a coin balance. */
+    act(1);assert(!wallet_can_undo());effects_saves=save_calls;effects_before=state;click("Oro: 12 MO");click("Anteprima");
+    root=lv_screen_active();lv_obj_update_layout(root);bool no_op=false;
+    for(unsigned i=0;i<lv_obj_get_child_count(root);i++){
+        lv_obj_t *b=lv_obj_get_child(root,i);
+        if(lv_obj_check_type(b,&lv_button_class)&&button_label(b)&&!strcmp(lv_label_get_text(button_label(b)),"Conferma")){
+            assert(lv_obj_has_state(b,LV_STATE_DISABLED));lv_obj_send_event(b,LV_EVENT_CLICKED,NULL);no_op=true;break;
+        }
+    }
+    assert(no_op&&page==WALLET_CONFIRM&&save_calls==effects_saves&&!memcmp(&state,&effects_before,sizeof state));act(2409);
+    /* Maximum amounts remain readable; a forged + at the cap cannot overflow. */
+    for(unsigned i=0;i<5;i++)state.wallet.coins[i]=PD_COIN_MAX;wallet_page=0;render();screenshot("wallet-maximum.ppm");
+    click("Rame: 999999999 MR");effects_before=state;act(2407);assert(wallet_draft.coins[0]==PD_COIN_MAX&&!memcmp(&state,&effects_before,sizeof state));
+    for(unsigned i=0;i<8;i++)act(2408);click("-");assert(wallet_draft.coins[0]==899999999);act(2409);assert(state.wallet.coins[0]==PD_COIN_MAX);
+    /* USB import explicitly replaces local money only after confirmation. */
+    pd_demo(&pending);pending.wallet=(pd_wallet){.available=true,.coins={1,2,3,42,5}};pd_state wallet_import=pending;
+    state.shortcuts[0]=12;state.shortcuts[1]=4;state.shortcuts[2]=5;
+    assert(stage_import(&wallet_import));screenshot("wallet-import.ppm");click("Annulla");assert(state.wallet.coins[3]==PD_COIN_MAX);
+    assert(stage_import(&wallet_import));click("Conferma");assert(page==HERO&&state.wallet.coins[3]==42&&state.shortcuts[0]==12&&state.shortcuts[1]==4&&state.shortcuts[2]==5);
     unsigned covered=0;
-    for(unsigned p=0;p<=HOME_VITALS;p++){
+    for(unsigned p=0;p<=WALLET_CONFIRM;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)HOME_VITALS+1);
-    assert(covered==HOME_VITALS+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)WALLET_CONFIRM+1);
+    assert(covered==WALLET_CONFIRM+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

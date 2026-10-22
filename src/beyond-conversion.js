@@ -12,7 +12,7 @@ export const BEYOND_LIMITATIONS = [
   'Armi importate come oggetti: attacchi, danni, proprietà e arma attiva sono da configurare.',
   'Magie, slot, capacità di classe, talenti, resistenze e vantaggi condizionali non vengono importati.',
   'PF temporanei, condizioni, dadi vita e tiri morte non sono rappresentati.',
-  'Peso, contenitori, monete, sintonia ed effetti degli oggetti non sono trasferiti. Lo stato equipaggiato sorgente è nelle note.',
+  'Peso, contenitori, sintonia ed effetti degli oggetti non sono trasferiti. Lo stato equipaggiato sorgente è nelle note.',
   'La CA è una fotografia dei dati letti: cambiare equipaggiamento o caratteristiche richiede aggiornarla manualmente.',
 ];
 

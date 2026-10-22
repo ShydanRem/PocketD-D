@@ -80,5 +80,5 @@ int main(void){
  calls=0;assert(!pd_concentration_event_roll(&s,&event,2,0,rng,NULL,&next,&roll,&report,false)&&!pd_concentration_event_roll(&s,&event,0,31,rng,NULL,&next,&roll,&report,false)&&!pd_concentration_event_roll(&s,&event,0,0,rng,NULL,&s,&roll,&report,false)&&!calls);
  s.training.available=false;assert(!pd_concentration_event_roll(&s,&event,0,0,rng,NULL,&next,&roll,&report,false)&&!calls);s.training.available=true;s.training.blocked=1u<<26;assert(!pd_concentration_event_roll(&s,&event,0,0,rng,NULL,&next,&roll,&report,false)&&!calls);
  assert(!pd_damage_event_preview(NULL,&event,&report)&&!pd_damage_event_preview(&s,NULL,&report)&&!pd_damage_event_preview(&s,&event,NULL)&&!pd_damage_event_apply(&s,&event,NULL));
- printf("Mixed damage: %u independent type/flag/amount pairs, %u split/rounding cases, 720 permutations, impact snapshot, one CON save, aggregate thresholds, unknown/malformed rejection and PDD23 candidate passed\n",cases,splits);
+ printf("Mixed damage: %u independent type/flag/amount pairs, %u split/rounding cases, 720 permutations, impact snapshot, one CON save, aggregate thresholds, unknown/malformed rejection and PDD24 candidate passed\n",cases,splits);
 }

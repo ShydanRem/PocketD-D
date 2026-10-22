@@ -2,8 +2,13 @@
 
 **Aggiornamento v0.41:** le [cariche oggetto](CARICHE-OGGETTI.md) sono configurabili
 manualmente e trasferibili al dispositivo; la conversione Beyond non le estrae
-ancora automaticamente. Backup correnti v11, USB8. Nessuna nuova lettura reale
+ancora automaticamente. Backup correnti v11, USB9. Nessuna nuova lettura reale
 Beyond per questo incremento; i risultati reali sotto restano quelli delle prove datate.
+
+**Aggiornamento v0.51:** i cinque saldi presenti nel sorgente sono marcati verificati,
+compreso lo zero; dati assenti restano sconosciuti. Il [borsello](BORSELLO.md)
+è ora trasferibile e gestibile offline. Queste modifiche hanno prove sintetiche:
+non è stata ripetuta la lettura del personaggio reale.
 
 **L'importazione compila ora anche competenze, salvezze, configurazioni delle armi, magie, slot e capacità riconosciute. I dati conservati e gli effetti di gioco automatizzati rimangono distinti.** `conversion.complete` resta `false`: l'app non è un motore completo di tutte le regole Beyond.
 

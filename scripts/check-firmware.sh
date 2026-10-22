@@ -13,6 +13,8 @@ cc -std=c11 -Wall -Wextra -Werror -Ifirmware/core -I"$IDF_PATH/components/json/c
 firmware/tests/out/core firmware/tests/out/demo.json
 cc -std=c11 -Wall -Wextra -Werror -Ifirmware/core -I"$IDF_PATH/components/json/cJSON" firmware/core/pocketdd.c firmware/core/magic.c firmware/core/checks.c firmware/core/combat.c firmware/core/dice_pool.c firmware/core/packet.c firmware/tests/checks_probe.c "$IDF_PATH/components/json/cJSON/cJSON.c" -lm -o firmware/tests/out/checks-probe
 node scripts/check-training.js
+cc -std=c11 -Wall -Wextra -Werror -Ifirmware/core -I"$IDF_PATH/components/json/cJSON" firmware/core/pocketdd.c firmware/core/magic.c firmware/core/checks.c firmware/core/packet.c firmware/tests/wallet_probe.c "$IDF_PATH/components/json/cJSON/cJSON.c" -lm -o firmware/tests/out/wallet-probe
+node scripts/check-wallet.js
 cc -std=c11 -Wall -Wextra -Werror -Ifirmware/core -I"$IDF_PATH/components/json/cJSON" firmware/core/pocketdd.c firmware/core/magic.c firmware/core/checks.c firmware/core/combat.c firmware/core/dice_pool.c firmware/core/packet.c firmware/tests/combat_probe.c "$IDF_PATH/components/json/cJSON/cJSON.c" -lm -o firmware/tests/out/combat-probe
 node scripts/check-combat.js
 cc -std=c11 -Wall -Wextra -Werror -Ifirmware/core -I"$IDF_PATH/components/json/cJSON" firmware/core/pocketdd.c firmware/core/magic.c firmware/core/checks.c firmware/core/packet.c firmware/tests/magic_probe.c "$IDF_PATH/components/json/cJSON/cJSON.c" -lm -o firmware/tests/out/magic-probe
@@ -27,7 +29,7 @@ cc -std=c11 -Wall -Wextra -Werror -Wno-unused-parameter -Ifirmware/core -Ifirmwa
 firmware/tests/out/storage
 cmake -S firmware/tests -B firmware/tests/out/ui-build -G Ninja
 cmake --build firmware/tests/out/ui-build --parallel 4
-(cd firmware/tests/out/ui-build && ./dice && ./pool && ./avatar && ./checks && ./combat && ./magic && ./rest && ./status && ./effects && ./durations && ./damage && ./concentration && ./links && ./temporary-defences && ./mixed-damage && ./conditional-defences && ./multiple-defences && ./reductions && ./reduction-profiles && ./profile-costs && ./slot-costs && ./turns && ./time && ./charges && ./multi-costs && ./recharge && ./roll-conditions && ./screen && ./buttons && ./alloc && ./ui)
+(cd firmware/tests/out/ui-build && ./dice && ./pool && ./avatar && ./wallet && ./checks && ./combat && ./magic && ./rest && ./status && ./effects && ./durations && ./damage && ./concentration && ./links && ./temporary-defences && ./mixed-damage && ./conditional-defences && ./multiple-defences && ./reductions && ./reduction-profiles && ./profile-costs && ./slot-costs && ./turns && ./time && ./charges && ./multi-costs && ./recharge && ./roll-conditions && ./screen && ./buttons && ./alloc && ./ui)
 firmware/tests/out/ui-build/avatar --hashes > firmware/tests/out/avatar-hashes.txt
 node scripts/check-avatar.js
 python3 scripts/check-device.py

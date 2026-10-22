@@ -74,6 +74,8 @@ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as out:
     ui_manifest=json.loads((preview/'ui-views.json').read_text())
     ui_files=['ui-views.json','ui-catalog.html','ui-overview.png','ui-all-views.png','ui-transition.gif']
     ui_files += [r['image'] for r in ui_manifest['views']]
+    ui_files += ['wallet-preview.png']+[f'wallet-{name}.png' for name in
+                 ('unknown','zero','edit','confirm','save-error','home','gold','maximum','import','confirm-zero')]
     for name in ui_files:
         image=preview/name
         if not image.is_file():raise SystemExit(f'Missing UI capture: {name}')

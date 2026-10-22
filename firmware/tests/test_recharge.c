@@ -24,5 +24,5 @@ int main(void){
  pd_demo(&s);s.items[0].charges=(pd_charges){2,7,1};before=s;calls=0;assert(!pd_item_recharge(NULL,0,&good,rng,NULL,&next,&roll,&gained)&&!pd_item_recharge(&s,0,NULL,rng,NULL,&next,&roll,&gained)&&!pd_item_recharge(&s,0,&good,NULL,NULL,&next,&roll,&gained)&&!pd_item_recharge(&s,0,&good,rng,NULL,&s,&roll,&gained)&&!pd_item_recharge(&s,0,&good,rng,NULL,NULL,&roll,&gained)&&!pd_item_recharge(&s,0,&good,rng,NULL,&next,NULL,&gained)&&!pd_item_recharge(&s,0,&good,rng,NULL,&next,&roll,NULL)&&!calls&&!memcmp(&s,&before,sizeof s));
  /* Candidate persists as the existing PDD23; the original and unrelated pools remain exact. */
  face=6;assert(pd_item_recharge(&s,0,&good,rng,NULL,&next,&roll,&gained)&&gained==5&&next.items[0].charges.current==7);static uint8_t data[PD_RECORD_SIZE];uint32_t gen;size_t n=pd_encode(&next,230,data);assert(pd_decode(data,n,&out,&gen)&&gen==230&&out.items[0].charges.current==7&&out.items[0].quantity==1&&!memcmp(&s,&before,sizeof s));
- printf("Recharge: %u independent item/die/count/capacity/balance/bonus/face cases, zero floor, excess cap, exact candidates, rejection before RNG and unchanged PDD23 persistence passed\n",cases);
+ printf("Recharge: %u independent item/die/count/capacity/balance/bonus/face cases, zero floor, excess cap, exact candidates, rejection before RNG and unchanged PDD24 persistence passed\n",cases);
 }

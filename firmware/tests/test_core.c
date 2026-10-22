@@ -27,9 +27,10 @@
 #include "fixtures/state-v20.h"
 #include "fixtures/state-v21.h"
 #include "fixtures/state-v22.h"
+#include "fixtures/state-v23.h"
 static void strip_charges(cJSON *root){cJSON *items=cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(root,"inventory"),"items");cJSON *item; cJSON_ArrayForEach(item,items)cJSON_DeleteItemFromObjectCaseSensitive(item,"charges");}
 static void record_crc(uint8_t *record) {
-    size_t size=8854; /* No powers: PDD23 prefix, recovery, status and CRC. */
+    size_t size=8875; /* No powers: PDD24 prefix, recovery, status and CRC. */
     uint32_t crc=pd_crc32(record,size-4);
     for(int i=0;i<4;i++)record[size-4+i]=crc>>(8*i);
 }
@@ -45,6 +46,10 @@ static uint32_t rng(void *ctx) { (void)ctx; return values[at++]; }
 int main(int argc,char **argv) {
     pd_state s,out;uint32_t gen;pd_demo(&s);assert(pd_valid(&s));
     for(int i=1;i<=30;i++) assert(pd_modifier(i)==(i-10)/2-((i<10&&(i&1))?1:0));
+    assert(pd_decode(golden_v23,sizeof golden_v23,&out,&gen)&&gen==231&&out.roll_conditions==15&&!out.wallet.available);
+    const uint8_t *const old_records[]={legacy_v1,legacy_v2,legacy_v3,legacy_v4,golden_v5,golden_v6,golden_v7,golden_v8,golden_v9,golden_v10,golden_v11,golden_v12,golden_v13,golden_v14,golden_v15,golden_v16,golden_v17,golden_v18,golden_v19,golden_v20,golden_v21,golden_v22,golden_v23};
+    const size_t old_lengths[]={sizeof legacy_v1,sizeof legacy_v2,sizeof legacy_v3,sizeof legacy_v4,sizeof golden_v5,sizeof golden_v6,sizeof golden_v7,sizeof golden_v8,sizeof golden_v9,sizeof golden_v10,sizeof golden_v11,sizeof golden_v12,sizeof golden_v13,sizeof golden_v14,sizeof golden_v15,sizeof golden_v16,sizeof golden_v17,sizeof golden_v18,sizeof golden_v19,sizeof golden_v20,sizeof golden_v21,sizeof golden_v22,sizeof golden_v23};
+    for(unsigned i=0;i<23;i++){assert(pd_decode(old_records[i],old_lengths[i],&out,&gen)&&!out.wallet.available);for(unsigned j=0;j<PD_COINS;j++)assert(!out.wallet.coins[j]);}
     s.temp_hp=3;pd_hp(&s,-2);assert(s.hp==24&&s.temp_hp==1);
     pd_hp(&s,-8);assert(s.hp==17&&s.temp_hp==0);
     pd_hp(&s,INT_MAX);assert(s.hp==32);pd_hp(&s,INT_MIN);assert(!s.hp);
@@ -99,9 +104,9 @@ int main(int argc,char **argv) {
     assert(pd_select(legacy_v1,sizeof legacy_v1,b,record_size,&out,&gen)==1&&gen==42);
     b[368]=3;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
     pd_encode(&s,42,b);b[372]=2;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
-    pd_encode(&s,42,b);b[record_size-943]=9;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
-    pd_encode(&s,42,b);b[record_size-943]=101;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
-    pd_encode(&s,42,b);b[record_size-942]=4;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
+    pd_encode(&s,42,b);b[record_size-964]=9;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
+    pd_encode(&s,42,b);b[record_size-964]=101;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
+    pd_encode(&s,42,b);b[record_size-963]=4;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
     pd_demo(&s);pd_encode(&s,41,a);s.hp=7;pd_encode(&s,42,b);
     assert(pd_select(a,record_size,b,record_size,&out,&gen)==1&&out.hp==7&&gen==42);
     /* Every header/CRC bit and distributed payload corruption falls back to older bank. */
@@ -124,7 +129,7 @@ int main(int argc,char **argv) {
         assert(!pd_parse_packet(json,n-1,&out));
         cJSON *base=cJSON_ParseWithLength(json,n),*v;assert(base);
         const char *numeric_keys[]={"version","level","hp","maxHp","tempHp","armorClass"};
-        double bad[]={9,21,33,0,-1,41};
+        double bad[]={10,21,33,0,-1,41};
         for (int i=0;i<6;i++) {
             v=cJSON_Duplicate(base,true);cJSON_ReplaceItemInObjectCaseSensitive(v,numeric_keys[i],cJSON_CreateNumber(bad[i]));reject(v);
         }
@@ -137,12 +142,12 @@ int main(int argc,char **argv) {
         }
         v=cJSON_Duplicate(base,true);cJSON_AddNumberToObject(cJSON_GetObjectItemCaseSensitive(v,"avatar"),"skin",0);reject(v);
         v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"avatar");reject(v);
-        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),1);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");reject(v);
-        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),1);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");
+        v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"wallet");cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),1);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");reject(v);
+        v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"wallet");cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),1);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");
         cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");cJSON_DeleteItemFromObjectCaseSensitive(v,"magic");cJSON_DeleteItemFromObjectCaseSensitive(v,"inventory");cJSON_DeleteItemFromObjectCaseSensitive(v,"training");cJSON_DeleteItemFromObjectCaseSensitive(v,"avatar");char *old=cJSON_PrintUnformatted(v);
         assert(pd_parse_packet(old,strlen(old),&out)&&out.avatar.skin==0&&out.idle_animation&&!out.training.available);
         cJSON_free(old);cJSON_Delete(v);
-        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),2);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");
+        v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"wallet");cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),2);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");
         cJSON_DeleteItemFromObjectCaseSensitive(v,"magic");cJSON_DeleteItemFromObjectCaseSensitive(v,"inventory");cJSON_DeleteItemFromObjectCaseSensitive(v,"training");old=cJSON_PrintUnformatted(v);
         assert(pd_parse_packet(old,strlen(old),&out)&&out.avatar.skin==2&&!out.training.available);cJSON_free(old);cJSON_Delete(v);
         v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"training");reject(v);
@@ -177,7 +182,7 @@ int main(int argc,char **argv) {
         v=cJSON_Duplicate(base,true);inv=cJSON_GetObjectItemCaseSensitive(v,"inventory");
         cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetObjectItemCaseSensitive(inv,"combat"),"raging",cJSON_CreateNumber(1));reject(v);
         /* v3 USB keeps training but must never fabricate an inventory. */
-        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),3);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");
+        v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"wallet");cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),3);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");
         cJSON_DeleteItemFromObjectCaseSensitive(v,"magic");cJSON_DeleteItemFromObjectCaseSensitive(v,"inventory");old=cJSON_PrintUnformatted(v);
         assert(pd_parse_packet(old,strlen(old),&out)&&out.training.available&&!out.inventory_available&&out.equipped==PD_NO_WEAPON);cJSON_free(old);cJSON_Delete(v);
         v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"magic");reject(v);
@@ -188,9 +193,9 @@ int main(int argc,char **argv) {
         cJSON_ReplaceItemInObjectCaseSensitive(cJSON_GetArrayItem(cJSON_GetObjectItemCaseSensitive(magic,"slots"),0),"current",cJSON_CreateNumber(10));reject(v);
         v=cJSON_Duplicate(base,true);magic=cJSON_GetObjectItemCaseSensitive(v,"magic");
         cJSON_AddItemToArray(cJSON_GetObjectItemCaseSensitive(magic,"powers"),cJSON_CreateObject());reject(v);
-        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),4);strip_charges(v);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");cJSON_DeleteItemFromObjectCaseSensitive(v,"magic");old=cJSON_PrintUnformatted(v);
+        v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"wallet");cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),4);strip_charges(v);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");cJSON_DeleteItemFromObjectCaseSensitive(v,"magic");old=cJSON_PrintUnformatted(v);
         assert(pd_parse_packet(old,strlen(old),&out)&&out.inventory_available&&!out.magic.available&&out.shortcuts[1]==3);cJSON_free(old);cJSON_Delete(v);
-        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),5);strip_charges(v);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");old=cJSON_PrintUnformatted(v);
+        v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"wallet");cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),5);strip_charges(v);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");old=cJSON_PrintUnformatted(v);
         assert(pd_parse_packet(old,strlen(old),&out)&&out.magic.available&&!out.recovery.available);cJSON_free(old);cJSON_Delete(v);
         v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"recovery");reject(v);
         v=cJSON_Duplicate(base,true);cJSON_AddBoolToObject(cJSON_GetObjectItemCaseSensitive(v,"recovery"),"available",true);reject(v);
@@ -202,7 +207,7 @@ int main(int argc,char **argv) {
             cJSON *h=cJSON_Parse("{\"name\":\"Classe\",\"die\":8,\"maximum\":3,\"used\":1}");assert(h);
             cJSON_ReplaceItemInObjectCaseSensitive(h,hit_keys[i],cJSON_CreateNumber(hit_bad[i]));cJSON_AddItemToArray(cJSON_GetObjectItemCaseSensitive(rec,"pools"),h);reject(v);
         }
-        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),6);strip_charges(v);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");old=cJSON_PrintUnformatted(v);
+        v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"wallet");cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),6);strip_charges(v);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");old=cJSON_PrintUnformatted(v);
         assert(pd_parse_packet(old,strlen(old),&out)&&!out.status.available);cJSON_free(old);cJSON_Delete(v);
         v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"status");reject(v);
         const char *status_keys[]={"successes","failures","stabilized","available"};
@@ -220,9 +225,9 @@ int main(int argc,char **argv) {
         for(int i=0;i<7;i++)cJSON_AddItemToArray(resources,cJSON_Duplicate(cJSON_GetArrayItem(resources,0),true));
         char *encoded=cJSON_PrintUnformatted(v);assert(pd_parse_packet(encoded,strlen(encoded),&out));
         assert(out.hp==999&&out.temp_hp==999&&out.resource_count==8);cJSON_free(encoded);cJSON_Delete(v);
-        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),7);strip_charges(v);old=cJSON_PrintUnformatted(v);
+        v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"wallet");cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),7);strip_charges(v);old=cJSON_PrintUnformatted(v);
         assert(pd_parse_packet(old,strlen(old),&out)&&!out.items[0].charges.maximum);cJSON_free(old);cJSON_Delete(v);
-        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),7);reject(v);
+        v=cJSON_Duplicate(base,true);cJSON_DeleteItemFromObjectCaseSensitive(v,"wallet");cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),7);reject(v);
         const char *charge_fields[]={"current","maximum","recovery"};
         for(unsigned i=0;i<3;i++){
             v=cJSON_Duplicate(base,true);cJSON *item=cJSON_GetArrayItem(cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(v,"inventory"),"items"),0);
@@ -234,6 +239,6 @@ int main(int argc,char **argv) {
     }
     const char *invalid[]={"{}","[]","null","{\"format\":\"pocketdd-device\",\"version\":1}","{", "{\"x\":\"\\u0000\"}","1e999"};
     for(size_t i=0;i<sizeof invalid/sizeof invalid[0];i++) assert(!pd_parse_packet(invalid[i],strlen(invalid[i]),&out));
-    puts("C core: HP/temp, counters, d20, CRC/corruption/wrap, golden v1..v22 migration, PDD23 persistence and strict USB v1..v8 passed");
+    puts("C core: HP/temp, counters, d20, CRC/corruption/wrap, golden v1..v23 migration, PDD24 persistence and strict USB v1..v9 passed");
     return 0;
 }

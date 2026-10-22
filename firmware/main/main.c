@@ -35,7 +35,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM } page_t;
 static const pd_theme_kind page_themes[]={
     [HERO]=PD_THEME_NONE,
     [SHEET]=PD_THEME_SHEET,
@@ -125,6 +125,9 @@ static const pd_theme_kind page_themes[]={
     [ROLL_CONTEXT]=PD_THEME_SHEET,
     [HOME_MENU]=PD_THEME_NONE,
     [HOME_VITALS]=PD_THEME_NONE,
+    [WALLET_HOME]=PD_THEME_WALLET,
+    [WALLET_EDIT]=PD_THEME_WALLET,
+    [WALLET_CONFIRM]=PD_THEME_WALLET,
 };
 PD_EXT static pd_state state,previous,pending,scratch;
 static bool undo_available,import_pending,has_roll;
@@ -135,9 +138,9 @@ static uint16_t *dice_pixels;
 static lv_timer_t *dice_timer;
 static lv_obj_t *avatar_sprite;
 static lv_timer_t *avatar_timer;
-enum { FEEDBACK_HEAL=1,FEEDBACK_HURT,FEEDBACK_RECOVER,FEEDBACK_SPEND,FEEDBACK_MIXED };
+enum { FEEDBACK_HEAL=1,FEEDBACK_HURT,FEEDBACK_RECOVER,FEEDBACK_SPEND,FEEDBACK_MIXED,FEEDBACK_WALLET };
 #define FEEDBACK_POOLS (PD_RESOURCES+PD_POWERS+18+PD_ITEMS*2+PD_HIT_POOLS)
-typedef struct { unsigned hp,temp;uint16_t pools[FEEDBACK_POOLS]; } feedback_snapshot;
+typedef struct { unsigned hp,temp;uint16_t pools[FEEDBACK_POOLS];pd_wallet wallet; } feedback_snapshot;
 static feedback_snapshot feedback_before;
 static struct { bool active;unsigned kind;uint32_t started;int hp_delta,temp_delta;char text[64]; } feedback;
 static lv_obj_t *feedback_panel,*feedback_motes[3];
@@ -195,7 +198,7 @@ static bool rest_active,hit_rolled;
 PD_EXT static pd_state hit_candidate;
 static pd_pool hit_result;
 static unsigned hit_gained;
-static bool confirmation_open(void){return page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
+static bool confirmation_open(void){return page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
 static pd_damage_plan damage_plan; /* First component + explicit concentration choice. */
 static pd_damage_component damage_extra[PD_DAMAGE_COMPONENTS-1],damage_part_draft;
 static pd_damage_context damage_context,damage_extra_context[PD_DAMAGE_COMPONENTS-1],damage_part_context,source_context_draft;
@@ -338,6 +341,13 @@ static QueueHandle_t packets;
 static TickType_t import_started;
 PD_EXT static char line[PD_PACKET_MAX+1];
 #endif
+static pd_wallet wallet_draft,wallet_origin;
+static unsigned wallet_page,wallet_coin,wallet_step;
+static const uint32_t wallet_steps[]={1,10,100,1000,10000,100000,1000000,10000000,100000000};
+static const char *const coin_names[]={"Rame","Argento","Electrum","Oro","Platino"};
+static const char *const coin_units[]={"MR","MA","ME","MO","MP"};
+static bool wallet_same(const pd_wallet *a,const pd_wallet *b){return a->available==b->available&&!memcmp(a->coins,b->coins,sizeof a->coins);}
+static bool wallet_can_undo(void){return undo_available&&!wallet_same(&state.wallet,&previous.wallet);}
 static void render(void);
 static void render_companion(void);
 #ifndef PD_UI_TEST
@@ -385,10 +395,10 @@ static lv_obj_t *art(const lv_image_dsc_t *source,int x,int y,lv_obj_t *parent) 
     return o;
 }
 static bool feedback_action(intptr_t a){
-    return a==1||a==2||a==20||a==21||a==89||a==832||a==840||a==841||a==848||a==849||a==907||a==914||a==1805||a==1865||a==2168||a==2179;
+    return a==2411||a==2414||a==1||a==2||a==20||a==21||a==89||a==832||a==840||a==841||a==848||a==849||a==907||a==914||a==1805||a==1865||a==2168||a==2179;
 }
 static void feedback_capture(feedback_snapshot *out){
-    out->hp=state.hp;out->temp=state.temp_hp;unsigned n=0;
+    out->hp=state.hp;out->temp=state.temp_hp;out->wallet=state.wallet;unsigned n=0;
     for(unsigned i=0;i<PD_RESOURCES;i++)out->pools[n++]=i<state.resource_count?state.resources[i].current:0;
     for(unsigned i=0;i<PD_POWERS;i++)out->pools[n++]=i<state.magic.count&&(state.magic.powers[i].kind||(state.magic.powers[i].flags&PD_LIMITED))?state.magic.powers[i].remaining:0;
     for(unsigned i=0;i<9;i++){out->pools[n++]=state.magic.slots[i].current;out->pools[n++]=state.magic.pact[i].current;}
@@ -404,7 +414,11 @@ static void feedback_prepare(void){
         else snprintf(feedback.text,sizeof feedback.text,hp?"PF %+d":"Temp %+d",hp?hp:temp);
     }else{
         bool up=false,down=false;for(unsigned i=0;i<FEEDBACK_POOLS;i++){up|=after.pools[i]>feedback_before.pools[i];down|=after.pools[i]<feedback_before.pools[i];}
-        if(!up&&!down)return;
+        if(!up&&!down){
+            if(wallet_same(&after.wallet,&feedback_before.wallet))return;
+            feedback.kind=FEEDBACK_WALLET;snprintf(feedback.text,sizeof feedback.text,"Monete aggiornate");
+            feedback.active=true;feedback.started=lv_tick_get();return;
+        }
         feedback.kind=up&&down?FEEDBACK_MIXED:up?FEEDBACK_RECOVER:FEEDBACK_SPEND;
         snprintf(feedback.text,sizeof feedback.text,"%s",up&&down?"Risorse aggiornate":up?"Risorse recuperate":"Risorse utilizzate");
     }
@@ -414,10 +428,10 @@ static void feedback_show(void){
     if(!feedback.active)return;
     uint32_t elapsed=lv_tick_get()-feedback.started;
     if(import_pending||display_screen.dimmed||strstr(pd_storage_status(),"Errore")||elapsed>=2000){feedback.active=false;return;}
-    unsigned color=feedback.kind==FEEDBACK_HURT?PD_DANGER:feedback.kind==FEEDBACK_SPEND?PD_VIOLET:feedback.kind==FEEDBACK_MIXED?PD_GOLD:PD_MINT;
+    unsigned color=feedback.kind==FEEDBACK_HURT?PD_DANGER:feedback.kind==FEEDBACK_SPEND?PD_VIOLET:(feedback.kind==FEEDBACK_MIXED||feedback.kind==FEEDBACK_WALLET)?PD_GOLD:PD_MINT;
     feedback_panel=decoration(78,68,310,27,PD_INK,0);
     lv_obj_set_style_border_color(feedback_panel,lv_color_hex(color),0);lv_obj_set_style_border_width(feedback_panel,1,0);
-    const lv_image_dsc_t *icon=feedback.kind==FEEDBACK_HEAL?&theme_receipt_heart:feedback.kind==FEEDBACK_HURT?&theme_receipt_shield:feedback.kind==FEEDBACK_RECOVER?&theme_receipt_confirm:&theme_receipt_crystal;
+    const lv_image_dsc_t *icon=feedback.kind==FEEDBACK_HEAL?&theme_receipt_heart:feedback.kind==FEEDBACK_HURT?&theme_receipt_shield:(feedback.kind==FEEDBACK_RECOVER||feedback.kind==FEEDBACK_WALLET)?&theme_receipt_confirm:&theme_receipt_crystal;
     art(icon,5,0,feedback_panel);
     lv_obj_t *text=small_label(feedback.text,34,3,242,color);lv_obj_set_parent(text,feedback_panel);lv_obj_set_pos(text,34,3);
     for(unsigned i=0;i<3;i++){feedback_motes[i]=decoration(280+i*7,10,2,2,color,0);lv_obj_set_parent(feedback_motes[i],feedback_panel);lv_obj_set_pos(feedback_motes[i],280+i*7,10);}
@@ -478,6 +492,8 @@ static void frame(void) {
 static void act(intptr_t action) {
     if((action==2300||action==2301)&&(import_pending||confirmation_open()))return;
     if(import_pending&&action!=30&&action!=31)return;
+    if(page==WALLET_EDIT&&(action<2404||action>2410))return;
+    if(page==WALLET_CONFIRM&&action!=2411&&action!=2412&&action!=2409)return;
     if(page==MAGIC_STOP&&action!=852&&action!=853)return;
     if(page==MAGIC_CONFIRM&&action!=832&&action!=833)return;
     if(page==DEFENCE_CONFIRM&&action!=1816&&action!=1817&&action!=2010)return;
@@ -528,6 +544,28 @@ static void act(intptr_t action) {
     }
     else if(action==2300)page=HOME_MENU;
     else if(action==2301)page=HOME_VITALS;
+    else if(action==2400){wallet_page=0;page=WALLET_HOME;}
+    else if(action==2401&&page==WALLET_HOME&&wallet_page)wallet_page--;
+    else if(action==2402&&page==WALLET_HOME&&wallet_page<1&&state.wallet.available)wallet_page++;
+    else if((action==2403||(action>=2500&&action<2505))&&page==WALLET_HOME){
+        wallet_origin=state.wallet;wallet_draft=state.wallet;wallet_draft.available=true;
+        wallet_coin=action==2403?0:action-2500;wallet_step=0;page=WALLET_EDIT;
+    }
+    else if(action==2404&&page==WALLET_EDIT&&wallet_coin)wallet_coin--;
+    else if(action==2405&&page==WALLET_EDIT&&wallet_coin+1<PD_COINS)wallet_coin++;
+    else if(action==2406&&page==WALLET_EDIT&&wallet_draft.coins[wallet_coin]>=wallet_steps[wallet_step])wallet_draft.coins[wallet_coin]-=wallet_steps[wallet_step];
+    else if(action==2407&&page==WALLET_EDIT&&wallet_draft.coins[wallet_coin]<=PD_COIN_MAX-wallet_steps[wallet_step])wallet_draft.coins[wallet_coin]+=wallet_steps[wallet_step];
+    else if(action==2408&&page==WALLET_EDIT)wallet_step=(wallet_step+1)%9;
+    else if(action==2409&&(page==WALLET_EDIT||page==WALLET_CONFIRM))page=WALLET_HOME;
+    else if(action==2410&&page==WALLET_EDIT)page=WALLET_CONFIRM;
+    else if(action==2412&&page==WALLET_CONFIRM)page=WALLET_EDIT;
+    else if(action==2411&&page==WALLET_CONFIRM){
+        if(!wallet_same(&wallet_origin,&state.wallet)||wallet_same(&wallet_draft,&state.wallet)||!pd_wallet_set(&next,&wallet_draft))return;
+        apply(&next);if(wallet_same(&state.wallet,&wallet_draft))page=WALLET_HOME;
+    }
+    else if(action==2414&&page==WALLET_HOME&&wallet_can_undo()){
+        if(pd_storage_save(&previous)){state=previous;undo_available=false;invalidate_strike();}
+    }
     else if (action==1) { pd_hp(&next,-1);if(memcmp(&next,&state,sizeof state))apply(&next); }
     else if (action==2) { pd_hp(&next,1);if(memcmp(&next,&state,sizeof state))apply(&next); }
     else if (action==3 && undo_available) {
@@ -1180,8 +1218,8 @@ static void render_inventory(void) {
         lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_align(l,LV_ALIGN_LEFT_MID,45,0);
     }
     small_label("* arma scelta | note sul PC",83,312,300,PD_MUTED);
-    button("Usi",83,359,144,48,103,true);
-    button("Attacco",239,359,144,48,81,state.equipped!=PD_NO_WEAPON);
+    const char *actions[]={"Monete","Usi","Attacco"};const unsigned ids[]={2400,103,81};
+    for(unsigned i=0;i<3;i++){lv_obj_t *b=button(actions[i],83+i*104,359,92,48,ids[i],i!=2||state.equipped!=PD_NO_WEAPON);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
 }
 static void render_item(void) {
     char text[160];const pd_item *v=&state.items[item_index];
@@ -1212,6 +1250,48 @@ static void render_item(void) {
     }
     button("Zaino",83,359,v->charges.maximum?144:300,48,80,true);
     if(v->charges.maximum)button("Cariche",239,359,144,48,2160,true);
+}
+static void render_wallet(void){
+    char text[160];
+    if(page==WALLET_HOME){
+        snprintf(text,sizeof text,"Borsello %u/2",wallet_page+1);label(text,139,111,188,false);
+        button("<",83,99,48,44,2401,state.wallet.available&&wallet_page>0);button(">",335,99,48,44,2402,state.wallet.available&&wallet_page<1);
+        if(!state.wallet.available){
+            label("Saldo non disponibile",83,173,300,false);
+            small_label("Monete non ancora verificate",83,215,300,PD_GOLD);
+            button("Configura saldo",83,261,300,48,2403,true);
+            small_label("Nessun saldo inventato",83,319,300,PD_MUTED);
+        }else{
+            for(unsigned row=0;row<3;row++){
+                unsigned i=wallet_page*3+row;if(i>=PD_COINS)break;
+                snprintf(text,sizeof text,"%s: %u %s",coin_names[i],(unsigned)state.wallet.coins[i],coin_units[i]);
+                button(text,83,155+row*49,300,44,2500+i,true);
+            }
+            snprintf(text,sizeof text,"Equiv. rame: %llu MR",(unsigned long long)pd_wallet_copper(&state.wallet));small_label(text,83,302,300,PD_GOLD);
+            small_label("Nessun cambio automatico",83,325,300,PD_MUTED);
+        }
+        lv_obj_t *undo=button("Annulla monete",83,359,144,48,2414,wallet_can_undo());lv_obj_set_style_text_font(undo,&lv_font_montserrat_16,0);
+        button("Zaino",239,359,144,48,80,true);return;
+    }
+    if(page==WALLET_EDIT){
+        snprintf(text,sizeof text,"%s (%s)",coin_names[wallet_coin],coin_units[wallet_coin]);label(text,139,111,188,false);
+        button("<",83,99,48,44,2404,wallet_coin>0);button(">",335,99,48,44,2405,wallet_coin+1<PD_COINS);
+        snprintf(text,sizeof text,"%u",(unsigned)wallet_draft.coins[wallet_coin]);label(text,83,161,300,true);
+        small_label("Nuovo saldo da confermare",83,196,300,PD_GOLD);
+        snprintf(text,sizeof text,"Passo: %u >",(unsigned)wallet_steps[wallet_step]);button(text,83,223,300,44,2408,true);
+        button("-",83,279,144,44,2406,wallet_draft.coins[wallet_coin]>=wallet_steps[wallet_step]);
+        button("+",239,279,144,44,2407,wallet_draft.coins[wallet_coin]<=PD_COIN_MAX-wallet_steps[wallet_step]);
+        small_label("Altri tagli: frecce in alto",83,326,300,PD_MUTED);
+        button("Annulla",83,359,144,48,2409,true);button("Anteprima",239,359,144,48,2410,true);return;
+    }
+    label("Conferma borsello",83,111,300,true);
+    for(unsigned i=0;i<PD_COINS;i++){
+        if(wallet_origin.available)snprintf(text,sizeof text,"%s %u -> %u",coin_units[i],(unsigned)wallet_origin.coins[i],(unsigned)wallet_draft.coins[i]);
+        else snprintf(text,sizeof text,"%s ? -> %u",coin_units[i],(unsigned)wallet_draft.coins[i]);
+        small_label(text,83,153+i*32,300,wallet_origin.coins[i]!=wallet_draft.coins[i]||!wallet_origin.available?PD_GOLD:PD_TEXT);
+    }
+    small_label(wallet_origin.available?"Salva tutti i tagli insieme":"Crea un saldo locale verificato",83,327,300,PD_MUTED);
+    button("Indietro",83,359,144,48,2412,true);button("Conferma",239,359,144,48,2411,!wallet_same(&wallet_draft,&state.wallet)&&wallet_same(&wallet_origin,&state.wallet));
 }
 static void render_combat(void) {
     pd_weapon_info w;char text[160];if(!pd_weapon_stats(&state,state.equipped,&w)) {page=INVENTORY;render_inventory();return;}
@@ -2019,11 +2099,13 @@ static void render_content(void) {
         if(pending.inventory_available)snprintf(items,sizeof items,"%u",pending.item_count);else strcpy(items,"?");
         if(pending.magic.available)snprintf(powers,sizeof powers,"%u",pending.magic.count);else strcpy(powers,"?");
         snprintf(text,sizeof text,"Zaino %s | magie/usi %s",items,powers);small_label(text,83,216,300,PD_GOLD);
-        label("Sostituisce la copia locale.",83,244,300,false);
-        small_label((state.effect_count||state.roll_conditions||local_defences()||state.reaction_spent)?"Stato locale rimosso; PC intatto":"PC: raccolta conservata.",83,279,300,(state.effect_count||state.roll_conditions||local_defences()||state.reaction_spent)?PD_GOLD:PD_TEXT);
-        button("Annulla",83,303,144,54,31,true); button("Conferma",239,303,144,54,30,true);
+        small_label(pending.wallet.available?"Monete: saldo verificato":"Monete: saldo non disponibile",83,239,300,PD_GOLD);
+        small_label("Sostituisce la copia locale.",83,262,300,PD_TEXT);
+        small_label((state.effect_count||state.roll_conditions||local_defences()||state.reaction_spent)?"Stato locale rimosso; PC intatto":"PC: raccolta conservata.",83,287,300,(state.effect_count||state.roll_conditions||local_defences()||state.reaction_spent)?PD_GOLD:PD_TEXT);
+        button("Annulla",83,313,144,54,31,true); button("Conferma",239,313,144,54,30,true);
         return;
     }
+    if(page==WALLET_HOME||page==WALLET_EDIT||page==WALLET_CONFIRM){render_wallet();return;}
     if(page>=DAMAGE_HOME){render_damage();return;}
     if(page>=EFFECT_LIST){render_effects();return;}
     if(page==DEVICE_SETTINGS){render_settings();return;}
@@ -2157,7 +2239,7 @@ static void render_content(void) {
     }
 }
 #ifdef PD_UI_TEST
-static bool styled_pages[HOME_VITALS+1];
+static bool styled_pages[WALLET_CONFIRM+1];
 static void capture_styled_page(unsigned view);
 #endif
 static void render(void){
@@ -2238,7 +2320,7 @@ static void usb_task(void *unused) {
             if(c=='\n') {
                 if(!overflow && used) {
                     line[used]=0;
-                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 8\n");
+                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 9\n");
                     else {
                         pd_state *candidate=malloc(sizeof *candidate);
                         if(!candidate)reply("PDD ERROR memory\n");

@@ -231,7 +231,7 @@ export function extendBeyond(report,c){
   state.condition=ext.conditions.some(x=>slug(x.name)==='poisoned');
   if(c.deathSaves)ext.deathSaves={successes:c.deathSaves.successCount,failures:c.deathSaves.failCount,stabilized:c.deathSaves.isStabilized};
   for(const cl of array(c.classes))if(cl.definition?.hitDice!=null)ext.hitDice.push({name:cl.definition.name??'Classe',die:cl.definition.hitDice,max:cl.level,used:cl.hitDiceUsed??0});
-  if(c.currencies)ext.currencies=c.currencies;
+  if(c.currencies){ext.currencies=c.currencies;ext.currenciesAvailable=true;}
   for(const a of array(c.customActions)){
     addPower({id:`ddb-custom-${powers.length+1}`,type:'feature',name:a.name,description:text(a.description||a.snippet,a.name),passive:true});
     warn('Azioni personalizzate conservate come note: tiri ed effetti da configurare manualmente.');

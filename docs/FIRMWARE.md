@@ -1,13 +1,14 @@
-# Firmware PocketD-D 0.50 — interfaccia del compagno
+# Firmware PocketD-D 0.51 — borsello offline
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
-[Novità v0.50: grafica e UX di tutte le viste, catalogo e verifiche](UI-COMPAGNO.md).
+[Novità v0.51: monete, conferme e compatibilità](BORSELLO.md).
+[Grafica v0.50: grafica e UX di tutte le viste, catalogo e verifiche](UI-COMPAGNO.md).
 [Avatar illustrato v0.49: 81 aspetti e reazioni](AVATAR-ILLUSTRATO.md).
 [Integrazione home, menu, PF e tasti v0.48](HOME-COMPAGNO.md).
-PDD23, USB v8, backup PC v11; layout invariato e lettura dei salvataggi precedenti.
+PDD24, USB v9, backup PC v11; layout invariato e lettura dei salvataggi precedenti.
 
 ## Stato e perimetro
 
@@ -85,7 +86,7 @@ Vantaggio e svantaggio selezionabili dal pulsante Base/Vant/Svant. Durante il vo
 si può accelerare; modalità e navigazione attendono l'arresto del tiro.
 
 Non è ancora una scheda completa: mancano gestione completa degli effetti, eccezioni ai tiri morte e morte istantanea,
-monete, storico persistente, mappa e party. Le prove applicano i contributi
+storico persistente, mappa e party. Le prove applicano i contributi
 riconosciuti e trasferiti; i contesti da verificare restano bloccati. Le istantanee per prove e attacchi includono Avvelenato, Ira, attacco potente e dadi critici extra: Ira riconosciuta usa ora il contatore della capacità; altre durate e interazioni restano manuali. Il dado libero
 usa bonus zero. CA/PF massimi effettivi sono basi esportate più modificatori
 locali espliciti; non si ricostruiscono automaticamente dall'equipaggiamento.
@@ -203,22 +204,24 @@ Nessun reset/flash, scrittura verso Beyond o modifica della raccolta da questo
 strumento. Il trasferimento fisico USB resta da collaudare, benché parser,
 protocollo host e conferma grafica siano testati separatamente.
 
-Formato `pocketdd-device` v7, massimo 262144 byte, campi esatti di base: `format`, `version`,
+Formato corrente `pocketdd-device` v9, massimo 262144 byte, campi esatti di base: `format`, `version`,
 `name`, `level`, `hp`, `maxHp`, `tempHp`, `armorClass`, `abilities` e `resources`.
 Da v2 è obbligatorio anche `avatar`, con esattamente `skin`, `hair`, `cloak`,
 `style`: indici interi 0–2 corrispondenti alle scelte PC. Da v3 è obbligatorio
 `training`, con gradi, competenze, extra, mezze competenze, blocchi e le due
 istantanee; [schema completo](ABILITA-SALVEZZE.md). Il firmware accetta anche
-v1/v2/v3/v4/v5/v6: v1 usa l'aspetto base; v1/v2 segnalano le competenze mancanti.
+v1–v8: v1 usa l'aspetto base; v1/v2 segnalano le competenze mancanti.
 Da v4 è obbligatorio `inventory`; [schema e omissioni](INVENTARIO-ATTACCHI.md).
 Da v5 è obbligatorio `magic`; [schema, testi e tasti locali](MAGIE-TASTI.md).
 Da v6 è obbligatorio `recovery`; [dadi vita e regole esplicite](RIPOSI-RECUPERI.md).
 Da v7 è obbligatorio `status`; [note e registro morte](STATO-CONDIZIONI-MORTE.md).
+Da v8 gli oggetti possono avere pool di cariche. Da v9 è obbligatorio `wallet`,
+con saldo verificato e cinque tagli; [schema e limiti](BORSELLO.md).
 La preferenza locale per
 l'animazione non viene trasferita dal PC: la conferma conserva quella già attiva.
-Il nuovo uploader negozia `PDD READY 1/2/3/4/5/6/7` e blocca una copia prima dell'invio
+Il nuovo uploader negozia `PDD READY 1` … `PDD READY 9` e blocca una copia prima dell'invio
 se il firmware non ne supporta la versione. Usare lo script di questa versione;
-i precedenti uploader non riconoscono `PDD READY 7`.
+gli uploader precedenti non riconoscono `PDD READY 9`.
 Nome ASCII 1–48 byte, contatore 1–32; accenti traslitterati e altri simboli
 sostituiti nell'anteprima PC. Livello 1–20, caratteristiche 1–30, CA 1–40,
 PF 0–massimo (massimo 1–999), temporanei 0–999. Massimo otto contatori con
@@ -235,8 +238,8 @@ reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
 ## Salvataggio e dadi
 
 NVS nel namespace `pocketdd`, nuova partizione `pdd_state`, due chiavi alternate
-`state_a`/`state_b`. Record PDD23 (tag `PDDN`) da **8854 + 552 × numero voci** byte, massimo
-75094. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
+`state_a`/`state_b`. Record PDD24 (tag `PDDO`) da **8875 + 552 × numero voci** byte, massimo
+75115. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
 visibile. Nessun dump di struct, erase o fallback distruttivo. Errori I/O o
 allocazioni insufficienti bloccano scritture; CRC e versioni future conservati.
 
@@ -273,13 +276,14 @@ PDD22 aggiunge 24 byte: due spese aggiuntive per ciascuno dei tre profili;
 PDD1–21 letti con la prima spesa conservata e le altre vuote, senza scritture al boot.
 PDD23 aggiunge un byte di effetti locali sui tiri, senza inferenza dalle note;
 PDD1–22 letti con i quattro nuovi effetti disattivati e Avvelenato conservato.
-Le nuove scritture richiedono firmware v0.44 o successivo:
-[compatibilità e downgrade](CONDIZIONI-TIRI.md).
-Il nuovo uploader supporta USB v1–v8. Preferenze avatar/tasti
+PDD24 aggiunge 21 byte: disponibilità e cinque saldi uint32; PDD1–23 iniziano
+con borsello non disponibile, senza scritture al boot. Le nuove scritture
+richiedono firmware v0.51 o successivo; [compatibilità e downgrade](BORSELLO.md).
+Il nuovo uploader supporta USB v1–v9. Preferenze avatar/tasti
 locali conservate durante l'importazione. [Dettagli](MAGIE-TASTI.md).
 
 PF e contatori vengono persistiti ad ogni modifica; “Annulla modifica” ripristina
-l'ultima modifica di sessione a PF/contatori/inventario/magie/recuperi/stato/effetti/durate/difese e la salva, non la vecchia scheda dopo
+l'ultima modifica di sessione a PF/contatori/inventario/magie/recuperi/stato/effetti/durate/difese/monete e la salva, non la vecchia scheda dopo
 un'importazione. I tiri liberi/attacco/danni non scrivono flash; cure e dadi vita salvano PF e consumo; le salvezze morte salvano PF e contatori prima dell’animazione. Non c’è storico persistente.
 L'uso prolungato della flash va misurato prima di cambiare strategia di scrittura.
 
@@ -1015,3 +1019,12 @@ statico/wrap/pulizia, liste con nomi lunghi e controlli nel cerchio.
 ESP32-S3: **994112 byte**, app 4 MiB **76% libera**, ESP-IDF 5.5.5/LVGL 9.4.0.
 PDD23/USB8/backup v11/layout e tasti invariati. Nessun flash, collaudo fisico,
 lettura Beyond o modifica della raccolta personale.
+
+## Incremento v0.51 — borsello
+
+[Uso, schema e verifiche](BORSELLO.md). Cinque saldi distinti, zero verificato
+diverso da dato assente, bozze locali senza scritture, anteprima prima/dopo,
+conferma atomica e annullamento dell'ultima modifica alle monete.
+Trasferimento PC USB9 e record PDD24; raccolta PC e tasti locali conservati.
+Nessun cambio, acquisto o peso automatico. 91/91 viste native esercitate;
+nessuna nuova lettura Beyond e nessuna prova fisica in questo incremento.

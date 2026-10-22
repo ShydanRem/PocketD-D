@@ -197,13 +197,13 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
     #define candidate (*allocated)
     candidate.brightness=50;candidate.idle_animation=true;candidate.equipped=PD_NO_WEAPON;
     candidate.shortcuts[0]=1;candidate.shortcuts[1]=3;candidate.shortcuts[2]=5;
-    const char *const fields[]={"format","version","name","level","hp","maxHp","tempHp","armorClass","abilities","resources","avatar","training","inventory","magic","recovery","status"};
+    const char *const fields[]={"format","version","name","level","hp","maxHp","tempHp","armorClass","abilities","resources","avatar","training","inventory","magic","recovery","status","wallet"};
     const char *const abilities[]={"FOR","DES","COS","INT","SAG","CAR"};
     const char *const resource_keys[]={"name","current","maximum"};
     const char *const avatar_keys[]={"skin","hair","cloak","style"};
-    int version=number(root,"version",1,8);
+    int version=number(root,"version",1,9);
     cJSON *fmt=cJSON_GetObjectItemCaseSensitive(root,"format");
-    if (version<0 || end!=json+size || !keys(root,fields,version==1?10:version==2?11:version==3?12:version==4?13:version==5?14:version==6?15:16) || !cJSON_IsString(fmt) ||
+    if (version<0 || end!=json+size || !keys(root,fields,version==1?10:version==2?11:version==3?12:version==4?13:version==5?14:version==6?15:version<9?16:17) || !cJSON_IsString(fmt) ||
         strcmp(fmt->valuestring,"pocketdd-device") ||
         !copy(root,"name",candidate.name,sizeof candidate.name)) goto done;
     int level=number(root,"level",1,20),hp=number(root,"hp",0,999),max=number(root,"maxHp",1,999),
@@ -223,6 +223,16 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
     if(version>=5&&!magic(cJSON_GetObjectItemCaseSensitive(root,"magic"),&candidate.magic))goto done;
     if(version>=6&&!recovery(cJSON_GetObjectItemCaseSensitive(root,"recovery"),&candidate.recovery))goto done;
     if(version>=7&&!status(cJSON_GetObjectItemCaseSensitive(root,"status"),&candidate.status))goto done;
+    if(version>=9){
+        const char *const fields[]={"available","cp","sp","ep","gp","pp"};
+        cJSON *wallet=cJSON_GetObjectItemCaseSensitive(root,"wallet"),*available=cJSON_GetObjectItemCaseSensitive(wallet,"available");
+        if(!keys(wallet,fields,6)||!cJSON_IsBool(available))goto done;
+        candidate.wallet.available=cJSON_IsTrue(available);
+        for(unsigned i=0;i<PD_COINS;i++){
+            int value=number(wallet,fields[i+1],0,PD_COIN_MAX);if(value<0)goto done;
+            candidate.wallet.coins[i]=(uint32_t)value;
+        }
+    }
     cJSON *a=cJSON_GetObjectItemCaseSensitive(root,"abilities");
     if (!keys(a,abilities,6)) goto done;
     for (int i=0;i<6;i++) { int n=number(a,abilities[i],1,30); if (n<0) goto done; candidate.abilities[i]=n; }

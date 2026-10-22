@@ -6,7 +6,11 @@
 #define PD_RESOURCES 8
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
-#define PD_RECORD_SIZE 75094
+#define PD_RECORD_SIZE 75115
+#define PD_COINS 5
+#define PD_COIN_MAX UINT32_C(999999999)
+/* cp/sp/ep/gp/pp, distinct physical counts. Unknown is not a zero balance. */
+typedef struct { bool available;uint32_t coins[PD_COINS]; } pd_wallet;
 #define PD_POWERS 120
 #define PD_POWER_TEXT_BYTES 501
 #define PD_ITEMS 60
@@ -102,11 +106,15 @@ typedef struct {
     pd_defences defences; /* Explicit local configuration; unknown is not normal. */
     uint8_t brightness,dim_timeout; /* Device-local: 10..100%, off/30/60/120s. */
     uint8_t shortcuts[3]; /* PWR short, BOOT short, BOOT long; device-local. */
+    pd_wallet wallet;
 } pd_state;
 typedef struct { uint8_t dice[2], count, natural; int total, bonus; } pd_roll;
 typedef uint32_t (*pd_random)(void *context);
 void pd_demo(pd_state *state);
 bool pd_valid(const pd_state *state);
+bool pd_wallet_set(pd_state *state,const pd_wallet *wallet);
+bool pd_wallet_change(pd_state *state,unsigned coin,int32_t delta);
+uint64_t pd_wallet_copper(const pd_wallet *wallet);
 int pd_effect_bonus(const pd_state *state,unsigned target);
 unsigned pd_armor(const pd_state *state);
 unsigned pd_max_hp(const pd_state *state);

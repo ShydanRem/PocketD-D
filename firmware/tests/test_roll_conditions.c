@@ -52,7 +52,7 @@ int main(void){
  pd_check_resolution r;assert(pd_check_resolve(&s,PD_CHECK,0,1,false,(pd_roll_context){1,1},&r)&&r.automatic_failure&&!r.needed&&!r.allowed);s.roll_conditions=PD_FRIGHTENED|PD_PRONE;pd_attack_resolution attack;assert(pd_attack_resolve(&s,1,(pd_roll_context){0},false,&attack)&&attack.allowed&&!attack.needed&&!attack.mode);
  /* One-byte PDD23 extension: every mask, CRC-valid invalid flags, all legacy data stable. */
  pd_demo(&s);s.magic.count=120;for(unsigned i=0;i<120;i++)s.magic.powers[i]=(pd_power){.name="Magia",.flags=PD_PREPARED};static uint8_t data[PD_RECORD_SIZE];uint32_t generation;
- for(unsigned flags=0;flags<16;flags++){s.roll_conditions=flags;size_t n=pd_encode(&s,230,data);assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDN",4)&&pd_decode(data,n,&out,&generation)&&generation==230&&out.roll_conditions==flags);}
- for(unsigned flags=16;flags<256;flags++){size_t n=pd_encode(&s,230,data);data[n-5]=flags;crc(data,n);before=out;generation=9;assert(!pd_decode(data,n,&out,&generation)&&generation==9&&!memcmp(&out,&before,sizeof out));}
- printf("Roll conditions: %u independent flags/scope/ability/mode/poison/rage/exclusion/partial-context cases, complete-context oracle, exact RNG guards, note separation and strict PDD23 passed\n",cases);
+ for(unsigned flags=0;flags<16;flags++){s.roll_conditions=flags;size_t n=pd_encode(&s,230,data);assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDO",4)&&pd_decode(data,n,&out,&generation)&&generation==230&&out.roll_conditions==flags);}
+ for(unsigned flags=16;flags<256;flags++){size_t n=pd_encode(&s,230,data);data[n-26]=flags;crc(data,n);before=out;generation=9;assert(!pd_decode(data,n,&out,&generation)&&generation==9&&!memcmp(&out,&before,sizeof out));}
+ printf("Roll conditions: %u independent flags/scope/ability/mode/poison/rage/exclusion/partial-context cases, complete-context oracle, exact RNG guards, note separation and strict PDD24 passed\n",cases);
 }

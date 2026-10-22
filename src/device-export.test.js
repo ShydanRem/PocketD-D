@@ -12,7 +12,7 @@ test('device export is a bounded projection and never mutates the source',()=>{
   const {packet,warnings}=projectDevice(s);
   assert.equal(packet.name,'Elian ??');assert.equal(packet.hp,24);assert.equal(packet.armorClass,16);
   assert.deepEqual(packet.abilities,s.abilities);assert.deepEqual(s,before);
-  assert.equal(packet.format,'pocketdd-device');assert.equal(packet.version,8);
+  assert.equal(packet.format,'pocketdd-device');assert.equal(packet.version,9);
   assert.equal(packet.resources[0].current,1);assert(warnings.some(w=>w.includes('inventario')));
   assert.equal(packet.inventory.items.length,s.inventory.length);assert.equal(packet.inventory.equipped,1);
 });

@@ -35,9 +35,9 @@ test('riposi: solo oggetti presenti, recupero pieno secondo la politica, quantit
  }
  assert.equal(serialize(s),raw);
 });
-test('proiezione USB8 trasferisce esattamente 60 saldi senza alterare la sorgente',()=>{
+test('proiezione USB9 trasferisce esattamente 60 saldi senza alterare la sorgente',()=>{
  const s={...initialState(),inventory:Array.from({length:60},(_,i)=>({...item({current:i,max:999,recovery:['manual','short','long'][i%3]}),id:`row-${i}`,quantity:i})),equippedWeaponId:null},raw=serialize(s);
- const {packet}=projectDevice(s);assert.equal(packet.version,8);assert.equal(packet.inventory.items.length,60);
+ const {packet}=projectDevice(s);assert.equal(packet.version,9);assert.equal(packet.inventory.items.length,60);
  packet.inventory.items.forEach((v,i)=>{assert.deepEqual(v.charges,{current:i,maximum:999,recovery:i%3});assert.equal(v.quantity,i)});assert.equal(serialize(s),raw);
  const plain=projectDevice(initialState()).packet;assert.deepEqual(plain.inventory.items[0].charges,{current:0,maximum:0,recovery:0});
 });
