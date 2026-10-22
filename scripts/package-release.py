@@ -70,6 +70,14 @@ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as out:
         image=preview/name
         if not image.is_file():raise SystemExit(f'Missing avatar preview: {name}')
         out.write(image,folder+'firmware-host-preview/'+name)
+    # Complete device UI review catalog; all entries are native host captures.
+    ui_manifest=json.loads((preview/'ui-views.json').read_text())
+    ui_files=['ui-views.json','ui-catalog.html','ui-overview.png','ui-all-views.png','ui-transition.gif']
+    ui_files += [r['image'] for r in ui_manifest['views']]
+    for name in ui_files:
+        image=preview/name
+        if not image.is_file():raise SystemExit(f'Missing UI capture: {name}')
+        out.write(image,folder+'firmware-host-preview/'+name)
 digest=hashlib.sha256(args.output.read_bytes()).hexdigest()
 args.output.with_suffix(args.output.suffix+'.sha256').write_text(f'{digest}  {args.output.name}\n')
 print(f'{args.output}: {args.output.stat().st_size} bytes\nSHA256 {digest}')

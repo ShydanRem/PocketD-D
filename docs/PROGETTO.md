@@ -56,13 +56,15 @@ Non fanno parte di questo traguardo: importazione Beyond, editor completo, incan
 
 L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco non impedisce le altre fasi. L'ordine delle fasi 0 e 1 può sovrapporsi se l'hardware non è immediatamente disponibile.
 
-## Punto attuale — v0.49
+## Punto attuale — v0.50
 
 La [home del compagno](HOME-COMPAGNO.md) è integrata: menu a icone, PF,
 salvataggi e accesso alle funzioni esistenti, con tasti configurati conservati.
 La [v0.49](AVATAR-ILLUSTRATO.md) usa l'avatar illustrato con le 81
-personalizzazioni e quattro pose per taglio. Restano il restyling delle viste
-interne e animazioni più articolate.
+personalizzazioni e quattro pose per taglio. La [v0.50](UI-COMPAGNO.md) completa
+il restyling delle 85 viste interne, con accesso al menu, transizioni, feedback
+e tasti configurabili conservati. Il blocco 4 è concluso nel software; le prove
+di resa e uso sul pannello restano nel blocco 3.
 
 | Blocco | Stato software | Cosa manca |
 | --- | --- | --- |
@@ -70,7 +72,7 @@ interne e animazioni più articolate.
 | Effetti numerici | Otto modificatori CA/PF massimi, basi separate, cure integrate, durate manuali/a round/inizio-fine turno/minuti-ore e vincolo esplicito alla concentrazione con fine congiunta | Altre durate/regole, proprietà speciali e ricalcolo da equipaggiamento |
 | Danni e difese | Profili manuali per 13 tipi, base/tre extra separati, durate/vincoli e scadenze comuni, PF/temporanei, salvezza COS, sei componenti per colpo, fonte esplicita e riduzioni manuali prima/dopo, tre profili locali con budget, conto completo, fino a tre spese da contatori/usi/slot ordinari-patto/cariche e reazione | Condizioni arbitrarie, più di tre extra per tipo, catalogo/requisiti automatici, oltre tre spese, costi alternativi ed eventi/formule di ricarica automatici, eccezioni alle salvezze e casi morte bloccati |
 | Stato e morte | Note separate dagli effetti sui tiri di Avvelenato/Accecato/Spaventato/Prono/Trattenuto, d20 morte base e correzioni, reazione e inizio turno espliciti | Altri effetti/condizioni, durate e fonti multiple, eccezioni e morte istantanea |
-| Grafica e comandi | v0.49: home ambientata, menu a icone, PF e avatar illustrato con 81 aspetti e quattro pose; PWR/BOOT configurabili conservati | Restyling delle viste interne, transizioni e animazioni più articolate, fluidità e touch sul pannello reale |
+| Grafica e comandi | v0.50: home, menu e tutte le 85 viste interne coerenti, avatar con 81 aspetti/quattro pose, transizioni e PWR/BOOT configurabili | Resa, fluidità e touch sul pannello reale (blocco 3) |
 | Impostazioni schermo | Luminosità, inattività e risveglio protetto nella v0.25 | Consumi misurati, sospensione, batteria e alimentazione |
 | Preparazione PC | Importazione Beyond, raccolta, configurazione, backup PC, copia USB con conferma | Trasferimento USB fisico e backup dei progressi aggiornati dal dispositivo al PC |
 | Party e griglia | Prototipi nel browser | Trasporto e interfaccia sul dispositivo |
@@ -80,14 +82,14 @@ sono portate nel firmware, ma i criteri di completamento richiedono ancora una
 sessione fisica, trasferimento/ripristino e misure. Non sono percentuali di
 completamento né una dichiarazione di collaudo.
 
-## Quattro blocchi concordati — v0.49
+## Quattro blocchi concordati — v0.50
 
 | Blocco | Punto attuale | Prossimo lavoro |
 | --- | --- | --- |
 | 1 — Scheda sul dispositivo | Percorsi base nel firmware: magie/slot/usi, concentrazione, riposi, dadi vita e morte base | Eccezioni e verifica nell'uso reale |
 | 2 — Effetti | Modificatori, round, concentrazione, difese, danni e riduzioni con costi/reazione; v0.38 aggiunge slot ordinari/patto; v0.39 durate del proprio turno; v0.40 minuti/ore; v0.41 cariche distinte dalla quantità; v0.42 tre spese congiunte; v0.43 ricarica parziale a dado esplicita; v0.44 quattro effetti di condizione sui tiri | Durate di altri soggetti, costi alternativi o oltre tre fonti, eventi/formule di ricarica automatici e requisiti/effetti automatici |
 | 3 — Prodotto fisico | Luminosità, attenuazione/risveglio, salvataggi, tasti configurabili e firmware compilato | Batteria, sospensione/spegnimento e collaudi reali touch/USB/memoria/alimentazione |
-| 4 — Estetica | v0.49: home/menu/PF integrati e avatar illustrato personalizzabile; reazioni a cura/danno salvati | Revisione delle altre viste, transizioni, altre animazioni e verifica sul display reale |
+| 4 — Estetica | v0.50: completato nel software; home/avatar e 85 viste interne, icone, feedback, transizioni e navigazione verificati su 88/88 viste | Collaudo sul display reale nel blocco 3; ulteriori affinamenti artistici sono evoluzioni successive |
 
 Il blocco 2 resta aperto. Le cariche hanno ora un modello distinto dalla quantità,
 configurazione PC, trasferimento, correzione locale, costi e recuperi al riposo.

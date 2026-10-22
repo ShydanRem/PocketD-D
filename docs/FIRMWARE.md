@@ -1,10 +1,11 @@
-# Firmware PocketD-D 0.49 — avatar illustrato del compagno
+# Firmware PocketD-D 0.50 — interfaccia del compagno
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
-[Novità v0.49: avatar illustrato, 81 aspetti e reazioni](AVATAR-ILLUSTRATO.md).
+[Novità v0.50: grafica e UX di tutte le viste, catalogo e verifiche](UI-COMPAGNO.md).
+[Avatar illustrato v0.49: 81 aspetti e reazioni](AVATAR-ILLUSTRATO.md).
 [Integrazione home, menu, PF e tasti v0.48](HOME-COMPAGNO.md).
 PDD23, USB v8, backup PC v11; layout invariato e lettura dei salvataggi precedenti.
 

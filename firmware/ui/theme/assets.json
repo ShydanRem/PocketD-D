@@ -1,0 +1,146 @@
+{
+  "images": [
+    {
+      "name": "theme_room_pack",
+      "bytes": 434312,
+      "sha256": "b8272670d487b537ce60553594208249ac1239835322a09f68ae256422a5a6ac"
+    },
+    {
+      "name": "theme_room_magic",
+      "bytes": 434312,
+      "sha256": "6f04b5b1b36012f4929aeeee20e5ea76b5227c65c31d45742c17c99ee44ad1f3"
+    },
+    {
+      "name": "theme_room_rest",
+      "bytes": 434312,
+      "sha256": "1cada205ecd846d23cf2d993124149e8ceef06613f7e4e185174c43587454e3a"
+    },
+    {
+      "name": "theme_room_study",
+      "bytes": 434312,
+      "sha256": "6d5a964ab9a4bf598efcedcbe0432eaa3265fc769c3551cbfe1600223164a74e"
+    },
+    {
+      "name": "theme_heart",
+      "bytes": 3072,
+      "sha256": "5a3b7d617155707b0e8007560842d942948d8a2686d735d5ecfd8f20b93a5a6e"
+    },
+    {
+      "name": "theme_receipt_heart",
+      "bytes": 1728,
+      "sha256": "ac357ea0789ee186e2e6ed9e796b5c772c2b658b9beb76b3383d4c4b87bd866a"
+    },
+    {
+      "name": "theme_shield",
+      "bytes": 3072,
+      "sha256": "c54fd3da1f6ab10ca0898e8d88aa716f1e8512342497b9df5f797b1d44d4493c"
+    },
+    {
+      "name": "theme_receipt_shield",
+      "bytes": 1728,
+      "sha256": "4499b395426816ee37029ff058923651dd175a3968e6b9fe358a2ba57d55e07b"
+    },
+    {
+      "name": "theme_crystal",
+      "bytes": 3072,
+      "sha256": "83278dfd6240baf28b2ec4e0afdb61b50477eb9621e659df162609cc53fdbef6"
+    },
+    {
+      "name": "theme_receipt_crystal",
+      "bytes": 1728,
+      "sha256": "1f733e948d96a8abc5f5c0d6aab556020be456d54db3c6ea8581b9f5bd6c25b8"
+    },
+    {
+      "name": "theme_time",
+      "bytes": 3072,
+      "sha256": "504bf5c4514bff8c03b401ebca2981f41808b3867ba91285f4702ff861867e52"
+    },
+    {
+      "name": "theme_gear",
+      "bytes": 3072,
+      "sha256": "676fd72ed7d8a7a5eda123dc9417e74ccb2e34a5e7f25b00d96688cbe1165516"
+    },
+    {
+      "name": "theme_usb",
+      "bytes": 3072,
+      "sha256": "ef288e291d857755bfc28d65a99c015252fa6cfb916bee84b727936cfa807469"
+    },
+    {
+      "name": "theme_potion",
+      "bytes": 3072,
+      "sha256": "6b39181a70956112ae5fd8755195c71a6a4d690229216fb3309db634db09bb59"
+    },
+    {
+      "name": "theme_bundle",
+      "bytes": 3072,
+      "sha256": "3c93d9b550720dffc206356034780affdf5e24ce211621346559c4455884c44c"
+    },
+    {
+      "name": "theme_hero",
+      "bytes": 3072,
+      "sha256": "8beb33dfe2e5fdbb12dee96bfcc2d3f58784ce1f2fd28fbd209ced5c15aa630e"
+    },
+    {
+      "name": "theme_sun",
+      "bytes": 3072,
+      "sha256": "f56ea337baced993cc6c6c331227d5bc8026001d9362f5cc9340203d9bbbf7e1"
+    },
+    {
+      "name": "theme_notes",
+      "bytes": 3072,
+      "sha256": "925abaeb23ae57179738f756e7a02d463f7454b00c54d4c32caa747dbeb591c7"
+    },
+    {
+      "name": "theme_confirm",
+      "bytes": 3072,
+      "sha256": "f338aa992e17c76f1c7296fd7531e3ce36cad11c77264e18c5b07164a32873c4"
+    },
+    {
+      "name": "theme_receipt_confirm",
+      "bytes": 1728,
+      "sha256": "7ba594e9aaf14a83a0ad4839fed5dc762d3cd61d2b18dfb5509f4841278877b1"
+    },
+    {
+      "name": "theme_sword",
+      "bytes": 3072,
+      "sha256": "a2340dfa4024f0a4dfb2e8bcd98af1a4978a19f46d4e8a27e9d15109c60befd2"
+    },
+    {
+      "name": "theme_dice",
+      "bytes": 3072,
+      "sha256": "f1f9adc0f75ffae56ba3b102d6c8184def92de632f84d942bb9e22c667ea80fb"
+    },
+    {
+      "name": "theme_magic",
+      "bytes": 3072,
+      "sha256": "70298110254d8e49a13f052c475f1e8e0f80cf22484a381f296542b72b50f51f"
+    },
+    {
+      "name": "theme_pack",
+      "bytes": 3072,
+      "sha256": "25b22160cd5745f54fb9e9138263de2441eba1942f0f12f74c2e3e45fbec02e6"
+    },
+    {
+      "name": "theme_rest",
+      "bytes": 3072,
+      "sha256": "02de6945dffe0366c0b56eb4dcd77e03d7b71f29529b059f1ab623501896fcd7"
+    },
+    {
+      "name": "theme_sheet",
+      "bytes": 3072,
+      "sha256": "fd2ab11b05eea55fa46ba56f76e4d4b5da7a690ad3ef6eef26d9cd78c0cbdae4"
+    },
+    {
+      "name": "theme_camp_stage",
+      "bytes": 72000,
+      "sha256": "e5ff604fdb8a23b88da6126f2c8de940d95daf09b0b8769b75434a9c09573f4e"
+    }
+  ],
+  "image_bytes": 1871456,
+  "sources": {
+    "rooms": "e48c9dda4367450baec01128896a62e4119e1123a5b78b8e183ad110155e3342",
+    "icons": "738fed94711de47afae0ee343c12be3da25dd9285e182556a59d083301ccdfcb",
+    "menu": "09909120ec7d031cf0338ba115e8e5c01f653b953bf2893d3ba5061e97adb2bb",
+    "camp": "67a9dd1d60e3c305e3b0e01cd211f8b8a2679047e2b4678906bf0494c54b565b"
+  }
+}

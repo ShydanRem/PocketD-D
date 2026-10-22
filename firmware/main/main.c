@@ -5,6 +5,7 @@
 #include "visual.h"
 #include "avatar.h"
 #include "companion.h"
+#include "theme.h"
 #include "checks.h"
 #include "combat.h"
 #include "magic.h"
@@ -35,6 +36,96 @@
 #include <stdlib.h>
 
 typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS } page_t;
+static const pd_theme_kind page_themes[]={
+    [HERO]=PD_THEME_NONE,
+    [SHEET]=PD_THEME_SHEET,
+    [DICE]=PD_THEME_DICE,
+    [RESOURCES]=PD_THEME_USES,
+    [APPEARANCE]=PD_THEME_APPEARANCE,
+    [CHECK_DETAIL]=PD_THEME_SHEET,
+    [INVENTORY]=PD_THEME_PACK,
+    [ITEM_DETAIL]=PD_THEME_PACK,
+    [ITEM_CONFIRM]=PD_THEME_PACK,
+    [COMBAT]=PD_THEME_COMBAT,
+    [COMBAT_DETAIL]=PD_THEME_COMBAT,
+    [MAGIC_LIST]=PD_THEME_MAGIC,
+    [MAGIC_DETAIL]=PD_THEME_MAGIC,
+    [MAGIC_CONFIRM]=PD_THEME_MAGIC,
+    [MAGIC_TEXT]=PD_THEME_MAGIC,
+    [MAGIC_STATUS]=PD_THEME_MAGIC,
+    [MAGIC_SLOTS]=PD_THEME_MAGIC,
+    [MAGIC_RECOVER]=PD_THEME_MAGIC,
+    [MAGIC_STOP]=PD_THEME_MAGIC,
+    [KEY_SETTINGS]=PD_THEME_KEYS,
+    [REST_HOME]=PD_THEME_REST,
+    [REST_LONG_SETTINGS]=PD_THEME_REST,
+    [REST_PREVIEW]=PD_THEME_REST,
+    [REST_REGAIN]=PD_THEME_REST,
+    [REST_SESSION]=PD_THEME_REST,
+    [HIT_DICE]=PD_THEME_REST,
+    [HIT_CONFIRM]=PD_THEME_REST,
+    [STATUS_HOME]=PD_THEME_STATUS,
+    [DEATH_VIEW]=PD_THEME_STATUS,
+    [DEATH_EDIT]=PD_THEME_STATUS,
+    [CONDITION_LIST]=PD_THEME_STATUS,
+    [CONDITION_DETAIL]=PD_THEME_STATUS,
+    [CONDITION_PICKER]=PD_THEME_STATUS,
+    [STATUS_CONFIRM]=PD_THEME_STATUS,
+    [DEVICE_SETTINGS]=PD_THEME_SCREEN,
+    [EFFECT_LIST]=PD_THEME_EFFECTS,
+    [EFFECT_EDIT]=PD_THEME_EFFECTS,
+    [EFFECT_CONFIRM]=PD_THEME_EFFECTS,
+    [EFFECT_DURATION]=PD_THEME_EFFECTS,
+    [EFFECT_ROUND]=PD_THEME_EFFECTS,
+    [EFFECT_LINK]=PD_THEME_EFFECTS,
+    [ROUND_DEFENCES]=PD_THEME_EFFECTS,
+    [DAMAGE_HOME]=PD_THEME_DAMAGE,
+    [DEFENCE_LIST]=PD_THEME_DAMAGE,
+    [DEFENCE_EDIT]=PD_THEME_DAMAGE,
+    [DEFENCE_CONFIRM]=PD_THEME_DAMAGE,
+    [DAMAGE_CONFIRM]=PD_THEME_DAMAGE,
+    [DAMAGE_RESULT]=PD_THEME_DAMAGE,
+    [CONCENTRATION_SETUP]=PD_THEME_DAMAGE,
+    [DEFENCE_TEMPORARY]=PD_THEME_DAMAGE,
+    [DEFENCE_DURATION]=PD_THEME_DAMAGE,
+    [DEFENCE_LINK]=PD_THEME_DAMAGE,
+    [DAMAGE_PARTS]=PD_THEME_DAMAGE,
+    [DAMAGE_PART_EDIT]=PD_THEME_DAMAGE,
+    [DAMAGE_TYPES]=PD_THEME_DAMAGE,
+    [DEFENCE_RULE]=PD_THEME_DAMAGE,
+    [DEFENCE_RULE_REVIEW]=PD_THEME_DAMAGE,
+    [DAMAGE_CONTEXT]=PD_THEME_DAMAGE,
+    [DEFENCE_GRANTS]=PD_THEME_DAMAGE,
+    [DEFENCE_GRANT_REVIEW]=PD_THEME_DAMAGE,
+    [DAMAGE_REDUCTION]=PD_THEME_DAMAGE,
+    [DAMAGE_MATH]=PD_THEME_DAMAGE,
+    [PROFILE_LIST]=PD_THEME_DAMAGE,
+    [PROFILE_VIEW]=PD_THEME_DAMAGE,
+    [PROFILE_EDIT]=PD_THEME_DAMAGE,
+    [PROFILE_DETAILS]=PD_THEME_DAMAGE,
+    [PROFILE_NUMBER]=PD_THEME_DAMAGE,
+    [PROFILE_CONFIRM]=PD_THEME_DAMAGE,
+    [PROFILE_ALLOCATE]=PD_THEME_DAMAGE,
+    [PROFILE_IMPACT]=PD_THEME_DAMAGE,
+    [PROFILE_COST]=PD_THEME_DAMAGE,
+    [PROFILE_COST_IMPACT]=PD_THEME_DAMAGE,
+    [REACTION_HOME]=PD_THEME_STATUS,
+    [REACTION_CONFIRM]=PD_THEME_STATUS,
+    [TURN_DETAILS]=PD_THEME_TIME,
+    [TIME_HOME]=PD_THEME_TIME,
+    [TIME_CONFIRM]=PD_THEME_TIME,
+    [TIME_DETAILS]=PD_THEME_TIME,
+    [ITEM_CHARGES]=PD_THEME_PACK,
+    [ITEM_CHARGE_CONFIRM]=PD_THEME_PACK,
+    [ITEM_RECHARGE]=PD_THEME_PACK,
+    [ITEM_RECHARGE_CONFIRM]=PD_THEME_PACK,
+    [ITEM_RECHARGE_RESULT]=PD_THEME_PACK,
+    [CONDITION_EFFECTS]=PD_THEME_EFFECTS,
+    [CONDITION_EFFECTS_CONFIRM]=PD_THEME_EFFECTS,
+    [ROLL_CONTEXT]=PD_THEME_SHEET,
+    [HOME_MENU]=PD_THEME_NONE,
+    [HOME_VITALS]=PD_THEME_NONE,
+};
 PD_EXT static pd_state state,previous,pending,scratch;
 static bool undo_available,import_pending,has_roll;
 static pd_roll result;
@@ -326,7 +417,7 @@ static void feedback_show(void){
     unsigned color=feedback.kind==FEEDBACK_HURT?PD_DANGER:feedback.kind==FEEDBACK_SPEND?PD_VIOLET:feedback.kind==FEEDBACK_MIXED?PD_GOLD:PD_MINT;
     feedback_panel=decoration(78,68,310,27,PD_INK,0);
     lv_obj_set_style_border_color(feedback_panel,lv_color_hex(color),0);lv_obj_set_style_border_width(feedback_panel,1,0);
-    const lv_image_dsc_t *icon=feedback.kind==FEEDBACK_HEAL?&pd_art_heart:feedback.kind==FEEDBACK_HURT?&pd_art_shield:feedback.kind==FEEDBACK_RECOVER?&pd_art_recover:&pd_art_flask;
+    const lv_image_dsc_t *icon=feedback.kind==FEEDBACK_HEAL?&theme_receipt_heart:feedback.kind==FEEDBACK_HURT?&theme_receipt_shield:feedback.kind==FEEDBACK_RECOVER?&theme_receipt_confirm:&theme_receipt_crystal;
     art(icon,5,0,feedback_panel);
     lv_obj_t *text=small_label(feedback.text,34,3,242,color);lv_obj_set_parent(text,feedback_panel);lv_obj_set_pos(text,34,3);
     for(unsigned i=0;i<3;i++){feedback_motes[i]=decoration(280+i*7,10,2,2,color,0);lv_obj_set_parent(feedback_motes[i],feedback_panel);lv_obj_set_pos(feedback_motes[i],280+i*7,10);}
@@ -370,24 +461,19 @@ static void meter(unsigned current,unsigned maximum,int y,unsigned color) {
     decoration(89,y,288,4,PD_PANEL_LOW,0);
     if(current&&maximum){unsigned filled=(288*current+maximum-1)/maximum;decoration(89,y,filled,4,color,0);for(unsigned x=24;x<filled;x+=24)decoration(89+x,y,2,4,PD_PANEL_LOW,0);}
 }
+static lv_obj_t *button(const char *text,int x,int y,int w,int h,intptr_t action,bool enabled);
 static void frame(void) {
-    art(&pd_art_surround,0,0,lv_screen_active());
-    lv_obj_t *rim=decoration(5,5,456,456,PD_INK,LV_RADIUS_CIRCLE);
-    lv_obj_set_style_bg_opa(rim,LV_OPA_TRANSP,0);lv_obj_set_style_border_width(rim,2,0);
-    lv_obj_set_style_border_color(rim,lv_color_hex(0x1b2b40),0);
-    /* Small pixel marks give the circular housing an identity without a busy HUD. */
-    lv_obj_t *brand=small_label("POCKET D-D",113,37,240,PD_MINT);
-    label_font(brand,&pd_pixel_2);lv_obj_set_style_text_letter_space(brand,3,0);
+    pd_theme_kind kind=import_pending?PD_THEME_IMPORT:page_themes[page];
+    pd_theme_begin(lv_screen_active(),kind,page==DICE&&!dice_setup&&!import_pending);
+    const pd_theme_spec *theme=pd_theme_get(kind);assert(theme);
+    lv_obj_t *menu=button("Menu",126,27,54,44,2300,!import_pending&&!confirmation_open()&&!dice_animation.active);
+    lv_obj_set_style_text_font(menu,&lv_font_montserrat_16,0);
+    lv_obj_t *title=label(theme->title,187,36,118,false);
+    lv_obj_set_style_text_color(title,lv_color_hex(theme->accent),0);
     const char *status=pd_storage_status();
     unsigned c=strstr(status,"Errore")?PD_DANGER:(strstr(status,"Recuperata")||strstr(status,"Layout"))?PD_GOLD:PD_MUTED;
-    small_label(status,78,72,310,c);
+    small_label(status,91,73,284,c);
     feedback_show();
-    const lv_image_dsc_t *emblem=NULL;
-    if(page==INVENTORY||page==ITEM_DETAIL||page==ITEM_CONFIRM||page==COMBAT||page==COMBAT_DETAIL||page==ITEM_CHARGES||page==ITEM_CHARGE_CONFIRM)emblem=&pd_art_satchel;
-    else if(page>=MAGIC_LIST&&page<=MAGIC_STOP)emblem=&pd_art_grimoire;
-    else if(page>=REST_HOME&&page<=HIT_CONFIRM)emblem=&pd_art_campfire;
-    if(emblem&&!import_pending)art(emblem,43,109,lv_screen_active());
-    decoration(183,422,100,2,PD_EDGE,0);decoration(223,422,20,2,PD_GOLD,0);
 }
 static void act(intptr_t action) {
     if((action==2300||action==2301)&&(import_pending||confirmation_open()))return;
@@ -971,23 +1057,9 @@ static void act(intptr_t action) {
 }
 static void event(lv_event_t *e){act((intptr_t)lv_event_get_user_data(e));}
 static lv_obj_t *button(const char *text,int x,int y,int w,int h,intptr_t action,bool enabled) {
-    lv_obj_t *b=lv_button_create(lv_screen_active());lv_obj_set_pos(b,x,y);lv_obj_set_size(b,w,h);
-    bool primary=action==13||action==46||action==30;
-    lv_obj_set_style_bg_color(b,lv_color_hex(primary?0x9bf2d1:PD_PANEL_LIGHT),0);lv_obj_set_style_radius(b,2,0);
-    lv_obj_set_style_bg_grad_color(b,lv_color_hex(primary?0x53bda8:PD_PANEL_LOW),0);
-    lv_obj_set_style_bg_grad_dir(b,LV_GRAD_DIR_VER,0);
-    lv_obj_set_style_border_width(b,2,0);lv_obj_set_style_border_color(b,lv_color_hex(primary?PD_MINT:PD_EDGE),0);
-    lv_obj_set_style_text_color(b,lv_color_hex(primary?PD_INK:PD_TEXT),0);
-    lv_obj_set_style_text_align(b,LV_TEXT_ALIGN_CENTER,0);
-    lv_obj_set_style_bg_color(b,lv_color_hex(0x273d4f),LV_STATE_PRESSED);
-    lv_obj_set_style_bg_grad_color(b,lv_color_hex(0x3f6073),LV_STATE_PRESSED);
-    lv_obj_set_style_border_color(b,lv_color_hex(PD_GOLD),LV_STATE_PRESSED);
-    lv_obj_set_style_text_color(b,lv_color_hex(PD_TEXT),LV_STATE_PRESSED);
-    lv_obj_set_style_bg_color(b,lv_color_hex(0x101a28),LV_STATE_DISABLED);
-    lv_obj_set_style_bg_grad_dir(b,LV_GRAD_DIR_NONE,LV_STATE_DISABLED);
-    lv_obj_set_style_border_color(b,lv_color_hex(0x243448),LV_STATE_DISABLED);
-    lv_obj_set_style_text_color(b,lv_color_hex(0x7b8a9c),LV_STATE_DISABLED);
-    lv_obj_set_style_shadow_width(b,0,0);lv_obj_set_style_pad_all(b,4,0);
+    lv_obj_t *b=lv_button_create(lv_screen_active());lv_obj_remove_style_all(b);lv_obj_set_pos(b,x,y);lv_obj_set_size(b,w,h);
+    bool primary=action==13||action==46||action==30||!strcmp(text,"Conferma")||!strcmp(text,"Applica")||!strcmp(text,"Lancia")||!strcmp(text,"Usa");
+    pd_theme_button(b,primary);
     lv_obj_t *l=lv_label_create(b);lv_label_set_text(l,text);lv_obj_center(l);
     if (!enabled) lv_obj_add_state(b,LV_STATE_DISABLED);
     lv_obj_add_event_cb(b,event,LV_EVENT_CLICKED,(void*)action);return b;
@@ -1097,15 +1169,15 @@ static void render_inventory(void) {
         do {
             snprintf(text,sizeof text,"%.*s%s%s  x%u",(int)shown,v->name,shown<length?"...":"",i==state.equipped?" *":"",v->quantity);
             lv_text_get_size(&extent,text,&lv_font_montserrat_20,0,0,1000,LV_TEXT_FLAG_NONE);
-            if(extent.x<=244||!shown)break;
+            if(extent.x<=234||!shown)break;
             shown--;
         } while(true);
         lv_obj_t *b=button(text,83,155+row*49,300,44,500+i,true);
         lv_obj_set_style_pad_all(b,0,0);
-        const lv_image_dsc_t *icon=v->kind==PD_WEAPON?&pd_art_sword:v->kind==PD_HEALING?&pd_art_flask:v->kind==PD_CONSUMABLE?&pd_art_bundle:&pd_art_pouch;
-        art(icon,7,8,b);
-        lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_width(l,246);lv_obj_set_height(l,lv_font_get_line_height(&lv_font_montserrat_20));
-        lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_align(l,LV_ALIGN_LEFT_MID,40,0);
+        const lv_image_dsc_t *icon=v->kind==PD_WEAPON?&theme_sword:v->kind==PD_HEALING?&theme_potion:v->kind==PD_CONSUMABLE?&theme_bundle:&theme_pack;
+        art(icon,5,5,b);
+        lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_width(l,236);lv_obj_set_height(l,lv_font_get_line_height(&lv_font_montserrat_20));
+        lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_align(l,LV_ALIGN_LEFT_MID,45,0);
     }
     small_label("* arma scelta | note sul PC",83,312,300,PD_MUTED);
     button("Usi",83,359,144,48,103,true);
@@ -1196,8 +1268,8 @@ static void render_magic_list(void) {
         int i=visible_power(magic_page*3+row);if(i<0)break;
         const pd_power *p=&state.magic.powers[i];
         lv_obj_t *b=button(p->name,83,199+row*48,300,44,1000+i,true);
-        lv_obj_set_style_pad_all(b,0,0);art(p->kind?&pd_art_talent:&pd_art_spell,7,8,b);
-        lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_width(l,246);lv_obj_set_height(l,lv_font_get_line_height(&lv_font_montserrat_20));lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_align(l,LV_ALIGN_LEFT_MID,40,0);
+        lv_obj_set_style_pad_all(b,0,0);art(p->kind?&theme_crystal:&theme_magic,5,5,b);
+        lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_width(l,236);lv_obj_set_height(l,lv_font_get_line_height(&lv_font_montserrat_20));lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_align(l,LV_ALIGN_LEFT_MID,45,0);
     }
     button("Usi",83,359,144,48,103,true);button("Risorse",239,359,144,48,836,state.magic.available);
 }
@@ -1291,9 +1363,12 @@ static void render_magic_other(void) {
     } else if(page==KEY_SETTINGS) {
         label("Tasti configurabili",83,111,300,true);
         const char *gestures[]={"PWR breve","BOOT breve","BOOT lungo"};
+        const lv_image_dsc_t *icons[]={&theme_gear,&theme_hero,&theme_sheet,&theme_dice,&theme_pack,&theme_magic,&theme_dice,&theme_rest,&theme_heart,&theme_sun,&theme_notes,&theme_time,&theme_shield};
         for(unsigned i=0;i<3;i++) {
             snprintf(text,sizeof text,"%s: %s",gestures[i],shortcut_names[state.shortcuts[i]]);
             lv_obj_t *b=button(text,83,157+i*54,300,48,860+i,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
+            art(icons[state.shortcuts[i]],6,7,b);
+            lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_width(l,246);lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_align(l,LV_ALIGN_LEFT_MID,44,0);
         }
         small_label("PWR lungo: alimentazione",83,326,300,PD_GOLD);button("Indietro",83,359,300,48,50,true);
     }
@@ -1913,13 +1988,14 @@ static void render_companion(void){
     if(avatar_sprite&&state.idle_animation)avatar_timer=lv_timer_create(avatar_frame,200,NULL);
     if(feedback.active)feedback_timer=lv_timer_create(feedback_frame,2000-age,NULL);
 }
-static void render(void) {
+static void render_content(void) {
     /* Destroy the LVGL image/cache before freeing its pixel buffer. A root redraw
        cancels the old timer; the roll itself remains in the pure presentation state. */
     if(dice_timer) { lv_timer_delete(dice_timer);dice_timer=NULL; }
     if(avatar_timer) { lv_timer_delete(avatar_timer);avatar_timer=NULL; }
     if(feedback_timer){lv_timer_delete(feedback_timer);feedback_timer=NULL;}
     feedback_panel=NULL;memset(feedback_motes,0,sizeof feedback_motes);
+    pd_theme_close();
     companion_close();
     lv_obj_t *root=lv_screen_active();lv_obj_clean(root);
     avatar_sprite=NULL;memset(scene_lights,0,sizeof scene_lights);memset(scene_halos,0,sizeof scene_halos);lv_image_cache_drop(&avatar_image);
@@ -1927,6 +2003,10 @@ static void render(void) {
     lv_obj_set_style_bg_color(root,lv_color_hex(PD_INK),0);
     lv_obj_remove_flag(root,LV_OBJ_FLAG_SCROLLABLE);
     char text[160];
+    /* Resolve presentation fallback before selecting its title, icon and room. */
+    if(!import_pending&&(page==COMBAT||page==COMBAT_DETAIL)){
+        pd_weapon_info weapon;if(!pd_weapon_stats(&state,state.equipped,&weapon))page=INVENTORY;
+    }
     if(!import_pending&&(page==HERO||page==HOME_MENU||page==HOME_VITALS)){render_companion();return;}
     frame();
     if (import_pending) {
@@ -1971,7 +2051,7 @@ static void render(void) {
     if(page==CHECK_DETAIL) { render_check_detail();return; }
     if(page==APPEARANCE) {
         label("Aspetto",83,111,300,true);
-        art(&pd_art_diorama,83,167,root);
+        art(&theme_camp_stage,83,143,root);
         scene_atmosphere(root,83,167);
         avatar_show(&state.avatar,185,143,root,4,true);
         snprintf(text,sizeof text,"Mantello %s / %s",(const char *const[]){"bosco","vino","notte"}[state.avatar.cloak],
@@ -2054,7 +2134,7 @@ static void render(void) {
         if(state.resource_count) {
             pd_resource *r=&state.resources[resource_index];label(r->name,83,158,300,false);
             snprintf(text,sizeof text,"%u / %u",r->current,r->maximum);
-            art(&pd_art_crystal,113,191,root);
+            art(&theme_crystal,113,191,root);
             lv_obj_t *value=label(text,155,194,228,true);label_font(value,&pd_pixel_4);
             lv_obj_set_style_text_color(value,lv_color_hex(PD_VIOLET),0);meter(r->current,r->maximum,235,PD_VIOLET);
             button("-1",83,247,144,44,20,r->current>0);button("+1",239,247,144,44,21,r->current<r->maximum);
@@ -2062,19 +2142,32 @@ static void render(void) {
         } else {label("Nessun contatore importato",83,194,300,false);button("Riposi",83,299,300,44,900,true);}
     }
     const char *nav[]={"Eroe","Scheda","Dadi","Usi"};
-    const lv_image_dsc_t *icons[]={&pd_art_hero,&pd_art_sheet,&pd_art_dice,&pd_art_uses};
+    const lv_image_dsc_t *icons[]={&theme_hero,&theme_sheet,&theme_dice,&theme_crystal};
     const int nav_x[]={79,153,251,325},nav_w[]={68,92,68,64};
     for (int i=0;i<4;i++) {
         lv_obj_t *b=button(nav[i],nav_x[i],350,nav_w[i],56,100+i,!dice_animation.active);
         lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);lv_obj_set_style_pad_all(b,2,0);
         lv_obj_align(lv_obj_get_child(b,0),LV_ALIGN_BOTTOM_MID,0,-2);
-        art(icons[i],(nav_w[i]-4-24)/2,2,b);
+        art(icons[i],(nav_w[i]-2-32)/2,0,b);
         if (page==i) {
-            lv_obj_set_style_bg_color(b,lv_color_hex(0x514438),0);lv_obj_set_style_bg_grad_color(b,lv_color_hex(0x241e26),0);
+            lv_obj_set_style_bg_color(b,lv_color_hex(0x294c4b),0);lv_obj_set_style_bg_grad_color(b,lv_color_hex(0x183439),0);
             lv_obj_set_style_border_color(b,lv_color_hex(PD_GOLD),0);
             lv_obj_set_style_text_color(b,lv_color_hex(PD_GOLD),0);
         }
     }
+}
+#ifdef PD_UI_TEST
+static bool styled_pages[HOME_VITALS+1];
+static void capture_styled_page(unsigned view);
+#endif
+static void render(void){
+    static int last_page=-1;
+    render_content();
+    pd_theme_finish(state.idle_animation&&!display_screen.dimmed&&!dice_animation.active,last_page!=(int)page);
+    last_page=page;
+#ifdef PD_UI_TEST
+    if(!styled_pages[page]){styled_pages[page]=true;capture_styled_page(page);}
+#endif
 }
 static void dice_frame(lv_timer_t *timer) {
     (void)timer;
@@ -2119,6 +2212,7 @@ static void screen_service(int pwr,int boot){
     bool failed=display_screen.failed;
     pd_screen_step(&display_screen,state.brightness,state.dim_timeout,import_pending||confirmation_open()||dice_animation.active,lv_tick_get(),pd_board_brightness,NULL);
     companion_pause(display_screen.dimmed);
+    if(display_screen.dimmed)pd_theme_pause();
     if(display_screen.dimmed&&avatar_sprite&&avatar_phase)avatar_set_pose(&state.avatar,0);
     if(display_screen.dimmed){feedback.active=false;if(feedback_timer){lv_timer_delete(feedback_timer);feedback_timer=NULL;}if(feedback_panel){lv_obj_delete(feedback_panel);feedback_panel=NULL;}memset(feedback_motes,0,sizeof feedback_motes);}
     if(failed!=display_screen.failed&&page==DEVICE_SETTINGS)render();

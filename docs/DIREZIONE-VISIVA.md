@@ -15,9 +15,11 @@ da ampliare. Dopo la [prima prova nativa](COMPAGNO-PIXEL.md), la
 salvataggi, importazione, tasti e le 81 personalizzazioni con lo sprite attuale.
 La [v0.49](AVATAR-ILLUSTRATO.md) porta il nuovo avatar illustrato nelle 81
 combinazioni esistenti, con pose neutra, battito delle palpebre, cura e danno.
-Restano la revisione delle viste interne e animazioni più articolate. Scena,
-icone e avatar generati hanno sorgenti/provenienza distinti dagli asset
-procedurali delle altre viste.
+La [v0.50](UI-COMPAGNO.md) completa il linguaggio grafico nelle 85 viste interne,
+con quattro ambienti, icone, menu contestuale e transizioni. Il blocco 4 è
+completato nel software; resa, fluidità e touch vanno collaudati nel blocco 3.
+Scena, icone e avatar generati hanno sorgenti/provenienza distinti dagli asset
+procedurali conservati per dadi, font e luci.
 
 ## Storia delle revisioni precedenti
 
@@ -32,6 +34,11 @@ con profondità e luce. [Schermate, contratti, verifiche e lavoro rimasto](RESTY
 I paragrafi v0.18–44 sotto descrivono le versioni precedenti. La revisione
 attuale ingrandisce la scena a 300×96 e l'avatar a 72×90, aggiunge cifre pixel,
 cornice illustrata, pannelli con rilievo, oggetti di sezione e luci ambientali.
+
+## Riferimento storico v0.18–19
+
+I dettagli tecnici sotto descrivono le prime versioni, incluse dimensioni e
+generatori poi sostituiti. Per lo stato corrente usare [UI-COMPAGNO.md](UI-COMPAGNO.md).
 
 ## Linguaggio grafico
 

@@ -6,8 +6,8 @@ set(CONFIG_LV_USE_THORVG_INTERNAL OFF CACHE BOOL "" FORCE)
 set(LV_BUILD_CONF_PATH "${CMAKE_CURRENT_LIST_DIR}/lv_conf.h" CACHE PATH "" FORCE)
 add_subdirectory(../.deps/lvgl lvgl)
 add_executable(ui ../core/recharge.c ../core/damage.c ../core/screen.c ../core/status.c ../core/rest.c test_ui.c ../core/buttons.c ../core/pocketdd.c ../core/magic.c ../core/checks.c ../core/combat.c ../core/dice_animation.c ../core/dice_pool.c ../core/avatar.c)
-target_sources(ui PRIVATE ../ui/companion/companion.c ../ui/companion/companion_assets.c)
-target_include_directories(ui PRIVATE ../core ../ui/companion)
+target_sources(ui PRIVATE ../ui/theme/theme.c ../ui/theme/theme_assets.c ../ui/companion/companion.c ../ui/companion/companion_assets.c)
+target_include_directories(ui PRIVATE ../core ../ui/companion ../ui/theme)
 target_link_libraries(ui lvgl m)
 
 # Standalone view harness, using the same production renderer and committed assets.

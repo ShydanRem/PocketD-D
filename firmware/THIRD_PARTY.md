@@ -1,5 +1,12 @@
 # Third-party sources
 
+The v0.50 interior environment/icon PNGs in `ui/theme/source/` were generated
+with OpenAI ImageGen using the accepted companion sources as references.
+Original bytes, hashes and request summaries are retained there.
+`ui/theme/build_assets.py` exports the committed RGB565/RGB565A8 assets;
+ImageMagick 7 is only needed to regenerate them. No provider credentials,
+Beyond portraits or personal character files are bundled.
+
 The `ui/companion/source/` PNGs were generated with OpenAI
 ImageGen for the new companion UI direction. Their prompts and provenance are
 retained in `ui/companion/source/provenance.json`; original bytes are

@@ -70,6 +70,9 @@ static void bounds(void) {
     }
 }
 /* New cost labels must display the complete 40-character source, even wide glyphs. */
+static void capture_styled_page(unsigned view){
+    char path[64];snprintf(path,sizeof path,"ux-page-%02u.ppm",view);bounds();screenshot(path);
+}
 static void wrapped_fits(void){
     lv_obj_t *root=lv_screen_active();lv_obj_update_layout(root);
     for(unsigned i=0;i<lv_obj_get_child_count(root);i++){
@@ -868,5 +871,49 @@ int main(void) {
     }
     assert(found_disabled_heal);assert(page==HOME_VITALS&&!state.hp&&save_calls==effects_saves);screenshot("home-zero.ppm");
 
+    /* The new header must offer real navigation without bypassing a draft.
+       A disabled Menu also rejects a forged click, just like physical shortcuts. */
+    pd_demo(&state);feedback.active=false;combat_roll=0;page=HERO;render();
+    const page_t inspect[]={INVENTORY,MAGIC_LIST,REST_HOME,SHEET,RESOURCES,APPEARANCE,KEY_SETTINGS,DEVICE_SETTINGS,STATUS_HOME,EFFECT_LIST,DAMAGE_HOME};
+    effects_saves=save_calls;effects_calls=random_calls;effects_before=state;
+    for(unsigned i=0;i<sizeof inspect/sizeof inspect[0];i++){
+        page=inspect[i];render();click("Menu");assert(page==HOME_MENU);
+        assert(save_calls==effects_saves&&random_calls==effects_calls&&!memcmp(&state,&effects_before,sizeof state));
+    }
+    page=ITEM_CONFIRM;item_index=1;render();root=lv_screen_active();bool disabled_menu=false;
+    for(unsigned i=0;i<lv_obj_get_child_count(root);i++){
+        lv_obj_t *b=lv_obj_get_child(root,i);
+        if(lv_obj_check_type(b,&lv_button_class)&&button_label(b)&&!strcmp(lv_label_get_text(button_label(b)),"Menu")){
+            assert(lv_obj_has_state(b,LV_STATE_DISABLED));lv_obj_send_event(b,LV_EVENT_CLICKED,NULL);disabled_menu=true;break;
+        }
+    }
+    assert(disabled_menu&&page==ITEM_CONFIRM&&save_calls==effects_saves&&random_calls==effects_calls);
+    state.equipped=PD_NO_WEAPON;
+    const page_t missing_weapon[]={COMBAT,COMBAT_DETAIL};
+    for(unsigned i=0;i<2;i++){
+        page=missing_weapon[i];render();assert(page==INVENTORY);bool pack_title=false;
+        root=lv_screen_active();lv_obj_update_layout(root);
+        for(unsigned j=0;j<lv_obj_get_child_count(root);j++){
+            lv_obj_t *o=lv_obj_get_child(root,j);
+            if(lv_obj_check_type(o,&lv_label_class)&&!strcmp(lv_label_get_text(o),"Zaino"))pack_title=true;
+        }
+        assert(pack_title&&save_calls==effects_saves&&random_calls==effects_calls);
+    }
+    /* Transitions finish, cancel on redraw/sleep, and never consume game state. */
+    pd_demo(&state);feedback.active=false;page=HERO;render();click("Menu");click("Zaino");
+    assert(lv_anim_count_running()>0);
+    for(unsigned i=0;i<5;i++){char file[48];snprintf(file,sizeof file,"ux-transition-%02u.ppm",i);screenshot(file);lv_tick_inc(40);lv_timer_handler();}
+    assert(!lv_anim_count_running());
+    click("Menu");click("Magie");assert(lv_anim_count_running()>0);render();assert(!lv_anim_count_running());
+    state.idle_animation=false;page=INVENTORY;render();assert(!lv_anim_count_running());state.idle_animation=true;
+    page=MAGIC_LIST;render();assert(lv_anim_count_running()>0);pd_theme_pause();assert(!lv_anim_count_running());
+    unsigned covered=0;
+    for(unsigned p=0;p<=HOME_VITALS;p++){
+        covered+=styled_pages[p];
+        if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
+        if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
+    }
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)HOME_VITALS+1);
+    assert(covered==HOME_VITALS+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

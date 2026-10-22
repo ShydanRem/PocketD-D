@@ -1,0 +1,25 @@
+{
+  "date": "2026-10-22",
+  "provider": "OpenAI ImageGen",
+  "purpose": "PocketD-D block 4: device interior environments and shared pixel icons",
+  "references": [
+    "firmware/ui/companion/source/camp.png",
+    "firmware/ui/companion/source/icons.png"
+  ],
+  "sources": {
+    "rooms.png": "e48c9dda4367450baec01128896a62e4119e1123a5b78b8e183ad110155e3342",
+    "icons.png": "738fed94711de47afae0ee343c12be3da25dd9285e182556a59d083301ccdfcb"
+  },
+  "generation": [
+    {
+      "file": "rooms.png",
+      "request_summary": "Production 2x2 atlas matching approved camp HD-2D pixel art. Outfitter workshop, magical library, cozy inn bedroom, cartographer sanctuary; empty dark centers for real UI, no people, text or UI buttons. Deep teal/blue shadows, warm lamps and crisp pixel clusters."
+    },
+    {
+      "file": "icons.png",
+      "request_summary": "Transparent 4x3 atlas matching approved RPG icons. Heart/shield/crystal/hourglass; gear/USB plug/potion/crate; adventurer/sun/quill/check token. Single complete icons with dark outlines, jewel colors, no labels or panels."
+    }
+  ],
+  "export": "build_assets.py samples backgrounds on 233x233 grid then replicates exactly to 466x466. Icon alpha threshold 50%, explicit occupied-row slices, trim and shared output grid. C raster data is versioned; no ImageMagick runtime/build dependency.",
+  "limits": "Artwork is decorative and does not infer equipment, character rules or additional device features."
+}

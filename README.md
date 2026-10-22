@@ -2,12 +2,13 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.49:** [avatar illustrato personalizzabile e reazioni](docs/AVATAR-ILLUSTRATO.md) nella home del compagno. Restano le 81 combinazioni di carnagione/capelli/mantello/taglio; nuove pose neutra, battito delle palpebre, cura e danno. Menu a icone, PF e tasti configurabili sono integrati. Le viste interne e il collaudo fisico restano da completare; le anteprime vengono dal firmware eseguito con LVGL su host, con dati sintetici.
+**Stato v0.50:** [blocco grafica/UX completato nel software](docs/UI-COMPAGNO.md): home con avatar illustrato e 81 aspetti, menu a icone e nuovo tema delle 85 viste interne. Zaino, magie, scheda, dadi, riposi, stato, effetti, difese, impostazioni e conferme condividono ambienti, icone e controlli. Tutte le 88 viste sono esercitate su LVGL host con dati sintetici. Collaudo sul pannello fisico ancora aperto.
 
 Il firmware comprende scheda, prove/abilità/salvezze, inventario, attacchi e dadi animati, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Le regole non rappresentate restano manuali e documentate. PDD23, USB8 e backup PC v11 invariati; tasti configurabili e raccolta personale conservati.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
+- [UI del compagno: restyling completo, navigazione e catalogo v0.50](docs/UI-COMPAGNO.md)
 - [Avatar illustrato: personalizzazione, pose e verifiche v0.49](docs/AVATAR-ILLUSTRATO.md)
 - [Home del compagno: integrazione, tasti e verifiche v0.48](docs/HOME-COMPAGNO.md)
 - [Compagno pixel: primo prototipo, riferimento storico](docs/COMPAGNO-PIXEL.md)
