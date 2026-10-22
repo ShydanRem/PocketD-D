@@ -11,7 +11,11 @@ static bool fail_save,fail_canvas,fail_brightness;
 static unsigned brightness_calls,brightness_last;
 bool pd_board_brightness(unsigned percent,void *unused){(void)unused;brightness_calls++;brightness_last=percent;return !fail_brightness;}
 static void *ui_malloc(size_t size) { return fail_canvas?NULL:lv_malloc(size); }
-static unsigned random_calls,save_calls;
+static unsigned random_calls,save_calls,history_save_calls,history_seen;
+static bool fail_history;static pd_history persisted_history;
+bool pd_history_store_load(uint32_t epoch,pd_history *h){if(persisted_history.epoch==epoch)*h=persisted_history;else pd_history_reset(h,epoch);return true;}
+bool pd_history_store_save(const pd_history *h){history_save_calls++;if(fail_history)return false;persisted_history=*h;history_seen|=1u<<h->entries[0].kind;return true;}
+const char *pd_history_store_status(void){return fail_history?"Storico non salvato":"Storico salvato";}
 static uint32_t random_values[2]={9,9};
 uint32_t pd_board_random(void *unused) { return random_values[(random_calls++)%2]; }
 bool pd_storage_save(const pd_state *s) { save_calls++;return !fail_save; }
@@ -212,7 +216,7 @@ int main(void) {
     rng_before=random_calls;fail_canvas=true;click("Lancia");
     assert(has_roll&&!dice_animation.active&&!dice_timer&&!dice_pixels);
     assert(result.natural==1&&random_calls==rng_before+2);
-    fail_canvas=false;click("Dadi");assert(dice_pixels);
+    fail_canvas=false;act(14);assert(dice_pixels);
     click("Scheda");state.abilities[1]=30;render();click("DES 30\n+10");
     random_values[0]=random_values[1]=19;random_calls=0;click("Lancia");click("Accelera");
     assert(result.natural==20&&result.total==30);screenshot("dice-twenty.ppm");
@@ -946,13 +950,38 @@ int main(void) {
     state.shortcuts[0]=12;state.shortcuts[1]=4;state.shortcuts[2]=5;
     assert(stage_import(&wallet_import));screenshot("wallet-import.ppm");click("Annulla");assert(state.wallet.coins[3]==PD_COIN_MAX);
     assert(stage_import(&wallet_import));click("Conferma");assert(page==HERO&&state.wallet.coins[3]==42&&state.shortcuts[0]==12&&state.shortcuts[1]==4&&state.shortcuts[2]==5);
+    /* Persistent history uses independent writes, before animation, never new RNG. */
+    assert(history_seen==((1u<<PD_H_KINDS)-1));
+    pd_demo(&state);pd_history_reset(&history,0);persisted_history=history;history_pending=false;fail_history=false;act(14);effects_saves=save_calls;effects_calls=random_calls;
+    click("Storico");assert(page==HISTORY_HOME&&!history.count);screenshot("history-empty.ppm");bounds();click("Indietro");
+    click("Lancia");assert(history.count==1&&persisted_history.count==1&&dice_animation.active&&save_calls==effects_saves);pd_history_entry frozen=history.entries[0];
+    act(2600);assert(page==DICE&&dice_animation.active);click("Accelera");assert(!memcmp(&frozen,&history.entries[0],sizeof frozen));
+    click("Storico");act(2700);assert(page==HISTORY_DETAIL);screenshot("history-detail.ppm");bounds();
+    effects_calls=random_calls;effects_saves=save_calls;unsigned journal_writes=history_save_calls;render();bounds();assert(random_calls==effects_calls&&save_calls==effects_saves&&history_save_calls==journal_writes);
+    pd_history rebooted;assert(pd_history_store_load(state.history_epoch,&rebooted)&&!memcmp(&history,&rebooted,sizeof history));
+    click("Dadi");fail_history=true;click("Lancia");assert(history_pending&&history.count==1&&dice_animation.active);pd_history_entry pending_roll=history_unsaved;click("Accelera");screenshot("history-unsaved-roll.ppm");
+    effects_calls=random_calls;effects_saves=save_calls;act(13);assert(page==HISTORY_HOME&&random_calls==effects_calls&&save_calls==effects_saves&&history_pending);screenshot("history-pending.ppm");bounds();
+    act(1);assert(history_pending&&random_calls==effects_calls);effects_saves=save_calls;pd_state unchanged=state;assert(!stage_import(&unchanged));act(2609);assert(page==HISTORY_DETAIL);screenshot("history-unsaved-detail.ppm");bounds();
+    click("Riprova");assert(history_pending&&random_calls==effects_calls&&history.count==1);fail_history=false;click("Riprova");assert(!history_pending&&history.count==2&&history.entries[0].total==pending_roll.total&&!memcmp(history.entries[0].dice,pending_roll.dice,18)&&random_calls==effects_calls&&save_calls==effects_saves);
+    act(2700);click("Dadi");fail_history=true;click("Lancia");click("Accelera");click("Storico");click("Scarta");assert(page==HISTORY_DISCARD);screenshot("history-discard.ppm");bounds();
+    shortcut(0);act(100);assert(page==HISTORY_DISCARD&&history_pending);click("Indietro");assert(history_pending);click("Scarta");click("Scarta");assert(!history_pending&&history.count==2&&!memcmp(&state,&unchanged,sizeof state));fail_history=false;
+    /* All eighteen faces, wide imported names and pagination fit the display. */
+    pd_pool eighteen={.count=18,.sides=20,.sum=360,.bonus=60,.total=420,.damage=true};for(unsigned i=0;i<18;i++)eighteen.dice[i]=20;
+    journal_pool(PD_H_DAMAGE,"WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",&eighteen,"Danni tirati; PF bersaglio non modificati");act(2700);screenshot("history-eighteen.ppm");bounds();wrapped_fits();click(">");click(">");assert(history_dice_page==2);screenshot("history-last-dice.ppm");bounds();click("Elenco");
+    for(unsigned i=0;i<25;i++)journal_d20(PD_H_FREE,"d20 libero",&(pd_roll){.dice={20},.count=1,.natural=20,.total=20},0,"Dado libero");render();assert(history.count==20);screenshot("history-full.ppm");
+    while((history_page+1)*3<history.count)act(2602);screenshot("history-oldest.ppm");bounds();
+    act(850);state.shortcuts[0]=12;render();click("PWR breve: Danni");assert(state.shortcuts[0]==13);screenshot("history-key.ppm");shortcut(0);assert(page==HISTORY_HOME);effects_calls=random_calls;effects_saves=save_calls;shortcut(0);assert(page==HISTORY_HOME&&history_return!=HISTORY_HOME&&random_calls==effects_calls&&save_calls==effects_saves);
+    unsigned old_sequence=history.sequence;uint32_t old_epoch=state.history_epoch;pd_demo(&pending);pd_state history_import=pending;
+    assert(stage_import(&history_import));click("Annulla");assert(history.sequence==old_sequence&&state.history_epoch==old_epoch);
+    assert(stage_import(&history_import));fail_save=true;click("Conferma");assert(history.sequence==old_sequence&&state.history_epoch==old_epoch);fail_save=false;
+    assert(stage_import(&history_import));click("Conferma");assert(!history.count&&state.history_epoch==old_epoch+1&&state.shortcuts[0]==13);act(14);click("Storico");screenshot("history-import-empty.ppm");bounds();state.history_epoch=UINT32_MAX;assert(!stage_import(&history_import));
     unsigned covered=0;
-    for(unsigned p=0;p<=WALLET_CONFIRM;p++){
+    for(unsigned p=0;p<=HISTORY_DISCARD;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)WALLET_CONFIRM+1);
-    assert(covered==WALLET_CONFIRM+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)HISTORY_DISCARD+1);
+    assert(covered==HISTORY_DISCARD+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

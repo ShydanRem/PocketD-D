@@ -1,5 +1,9 @@
 # Borsello offline — v0.51
 
+**Aggiornamento v0.52:** lo [storico dei tiri](STORICO-TIRI.md) è ora persistente.
+Le nuove scritture della scheda sono PDD25; USB9 e backup PC v11 restano gli stessi.
+I dettagli PDD24 sotto descrivono il rilascio v0.51.
+
 Il blocco grafica/UX resta concluso nel software alla v0.50. Si riprende il
 blocco 1, scheda sul dispositivo, con le monete. Storico persistente, regole
 speciali ed eccezioni restano aperti; il backup dei progressi dal dispositivo

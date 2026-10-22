@@ -56,7 +56,7 @@ Non fanno parte di questo traguardo: importazione Beyond, editor completo, incan
 
 L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco non impedisce le altre fasi. L'ordine delle fasi 0 e 1 può sovrapporsi se l'hardware non è immediatamente disponibile.
 
-## Punto attuale — v0.51
+## Punto attuale — v0.52
 
 La [home del compagno](HOME-COMPAGNO.md) è integrata: menu a icone, PF,
 salvataggi e accesso alle funzioni esistenti, con tasti configurati conservati.
@@ -67,11 +67,13 @@ e tasti configurabili conservati. Il blocco 4 è concluso nel software; le prove
 di resa e uso sul pannello restano nel blocco 3.
 La [v0.51](BORSELLO.md) riprende il blocco 1 con le monete: cinque saldi,
 configurazione locale, anteprima, conferma, salvataggio e annullamento.
-Le tre nuove viste portano la copertura host a 91/91, senza cambiare la direzione grafica.
+La [v0.52](STORICO-TIRI.md) aggiunge gli ultimi 20 tiri in un registro locale
+persistente, con dettaglio dei dadi e accesso assegnabile ai tasti.
+Le tre nuove viste portano la copertura host a 94/94, nella stessa direzione grafica.
 
 | Blocco | Stato software | Cosa manca |
 | --- | --- | --- |
-| Scheda individuale offline | PF/temporanei, prove, abilità/salvezze, zaino/cariche/monete, armi, magie, risorse, riposi e dadi vita nel firmware | Storico persistente, effetti completi e regole speciali; sessione reale |
+| Scheda individuale offline | PF/temporanei, prove, abilità/salvezze, zaino/cariche/monete, armi, magie, risorse, riposi, dadi vita e ultimi 20 tiri persistenti nel firmware | Effetti completi e regole speciali; sessione reale |
 | Effetti numerici | Otto modificatori CA/PF massimi, basi separate, cure integrate, durate manuali/a round/inizio-fine turno/minuti-ore e vincolo esplicito alla concentrazione con fine congiunta | Altre durate/regole, proprietà speciali e ricalcolo da equipaggiamento |
 | Danni e difese | Profili manuali per 13 tipi, base/tre extra separati, durate/vincoli e scadenze comuni, PF/temporanei, salvezza COS, sei componenti per colpo, fonte esplicita e riduzioni manuali prima/dopo, tre profili locali con budget, conto completo, fino a tre spese da contatori/usi/slot ordinari-patto/cariche e reazione | Condizioni arbitrarie, più di tre extra per tipo, catalogo/requisiti automatici, oltre tre spese, costi alternativi ed eventi/formule di ricarica automatici, eccezioni alle salvezze e casi morte bloccati |
 | Stato e morte | Note separate dagli effetti sui tiri di Avvelenato/Accecato/Spaventato/Prono/Trattenuto, d20 morte base e correzioni, reazione e inizio turno espliciti | Altri effetti/condizioni, durate e fonti multiple, eccezioni e morte istantanea |
@@ -85,11 +87,11 @@ sono portate nel firmware, ma i criteri di completamento richiedono ancora una
 sessione fisica, trasferimento/ripristino e misure. Non sono percentuali di
 completamento né una dichiarazione di collaudo.
 
-## Quattro blocchi concordati — v0.51
+## Quattro blocchi concordati — v0.52
 
 | Blocco | Punto attuale | Prossimo lavoro |
 | --- | --- | --- |
-| 1 — Scheda sul dispositivo | Percorsi base nel firmware: magie/slot/usi, concentrazione, riposi, dadi vita, morte base; v0.51 borsello | Storico persistente, regole/eccezioni e verifica nell'uso reale |
+| 1 — Scheda sul dispositivo | Percorsi base nel firmware: magie/slot/usi, concentrazione, riposi, dadi vita, morte base; v0.51 borsello e v0.52 storico dei tiri | Regole/eccezioni e verifica nell'uso reale |
 | 2 — Effetti | Modificatori, round, concentrazione, difese, danni e riduzioni con costi/reazione; v0.38 aggiunge slot ordinari/patto; v0.39 durate del proprio turno; v0.40 minuti/ore; v0.41 cariche distinte dalla quantità; v0.42 tre spese congiunte; v0.43 ricarica parziale a dado esplicita; v0.44 quattro effetti di condizione sui tiri | Durate di altri soggetti, costi alternativi o oltre tre fonti, eventi/formule di ricarica automatici e requisiti/effetti automatici |
 | 3 — Prodotto fisico | Luminosità, attenuazione/risveglio, salvataggi, tasti configurabili e firmware compilato | Batteria, sospensione/spegnimento e collaudi reali touch/USB/memoria/alimentazione |
 | 4 — Estetica | v0.50: completato nel software; home/avatar e 85 viste interne, icone, feedback, transizioni e navigazione verificati su 88/88 viste | Collaudo sul display reale nel blocco 3; ulteriori affinamenti artistici sono evoluzioni successive |
@@ -184,28 +186,19 @@ L'incremento 0.12 anticipa le fasi 5 e 6 con un trasporto browser sostituibile. 
 Il percorso principale rimane articolato nei quattro blocchi concordati:
 
 1. **Scheda sul dispositivo:** magie/slot/capacità/concentrazione, riposi, dadi
-   vita e tiro morte base implementati; eccezioni e sessione fisica aperte.
-2. **Effetti:** priorità software attuale. La v0.26 aggiunge modificatori locali
-   espliciti a CA/PF massimi; la v0.27 aggiunge round/pausa/scadenze simultanee
-   confermate. La v0.28 aggiunge difese manuali per tipo e danni ricevuti con
-   esito esplicito della concentrazione; la v0.29 aggiunge il tiro COS con
-   bonus/CD verificabili e salvataggio prima dell'animazione. La v0.30 collega
-   esplicitamente gli effetti alla concentrazione, con disattivazione e PF
-   coerenti alla fine/sostituzione. La v0.31 aggiunge difese temporanee separate
-   dalla base, con durata/vincolo e round comune agli effetti numerici. La v0.32
-   compone fino a sei componenti per colpo con raggruppamento e un solo esito.
-   La v0.33 aggiunge condizioni difensive e fonte esplicita per componente.
-   La v0.34 porta a tre gli extra indipendenti per tipo; la v0.35 aggiunge
-   riduzioni manuali prima/dopo e conto completo del colpo. La v0.36 aggiunge
-   tre profili persistenti con budget, regole, durate e vincoli. Seguono
-   condizioni arbitrarie, proprietà speciali e
-   durate di turno/minuti. Nessuna
-   regola dedotta dai nomi delle note.
+   vita e tiro morte base implementati; aggiunti borsello v0.51 e storico dei
+   tiri persistente v0.52. Regole speciali, eccezioni e sessione fisica aperte.
+2. **Effetti:** modificatori, durate, concentrazione, difese/danni, riduzioni
+   con tre spese, cariche e condizioni esplicite sui tiri implementati nel
+   sottoinsieme documentato. Restano automatismi, fonti/durate non rappresentate
+   e proprietà speciali indicati nella tabella corrente; nessuna regola dedotta
+   dal nome delle note.
 3. **Prodotto fisico:** luminosità/attenuazione implementate; batteria,
    sospensione/spegnimento e collaudo di touch, tasti, USB, memoria, fluidità e
    perdita d'alimentazione restano aperti.
-4. **Estetica:** base pixel art, avatar e dadi animati implementati; illustrazioni,
-   icone specifiche, transizioni e feedback proseguono insieme alle viste.
+4. **Estetica:** blocco completato nel software con la v0.50; borsello e storico
+   condividono ora la stessa grafica, portando la suite a 94/94 viste. Collaudo
+   sul pannello nel blocco 3; ulteriori revisioni artistiche sono evoluzioni.
 
 Il backup/ripristino dei progressi dal dispositivo verso PC rimane supporto
 necessario alla conservazione dei dati e ancora da completare. Non sostituisce

@@ -17,6 +17,7 @@ static const pd_theme_spec themes[]={
     [PD_THEME_SCREEN]={"Schermo",0xe8d08d,&theme_sun,&theme_room_study},
     [PD_THEME_KEYS]={"Tasti",0xb5d4da,&theme_gear,&theme_room_study},
     [PD_THEME_WALLET]={"Monete",0xe7c389,&theme_pack,&theme_room_pack},
+    [PD_THEME_HISTORY]={"Storico",0xe3c487,&theme_notes,&theme_room_study},
     [PD_THEME_IMPORT]={"Copia USB",0x8ad9e2,&theme_usb,&theme_room_study}
 };
 static const pd_theme_spec *current;
@@ -32,7 +33,7 @@ void pd_theme_begin(lv_obj_t *root,pd_theme_kind kind,bool dice_tray){
     lv_obj_t *bg=lv_image_create(root);lv_image_set_src(bg,current->room);
     lv_obj_remove_flag(bg,LV_OBJ_FLAG_CLICKABLE|LV_OBJ_FLAG_SCROLLABLE);
     rect(root,0,0,466,466,0x061923,80,0);
-    panel=rect(root,74,96,318,249,0x081c27,230,10);
+    panel=rect(root,74,96,318,kind==PD_THEME_HISTORY?261:249,0x081c27,230,10);
     lv_obj_set_style_border_width(panel,1,0);lv_obj_set_style_border_color(panel,lv_color_hex(0x49616b),0);
     rect(root,121,24,230,47,0x081c27,230,8);
     rect(root,91,72,284,20,0x081c27,235,4);

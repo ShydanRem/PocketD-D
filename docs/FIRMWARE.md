@@ -1,14 +1,15 @@
-# Firmware PocketD-D 0.51 — borsello offline
+# Firmware PocketD-D 0.52 — storico dei tiri
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
-[Novità v0.51: monete, conferme e compatibilità](BORSELLO.md).
+[Novità v0.52: storico persistente, tasti e limiti](STORICO-TIRI.md).
+[Borsello v0.51: monete, conferme e compatibilità](BORSELLO.md).
 [Grafica v0.50: grafica e UX di tutte le viste, catalogo e verifiche](UI-COMPAGNO.md).
 [Avatar illustrato v0.49: 81 aspetti e reazioni](AVATAR-ILLUSTRATO.md).
 [Integrazione home, menu, PF e tasti v0.48](HOME-COMPAGNO.md).
-PDD24, USB v9, backup PC v11; layout invariato e lettura dei salvataggi precedenti.
+PDD25 + registro PDH1, USB v9, backup PC v11; layout invariato e lettura dei salvataggi precedenti.
 
 ## Stato e perimetro
 
@@ -86,7 +87,7 @@ Vantaggio e svantaggio selezionabili dal pulsante Base/Vant/Svant. Durante il vo
 si può accelerare; modalità e navigazione attendono l'arresto del tiro.
 
 Non è ancora una scheda completa: mancano gestione completa degli effetti, eccezioni ai tiri morte e morte istantanea,
-storico persistente, mappa e party. Le prove applicano i contributi
+registro completo delle modifiche, mappa e party. Le prove applicano i contributi
 riconosciuti e trasferiti; i contesti da verificare restano bloccati. Le istantanee per prove e attacchi includono Avvelenato, Ira, attacco potente e dadi critici extra: Ira riconosciuta usa ora il contatore della capacità; altre durate e interazioni restano manuali. Il dado libero
 usa bonus zero. CA/PF massimi effettivi sono basi esportate più modificatori
 locali espliciti; non si ricostruiscono automaticamente dall'equipaggiamento.
@@ -238,8 +239,8 @@ reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
 ## Salvataggio e dadi
 
 NVS nel namespace `pocketdd`, nuova partizione `pdd_state`, due chiavi alternate
-`state_a`/`state_b`. Record PDD24 (tag `PDDO`) da **8875 + 552 × numero voci** byte, massimo
-75115. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
+`state_a`/`state_b`. Record PDD25 (tag `PDDP`) da **8879 + 552 × numero voci** byte, massimo
+75119. Generazione e CRC32 espliciti; commit e rilettura prima dello stato
 visibile. Nessun dump di struct, erase o fallback distruttivo. Errori I/O o
 allocazioni insufficienti bloccano scritture; CRC e versioni future conservati.
 
@@ -277,14 +278,17 @@ PDD1–21 letti con la prima spesa conservata e le altre vuote, senza scritture 
 PDD23 aggiunge un byte di effetti locali sui tiri, senza inferenza dalle note;
 PDD1–22 letti con i quattro nuovi effetti disattivati e Avvelenato conservato.
 PDD24 aggiunge 21 byte: disponibilità e cinque saldi uint32; PDD1–23 iniziano
-con borsello non disponibile, senza scritture al boot. Le nuove scritture
-richiedono firmware v0.51 o successivo; [compatibilità e downgrade](BORSELLO.md).
+con borsello non disponibile, senza scritture al boot. PDD25 aggiunge quattro
+byte di identità locale dello storico e il valore 13 per la scorciatoia Storico.
+PDD1–24 ricevono identità zero, conservando monete e tasti precedenti. Le nuove
+scritture richiedono firmware v0.52 o successivo; [registro e compatibilità](STORICO-TIRI.md).
 Il nuovo uploader supporta USB v1–v9. Preferenze avatar/tasti
 locali conservate durante l'importazione. [Dettagli](MAGIE-TASTI.md).
 
 PF e contatori vengono persistiti ad ogni modifica; “Annulla modifica” ripristina
 l'ultima modifica di sessione a PF/contatori/inventario/magie/recuperi/stato/effetti/durate/difese/monete e la salva, non la vecchia scheda dopo
-un'importazione. I tiri liberi/attacco/danni non scrivono flash; cure e dadi vita salvano PF e consumo; le salvezze morte salvano PF e contatori prima dell’animazione. Non c’è storico persistente.
+un'importazione. I tiri liberi/attacco/danni non scrivono flash; cure e dadi vita salvano PF e consumo; le salvezze morte salvano PF e contatori prima dell’animazione. Lo storico dei tiri v0.52 è un registro separato, non un
+giornale completo delle modifiche o un annullamento persistente.
 L'uso prolungato della flash va misurato prima di cambiare strategia di scrittura.
 
 Dadi con rejection sampling, senza modulo distorto. Wi-Fi/Bluetooth spenti;
@@ -1028,3 +1032,15 @@ conferma atomica e annullamento dell'ultima modifica alle monete.
 Trasferimento PC USB9 e record PDD24; raccolta PC e tasti locali conservati.
 Nessun cambio, acquisto o peso automatico. 91/91 viste native esercitate;
 nessuna nuova lettura Beyond e nessuna prova fisica in questo incremento.
+
+## Incremento v0.52 — storico dei tiri
+
+[Uso, salvataggi, errori e verifiche](STORICO-TIRI.md). Ultimi 20 esiti,
+11 tipi di tiro, dadi/bonus/modalità e note immutabili rispetto alle modifiche
+successive della scheda. Record PDH1 piccoli in due banchi, separati dalla
+scheda; nuova importazione con identità PDD25 e storico distinto. Errori del
+registro riprovabili sullo stesso esito, senza RNG aggiuntivo. Storico è la
+quattordicesima scelta dei tasti (incluso Spento). USB9, backup PC v11 e layout
+invariati; 94/94 viste native esercitate. Scheda e registro non costituiscono
+un'unica transazione resistente a ogni interruzione di alimentazione. Nessun
+flash o collaudo fisico, lettura Beyond o modifica della raccolta personale.

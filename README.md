@@ -2,12 +2,13 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.51:** [borsello sul dispositivo](docs/BORSELLO.md), con rame, argento, electrum, oro e platino separati. Saldo sconosciuto distinto da zero verificato, modifiche con anteprima/conferma, annullamento e trasferimento USB. La grafica del compagno resta la base approvata; 91/91 viste esercitate su LVGL host con dati sintetici. Collaudo sul pannello fisico ancora aperto.
+**Stato v0.52:** [storico dei tiri sul dispositivo](docs/STORICO-TIRI.md), con gli ultimi 20 esiti salvati, dadi singoli, bonus, modalità e note. Include tiri liberi, prove, attacchi/danni, cure, dadi vita, morte, concentrazione e ricariche. Gli errori del registro hanno un tentativo ripetibile senza nuovi dadi; Storico è assegnabile ai tasti. Grafica del compagno conservata, 94/94 viste esercitate su LVGL host con dati sintetici. Collaudo fisico ancora aperto.
 
-Il firmware comprende scheda, prove/abilità/salvezze, inventario e monete, attacchi e dadi animati, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Le regole non rappresentate restano manuali e documentate. Nuovi salvataggi PDD24 e copie USB9, lettura dei precedenti e backup PC v11 conservati. Il blocco 1 continua: storico persistente e altre regole restano aperti; manca anche il backup dei progressi dal dispositivo al PC.
+Il firmware comprende anche il [borsello offline](docs/BORSELLO.md), scheda, inventario, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Nuovi salvataggi PDD25 e registro PDH1 separato, lettura dei precedenti, USB9 e backup PC v11 conservati. Il blocco 1 continua con regole speciali ed eccezioni; manca anche il backup dei progressi dal dispositivo al PC.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
+- [Storico dei tiri: persistenza, tasti, errori e limiti v0.52](docs/STORICO-TIRI.md)
 - [Borsello: monete, conferme, compatibilità e verifiche v0.51](docs/BORSELLO.md)
 - [UI del compagno: restyling completo, navigazione e catalogo v0.50](docs/UI-COMPAGNO.md)
 - [Avatar illustrato: personalizzazione, pose e verifiche v0.49](docs/AVATAR-ILLUSTRATO.md)

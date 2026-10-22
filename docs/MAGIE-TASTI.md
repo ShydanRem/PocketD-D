@@ -1,5 +1,9 @@
 # Magie, capacità e tasti sul dispositivo — v0.22
 
+**Aggiornamento v0.52:** [Storico](STORICO-TIRI.md) aggiunto alle azioni dei tasti,
+14 scelte incluso Spento; salvataggi PDD25 e vecchie assegnazioni conservate.
+
+
 > Aggiornamento v0.31: [difese temporanee, concentrazione e round comune](DIFESE-TEMPORANEE.md)
 > con PDD13. I limiti/formati dell’incremento sotto sono storici.
 

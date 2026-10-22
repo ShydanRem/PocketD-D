@@ -8,7 +8,7 @@ export function projectDevice(input){
     'Firmware iniziale: una sola scheda attiva. La conferma sul display sostituisce la copia sul dispositivo; la raccolta PC resta conservata.',
     'Trasferisce nome, livello, aspetto dell’avatar, PF, PF temporanei, CA, caratteristiche, abilità, salvezze, inventario (60 voci), attacchi, magie/capacità, dadi vita, condizioni e contatori morte e fino a 8 contatori manuali. Non trasferisce la risposta originale di Beyond.',
     'Avatar originale: carnagione, colore/taglio dei capelli e mantello scelti sul PC. Non rappresenta equipaggiamento o immagini di Beyond. Animazione disattivabile dal dispositivo in Aspetto.',
-    'Non disponibili sul dispositivo: gestione completa degli effetti delle condizioni, mappa, party e storico.',
+    'Non disponibili sul dispositivo: gestione completa degli effetti delle condizioni, mappa e party. Lo storico locale degli ultimi 20 tiri richiede firmware v0.52 e non torna al PC.',
     'Prove con competenze, maestrie, bonus extra e mezza competenza riconosciuti dal PC. Le prove da verificare restano bloccate; per eccezioni del DM è disponibile il dado libero.',
     'Avvelenato e vantaggio FOR da Ira sono fotografati al trasferimento. Ira riconosciuta attivabile dalla capacità; altre condizioni e durate restano manuali. Effetti PC disattivabili per il singolo tiro; altri effetti restano da gestire con il DM.',
     'CA fotografata al momento dell’esportazione; non ricalcolata cambiando equipaggiamento. I contatori non applicano recuperi o effetti automatici.',

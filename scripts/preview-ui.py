@@ -42,6 +42,13 @@ wallet_gallery=Image.new('RGB',(466*2,466*2),'black')
 for i,name in enumerate(('unknown','edit','confirm','gold')):
     wallet_gallery.paste(Image.open(BASE/f'wallet-{name}.png'),(i%2*466,i//2*466))
 wallet_gallery.save(BASE/'wallet-preview.png')
+history_views=('empty','detail','unsaved-roll','pending','unsaved-detail','discard','eighteen','last-dice','full','oldest','key','import-empty')
+for name in history_views:
+    Image.open(BASE/f'history-{name}.ppm').save(BASE/f'history-{name}.png')
+history_gallery=Image.new('RGB',(466*2,466*2),'black')
+for i,name in enumerate(('full','detail','eighteen','pending')):
+    history_gallery.paste(Image.open(BASE/f'history-{name}.png'),(i%2*466,i//2*466))
+history_gallery.save(BASE/'history-preview.png')
 frames=[Image.open(BASE/f'ux-transition-{i:02d}.ppm').convert('RGB') for i in range(5)]
 frames[0].save(BASE/'ui-transition.gif',save_all=True,append_images=frames[1:],duration=[40,40,40,40,1000],loop=0,disposal=2,optimize=True)
 print(f'UI: {len(records)} production views, overview, offline catalog and transition exported')

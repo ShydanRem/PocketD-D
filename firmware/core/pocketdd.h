@@ -6,7 +6,7 @@
 #define PD_RESOURCES 8
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
-#define PD_RECORD_SIZE 75115
+#define PD_RECORD_SIZE 75119
 #define PD_COINS 5
 #define PD_COIN_MAX UINT32_C(999999999)
 /* cp/sp/ep/gp/pp, distinct physical counts. Unknown is not a zero balance. */
@@ -107,6 +107,7 @@ typedef struct {
     uint8_t brightness,dim_timeout; /* Device-local: 10..100%, off/30/60/120s. */
     uint8_t shortcuts[3]; /* PWR short, BOOT short, BOOT long; device-local. */
     pd_wallet wallet;
+    uint32_t history_epoch; /* Local import identity; never supplied by USB. */
 } pd_state;
 typedef struct { uint8_t dice[2], count, natural; int total, bonus; } pd_roll;
 typedef uint32_t (*pd_random)(void *context);

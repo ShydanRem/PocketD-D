@@ -26,10 +26,12 @@ node scripts/check-charges.js
 cc -std=c11 -Wall -Wextra -Werror -Ifirmware/core -I"$IDF_PATH/components/json/cJSON" firmware/core/pocketdd.c firmware/core/status.c firmware/core/magic.c firmware/core/checks.c firmware/core/combat.c firmware/core/dice_pool.c firmware/core/rest.c firmware/core/packet.c firmware/tests/status_probe.c "$IDF_PATH/components/json/cJSON/cJSON.c" -lm -o firmware/tests/out/status-probe
 node scripts/check-status.js
 cc -std=c11 -Wall -Wextra -Werror -Wno-unused-parameter -Ifirmware/core -Ifirmware/tests/fake firmware/core/pocketdd.c firmware/core/magic.c firmware/core/checks.c firmware/core/combat.c firmware/core/dice_pool.c firmware/tests/test_storage.c -o firmware/tests/out/storage
+cc -std=c11 -Wall -Wextra -Werror -Wno-unused-parameter -Ifirmware/core -Ifirmware/tests/fake firmware/core/history.c firmware/core/pocketdd.c firmware/core/magic.c firmware/core/checks.c firmware/tests/test_history_store.c -o firmware/tests/out/history-storage
+firmware/tests/out/history-storage
 firmware/tests/out/storage
 cmake -S firmware/tests -B firmware/tests/out/ui-build -G Ninja
 cmake --build firmware/tests/out/ui-build --parallel 4
-(cd firmware/tests/out/ui-build && ./dice && ./pool && ./avatar && ./wallet && ./checks && ./combat && ./magic && ./rest && ./status && ./effects && ./durations && ./damage && ./concentration && ./links && ./temporary-defences && ./mixed-damage && ./conditional-defences && ./multiple-defences && ./reductions && ./reduction-profiles && ./profile-costs && ./slot-costs && ./turns && ./time && ./charges && ./multi-costs && ./recharge && ./roll-conditions && ./screen && ./buttons && ./alloc && ./ui)
+(cd firmware/tests/out/ui-build && ./dice && ./pool && ./avatar && ./wallet && ./history && ./checks && ./combat && ./magic && ./rest && ./status && ./effects && ./durations && ./damage && ./concentration && ./links && ./temporary-defences && ./mixed-damage && ./conditional-defences && ./multiple-defences && ./reductions && ./reduction-profiles && ./profile-costs && ./slot-costs && ./turns && ./time && ./charges && ./multi-costs && ./recharge && ./roll-conditions && ./screen && ./buttons && ./alloc && ./ui)
 firmware/tests/out/ui-build/avatar --hashes > firmware/tests/out/avatar-hashes.txt
 node scripts/check-avatar.js
 python3 scripts/check-device.py
