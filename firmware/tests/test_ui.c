@@ -9,6 +9,16 @@ static void *ui_malloc(size_t size);
 #include <math.h>
 static bool fail_save,fail_canvas,fail_brightness;
 static unsigned brightness_calls,brightness_last;
+static char last_reply[PD_DIAGNOSTICS_MAX+32];
+void pd_ui_reply(const char *text){assert(strlen(text)<sizeof last_reply);strcpy(last_reply,text);}
+void pd_board_diagnostics(pd_diagnostics *out){
+    *out=(pd_diagnostics){.firmware="0.54.0-host-test",.idf="v5.5.5",.uptime_ms=123456,
+        .internal_free=123000,.internal_min=100000,.internal_largest=90000,
+        .psram_total=8000000,.psram_free=7000000,.psram_min=6000000,.psram_largest=5000000,
+        .ui_stack_min=4000,.usb_stack_min=3000,.lvgl_ticks=200,.lvgl_max_us=30000,
+        .flushes_submitted=100,.touch_samples=100,.touch_contacts=12,.pwr_available=true,
+        .pwr_presses=3,.boot_presses=2};
+}
 bool pd_board_brightness(unsigned percent,void *unused){(void)unused;brightness_calls++;brightness_last=percent;return !fail_brightness;}
 static void *ui_malloc(size_t size) { return fail_canvas?NULL:lv_malloc(size); }
 static unsigned random_calls,save_calls,history_save_calls,history_seen;
@@ -1002,6 +1012,37 @@ int main(void) {
     fail_save=true;click("Ripristina");assert(page==BACKUP_RESTORE_CONFIRM&&!prepared_ready&&!memcmp(&state,&effects_before,sizeof state));screenshot("backup-state-error.ppm");assert(history_quarantined);click("Annulla");assert(!stage_backup(&snapshot));fail_save=false;pd_history_store_load(state.history_epoch,&history);assert(stage_backup(&snapshot));
     uint32_t restored_epoch=state.history_epoch+1;click("Ripristina");assert(page==HERO&&state.hp==7&&state.temp_hp==3&&state.shortcuts[0]==13&&state.brightness==80&&state.wallet.coins[0]==5&&state.history_epoch==restored_epoch&&history.epoch==restored_epoch&&history.count==1&&history.entries[0].total==20&&!undo_available&&random_calls==effects_calls);screenshot("backup-restored.ppm");
     pd_history_entry not_saved=archived;history_unsaved=not_saved;history_pending=true;assert(!stage_backup(NULL)&&!stage_backup(&snapshot));history_pending=false;
+    /* Read-only diagnostics must not resolve rolls, wake the display, consume
+       input, dismiss confirmations, or attempt either NVS store. */
+    effects_before=state;pd_history diagnostic_history=history;
+    static pd_state diagnostic_pending,diagnostic_previous;
+    diagnostic_pending=pending;diagnostic_previous=previous;
+    effects_saves=save_calls;effects_calls=random_calls;before_journal=history_save_calls;
+    for(unsigned context=0;context<8;context++){
+        page=context==1?BACKUP_RESTORE_CONFIRM:HERO;
+        import_pending=context==2;dice_animation.active=context==3;
+        display_screen.dimmed=context==4;display_screen.failed=context==5;
+        fail_save=history_quarantined=context==5;history_pending=context==6;
+        history.epoch=context==7?state.history_epoch+1:state.history_epoch;
+        pd_screen screen_before=display_screen;pd_dice_animation animation_before=dice_animation;
+        pd_history history_before=history;pd_history_entry unsaved_before=history_unsaved;
+        bool undo_before=undo_available;page_t page_before=page;
+        pd_diagnostics observation;collect_diagnostics(&observation);report_diagnostics();
+        assert(observation.busy==(context==1||context==2||context==3));
+        assert(observation.dimmed==(context==4)&&observation.screen_failed==(context==5));
+        assert(observation.state_writable==(context!=5)&&observation.history_available==(context!=5));
+        assert(observation.history_pending==(context==6)&&observation.history_matches==(context!=7)&&observation.state_valid);
+        assert(!strncmp(last_reply,"PDD DIAGNOSTICS {",17)&&last_reply[strlen(last_reply)-1]=='\n');
+        assert(!strstr(last_reply,state.name)&&!strstr(last_reply,"history_epoch")&&!strstr(last_reply,"dice\""));
+        assert(page==page_before&&undo_available==undo_before&&!memcmp(&display_screen,&screen_before,sizeof screen_before)&&!memcmp(&dice_animation,&animation_before,sizeof animation_before));
+        assert(!memcmp(&state,&effects_before,sizeof state)&&!memcmp(&pending,&diagnostic_pending,sizeof pending)&&!memcmp(&previous,&diagnostic_previous,sizeof previous));
+        assert(!memcmp(&history,&history_before,sizeof history)&&!memcmp(&history_unsaved,&unsaved_before,sizeof history_unsaved));
+        assert(save_calls==effects_saves&&random_calls==effects_calls&&history_save_calls==before_journal);
+        if(!context){FILE *f=fopen("diagnostics-live.json","wb");assert(f);size_t n=strlen(last_reply+16)-1;assert(fwrite(last_reply+16,1,n,f)==n);fclose(f);}
+    }
+    history=diagnostic_history;fail_save=history_quarantined=history_pending=import_pending=false;
+    dice_animation.active=display_screen.dimmed=display_screen.failed=false;page=HERO;
+    puts("Diagnostics UI snapshot: eight normal/busy/dimmed/error/pending/mismatched contexts, no state/history/NVS/RNG/input effects (synthetic)");
     unsigned covered=0;
     for(unsigned p=0;p<=BACKUP_RESTORE_CONFIRM;p++){
         covered+=styled_pages[p];

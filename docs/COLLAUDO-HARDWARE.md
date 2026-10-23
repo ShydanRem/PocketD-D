@@ -1,0 +1,64 @@
+# Scheda di collaudo fisico PocketD-D
+
+Modello vuoto: **nessuna prova fisica eseguita**. Compilare una copia privata
+seguendo [PRIMO-AVVIO.md](PRIMO-AVVIO.md), senza pubblicare dump o schede personali.
+
+- Data e operatore:
+- Sigla e revisione fisica della scheda:
+- Firmware, commit e archivio utilizzati:
+- Sistema operativo / Python / esptool:
+- Collegamento e alimentazione:
+- Backup originale conservato e recovery disponibile:
+- Personaggio di collaudo sintetico / altra scheda:
+- Rapporti diagnostici prima/dopo (nomi privati):
+
+Esiti ammessi: **Non eseguito / Passato / Fallito / Bloccato**. Ogni `Passato`
+richiede un'osservazione reale; indicare eventuali prove parziali nelle note.
+
+| ID | Prova | Esito | Osservazione / anomalia |
+| --- | --- | --- | --- |
+| H01 | Modello standard corretto, backup fabbrica e installazione | Non eseguito | |
+| H02 | Avvio e stabilità della home | Non eseguito | |
+| H03 | Resa: testi, icone, colori e ritagli | Non eseguito | |
+| H04 | Touch: orientamento e comandi in tutte le zone usate | Non eseguito | |
+| H05 | PWR breve, BOOT breve/lungo: configurazione, una azione, riavvio | Non eseguito | |
+| H06 | Tasti bloccati nelle conferme; risveglio senza azione | Non eseguito | |
+| H07 | Luminosità e attenuazione 30 s, ripresa e preferenze persistenti | Non eseguito | |
+| H08 | Diagnostica USB: rapporto valido, versione e stati osservati | Non eseguito | |
+| H09 | Import USB: annulla/conferma e confronto valori della fixture | Non eseguito | |
+| H10 | PF, temporanei e annullamento | Non eseguito | |
+| H11 | Prove/dadi: bonus, facce, accelerazione e storico | Non eseguito | |
+| H12 | Arma: attacco e danni spiegati | Non eseguito | |
+| H13 | Magie: ordinari/patto, utilizzi e concentrazione | Non eseguito | |
+| H14 | Breve, dado vita e lungo con recuperi espliciti | Non eseguito | |
+| H15 | Quantità, cure da oggetto e monete | Non eseguito | |
+| H16 | Effetto CA, durata e scadenza | Non eseguito | |
+| H17 | Riavvio normale conserva progressi e impostazioni | Non eseguito | |
+| H18 | Backup: file completo, anteprima coerente, raccolta PC conservata | Non eseguito | |
+| H19 | Ripristino: annulla/conferma, preferenze/storico e riavvio | Non eseguito | |
+| H20 | Ripetizione dei percorsi: heap, stack e fluidità | Non eseguito | |
+| H21 | Interruzioni durante scritture: protocollo concordato e recupero | Non eseguito | |
+| H22 | Batteria, consumi, sospensione e spegnimento | Non eseguito | Funzioni ancora da completare |
+
+## Problema riproducibile
+
+- ID della prova e schermata:
+- Stato iniziale e impostazioni tasti:
+- Passaggi esatti, incluso gesto breve/lungo e conferma:
+- Risultato atteso:
+- Risultato osservato:
+- Frequenza / riavvii inattesi:
+- Rapporti prima/dopo e foto/video senza dati personali:
+- Riproducibile dopo un normale riavvio:
+- Passaggi successivi concordati:
+
+## Decisione sul prototipo
+
+- Avvio, comandi e sessione offline verificati:
+- Persistenza dopo normale riavvio verificata:
+- Acquisizione e ripristino nativo verificati:
+- Problemi che impediscono l'uso al tavolo:
+- Limiti di regole dichiarati e gestibili manualmente:
+- Misure energetiche e tenuta ai guasti ancora aperte:
+
+Nessun risultato automatico della diagnostica compila queste voci da solo.

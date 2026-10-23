@@ -13,6 +13,8 @@
 #include "esp_timer.h"
 #include "esp_random.h"
 #include "bootloader_random.h"
+#include "esp_system.h"
+#include "esp_app_desc.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 
@@ -27,6 +29,10 @@ static bool pwr_ready;
 static uint8_t pwr_polarity;
 static int pwr_level=-1;
 static int64_t buttons_read_at=-100;
+static pd_diagnostics observations;
+static bool contact_down;
+static int last_pwr=-1,last_boot=-1;
+static void observed(uint32_t *value){if(*value<UINT32_MAX)(*value)++;}
 static esp_err_t expander_read(uint8_t reg,uint8_t *value) {return i2c_master_transmit_receive(expander,&reg,1,value,1,5);}
 
 static pd_screen *screen_control;
@@ -45,6 +51,7 @@ static void flush(lv_display_t *d,const lv_area_t *a,uint8_t *pixels) {
     lv_draw_sw_rgb565_swap(pixels,lv_area_get_size(a));
     transfer_pending=true;
     ESP_ERROR_CHECK(esp_lcd_panel_draw_bitmap(panel,a->x1,a->y1,a->x2+1,a->y2+1,pixels));
+    observed(&observations.flushes_submitted);
 }
 static void flush_wait(lv_display_t *d) {
     if (transfer_pending) { xSemaphoreTake(flushed,portMAX_DELAY); transfer_pending=false; }
@@ -56,9 +63,12 @@ static void round_area(lv_event_t *e) {
 static void read_touch(lv_indev_t *indev,lv_indev_data_t *data) {
     esp_lcd_touch_point_data_t point={0}; uint8_t count=0;
     data->state=LV_INDEV_STATE_RELEASED;
-    if (esp_lcd_touch_read_data(touch)!=ESP_OK){if(screen_control)pd_screen_touch(screen_control,false,false,lv_tick_get());return;}
+    observed(&observations.touch_samples);
+    if (esp_lcd_touch_read_data(touch)!=ESP_OK){observed(&observations.touch_errors);if(screen_control)pd_screen_touch(screen_control,false,false,lv_tick_get());return;}
     bool valid=esp_lcd_touch_get_data(touch,&point,&count,1)==ESP_OK;
+    if(!valid)observed(&observations.touch_errors);
     bool pressed=valid&&count;
+    if(valid){if(pressed&&!contact_down)observed(&observations.touch_contacts);contact_down=pressed;}
     bool allow=screen_control?pd_screen_touch(screen_control,valid,pressed,lv_tick_get()):pressed;
     if(allow&&point.x<RES&&point.y<RES){data->state=LV_INDEV_STATE_PRESSED;data->point.x=point.x;data->point.y=point.y;}
 
@@ -115,9 +125,14 @@ void pd_board_init(void) {
     last_tick=esp_timer_get_time()/1000;
 }
 void pd_board_tick(void) {
+    int64_t started=esp_timer_get_time();
     int64_t now=esp_timer_get_time()/1000;
     lv_tick_inc((uint32_t)(now-last_tick)); last_tick=now;
     lv_timer_handler();
+    observed(&observations.lvgl_ticks);
+    uint64_t elapsed=(uint64_t)(esp_timer_get_time()-started);
+    uint32_t duration=elapsed>UINT32_MAX?UINT32_MAX:(uint32_t)elapsed;
+    if(duration>observations.lvgl_max_us)observations.lvgl_max_us=duration;
 }
 uint32_t pd_board_random(void *unused) { return esp_random(); }
 
@@ -126,8 +141,12 @@ void pd_board_buttons(int levels[2]) {
     if(now-buttons_read_at>=20) {
         buttons_read_at=now;uint8_t raw;
         pwr_level=pwr_ready&&expander_read(0,&raw)==ESP_OK?((raw^pwr_polarity)&0x10?1:0):-1;
+        if(pwr_level<0)observed(&observations.pwr_read_errors);
     }
     levels[0]=pwr_level;levels[1]=gpio_get_level(GPIO_NUM_0)==0;
+    if(levels[0]==1&&last_pwr==0)observed(&observations.pwr_presses);
+    if(levels[1]==1&&last_boot==0)observed(&observations.boot_presses);
+    last_pwr=levels[0];last_boot=levels[1];observations.pwr_available=pwr_level>=0;
 }
 
 void pd_board_screen(pd_screen *controller){screen_control=controller;}
@@ -136,4 +155,20 @@ bool pd_board_brightness(unsigned percent,void *unused){
     /* Drain the outstanding DMA transfer before sending a control command. */
     flush_wait(NULL);
     return esp_lcd_panel_co5300_set_brightness(panel,percent)==ESP_OK;
+}
+
+void pd_board_diagnostics(pd_diagnostics *out){
+    *out=observations;
+    out->firmware=esp_app_get_description()->version;
+    out->idf=esp_get_idf_version();
+    out->uptime_ms=(uint64_t)esp_timer_get_time()/1000;
+    out->reset_reason=(uint32_t)esp_reset_reason();
+    unsigned internal=MALLOC_CAP_INTERNAL|MALLOC_CAP_8BIT,external=MALLOC_CAP_SPIRAM|MALLOC_CAP_8BIT;
+    out->internal_free=heap_caps_get_free_size(internal);
+    out->internal_min=heap_caps_get_minimum_free_size(internal);
+    out->internal_largest=heap_caps_get_largest_free_block(internal);
+    out->psram_total=heap_caps_get_total_size(external);
+    out->psram_free=heap_caps_get_free_size(external);
+    out->psram_min=heap_caps_get_minimum_free_size(external);
+    out->psram_largest=heap_caps_get_largest_free_block(external);
 }

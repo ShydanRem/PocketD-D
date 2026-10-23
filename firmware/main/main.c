@@ -346,8 +346,9 @@ static unsigned selected_hit_dice(void){unsigned n=0;for(unsigned i=0;i<PD_HIT_P
 
 
 #ifndef PD_UI_TEST
-static QueueHandle_t packets,backup_packets;
+static QueueHandle_t packets,backup_packets,diagnostic_requests;
 static SemaphoreHandle_t usb_output;
+static TaskHandle_t usb_thread;
 static TickType_t import_started;
 PD_EXT static char line[PD_PACKET_MAX+1];
 #endif
@@ -377,7 +378,8 @@ static bool backup_send(const pd_state *s,const pd_history *h){
     xSemaphoreTake(usb_output,portMAX_DELAY);TickType_t started=xTaskGetTickCount();bool ok=pd_backup_transmit(s,h,usb_write_all,&started);xSemaphoreGive(usb_output);return ok;
 }
 #else
-static void reply(const char *text) { (void)text; }
+void pd_ui_reply(const char *text);
+static void reply(const char *text) { pd_ui_reply(text); }
 bool pd_ui_backup_send(const pd_state *s,const pd_history *h);
 static bool backup_send(const pd_state *s,const pd_history *h){return pd_ui_backup_send(s,h);}
 #endif
@@ -389,6 +391,30 @@ static bool stage_backup(const pd_backup *snapshot); /* NULL requests read-only 
 static pd_history history;
 static pd_history_entry history_unsaved;
 static bool history_pending;
+static void collect_diagnostics(pd_diagnostics *out){
+    pd_board_diagnostics(out);
+#ifndef PD_UI_TEST
+    /* ESP-IDF reports the stack high-water mark in bytes, not words. */
+    out->ui_stack_min=uxTaskGetStackHighWaterMark(NULL);
+    out->usb_stack_min=uxTaskGetStackHighWaterMark(usb_thread);
+#endif
+    out->state_writable=pd_storage_writable();
+    out->history_available=pd_history_store_available();
+    out->history_pending=history_pending;
+    out->history_matches=history.epoch==state.history_epoch;
+    out->state_valid=pd_valid(&state);
+    out->dimmed=display_screen.dimmed;out->screen_failed=display_screen.failed;
+    out->busy=import_pending||confirmation_open()||dice_animation.active;
+}
+static void report_diagnostics(void){
+    pd_diagnostics data;collect_diagnostics(&data);
+    char message[PD_DIAGNOSTICS_MAX+32];
+    const char *prefix="PDD DIAGNOSTICS ";size_t start=strlen(prefix);
+    memcpy(message,prefix,start);
+    size_t size=pd_diagnostics_encode(&data,message+start,PD_DIAGNOSTICS_MAX+1);
+    if(!size){reply("PDD ERROR diagnostics\n");return;}
+    message[start+size]='\n';message[start+size+1]=0;reply(message);
+}
 static unsigned history_page,history_index,history_dice_page;
 static page_t history_return=HERO;
 static bool journal_flush(void){
@@ -2525,6 +2551,7 @@ static void usb_task(void *unused) {
                     line[used]=0;
                     if(!strcmp(line,"PDD HELLO")) reply("PDD READY 9\n");
                     else if(!strcmp(line,"PDD BACKUP HELLO"))reply("PDD BACKUP_READY 1\n");
+                    else if(!strcmp(line,"PDD DIAGNOSTICS GET 1")){uint8_t request=1;if(xQueueSend(diagnostic_requests,&request,0)!=pdPASS)reply("PDD ERROR busy\n");}
                     else if(!strcmp(line,"PDD BACKUP GET 1")){pd_backup *request=NULL;if(xQueueSend(backup_packets,&request,0)!=pdPASS)reply("PDD ERROR busy\n");}
                     else {
                         pd_state *candidate=malloc(sizeof *candidate);
@@ -2556,7 +2583,8 @@ void app_main(void) {
     usb_output=xSemaphoreCreateMutex();assert(usb_output);
     packets=xQueueCreate(1,sizeof(pd_state *));assert(packets);
     backup_packets=xQueueCreate(1,sizeof(pd_backup *));assert(backup_packets);
-    assert(xTaskCreate(usb_task,"usb_import",12288,NULL,3,NULL)==pdPASS);
+    diagnostic_requests=xQueueCreate(1,sizeof(uint8_t));assert(diagnostic_requests);
+    assert(xTaskCreate(usb_task,"usb_import",12288,NULL,3,&usb_thread)==pdPASS);
     render();
     for(;;) {
         pd_state *incoming=NULL;
@@ -2567,6 +2595,8 @@ void app_main(void) {
         pd_backup *snapshot=NULL;
         if(xQueueReceive(backup_packets,&snapshot,0)==pdPASS){stage_backup(snapshot);free(snapshot);}
         backup_service();
+        uint8_t diagnostic_request;
+        if(xQueueReceive(diagnostic_requests,&diagnostic_request,0)==pdPASS)report_diagnostics();
         pd_board_tick();
         int levels[2];pd_board_buttons(levels);
         screen_service(levels[0],levels[1]);

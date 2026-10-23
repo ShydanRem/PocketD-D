@@ -56,7 +56,7 @@ Non fanno parte di questo traguardo: importazione Beyond, editor completo, incan
 
 L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco non impedisce le altre fasi. L'ordine delle fasi 0 e 1 può sovrapporsi se l'hardware non è immediatamente disponibile.
 
-## Punto attuale — v0.53
+## Punto attuale — v0.54
 
 La [home del compagno](HOME-COMPAGNO.md) è integrata: menu a icone, PF,
 salvataggi e accesso alle funzioni esistenti, con tasti configurati conservati.
@@ -72,6 +72,9 @@ persistente, con dettaglio dei dadi e accesso assegnabile ai tasti.
 La [v0.53](BACKUP-DISPOSITIVO.md) aggiunge backup nativo USB, anteprima PC e
 ripristino di scheda/storico/preferenze, con conferme sul display.
 Le tre nuove viste portano la copertura host a 97/97, nella stessa direzione grafica.
+La [v0.54](PRIMO-AVVIO.md) prepara il blocco 3: diagnostica USB in sola lettura,
+sessione sintetica riproducibile e scheda per gli esiti. Hardware in arrivo;
+nessun esito fisico è stato ancora acquisito.
 
 | Blocco | Stato software | Cosa manca |
 | --- | --- | --- |
@@ -89,13 +92,13 @@ sono portate nel firmware, ma i criteri di completamento richiedono ancora una
 sessione fisica, trasferimento/ripristino e misure. Non sono percentuali di
 completamento né una dichiarazione di collaudo.
 
-## Quattro blocchi concordati — v0.53
+## Quattro blocchi concordati — v0.54
 
 | Blocco | Punto attuale | Prossimo lavoro |
 | --- | --- | --- |
 | 1 — Scheda sul dispositivo | Percorsi base nel firmware: magie/slot/usi, concentrazione, riposi, dadi vita, morte base; v0.51 borsello e v0.52 storico dei tiri | Regole/eccezioni e verifica nell'uso reale |
 | 2 — Effetti | Modificatori, round, concentrazione, difese, danni e riduzioni con costi/reazione; v0.38 aggiunge slot ordinari/patto; v0.39 durate del proprio turno; v0.40 minuti/ore; v0.41 cariche distinte dalla quantità; v0.42 tre spese congiunte; v0.43 ricarica parziale a dado esplicita; v0.44 quattro effetti di condizione sui tiri | Durate di altri soggetti, costi alternativi o oltre tre fonti, eventi/formule di ricarica automatici e requisiti/effetti automatici |
-| 3 — Prodotto fisico | Luminosità, attenuazione/risveglio, salvataggi, tasti configurabili e firmware compilato | Batteria, sospensione/spegnimento e collaudi reali touch/USB/memoria/alimentazione |
+| 3 — Prodotto fisico | Luminosità, attenuazione/risveglio, salvataggi, tasti configurabili, diagnostica USB v0.54 e firmware compilato | Batteria, sospensione/spegnimento e collaudi reali touch/USB/memoria/alimentazione |
 | 4 — Estetica | v0.50: completato nel software; home/avatar e 85 viste interne, icone, feedback, transizioni e navigazione verificati su 88/88 viste | Collaudo sul display reale nel blocco 3; ulteriori affinamenti artistici sono evoluzioni successive |
 
 Il blocco 2 resta aperto. Le cariche hanno ora un modello distinto dalla quantità,
@@ -167,7 +170,7 @@ L'incremento 0.8 aggiunge zoom 5 × 5, panoramica e assistenza geometrica agli a
 
 ## Prosecuzione senza hardware
 
-L'hardware non è ancora disponibile. Lo sviluppo procede sulla simulazione e sull'app di supporto, mantenendo aperta la verifica fisica delle fasi 0 e 2:
+L'hardware è in arrivo. Lo sviluppo procede sulla simulazione e sull'app di supporto, mantenendo aperta la verifica fisica delle fasi 0 e 2:
 
 1. **Completato nella 0.9:** raccolta di più personaggi con progressi separati e backup.
 2. **Completato nella 0.10:** inventario estensibile, armi e cure personalizzabili, mantenendo le regole dimostrative esplicite e la compatibilità dei backup.

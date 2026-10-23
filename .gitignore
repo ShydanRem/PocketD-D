@@ -11,3 +11,5 @@ __pycache__/
 /device-backups/
 /pocketdd-device-backup.json
 /.pocketdd-*
+/device-diagnostics/
+/factory-backup*.bin

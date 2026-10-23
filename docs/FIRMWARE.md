@@ -1,9 +1,10 @@
-# Firmware PocketD-D 0.53 — backup nativo USB
+# Firmware PocketD-D 0.54 — preparazione al primo collaudo
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
+[Novità v0.54: primo avvio, diagnostica e sessione guidata](PRIMO-AVVIO.md).
 [Novità v0.53: backup nativo, ripristino e garanzie](BACKUP-DISPOSITIVO.md).
 [Storico v0.52: storico persistente, tasti e limiti](STORICO-TIRI.md).
 [Borsello v0.51: monete, conferme e compatibilità](BORSELLO.md).
@@ -118,7 +119,7 @@ il buffer. Rettangoli allineati a coordinate pari come richiesto dal pannello.
 Le aree touch sono alte almeno 44 pixel e restano dentro il cerchio.
 Stati estesi/linea USB in PSRAM e temporanei nel heap; stack principale da
 16384 byte, USB da 12288 byte. Il margine effettivo degli stack resta da misurare
-sulla scheda insieme a heap e PSRAM.
+sulla scheda insieme a heap e PSRAM; la v0.54 espone questi dati via USB.
 
 Non vengono scritti registri di carica/voltaggio del PMIC AXP2101: si segue il
 percorso display/touch dell'esempio ufficiale, che non riprogramma il PMIC.
@@ -237,6 +238,33 @@ Il firmware rifiuta chiavi sconosciute/duplicate, valori frazionari, Unicode
 nel formato USB, strutture troppo annidate, payload troppo grandi e versioni
 incompatibili. Prove sintetiche non equivalgono alla conversione del personaggio
 reale Beyond: quella resta documentata separatamente in BEYOND-PROVE.md.
+
+## Diagnostica USB in sola lettura — v0.54
+
+La [guida di primo avvio](PRIMO-AVVIO.md) distingue acquisizione, lettura dei
+valori e collaudo fisico. `scripts/device-check.py --port PORTA` negozia prima
+`PDD HELLO` → `PDD READY 9`, poi invia `PDD DIAGNOSTICS GET 1`. Il firmware
+risponde con una sola riga `PDD DIAGNOSTICS {JSON}\n`, JSON massimo 2048 byte,
+formato `pocketdd-diagnostics`, versione 1. Versioni/formati futuri, campi
+sconosciuti/duplicati, tipi errati, contatori fuori limite e trasferimenti
+incompleti vengono rifiutati. Un vecchio firmware riceve solo comandi testuali,
+mai una scheda da importare. Una coda piena restituisce `PDD ERROR busy`.
+
+Il task USB accoda una richiesta piccola; il task proprietario LVGL raccoglie
+il rapporto senza modificare stato, pagina, conferme, timer di inattività,
+tiro pendente o registro. Nessuna scrittura NVS, RNG, comando touch, reset,
+controllo PMIC o lettura di dati personali. Il mutex di uscita mantiene integra
+la riga e il framing dei backup. Un trasferimento nativo occupato va terminato
+prima di aprire un secondo strumento sulla stessa porta.
+
+La scheda espone versione app/SDK, destinazione compilata, uptime/reset,
+heap interno/PSRAM, minimi stack UI/USB in byte, contatori touch/tasti, invii
+al display, massimo handler LVGL e stati di disponibilità dei salvataggi.
+I contatori PWR/BOOT sono fronti grezzi; le azioni configurabili continuano a
+passare dal debounce e dai blocchi esistenti. Nessun campo contiene la scheda,
+le facce dei dadi o identificativi univoci. La validità RAM non prova un commit
+NVS; il contatore display non prova colori o fluidità, e non equivale a FPS.
+Il rapporto non certifica l'esito delle prove hardware.
 
 ## Backup dal dispositivo al PC
 
@@ -1072,3 +1100,23 @@ impediscono altre scritture al registro fino al riavvio. Nuove conferme protette
 e timeout, anteprima PC, raccolta conservata e 97/97 viste native esercitate.
 Scheda PDD25, USB9, backup PC v11 e layout invariati. Nessun trasferimento USB
 fisico, flash, lettura Beyond o modifica della raccolta personale.
+
+## Incremento v0.54 — preparazione al collaudo fisico
+
+[Primo avvio e sessione guidata](PRIMO-AVVIO.md),
+[modello degli esiti ancora da compilare](COLLAUDO-HARDWARE.md).
+Diagnostica USB v1 in sola lettura: memoria/stack, touch/tasti, handler LVGL,
+reset e stato dei salvataggi, senza dati della scheda. Snapshot dal task UI,
+nessuna risoluzione di conferme o tiri e nessuna scrittura NVS/RNG. Tasti
+configurabili e grafica approvata conservati; formati PDD25/PDH2/USB9/backup e
+partizioni invariati. La fixture USB9 originale per il collaudo non apre la
+raccolta PC e non contiene materiale Beyond.
+
+Verificati: 161 test JavaScript, suite firmware e 97/97 viste LVGL, codec
+con buffer limite/contatori estremi, otto contesti UI senza effetti laterali,
+12 test Python di trasporto/schema/file/CLI e fixture PC → parser C con
+30 bonus confrontati. ASan/UBSan UI e codec, build PC/HTML autonomo ed
+ESP32-S3 passati. Binario app 3.383.376 byte, partizione app 4 MiB 19% libera.
+Misure dei driver, USB fisico, resa, precisione, memoria e alimentazione sono
+ancora da acquisire sull'hardware in arrivo. Nessun flash, prova fisica,
+lettura Beyond o modifica della raccolta personale in questo incremento.
