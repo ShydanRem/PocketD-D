@@ -1,9 +1,10 @@
-# Firmware PocketD-D 0.54 — preparazione al primo collaudo
+# Firmware PocketD-D 0.55 — collaudo locale dei comandi
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
+[Novità v0.55: prova locale di tocco e tasti configurabili](COLLAUDO-COMANDI.md).
 [Novità v0.54: primo avvio, diagnostica e sessione guidata](PRIMO-AVVIO.md).
 [Novità v0.53: backup nativo, ripristino e garanzie](BACKUP-DISPOSITIVO.md).
 [Storico v0.52: storico persistente, tasti e limiti](STORICO-TIRI.md).
@@ -1120,3 +1121,23 @@ ESP32-S3 passati. Binario app 3.383.376 byte, partizione app 4 MiB 19% libera.
 Misure dei driver, USB fisico, resa, precisione, memoria e alimentazione sono
 ancora da acquisire sull'hardware in arrivo. Nessun flash, prova fisica,
 lettura Beyond o modifica della raccolta personale in questo incremento.
+
+## Incremento v0.55 — collaudo locale dei comandi
+
+[Uso e garanzie](COLLAUDO-COMANDI.md). Da Aspetto → Tasti → Collaudo si
+provano cinque bersagli touch ordinati e PWR breve/BOOT breve-lungo con le
+scorciatoie attuali mostrate, senza eseguirle. Risultati solo in RAM, Azzera,
+uscita e timeout assoluto di 120 secondi per vista, con assorbimento degli
+input mantenuti fino al rilascio. Nessuna scrittura di scheda/registro,
+estrazione RNG o modifica delle assegnazioni. Import/backup ricevono busy;
+la diagnostica USB resta leggibile. PMIC e driver hardware invariati.
+
+Passati: 161 test JavaScript, suite firmware completa, nuovo controller C
+con soglia 799/800 ms e wrap, flusso puntatore LVGL con pressione/rilascio e
+trascinamento, tre timeout con contatti mantenuti e ritorno alle scorciatoie.
+100/100 viste esercitate, confronti di stato/preferenze/storico/copia pendente
+e contatori NVS/RNG invariati. ASan/UBSan sul controller e UI, build PC/HTML
+ed ESP32-S3 passati. Binario app 3.385.632 byte, partizione app 4 MiB 19% libera.
+PDD25/PDH2/USB9, backup, diagnostica v1 e partizioni invariati. Nuove catture
+`input-check-*.png` nel pacchetto, tutte native su host con periferiche sintetiche.
+Nessun flash, collaudo fisico, lettura Beyond o modifica della raccolta personale.

@@ -138,6 +138,30 @@ static void tap(int x,int y) {
     }
     assert(!"touch target not found");
 }
+/* A real LVGL pointer stream for the on-device target test. The peripheral
+   samples are synthetic; hit-testing, press/release and callbacks are real. */
+static int probe_x,probe_y;
+static bool probe_down,probe_valid=true;
+static void probe_touch(lv_indev_t *indev,lv_indev_data_t *data){
+    (void)indev;
+    bool allowed=pd_screen_touch(&display_screen,probe_valid,probe_down,lv_tick_get());
+    data->state=allowed?LV_INDEV_STATE_PRESSED:LV_INDEV_STATE_RELEASED;
+    data->point=(lv_point_t){probe_x,probe_y};
+}
+static void probe_sample(lv_indev_t *indev,int x,int y,bool down,unsigned elapsed){
+    probe_x=x;probe_y=y;probe_down=down;lv_tick_inc(elapsed);
+    lv_obj_update_layout(lv_screen_active());lv_indev_read(indev);bounds();
+}
+static void probe_click(lv_indev_t *indev,int x,int y){
+    probe_sample(indev,x,y,true,20);probe_sample(indev,x,y,false,20);
+}
+static void probe_key_sample(int pwr,int boot,unsigned elapsed){lv_tick_inc(elapsed);screen_service(pwr,boot);bounds();}
+static void probe_key_gesture(unsigned which,unsigned held){
+    probe_key_sample(0,0,0);probe_key_sample(0,0,31);
+    int pwr=which==0,boot=which!=0;
+    probe_key_sample(pwr,boot,0);probe_key_sample(pwr,boot,31);
+    probe_key_sample(pwr,boot,held);probe_key_sample(0,0,0);probe_key_sample(0,0,31);
+}
 int main(void) {
     lv_init();lv_display_t *d=lv_display_create(466,466);static uint16_t buffer[466*40];
     lv_display_set_buffers(d,buffer,NULL,sizeof buffer,LV_DISPLAY_RENDER_MODE_PARTIAL);lv_display_set_flush_cb(d,paint);
@@ -1043,13 +1067,84 @@ int main(void) {
     history=diagnostic_history;fail_save=history_quarantined=history_pending=import_pending=false;
     dice_animation.active=display_screen.dimmed=display_screen.failed=false;page=HERO;
     puts("Diagnostics UI snapshot: eight normal/busy/dimmed/error/pending/mismatched contexts, no state/history/NVS/RNG/input effects (synthetic)");
+    /* Device-local input checks: actual LVGL pointer events and production
+       key controller. They must never become gameplay actions or NVS writes. */
+    pd_demo(&state);state.shortcuts[0]=6;state.shortcuts[1]=4;state.shortcuts[2]=13;state.dim_timeout=1;
+    pd_history_reset(&history,state.history_epoch);history_pending=false;
+    display_screen=(pd_screen){0};physical_keys=(pd_buttons){0};has_roll=false;
+    effects_before=state;diagnostic_history=history;diagnostic_pending=pending;diagnostic_previous=previous;
+    effects_saves=save_calls;effects_calls=random_calls;before_journal=history_save_calls;
+    act(850);assert(page==KEY_SETTINGS);screenshot("input-check-entry.ppm");click("Collaudo");
+    assert(page==INPUT_CHECK_HOME&&confirmation_open());screenshot("input-check-home.ppm");
+    assert(!stage_import(&snapshot.state)&&!strcmp(last_reply,"PDD ERROR busy\n"));
+    assert(!stage_backup(NULL)&&!stage_backup(&snapshot));
+    act(1);act(100);act(13);act(850);shortcut(0);assert(page==INPUT_CHECK_HOME);
+    pd_diagnostics checking;collect_diagnostics(&checking);assert(checking.busy);
+    click("Prova tocco");assert(page==INPUT_CHECK_TOUCH&&input_check.touched==0);screenshot("input-check-touch.ppm");
+    act(2909);assert(!input_check.touched);click("1");assert(!input_check.touched); /* No pointer event: no observation. */
+    lv_indev_t *probe=lv_indev_create();assert(probe);lv_indev_set_type(probe,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(probe,probe_touch);lv_indev_set_display(probe,d);
+    probe_click(probe,328,234);probe_click(probe,90,210);assert(!input_check.touched);
+    probe_sample(probe,233,170,true,20);probe_sample(probe,233,170,true,1000);assert(!input_check.touched);
+    probe_sample(probe,233,170,false,20);assert(input_check.touched==1);
+    /* Releasing after a drag off the active target must not accept it. */
+    probe_sample(probe,328,234,true,20);probe_sample(probe,233,298,true,20);probe_sample(probe,233,298,false,20);assert(input_check.touched==1);
+    for(unsigned i=1;i<PD_INPUT_CHECK_TARGETS;i++){
+        probe_click(probe,input_target_centers[i][0],input_target_centers[i][1]);
+        assert(input_check.touched==i+1);char image[48];snprintf(image,sizeof image,"input-check-touch-%u.ppm",i+1);screenshot(image);
+    }
+    assert(input_check.touched==5);screenshot("input-check-touch-done.ppm");
+    probe_click(probe,233,234);assert(input_check.touched==5);click("Azzera");assert(!input_check.touched);
+    act(2902);assert(page==INPUT_CHECK_TOUCH);click("Indietro");assert(page==INPUT_CHECK_HOME);
+    click("Prova tasti");assert(page==INPUT_CHECK_KEYS);
+    probe_key_sample(1,1,0);probe_key_sample(1,1,1000);probe_key_sample(0,0,0);probe_key_sample(0,0,31);
+    assert(!input_check.counts[0]&&!input_check.counts[1]&&!input_check.counts[2]);
+    click("Azzera");probe_key_sample(0,0,0);screenshot("input-check-keys.ppm");
+    probe_key_sample(-1,0,0);assert(!input_check.available[0]);screenshot("input-check-unavailable.ppm");
+    for(unsigned i=0;i<3;i++){probe_key_gesture(i,i==2?800:100);assert(page==INPUT_CHECK_KEYS&&input_check.counts[i]==1);}
+    probe_key_gesture(0,900);assert(input_check.counts[0]==1);screenshot("input-check-keys-done.ppm");
+    for(unsigned i=0;i<3;i++)input_check.counts[i]=PD_INPUT_CHECK_COUNT_MAX;
+    input_check_refresh();bounds();screenshot("input-check-maximum.ppm");
+    for(unsigned i=0;i<3;i++){probe_key_gesture(i,i==2?800:100);assert(input_check.counts[i]==999);}
+    assert(!has_roll&&random_calls==effects_calls&&!memcmp(&state,&effects_before,sizeof state));
+    click("Azzera");assert(!input_check.counts[0]&&!input_check.counts[1]&&!input_check.counts[2]);
+    /* A held BOOT at exit cannot invoke its configured Zaino shortcut. */
+    probe_key_sample(0,0,0);probe_key_sample(0,0,31);probe_key_sample(0,1,0);probe_key_sample(0,1,31);
+    click("Indietro");click("Esci");assert(page==KEY_SETTINGS&&input_check.mode==PD_INPUT_IDLE);
+    probe_key_sample(0,1,1000);probe_key_sample(0,0,0);probe_key_sample(0,0,31);assert(page==KEY_SETTINGS);
+    probe_key_gesture(1,100);assert(page==INVENTORY); /* A fresh gesture works again. */
+    for(unsigned view=0;view<3;view++){
+        act(850);click("Collaudo");
+        if(view==1)click("Prova tocco");if(view==2)click("Prova tasti");
+        if(view==2){history_pending=true;probe_key_sample(0,1,0);}
+        probe_sample(probe,233,180,false,20);probe_sample(probe,233,180,true,20);
+        /* Check absolute timeout across the LVGL clock wrap in each view. */
+        lv_tick_inc(UINT32_MAX-lv_tick_get()-60000);input_check.started=lv_tick_get();
+        lv_tick_inc(119999);assert(!input_check_service()&&input_check_open());
+        lv_tick_inc(1);assert(input_check_service()&&page==KEY_SETTINGS&&input_check.mode==PD_INPUT_IDLE);
+        assert(display_screen.swallow_keys&&display_screen.swallow_touch&&strstr(input_check_notice,"scaduta"));
+        /* After timeout that same coordinate is a binding button. A contact
+           carried from the test must not reconfigure it on release. */
+        probe_sample(probe,233,180,true,20);probe_sample(probe,233,180,false,20);
+        assert(!display_screen.swallow_touch&&!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves);
+        probe_key_sample(0,1,1000);probe_key_sample(0,0,0);probe_key_sample(0,0,31);assert(page==KEY_SETTINGS);
+        if(view==2){assert(history_pending);history_pending=false;}
+        screenshot("input-check-timeout.ppm");
+    }
+    probe_sample(probe,233,234,false,20);lv_indev_delete(probe);
+    assert(save_calls==effects_saves&&history_save_calls==before_journal&&random_calls==effects_calls);
+    assert(!memcmp(&state,&effects_before,sizeof state)&&!memcmp(&history,&diagnostic_history,sizeof history));
+    assert(!memcmp(&pending,&diagnostic_pending,sizeof pending)&&!memcmp(&previous,&diagnostic_previous,sizeof previous));
+    import_pending=true;act(2900);assert(page==KEY_SETTINGS);import_pending=false;
+    dice_animation.active=true;act(2900);assert(page==KEY_SETTINGS);dice_animation.active=false;
+    page=MAGIC_CONFIRM;act(2900);assert(page==MAGIC_CONFIRM);page=HERO;
+    puts("Local input check: real LVGL pointer stream, five targets/drag/held/reset, production key gestures/held exit, busy USB, unchanged state/history/preferences/NVS/RNG and all three timeout/wrap views passed (synthetic)");
     unsigned covered=0;
-    for(unsigned p=0;p<=BACKUP_RESTORE_CONFIRM;p++){
+    for(unsigned p=0;p<=INPUT_CHECK_KEYS;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)BACKUP_RESTORE_CONFIRM+1);
-    assert(covered==BACKUP_RESTORE_CONFIRM+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)INPUT_CHECK_KEYS+1);
+    assert(covered==INPUT_CHECK_KEYS+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

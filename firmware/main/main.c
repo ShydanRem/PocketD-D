@@ -12,6 +12,7 @@
 #include "combat.h"
 #include "magic.h"
 #include "buttons.h"
+#include "input_check.h"
 #include "rest.h"
 #include "recharge.h"
 #include "status.h"
@@ -38,7 +39,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS } page_t;
 static const pd_theme_kind page_themes[]={
     [HERO]=PD_THEME_NONE,
     [SHEET]=PD_THEME_SHEET,
@@ -137,6 +138,9 @@ static const pd_theme_kind page_themes[]={
     [BACKUP_HOME]=PD_THEME_BACKUP,
     [BACKUP_SEND_CONFIRM]=PD_THEME_BACKUP,
     [BACKUP_RESTORE_CONFIRM]=PD_THEME_BACKUP,
+    [INPUT_CHECK_HOME]=PD_THEME_CHECK,
+    [INPUT_CHECK_TOUCH]=PD_THEME_CHECK,
+    [INPUT_CHECK_KEYS]=PD_THEME_CHECK,
 };
 PD_EXT static pd_state state,previous,pending,scratch;
 static bool undo_available,import_pending,has_roll;
@@ -196,6 +200,10 @@ static bool strike_ready,damage_used;
 static pd_pool damage_result;
 static pd_buttons physical_keys;
 static pd_screen display_screen;
+static pd_input_check input_check;
+static lv_obj_t *input_check_counts[3];
+static bool input_check_open(void){return page>=INPUT_CHECK_HOME&&page<=INPUT_CHECK_KEYS;}
+static const char *input_check_notice="PWR lungo: alimentazione";
 static unsigned magic_filter=2,magic_page,power_index,cast_level,text_page,slot_index;
 static bool cast_pact,slot_pact,stop_rage;
 static const char *const shortcut_names[]={"Spento","Eroe","Scheda","Dadi","Zaino","Magie","Lancia","Riposi","Stato","Schermo","Effetti","Round","Danni","Storico"};
@@ -207,7 +215,7 @@ static bool rest_active,hit_rolled;
 PD_EXT static pd_state hit_candidate;
 static pd_pool hit_result;
 static unsigned hit_gained;
-static bool confirmation_open(void){return page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
+static bool confirmation_open(void){return input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
 static pd_damage_plan damage_plan; /* First component + explicit concentration choice. */
 static pd_damage_component damage_extra[PD_DAMAGE_COMPONENTS-1],damage_part_draft;
 static pd_damage_context damage_context,damage_extra_context[PD_DAMAGE_COMPONENTS-1],damage_part_context,source_context_draft;
@@ -577,7 +585,39 @@ static void frame(void) {
     small_label(status,91,73,284,c);
     feedback_show();
 }
+static void input_check_leave(void){
+    pd_input_check_close(&input_check);physical_keys=(pd_buttons){0};
+    display_screen.swallow_keys=display_screen.swallow_touch=true;
+    pd_screen_activity(&display_screen,lv_tick_get());
+    page=KEY_SETTINGS;render();
+}
+static bool input_check_service(void){
+    if(!input_check_open()||!pd_input_check_tick(&input_check,lv_tick_get()))return false;
+    input_check_notice="Prova scaduta; scheda conservata";input_check_leave();return true;
+}
+static void input_check_action(intptr_t action){
+    if(import_pending||dice_animation.active)return;
+    if(input_check_service())return;
+    if(action==2900&&page==KEY_SETTINGS){
+        pd_input_check_begin(&input_check,lv_tick_get());physical_keys=(pd_buttons){0};
+        input_check_notice="PWR lungo: alimentazione";feedback.active=false;page=INPUT_CHECK_HOME;
+    }else if(!input_check_open())return;
+    else if(action==2901&&(page==INPUT_CHECK_HOME||page==INPUT_CHECK_TOUCH)){
+        pd_input_check_select(&input_check,PD_INPUT_TOUCH,lv_tick_get());page=INPUT_CHECK_TOUCH;
+    }else if(action==2902&&(page==INPUT_CHECK_HOME||page==INPUT_CHECK_KEYS)){
+        pd_input_check_select(&input_check,PD_INPUT_KEYS,lv_tick_get());page=INPUT_CHECK_KEYS;
+    }else if(action==2903&&(page==INPUT_CHECK_TOUCH||page==INPUT_CHECK_KEYS)){
+        pd_input_check_select(&input_check,PD_INPUT_HOME,lv_tick_get());
+        physical_keys=(pd_buttons){0};display_screen.swallow_keys=true;page=INPUT_CHECK_HOME;
+    }else if(action==2904&&page==INPUT_CHECK_HOME){input_check_leave();return;}
+    else if(action>=2908&&action<2908+PD_INPUT_CHECK_TARGETS&&page==INPUT_CHECK_TOUCH){
+        if(!pd_input_check_touch(&input_check,(unsigned)(action-2908)))return;
+    }else return;
+    pd_screen_activity(&display_screen,lv_tick_get());render();
+}
 static void act(intptr_t action) {
+    if(action>=2900&&action<2913){input_check_action(action);return;}
+    if(input_check_open())return;
     if((action==2300||action==2301)&&(import_pending||confirmation_open()))return;
     if(import_pending&&action!=30&&action!=31)return;
     if(page==BACKUP_SEND_CONFIRM&&action!=2801&&action!=2802)return;
@@ -1227,7 +1267,17 @@ static void act(intptr_t action) {
     render();
     #undef next
 }
-static void event(lv_event_t *e){act((intptr_t)lv_event_get_user_data(e));}
+static void event(lv_event_t *e){
+    intptr_t action=(intptr_t)lv_event_get_user_data(e);
+    if(action>=2908&&action<2908+PD_INPUT_CHECK_TARGETS){
+        lv_indev_t *input=lv_event_get_indev(e);
+        if(!input||lv_indev_get_type(input)!=LV_INDEV_TYPE_POINTER)return;
+        lv_point_t point;lv_area_t area;lv_indev_get_point(input,&point);
+        lv_obj_get_coords(lv_event_get_current_target(e),&area);
+        if(point.x<area.x1||point.x>area.x2||point.y<area.y1||point.y>area.y2)return;
+    }
+    act(action);
+}
 static lv_obj_t *button(const char *text,int x,int y,int w,int h,intptr_t action,bool enabled) {
     lv_obj_t *b=lv_button_create(lv_screen_active());lv_obj_remove_style_all(b);lv_obj_set_pos(b,x,y);lv_obj_set_size(b,w,h);
     bool primary=action==13||action==46||action==30||!strcmp(text,"Conferma")||!strcmp(text,"Applica")||!strcmp(text,"Lancia")||!strcmp(text,"Usa");
@@ -1633,7 +1683,7 @@ static void render_magic_other(void) {
             art(icons[state.shortcuts[i]],6,7,b);
             lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_width(l,246);lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_align(l,LV_ALIGN_LEFT_MID,44,0);
         }
-        small_label("PWR lungo: alimentazione",83,326,300,PD_GOLD);button("Indietro",83,359,300,48,50,true);
+        small_label(input_check_notice,83,326,300,PD_GOLD);button("Indietro",83,359,144,48,50,true);button("Collaudo",239,359,144,48,2900,true);
     }
 }
 
@@ -1695,6 +1745,52 @@ static void render_rest(void) {
     }
 }
 
+static const int input_target_centers[PD_INPUT_CHECK_TARGETS][2]={{233,170},{328,234},{233,298},{138,234},{233,234}};
+static void input_check_refresh(void){
+    for(unsigned i=0;i<3;i++)if(input_check_counts[i]){
+        bool available=input_check.available[i?1:0];
+        if(available)lv_label_set_text_fmt(input_check_counts[i],"Ricevuti: %u",input_check.counts[i]);
+        else lv_label_set_text(input_check_counts[i],"Lettura non disponibile");
+        lv_obj_set_style_text_color(input_check_counts[i],lv_color_hex(!available?PD_GOLD:input_check.counts[i]?PD_MINT:PD_MUTED),0);
+    }
+}
+static void render_input_check(void){
+    char text[100];memset(input_check_counts,0,sizeof input_check_counts);
+    if(page==INPUT_CHECK_HOME){
+        label("Collaudo comandi",83,111,300,true);
+        small_label("Prove locali; scheda conservata",83,153,300,PD_MUTED);
+        button("Prova tocco",83,187,300,44,2901,true);
+        button("Prova tasti",83,243,300,44,2902,true);
+        unsigned seen=0;for(unsigned i=0;i<3;i++)seen+=input_check.counts[i]>0;
+        snprintf(text,sizeof text,"Tocco %u/5 | gesti osservati %u/3",input_check.touched,seen);
+        small_label(text,83,299,300,PD_MINT);
+        small_label("Ogni prova si chiude dopo 2 minuti",83,326,300,PD_GOLD);
+        button("Esci",83,359,300,48,2904,true);
+    }else if(page==INPUT_CHECK_TOUCH){
+        if(input_check.touched<PD_INPUT_CHECK_TARGETS)snprintf(text,sizeof text,"Tocca il bersaglio %u/5",input_check.touched+1);
+        else snprintf(text,sizeof text,"Cinque tocchi riconosciuti");
+        label(text,83,111,300,false);
+        for(unsigned i=0;i<PD_INPUT_CHECK_TARGETS;i++){
+            snprintf(text,sizeof text,"%u",i+1);
+            lv_obj_t *b=button(text,input_target_centers[i][0]-28,input_target_centers[i][1]-28,56,56,2908+i,i==input_check.touched);
+            lv_obj_set_style_border_width(b,i==input_check.touched?3:1,0);
+            lv_obj_set_style_border_color(b,lv_color_hex(i<input_check.touched?PD_MINT:i==input_check.touched?PD_GOLD:PD_MUTED),0);
+        }
+        small_label(input_check.touched<5?"Tocca e rilascia; controlla la posizione":"Percorso completo; verifica la resa",83,326,300,PD_MUTED);
+        button("Azzera",83,359,144,48,2901,true);button("Indietro",239,359,144,48,2903,true);
+    }else{
+        label("Prova i tasti",83,111,300,true);
+        const char *names[]={"PWR breve","BOOT breve","BOOT lungo"};
+        for(unsigned i=0;i<3;i++){
+            snprintf(text,sizeof text,"%s: %s",names[i],shortcut_names[state.shortcuts[i]]);
+            small_label(text,83,157+i*54,300,PD_TEXT);
+            input_check_counts[i]=label("",83,179+i*54,300,false);
+        }
+        input_check_refresh();
+        small_label("Rilascia prima del prossimo gesto",83,326,300,PD_GOLD);
+        button("Azzera",83,359,144,48,2902,true);button("Indietro",239,359,144,48,2903,true);
+    }
+}
 static void render_backup(void){
     char text[160];
     if(page==BACKUP_HOME){
@@ -2310,6 +2406,7 @@ static void render_content(void) {
         button("Annulla",83,313,144,54,31,true); button("Conferma",239,313,144,54,30,true);
         return;
     }
+    if(input_check_open()){render_input_check();return;}
     if(page==BACKUP_HOME||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM){render_backup();return;}
     if(page==HISTORY_HOME||page==HISTORY_DETAIL||page==HISTORY_DISCARD){render_history();return;}
     if(page==WALLET_HOME||page==WALLET_EDIT||page==WALLET_CONFIRM){render_wallet();return;}
@@ -2447,7 +2544,7 @@ static void render_content(void) {
     }
 }
 #ifdef PD_UI_TEST
-static bool styled_pages[BACKUP_RESTORE_CONFIRM+1];
+static bool styled_pages[INPUT_CHECK_KEYS+1];
 static void capture_styled_page(unsigned view);
 #endif
 static void render(void){
@@ -2496,9 +2593,12 @@ static void shortcut(unsigned gesture) {
     else if(binding==4)act(80);else if(binding==5)act(800);else if(binding==7)act(900);else if(binding==8)act(1500);else if(binding==9)act(1600);else if(binding==10)act(1700);else if(binding==11)act(1740);else if(binding==12)act(1800);else if(binding==13)act(2600);
 }
 static void screen_service(int pwr,int boot){
-    bool enabled=pd_screen_keys(&display_screen,pwr,boot,lv_tick_get())&&!import_pending&&!confirmation_open();
+    input_check_service();
+    bool allowed=pd_screen_keys(&display_screen,pwr,boot,lv_tick_get());
+    bool enabled=allowed&&!import_pending&&!confirmation_open();
     unsigned gestures=pd_buttons_sample(&physical_keys,pwr,boot,lv_tick_get(),enabled);
     for(unsigned i=0;i<3;i++)if(gestures&(1u<<i))shortcut(i);
+    if(page==INPUT_CHECK_KEYS&&pd_input_check_keys(&input_check,pwr,boot,lv_tick_get(),allowed))input_check_refresh();
     bool failed=display_screen.failed;
     pd_screen_step(&display_screen,state.brightness,state.dim_timeout,import_pending||confirmation_open()||dice_animation.active,lv_tick_get(),pd_board_brightness,NULL);
     companion_pause(display_screen.dimmed);

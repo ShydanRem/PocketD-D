@@ -56,6 +56,13 @@ backup_gallery=Image.new('RGB',(466*2,466*2),'black')
 for i,name in enumerate(('send','restore','state-error','restored')):
     backup_gallery.paste(Image.open(BASE/f'backup-{name}.png'),(i%2*466,i//2*466))
 backup_gallery.save(BASE/'backup-preview.png')
+input_views=('entry','home','touch','touch-2','touch-3','touch-4','touch-5','touch-done','keys','keys-done','unavailable','maximum','timeout')
+for name in input_views:
+    Image.open(BASE/f'input-check-{name}.ppm').save(BASE/f'input-check-{name}.png')
+input_gallery=Image.new('RGB',(466*2,466*2),'black')
+for i,name in enumerate(('home','touch','keys-done','timeout')):
+    input_gallery.paste(Image.open(BASE/f'input-check-{name}.png'),(i%2*466,i//2*466))
+input_gallery.save(BASE/'input-check-preview.png')
 frames=[Image.open(BASE/f'ux-transition-{i:02d}.ppm').convert('RGB') for i in range(5)]
 frames[0].save(BASE/'ui-transition.gif',save_all=True,append_images=frames[1:],duration=[40,40,40,40,1000],loop=0,disposal=2,optimize=True)
 print(f'UI: {len(records)} production views, overview, offline catalog and transition exported')

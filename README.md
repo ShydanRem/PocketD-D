@@ -2,13 +2,14 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.54:** pronto il [percorso di primo avvio e collaudo](docs/PRIMO-AVVIO.md), con diagnostica USB in sola lettura, scheda sintetica per una sessione riproducibile e modello per registrare gli esiti. Memoria, stack, contatti/tasti e stato dei salvataggi sono osservabili senza pubblicare dati del personaggio. Grafica del compagno e backup nativo v0.53 conservati; 97/97 viste esercitate su LVGL host. Hardware in arrivo: USB fisico, resa, alimentazione e affidabilità reale restano da provare.
+**Stato v0.55:** [collaudo locale dei comandi](docs/COLLAUDO-COMANDI.md) da Aspetto → Tasti: cinque bersagli per il tocco e monitor PWR/BOOT con le scorciatoie assegnate. Prove isolate dal gioco, azzeramento, uscita e timeout protetti, senza modificare scheda o salvataggi. La diagnostica USB v0.54 e il backup nativo restano disponibili. Grafica del compagno conservata; 100/100 viste esercitate su LVGL host. Hardware in arrivo: nessuna prova fisica ancora eseguita.
 
 Il firmware comprende borsello, storico, scheda, inventario, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Scheda PDD25, nuovi registri NVS PDH2 con lettura di PDH1, copia scheda USB9 e backup PC v11. Il backup nativo è un archivio distinto dal backup della raccolta PC. Regole speciali, altri effetti e prodotto fisico restano aperti.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
-- [Primo avvio: installazione, diagnostica e sessione guidata v0.54](docs/PRIMO-AVVIO.md)
+- [Collaudo locale del tocco e dei tasti configurabili v0.55](docs/COLLAUDO-COMANDI.md)
+- [Primo avvio: installazione, diagnostica e sessione guidata v0.55](docs/PRIMO-AVVIO.md)
 - [Scheda da compilare durante il collaudo hardware](docs/COLLAUDO-HARDWARE.md)
 - [Backup del dispositivo: acquisizione, anteprima, ripristino e compatibilità v0.53](docs/BACKUP-DISPOSITIVO.md)
 - [Storico dei tiri: persistenza, tasti, errori e limiti v0.52](docs/STORICO-TIRI.md)

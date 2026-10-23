@@ -20,8 +20,8 @@ richiede un'osservazione reale; indicare eventuali prove parziali nelle note.
 | H01 | Modello standard corretto, backup fabbrica e installazione | Non eseguito | |
 | H02 | Avvio e stabilità della home | Non eseguito | |
 | H03 | Resa: testi, icone, colori e ritagli | Non eseguito | |
-| H04 | Touch: orientamento e comandi in tutte le zone usate | Non eseguito | |
-| H05 | PWR breve, BOOT breve/lungo: configurazione, una azione, riavvio | Non eseguito | |
+| H04 | Prova tocco locale: bersagli, orientamento e comandi in tutte le zone usate | Non eseguito | |
+| H05 | Prova tasti locale e PWR breve, BOOT breve/lungo: configurazione, una azione, riavvio | Non eseguito | |
 | H06 | Tasti bloccati nelle conferme; risveglio senza azione | Non eseguito | |
 | H07 | Luminosità e attenuazione 30 s, ripresa e preferenze persistenti | Non eseguito | |
 | H08 | Diagnostica USB: rapporto valido, versione e stati osservati | Non eseguito | |

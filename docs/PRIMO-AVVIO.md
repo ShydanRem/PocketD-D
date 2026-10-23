@@ -1,8 +1,9 @@
-# Primo avvio e sessione di collaudo — v0.54
+# Primo avvio e sessione di collaudo — v0.55
 
 Questa versione prepara il **blocco 3, prodotto fisico**. L'hardware è in
 arrivo: tutte le prove fisiche sotto sono **da eseguire**, nessuna è già passata.
-La grafica approvata e le 97 viste restano quelle della v0.53.
+La grafica approvata è conservata; le tre viste di collaudo v0.55 portano
+la copertura host a 100/100, senza attestare un esito fisico.
 
 L'obiettivo della prima prova è trasferire una scheda nota, giocare offline,
 conservare i progressi dopo un riavvio e recuperarli da un backup. Batteria,
@@ -102,6 +103,14 @@ controllo, senza un polling continuo. Non assegniamo soglie di prestazione o
 autonomia prima delle misure.
 
 ## 4. Provare display, touch e tasti configurabili
+
+In **Aspetto → Tasti → Collaudo**, aprire prima **Prova tocco** e poi
+**Prova tasti**. Il [percorso locale](COLLAUDO-COMANDI.md) offre cinque bersagli
+ordinati e tre contatori dei gesti, senza eseguire le scorciatoie configurate.
+Controllare rilascio/posizione e registrare l'esito osservato. Azzera riavvia la
+prova; Esci o la scadenza di due minuti conservano scheda e preferenze.
+Una pressione mantenuta all'uscita deve essere rilasciata prima di poter agire
+sui comandi normali. Il collaudo non salva risultati, non scrive NVS e non estrae dadi.
 
 Aprire Eroe, Menu, Scheda, Zaino e Magie. Controllare testi, icone, colori,
 assenza di ritagli/lampeggiamenti e precisione dei comandi in tutte le zone

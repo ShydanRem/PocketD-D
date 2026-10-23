@@ -80,6 +80,8 @@ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as out:
                  ('empty','detail','unsaved-roll','pending','unsaved-detail','discard','eighteen','last-dice','full','oldest','key','import-empty')]
     ui_files += ['backup-preview.png']+[f'backup-{name}.png' for name in
                  ('home','send','send-error','sent','timeout','restore','history-error','state-error','restored')]
+    ui_files += ['input-check-preview.png']+[f'input-check-{name}.png' for name in
+                 ('entry','home','touch','touch-2','touch-3','touch-4','touch-5','touch-done','keys','keys-done','unavailable','maximum','timeout')]
     for name in ui_files:
         image=preview/name
         if not image.is_file():raise SystemExit(f'Missing UI capture: {name}')
