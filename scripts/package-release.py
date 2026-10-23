@@ -102,6 +102,10 @@ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as out:
                  ('vitals','heal-keypad','heal-preview','heal-error','heal-result','temp-kept',
                   'temp-grant','temp-correction','temp-clear','heal-capped','damage-amount',
                   'damage-maximum','zero-pf','potion-retry','potion-result','hit-retry')]
+    ui_files += ['power-gallery.png']+[f'power-{name}.png' for name in
+                 ('home-battery','battery','charging','no-battery','unavailable','low','critical',
+                  'home-critical','stale','pause-error','sleep-error','pending-history','off-preview',
+                  'off-state-error','off-history-error','off-uncertain','off-requested')]
     for name in ui_files:
         image=preview/name
         if not image.is_file():raise SystemExit(f'Missing UI capture: {name}')

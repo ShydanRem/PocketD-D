@@ -38,13 +38,14 @@ richiede un'osservazione reale; indicare eventuali prove parziali nelle note.
 | H19 | Ripristino: annulla/conferma, preferenze/storico e riavvio | Non eseguito | |
 | H20 | Ripetizione dei percorsi: heap, stack e fluidità | Non eseguito | |
 | H21 | Interruzioni durante scritture: protocollo concordato e recupero | Non eseguito | |
-| H22 | Batteria, consumi, sospensione e spegnimento | Non eseguito | Funzioni ancora da completare |
+| H22 | Batteria, consumi, sospensione e spegnimento | Non eseguito | Software integrato v0.62; misure e comportamento fisico da verificare |
 | H23 | Scheda sintetica dopo backup: danni a zero PF, critico, morte istantanea, annulla, riavvio/ripristino | Non eseguito | [Procedura v0.56](DANNI-ZERO-PF.md) |
 | H24 | Scheda sintetica: tiro morte base/modificato, annullamento dei segni, bonus, storico, annulla e reset bozza | Non eseguito | [Procedura v0.57](TIRI-MORTE.md) |
 | H25 | Scheda sintetica: riferimenti A/B/C, isolamento turno proprio/reazione, scadenze, cap PF, annulla e backup/riavvio | Non eseguito | [Procedura v0.58](TURNI-ESTERNI.md) |
 | H26 | Scheda sintetica: nomi A/B/C, tastiera/pagine/limite, anteprima, annulla, timer invariati e backup/riavvio | Non eseguito | [Procedura v0.59](NOMI-TURNI.md) |
 | H27 | Scheda sintetica: due/tre alternative, scelta esplicita, blocchi/saldi, reazione, annulla, nuovo colpo e backup/riavvio | Non eseguito | [Procedura v0.60](COSTI-ALTERNATIVI.md) |
 | H28 | Scheda sintetica: pannello PF, cura/cap, temporanei assegna/correggi/zero, importi danni, annulla, tasti e riavvio | Non eseguito | [Procedura v0.61](USO-AL-TAVOLO.md) |
+| H29 | Alimentazione v0.62: telemetria reale, USB/ricarica, avvisi, pausa/risveglio/tasti, arresto e persistenza | Non eseguito | [Procedura](ALIMENTAZIONE.md) |
 
 ## Problema riproducibile
 

@@ -1,5 +1,10 @@
 # Collaudo dei comandi sul dispositivo — v0.55
 
+> Aggiornamento v0.62: [alimentazione e batteria](ALIMENTAZIONE.md).
+> Telemetria, avvisi, pausa/risveglio e spegnimento con salvataggio sono ora
+> implementati; le prove fisiche e le misure restano da eseguire. Descrizioni
+> e limiti successivi sono quelli storici della versione del titolo.
+
 Il blocco 3 dispone ora anche di una prova locale per tocco e tasti, accessibile
 senza un programma PC. La scheda fisica è ancora in arrivo: il percorso è
 verificato con LVGL su host e campioni sintetici, **non sull'hardware reale**.

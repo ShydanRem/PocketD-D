@@ -183,3 +183,12 @@ script esistente, oltre a UI e test originali per il feedback transitorio dei
 saldi. Nessun asset/font/servizio esterno o dipendenza del firmware aggiunti.
 Le catture e la GIF del feedback usano dati sintetici. Nessun dato personale
 o JSON Beyond incluso.
+
+Power integration v0.62 is original C code. AXP2101 register meanings and board
+wiring were checked against the official Waveshare standard-board schematic,
+AXP2101 datasheet and bundled XPowers reference at
+https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.75/tree/e4344e70c2fa78a13e8a06566507f1ba8af6672a
+XPowersLib is by Lewis He (MIT); its sources are used as a reference, not a new
+runtime dependency. See docs/ALIMENTAZIONE.md for exact pinned links. No charger
+initialization code, current/voltage configuration or external assets were copied.
+The only new PMIC write is the explicit Soft PWROFF request after saving.

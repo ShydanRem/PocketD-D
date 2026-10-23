@@ -1,5 +1,10 @@
 # Uso pratico al tavolo — v0.61
 
+> Aggiornamento v0.62: [alimentazione e batteria](ALIMENTAZIONE.md).
+> Telemetria, avvisi, pausa/risveglio e spegnimento con salvataggio sono ora
+> implementati; le prove fisiche e le misure restano da eseguire. Descrizioni
+> e limiti successivi sono quelli storici della versione del titolo.
+
 Controllo del 23 ottobre 2026 sul firmware di `main`. L'obiettivo è una prima
 sessione individuale offline: scheda, dadi, PF, risorse e progressi recuperabili.
 Il PC prepara/importa la scheda e conserva i backup. Regole speciali, party,

@@ -1,14 +1,15 @@
-# Primo avvio e sessione di collaudo — v0.61
+# Primo avvio e sessione di collaudo — v0.62
 
 Questa versione prepara il **blocco 3, prodotto fisico**. L'hardware è in
 arrivo: tutte le prove fisiche sotto sono **da eseguire**, nessuna è già passata.
-La grafica approvata è conservata; la v0.61 migliora i percorsi frequenti di
-PF/temporanei e danni e porta la copertura host a 108/108.
+La grafica approvata è conservata; la v0.62 integra il software di alimentazione
+e porta la copertura host a 110/110.
 Il [controllo pratico](USO-AL-TAVOLO.md) separa software verificato e prove fisiche.
 
 L'obiettivo della prima prova è trasferire una scheda nota, giocare offline,
-conservare i progressi dopo un riavvio e recuperarli da un backup. Batteria,
-sospensione e spegnimento controllato restano un lavoro successivo.
+conservare i progressi dopo un riavvio e recuperarli da un backup.
+[Telemetria batteria, pausa e spegnimento](ALIMENTAZIONE.md) sono integrati nel
+software; la loro prova fisica segue i controlli iniziali via USB.
 
 ## 1. Identificare la scheda e conservare il firmware originale
 
@@ -93,7 +94,7 @@ senza questa opzione il riepilogo viene soltanto stampato.
 | PWR/BOOT | Fronti premuto dopo un rilascio osservato; letture PWR indisponibili | Debounce, pressione breve/lunga e azione assegnata; i contatori sono grezzi |
 | Display/LVGL | Invii di rettangoli e massimo tempo di un handler in microsecondi | Colori, resa, FPS e latenza percepita; gli invii non provano la resa del pannello |
 | Scheda/registro | Disponibilità di scrittura, validità RAM e identità coincidenti | Persistenza effettiva dopo riavvio e perdita di alimentazione |
-| Schermo | Attenuazione, errore corrente di luminosità e operazione protetta | Luminosità reale e consumi; non viene letto uno stato batteria |
+| Schermo | Attenuazione, errore corrente di luminosità e operazione protetta | Luminosità reale e consumi; la batteria si consulta in Alimentazione, fuori dal rapporto v1 |
 
 Contatori e massimi ripartono al boot, saturano a UINT32_MAX e non sono salvati.
 Il tempo di funzionamento è a 64 bit. I valori heap sono letture ravvicinate,
@@ -121,7 +122,8 @@ errore; una foto/video del pannello aiuta a confrontarlo con il catalogo host.
 In **Aspetto → Tasti**, assegnare temporaneamente PWR breve a Scheda, BOOT
 breve a Zaino e BOOT lungo a Storico. Provare ciascuna azione dopo il rilascio;
 deve partire una volta sola. PWR lungo resta riservato all'hardware e non è
-una quarta scorciatoia. Non attribuire al firmware uno spegnimento controllato.
+una quarta scorciatoia. Lo spegnimento software si richiede separatamente da
+**Schermo → Alimentazione → Spegni**, con salvataggio e conferma.
 
 Aprire una conferma di gioco e premere i tre comandi: non devono confermare,
 consumare, lanciare o abbandonare la finestra. Riavviare in modo ordinario e
@@ -297,6 +299,32 @@ protezione dai tasti nelle bozze, Annulla e riavvio dei saldi salvati.
 Registrare H28 secondo [USO-AL-TAVOLO.md](USO-AL-TAVOLO.md). Le simulazioni di
 errori di scrittura restano sul banco host; evitare guasti indotti fuori dal
 protocollo dedicato H21.
+
+## 13. Alimentazione e batteria — dopo i controlli via USB e il backup
+
+Verificare batteria effettivamente montata e indicazioni della revisione
+Waveshare. Aprire **Aspetto → Schermo → Alimentazione**, confrontare presenza
+batteria, USB e ricarica con i collegamenti reali. Verificare anche il caso
+senza batteria, se il modello lo consente; una lettura indisponibile deve
+restare esplicita. Percentuale e tensione richiedono confronto con misure:
+nessuna autonomia viene dedotta da questa schermata.
+
+Con dati sintetici salvati provare **Pausa**: pannello spento, risveglio da
+touch/BOOT/PWR, primo gesto consumato, stato e Annulla conservati. Verificare
+USB e batteria separatamente, compreso il collegamento USB durante la pausa.
+Con Attenua 30/60/120 s e senza USB, cinque minuti di inattività devono
+attivare la pausa; conferme, dadi e storico pendente la impediscono. Attenua
+mai la disabilita. Confrontare consumi attivi/attenuati/in pausa e latenza
+reale senza assegnare un risparmio teorico.
+
+Dopo il backup, a batteria con USB scollegata, provare **Spegni**: annullare
+una volta, poi **Salva e spegni**. Verificare arresto fisico, riaccensione PWR
+e scheda/storico/preferenze conservati. Se il comando non è confermato o la
+scheda resta accesa, annotare l'anomalia e usare PWR hardware. Per avvisi di
+bassa carica usare una normale scarica controllata secondo le indicazioni del
+produttore, senza aggirare protezioni o modificare soglie elettriche. Le
+simulazioni di guasti I2C/NVS restano nei test host. Registrare H22 e H29 con
+la [procedura e i limiti](ALIMENTAZIONE.md).
 
 ## Registrazione dell'esito
 

@@ -22,6 +22,10 @@ typedef struct {
     int applied_hp, applied_temporary; /* actual committed deltas, not requested amounts */
     uint32_t feedback_age; /* elapsed since commit; redraw never restarts a receipt */
     const char *notice;
+    const char *power_text; /* copied during show; NULL hides the indicator */
+    unsigned power_warning,power_percent;
+    bool power_percent_valid;
+    bool power_charging;
     const lv_image_dsc_t *avatar; /* caller owns live descriptor; NULL: demonstration sprite */
 } companion_view;
 typedef void (*companion_handler)(companion_action action, void *context);

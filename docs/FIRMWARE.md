@@ -1,8 +1,10 @@
-# Firmware PocketD-D 0.61 — uso pratico al tavolo
+# Firmware PocketD-D 0.62 — alimentazione e batteria
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
+
+[Novità v0.62: telemetria batteria, pausa/risveglio e spegnimento](ALIMENTAZIONE.md).
 
 [Novità v0.61: controllo pratico, cure/temporanei locali, importi e retry](USO-AL-TAVOLO.md).
 
@@ -134,14 +136,17 @@ Stati estesi/linea USB in PSRAM e temporanei nel heap; stack principale da
 16384 byte, USB da 12288 byte. Il margine effettivo degli stack resta da misurare
 sulla scheda insieme a heap e PSRAM; la v0.54 espone questi dati via USB.
 
-Non vengono scritti registri di carica/voltaggio del PMIC AXP2101: si segue il
-percorso display/touch dell'esempio ufficiale, che non riprogramma il PMIC.
-**Avvio a batteria, alimentazioni, orientamento touch e luminosità devono ancora
-essere verificati sulla scheda reale.** Non sono implementati telemetria
-batteria, sospensione, spegnimento controllato o stime d'autonomia. Luminosità
-iniziale 50%, configurabile da Schermo. Attenuazione per inattività disponibile;
-nessun valore di batteria inventato. Audio, SD, RTC e IMU
-non vengono avviati. Nessun GPIO riutilizzato per periferiche esterne.
+La [v0.62](ALIMENTAZIONE.md) legge lo stato AXP2101 e integra indicatore/avvisi,
+pausa con pannello spento e light sleep a intervalli a batteria, risveglio
+protetto e Soft PWROFF esplicito dopo salvataggio. I registri di carica,
+voltaggio, regolatori e parametri del gauge restano invariati: l'unica nuova
+scrittura PMIC è il bit di arresto, su conferma. **Avvio a batteria, risveglio,
+arresto, alimentazioni, orientamento touch e luminosità devono ancora essere
+verificati sulla scheda reale.** Nessuna autonomia o calibrazione attestata.
+Luminosità iniziale 50%, configurabile da Schermo. Attenuazione per inattività
+e pausa automatica opzionale sono descritte nel documento alimentazione.
+Audio, SD, RTC e IMU non vengono avviati. Nessun GPIO riutilizzato per
+periferiche esterne.
 
 ## Compilazione
 
@@ -1320,3 +1325,48 @@ assegnazioni dei tasti conservate. Catture `practical-*.png` e galleria native
 LVGL host con dati sintetici. Nessuna lettura Beyond o modifica della raccolta
 personale. Collaudi fisici ancora da eseguire; il prossimo traguardo pratico
 è la sessione offline via USB, poi alimentazione autonoma e tenuta ai guasti.
+
+## Incremento v0.62 — alimentazione, batteria e pausa
+
+[Uso, fonti hardware e limiti](ALIMENTAZIONE.md). AXP2101 letto sul bus touch
+con verifica dell'identità: batteria presente, USB valida, direzione di carica,
+stima percentuale del gauge e tensione ADC già abilitato. Nessuna stima
+inventata da una curva tensione/percentuale; campioni falliti, obsoleti o fuori
+intervallo rimangono indisponibili. Indicatore nella home e pagina Alimentazione,
+avvisi al 20% e 5%, senza taglio automatico dell'alimentazione.
+
+Pausa manuale con pannello spento e RAM conservata; a batteria, light sleep
+CPU a intervalli di 20 ms, touch/BOOT come wake GPIO e PWR controllato fra gli
+intervalli. Con USB o dati sconosciuti resta la sola pausa display/rendering.
+Ripresa protetta fino al rilascio del gesto, collegamento USB durante la pausa,
+DMA drenato e ripristino della sorgente di entropia prima di altri tiri.
+Pausa automatica dopo cinque minuti a batteria se Attenua è abilitata,
+compreso il caso luminosità 10%; bloccata nelle operazioni protette e con
+storico/memoria da risolvere. I campioni di tensione non ricreano la home o
+riavviano l'animazione dell'avatar.
+
+Spegnimento esplicito con batteria e USB scollegata: conferma, salvataggio di
+scheda e storico, quindi nuova verifica PMIC e singolo comando Soft PWROFF.
+Un salvataggio fallito impedisce il comando. Esito richiesto e non confermato
+restano distinti; dopo il tentativo i comandi di gioco sono bloccati, senza
+ripetere scritture. Nessuna modifica di ricarica, tensioni, regolatori, TS,
+IRQ o parametri del gauge. PWR lungo resta hardware, tre tasti configurabili
+conservati. Arresto, riaccensione e risparmio reali devono essere collaudati.
+
+Passati: 167 test JavaScript e suite firmware completa. Nuovo core con
+262.144 combinazioni indipendenti di stato/direzione/SOC, 16.384 valori ADC,
+letture mancanti, gauge/ADC disabilitati, scadenza e wrap temporale, condizioni
+di pausa e tutti i valori del registro di configurazione per l'unica scrittura
+consentita. UI 110/110: dati sconosciuti/assenti/ricarica/bassi/obsoleti,
+pausa/risveglio simulati, input mantenuti, USB, errori display/sleep, inattività,
+nessuna modifica a scheda/storico/RNG, errori dei salvataggi e richiesta di
+arresto unica. ASan/UBSan su core alimentazione/schermo e UI passati.
+Build PC/HTML autonomo ed ESP32-S3 passate. Binario app 3.416.128 byte
+(partizione 4 MiB, 19% libera).
+
+PDD28/PDDS, PDH2/lettura PDH1, USB9, backup nativo v1, backup PC v11,
+diagnostica v1 e partizioni invariati. Nessun nuovo campo persistente.
+Catture `power-*.png` e galleria LVGL host con dati inventati. Gli adapter
+PMIC/sleep/pannello del test UI sono simulati; la build reale usa le API
+ESP-IDF e il driver del pannello. Nessun flash, misura di autonomia o collaudo
+fisico eseguiti, nessuna lettura Beyond o modifica della raccolta personale.

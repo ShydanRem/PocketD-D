@@ -39,7 +39,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM, POWER_HOME, POWER_OFF } page_t;
 static const pd_theme_kind page_themes[]={
     [HERO]=PD_THEME_NONE,
     [SHEET]=PD_THEME_SHEET,
@@ -149,6 +149,8 @@ static const pd_theme_kind page_themes[]={
     [PAYMENT_CHOICE]=PD_THEME_DAMAGE,
     [NUMBER_ENTRY]=PD_THEME_STATUS,
     [VITAL_CONFIRM]=PD_THEME_STATUS,
+    [POWER_HOME]=PD_THEME_SCREEN,
+    [POWER_OFF]=PD_THEME_SCREEN,
 };
 PD_EXT static pd_state state,previous,pending,scratch;
 static bool undo_available,import_pending,has_roll;
@@ -208,6 +210,10 @@ static bool strike_ready,damage_used;
 static pd_pool damage_result;
 static pd_buttons physical_keys;
 static pd_screen display_screen;
+static pd_power_info power_info;
+static bool power_paused,power_pause_usb,power_off_attempted,power_off_ok;
+static const char *power_notice="";
+static lv_obj_t *storage_status_label;
 static pd_input_check input_check;
 static lv_obj_t *input_check_counts[3];
 static bool input_check_open(void){return page>=INPUT_CHECK_HOME&&page<=INPUT_CHECK_KEYS;}
@@ -229,7 +235,7 @@ static bool number_fresh;
 static bool item_rolled;
 static pd_pool item_result;
 static unsigned item_gained;
-static bool confirmation_open(void){return page==NUMBER_ENTRY||page==VITAL_CONFIRM||page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
+static bool confirmation_open(void){return power_paused||power_off_attempted||page==POWER_OFF||page==NUMBER_ENTRY||page==VITAL_CONFIRM||page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
 static pd_damage_plan damage_plan; /* First component + explicit concentration choice. */
 static pd_damage_component damage_extra[PD_DAMAGE_COMPONENTS-1],damage_part_draft;
 static pd_damage_context damage_context,damage_extra_context[PD_DAMAGE_COMPONENTS-1],damage_part_context,source_context_draft;
@@ -405,6 +411,9 @@ static bool wallet_same(const pd_wallet *a,const pd_wallet *b){return a->availab
 static bool wallet_can_undo(void){return undo_available&&!wallet_same(&state.wallet,&previous.wallet);}
 static void render(void);
 static void render_companion(void);
+static bool power_begin_pause(void);
+static void power_service(void);
+static bool power_storage_ready(void);
 #ifndef PD_UI_TEST
 static bool usb_write_all(const char *data,size_t size,void *context){
     TickType_t started=*(TickType_t *)context;size_t at=0;
@@ -435,6 +444,7 @@ static bool stage_backup(const pd_backup *snapshot); /* NULL requests read-only 
 static pd_history history;
 static pd_history_entry history_unsaved;
 static bool history_pending;
+static bool power_storage_ready(void){return !history_pending&&pd_storage_writable()&&pd_history_store_available()&&history.epoch==state.history_epoch&&pd_history_valid(&history)&&pd_valid(&state);}
 static void collect_diagnostics(pd_diagnostics *out){
     pd_board_diagnostics(out);
 #ifndef PD_UI_TEST
@@ -482,7 +492,16 @@ static void journal_pool(unsigned kind,const char *name,const pd_pool *r,const c
 }
 static const char *ui_storage_status(void){
     const char *status=pd_storage_status();
-    return !strstr(status,"Errore")&&history_pending?"Tiro non registrato":status;
+    if(strstr(status,"Errore"))return status;
+    if(history_pending)return "Tiro non registrato";
+    unsigned warning=pd_power_warning(&power_info,lv_tick_get());
+    if(warning&& !strcmp(status,"Salvato offline")){static char low[48];snprintf(low,sizeof low,warning==2?"Batteria %u%%: collega USB":"Batteria bassa: %u%%",power_info.percent);return low;}
+    return status;
+}
+static unsigned ui_status_color(const char *status){
+    if(strstr(status,"Errore"))return PD_DANGER;
+    if(strstr(status,"Batteria"))return pd_power_warning(&power_info,lv_tick_get())==2?PD_DANGER:PD_GOLD;
+    return strstr(status,"Recuperata")||strstr(status,"Layout")?PD_GOLD:PD_MUTED;
 }
 static void invalidate_strike(void) {
     strike_ready=false;
@@ -617,8 +636,8 @@ static void frame(void) {
     lv_obj_t *title=label(theme->title,187,36,118,false);
     lv_obj_set_style_text_color(title,lv_color_hex(theme->accent),0);
     const char *status=ui_storage_status();
-    unsigned c=strstr(status,"Errore")?PD_DANGER:(strstr(status,"Recuperata")||strstr(status,"Layout"))?PD_GOLD:PD_MUTED;
-    small_label(status,91,73,284,c);
+    unsigned c=ui_status_color(status);
+    storage_status_label=small_label(status,91,73,284,c);
     feedback_show();
 }
 static void input_check_leave(void){
@@ -654,6 +673,8 @@ static void input_check_action(intptr_t action){
 static void act(intptr_t action) {
     if(action>=2900&&action<2913){input_check_action(action);return;}
     if(input_check_open())return;
+    if(power_paused||power_off_attempted)return;
+    if(page==POWER_OFF&&action!=3703&&action!=3704)return;
     if((action==2300||action==2301)&&(import_pending||confirmation_open()))return;
     if(import_pending&&action!=30&&action!=31)return;
     if(page==NUMBER_ENTRY&&(action<3603||action>3619))return;
@@ -724,6 +745,22 @@ static void act(intptr_t action) {
     }
     else if(action==2300)page=HOME_MENU;
     else if(action==2301)page=HOME_VITALS;
+    else if(action==3700&&page==DEVICE_SETTINGS){power_notice="";page=POWER_HOME;pd_board_power(&power_info,lv_tick_get(),true);}
+    else if(action==3701&&page==POWER_HOME){power_begin_pause();return;}
+    else if(action==3702&&page==POWER_HOME){
+        pd_board_power(&power_info,lv_tick_get(),true);
+        if(!power_storage_ready()||!pd_power_battery_only(&power_info,lv_tick_get())){render();return;}
+        power_notice="";page=POWER_OFF;
+    }
+    else if(action==3703&&page==POWER_OFF){power_notice="";page=POWER_HOME;}
+    else if(action==3704&&page==POWER_OFF){
+        pd_board_power(&power_info,lv_tick_get(),true);
+        if(!power_storage_ready()||!pd_power_battery_only(&power_info,lv_tick_get())){render();return;}
+        if(!pd_storage_save(&state))power_notice="Errore memoria: riavvia";
+        else if(!pd_history_store_save(&history))power_notice="Storico non salvato: riprova";
+        else {power_off_attempted=true;power_off_ok=pd_board_power_off();}
+    }
+
     else if((action==3600||action==3601)&&page==HOME_VITALS){
         number_target=action==3600?NUMBER_HEAL:NUMBER_TEMP;vital_kind=action==3600?PD_VITAL_HEAL:PD_VITAL_TEMP_GRANT;
         if(vital_kind==PD_VITAL_HEAL&&(!pd_vitals_apply(&next,vital_kind,1)||state.hp==pd_max_hp(&state)))return;
@@ -1972,12 +2009,41 @@ static void render_backup(void){
     if(restoring&&strstr(backup_notice,"Errore"))small_label(backup_notice,83,326,300,PD_DANGER);
     button("Annulla",83,359,144,48,2801,true);button(restoring?"Ripristina":"Invia",239,359,144,48,restoring?2803:2802,true);
 }
+static void render_power(void){
+    char text[120];bool fresh=pd_power_fresh(&power_info,lv_tick_get()),ready=power_storage_ready(),battery=pd_power_battery_only(&power_info,lv_tick_get());
+    if(page==POWER_OFF){
+        if(power_off_attempted){
+            label(power_off_ok?"Spegnimento richiesto":"Esito non confermato",83,111,300,false);
+            small_label("Scheda e storico salvati",83,169,300,PD_MINT);
+            small_label(power_off_ok?"Attendi l'arresto della scheda":"Comando PMIC non confermato",83,225,300,PD_GOLD);
+            small_label("Se resta accesa, usa PWR lungo",83,281,300,PD_MUTED);
+            button("Richiesta terminata",83,359,300,48,3704,false);return;
+        }
+        label("Spegnere il dispositivo?",83,111,300,false);
+        small_label("Salva scheda e storico",83,169,300,PD_TEXT);
+        small_label("Per riaccendere: premi PWR",83,213,300,PD_GOLD);
+        small_label("Bozze e Annulla di sessione persi",83,257,300,PD_MUTED);
+        small_label(!battery?"Serve batteria; scollega USB":!ready?"Prima risolvi memoria e storico":power_notice[0]?power_notice:"Pronto per salvare e spegnere",83,307,300,ready&&battery?PD_GOLD:PD_DANGER);
+        button("Indietro",83,359,144,48,3703,true);lv_obj_t *off=button("Salva e spegni",239,359,144,48,3704,ready&&battery);lv_obj_set_style_text_font(off,&lv_font_montserrat_16,0);return;
+    }
+    label("Alimentazione",83,111,300,false);
+    if(!fresh)strcpy(text,"Batteria: dati non disponibili");else if(!power_info.battery)strcpy(text,"Batteria non rilevata");else if(!power_info.percent_valid)strcpy(text,"Stima batteria non disponibile");else snprintf(text,sizeof text,"Stima batteria: %u%%",power_info.percent);
+    label(text,83,155,300,false);
+    small_label(!fresh?"Lettura PMIC non disponibile":power_info.charging?"In carica":power_info.vbus?"USB presente":"USB assente",83,195,300,PD_TEXT);
+    if(fresh&&power_info.voltage_valid)snprintf(text,sizeof text,"Tensione: %u.%03u V",power_info.millivolts/1000,power_info.millivolts%1000);else strcpy(text,"Tensione non disponibile");small_label(text,83,231,300,PD_MUTED);
+    unsigned warning=pd_power_warning(&power_info,lv_tick_get());
+    small_label(power_notice[0]?power_notice:warning==2?"Quasi scarica: collega USB":warning?"Batteria bassa: collega USB":"Percentuale stimata dal PMIC",83,267,300,warning==2?PD_DANGER:PD_GOLD);
+    if(history_pending)button("Apri Storico",83,303,300,44,2600,true);
+    else small_label(state.dim_timeout?"Pausa auto: 5 min a batteria":"Pausa auto spenta (Attenua: mai)",83,315,300,PD_MUTED);
+    const char *names[]={"Indietro","Pausa","Spegni"};const unsigned actions[]={1600,3701,3702};
+    for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names[i],83+i*104,359,92,48,actions[i],i==0||(ready&&(i==1||battery)));lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
+}
 static void render_settings(void){
     char text[120];label("Schermo",83,111,300,true);
     snprintf(text,sizeof text,"Luminosita %u%%",state.brightness);label(text,83,155,300,false);
     button("-10",83,193,144,44,1601,state.brightness>10);button("+10",239,193,144,44,1602,state.brightness<100);
     snprintf(text,sizeof text,"Attenua: %s >",(const char *const[]){"mai","30 sec","60 sec","120 sec"}[state.dim_timeout]);button(text,83,251,300,44,1603,true);
-    small_label(display_screen.failed?"Errore comando luminosita":"Attenuato al 10%; primo input riattiva",83,309,300,display_screen.failed?PD_DANGER:PD_GOLD);
+    button(display_screen.failed?"Errore schermo | Alimentazione >":"Alimentazione >",83,303,300,44,3700,true);
     const char *names[]={"Indietro","Tasti","Backup"};const unsigned actions[]={50,850,2800};
     for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names[i],83+i*104,359,92,48,actions[i],true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
 }
@@ -2635,6 +2701,8 @@ static void render_companion(void){
     uint32_t age=lv_tick_get()-feedback.started;
     if(error||display_screen.dimmed||age>=2000)feedback.active=false;
     if(page==HERO)avatar_prepare(&state.avatar,4);
+    char badge[16];bool fresh=pd_power_fresh(&power_info,lv_tick_get());
+    if(fresh&&power_info.battery&&power_info.percent_valid)snprintf(badge,sizeof badge,"%u%%",power_info.percent);else snprintf(badge,sizeof badge,"%s",fresh&&power_info.vbus?"USB":"?");
     companion_view view={
         .page=page==HERO?COMPANION_HOME:page==HOME_MENU?COMPANION_MENU:COMPANION_VITALS,
         .name=state.name,.level=state.level,.hp=state.hp,.maximum=pd_max_hp(&state),
@@ -2643,6 +2711,7 @@ static void render_companion(void){
         .can_hurt=state.hp||state.temp_hp,
         .can_heal=state.hp<pd_max_hp(&state)&&(state.hp||!state.status.available||state.status.failures<3),
         .applied_hp=feedback.active?feedback.hp_delta:0,.applied_temporary=feedback.active?feedback.temp_delta:0,
+        .power_text=badge,.power_percent=power_info.percent,.power_percent_valid=fresh&&power_info.battery&&power_info.percent_valid,.power_warning=pd_power_warning(&power_info,lv_tick_get()),.power_charging=fresh&&power_info.charging,
         .feedback_age=age,.notice=strcmp(status,"Salvato offline")?status:NULL,.avatar=&avatar_image
     };
     companion_show(lv_screen_active(),&view,companion_event,NULL);
@@ -2656,7 +2725,7 @@ static void render_content(void) {
     if(dice_timer) { lv_timer_delete(dice_timer);dice_timer=NULL; }
     if(avatar_timer) { lv_timer_delete(avatar_timer);avatar_timer=NULL; }
     if(feedback_timer){lv_timer_delete(feedback_timer);feedback_timer=NULL;}
-    feedback_panel=NULL;memset(feedback_motes,0,sizeof feedback_motes);
+    storage_status_label=NULL;feedback_panel=NULL;memset(feedback_motes,0,sizeof feedback_motes);
     pd_theme_close();
     companion_close();
     lv_obj_t *root=lv_screen_active();lv_obj_clean(root);
@@ -2692,6 +2761,7 @@ static void render_content(void) {
     if(page==DEATH_ROLL_SETUP){render_death_roll_setup();return;}
     if(page==EXTERNAL_TURN_HOME){render_external_turn();return;}
     if(page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM){render_turn_name();return;}
+    if(page==POWER_HOME||page==POWER_OFF){render_power();return;}
     if(page==NUMBER_ENTRY){scratch=state;render_number_entry();return;}
     if(page==VITAL_CONFIRM){render_vital_confirm();return;}
     if(page==PAYMENT_CHOICE){render_payment_choice();return;}
@@ -2832,7 +2902,7 @@ static void render_content(void) {
     }
 }
 #ifdef PD_UI_TEST
-static bool styled_pages[VITAL_CONFIRM+1];
+static bool styled_pages[POWER_OFF+1];
 static void capture_styled_page(unsigned view);
 #endif
 static void render(void){
@@ -2894,6 +2964,36 @@ static void screen_service(int pwr,int boot){
     if(display_screen.dimmed&&avatar_sprite&&avatar_phase)avatar_set_pose(&state.avatar,0);
     if(display_screen.dimmed){feedback.active=false;if(feedback_timer){lv_timer_delete(feedback_timer);feedback_timer=NULL;}if(feedback_panel){lv_obj_delete(feedback_panel);feedback_panel=NULL;}memset(feedback_motes,0,sizeof feedback_motes);}
     if(failed!=display_screen.failed&&page==DEVICE_SETTINGS)render();
+}
+static bool power_begin_pause(void){
+    if(!power_storage_ready()||confirmation_open()||import_pending||dice_animation.active){power_notice="Prima risolvi memoria e storico";render();return false;}
+    if(!pd_board_pause(true)){power_notice="Errore pausa schermo";render();return false;}
+    power_paused=true;power_pause_usb=pd_power_fresh(&power_info,lv_tick_get())&&power_info.vbus;
+    companion_pause(true);pd_theme_pause();feedback.active=false;physical_keys=(pd_buttons){0};
+    display_screen.swallow_keys=display_screen.swallow_touch=true;return true;
+}
+static void power_service(void){
+    if(power_off_attempted)return;
+    pd_power_info old=power_info;pd_board_power(&power_info,lv_tick_get(),false);
+    bool changed=old.available!=power_info.available||old.battery!=power_info.battery||old.vbus!=power_info.vbus||old.charging!=power_info.charging||old.percent_valid!=power_info.percent_valid||old.voltage_valid!=power_info.voltage_valid||old.percent!=power_info.percent||old.millivolts!=power_info.millivolts;
+    if(power_paused){
+        bool usb_inserted=!power_pause_usb&&pd_power_fresh(&power_info,lv_tick_get())&&power_info.vbus;
+        unsigned result=usb_inserted?PD_POWER_WAKE:pd_board_power_wait(pd_power_battery_only(&power_info,lv_tick_get()));
+        if(result==PD_POWER_WAIT)return;
+        if(!pd_board_pause(false))return; /* Retry waking the panel; keep game input quarantined. */
+        power_paused=false;power_notice=result==PD_POWER_ERROR?"Pausa interrotta: errore sleep":usb_inserted?"USB collegata":"";
+        physical_keys=(pd_buttons){0};pd_screen_activity(&display_screen,lv_tick_get());
+        display_screen.swallow_touch=display_screen.swallow_keys=true;display_screen.applied=0;
+        pd_screen_step(&display_screen,state.brightness,state.dim_timeout,true,lv_tick_get(),pd_board_brightness,NULL);render();return;
+    }
+    bool badge_changed=old.available!=power_info.available||old.battery!=power_info.battery||old.vbus!=power_info.vbus||old.charging!=power_info.charging||old.percent_valid!=power_info.percent_valid||old.percent!=power_info.percent;
+    if(((badge_changed&&page==HERO)||(changed&&(page==POWER_HOME||page==POWER_OFF)))&&!import_pending&&!dice_animation.active)render();
+    else if(badge_changed&&storage_status_label){
+        const char *status=ui_storage_status();lv_label_set_text(storage_status_label,status);
+        lv_obj_set_style_text_color(storage_status_label,lv_color_hex(ui_status_color(status)),0);
+    }
+    bool blocked=import_pending||confirmation_open()||dice_animation.active||display_screen.touch_down||history_pending;
+    if(pd_power_auto_pause(&power_info,lv_tick_get(),display_screen.activity,state.dim_timeout!=0,blocked)&&power_storage_ready())power_begin_pause();
 }
 static bool stage_backup(const pd_backup *snapshot){
     if(import_pending||confirmation_open()){reply("PDD ERROR busy\n");return false;}
@@ -2963,6 +3063,7 @@ static void usb_task(void *unused) {
 void app_main(void) {
     pd_demo(&state);if(pd_storage_load(&state))pd_history_store_load(state.history_epoch,&history);
     pd_board_screen(&display_screen);pd_board_init();
+    pd_board_power(&power_info,lv_tick_get(),true);
     pd_screen_activity(&display_screen,lv_tick_get());
     pd_screen_step(&display_screen,state.brightness,state.dim_timeout,true,lv_tick_get(),pd_board_brightness,NULL);
     usb_serial_jtag_driver_config_t usb=USB_SERIAL_JTAG_DRIVER_CONFIG_DEFAULT();
@@ -2986,8 +3087,8 @@ void app_main(void) {
         uint8_t diagnostic_request;
         if(xQueueReceive(diagnostic_requests,&diagnostic_request,0)==pdPASS)report_diagnostics();
         pd_board_tick();
-        int levels[2];pd_board_buttons(levels);
-        screen_service(levels[0],levels[1]);
+        if(!power_paused&&!power_off_attempted){int levels[2];pd_board_buttons(levels);screen_service(levels[0],levels[1]);}
+        power_service();
         vTaskDelay(pdMS_TO_TICKS(5));
     }
 }

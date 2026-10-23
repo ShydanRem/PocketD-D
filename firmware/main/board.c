@@ -1,7 +1,9 @@
 /* Adapted display/touch initialization from Waveshare ESP32-S3-Touch-AMOLED-1.75
  * BSP at e4344e70c2fa78a13e8a06566507f1ba8af6672a (Apache-2.0).
  * PocketD-D changes: direct LVGL 9 partial DMA buffers, one owner task, no audio,
- * no SD formatting, no PMIC charge/voltage writes. See THIRD_PARTY.md. */
+ * no SD formatting, no PMIC charge/voltage writes. Explicit PWROFF only.
+ * AXP register meanings checked against the pinned official example/datasheet.
+ * See THIRD_PARTY.md and docs/ALIMENTAZIONE.md. */
 #include "board.h"
 #include "esp_lcd_co5300.h"
 #include "esp_lcd_touch_cst9217.h"
@@ -15,6 +17,8 @@
 #include "bootloader_random.h"
 #include "esp_system.h"
 #include "esp_app_desc.h"
+#include "esp_sleep.h"
+#include "driver/usb_serial_jtag.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"
 
@@ -25,6 +29,9 @@ static esp_lcd_touch_handle_t touch;
 static SemaphoreHandle_t flushed;
 static int64_t last_tick;
 static i2c_master_dev_handle_t expander;
+static i2c_master_dev_handle_t pmic;
+static bool board_paused,power_sampled;
+static pd_power_info power_observed;
 static bool pwr_ready;
 static uint8_t pwr_polarity;
 static int pwr_level=-1;
@@ -110,6 +117,8 @@ void pd_board_init(void) {
             pwr_ready=(direction&0x10)||i2c_master_transmit(expander,config,sizeof config,5)==ESP_OK;
         }
     }
+    i2c_device_config_t pm={.dev_addr_length=I2C_ADDR_BIT_LEN_7,.device_address=0x34,.scl_speed_hz=400000};
+    if(i2c_master_bus_add_device(i2c,&pm,&pmic)!=ESP_OK)pmic=NULL;
     gpio_config_t key={.pin_bit_mask=UINT64_C(1)<<0,.mode=GPIO_MODE_INPUT,.pull_up_en=GPIO_PULLUP_DISABLE,.pull_down_en=GPIO_PULLDOWN_DISABLE,.intr_type=GPIO_INTR_DISABLE};
     ESP_ERROR_CHECK(gpio_config(&key)); /* GPIO0 already has the board pull-up. */
     lv_init();
@@ -128,7 +137,7 @@ void pd_board_tick(void) {
     int64_t started=esp_timer_get_time();
     int64_t now=esp_timer_get_time()/1000;
     lv_tick_inc((uint32_t)(now-last_tick)); last_tick=now;
-    lv_timer_handler();
+    if(!board_paused)lv_timer_handler();
     observed(&observations.lvgl_ticks);
     uint64_t elapsed=(uint64_t)(esp_timer_get_time()-started);
     uint32_t duration=elapsed>UINT32_MAX?UINT32_MAX:(uint32_t)elapsed;
@@ -156,6 +165,46 @@ bool pd_board_brightness(unsigned percent,void *unused){
     flush_wait(NULL);
     return esp_lcd_panel_co5300_set_brightness(panel,percent)==ESP_OK;
 }
+
+static bool power_read(uint8_t reg,uint8_t *out,size_t count,void *unused){
+    (void)unused;return pmic&&i2c_master_transmit_receive(pmic,&reg,1,out,count,5)==ESP_OK;
+}
+static bool power_write(uint8_t reg,uint8_t value,void *unused){
+    (void)unused;uint8_t data[]={reg,value};return pmic&&i2c_master_transmit(pmic,data,sizeof data,5)==ESP_OK;
+}
+void pd_board_power(pd_power_info *out,uint32_t now,bool force){
+    if(force||!power_sampled||(uint32_t)(now-power_observed.sampled_at)>=2000){
+        pd_power_sample(&power_observed,now,power_read,NULL);power_sampled=true;
+    }
+    *out=power_observed;
+}
+bool pd_board_pause(bool paused){
+    flush_wait(NULL);
+    if(esp_lcd_panel_disp_on_off(panel,!paused)!=ESP_OK)return false;
+    board_paused=paused;return true;
+}
+unsigned pd_board_power_wait(bool battery_only){
+    flush_wait(NULL); /* The click that paused LVGL may have queued its last frame. */
+    int levels[2];pd_board_buttons(levels);
+    esp_lcd_touch_point_data_t point={0};uint8_t count=0;
+    if(esp_lcd_touch_read_data(touch)!=ESP_OK||esp_lcd_touch_get_data(touch,&point,&count,1)!=ESP_OK)return PD_POWER_ERROR;
+    if(count||levels[0]==1||levels[1]==1||(battery_only&&usb_serial_jtag_is_connected()))return PD_POWER_WAKE;
+    if(!battery_only){vTaskDelay(pdMS_TO_TICKS(20));return PD_POWER_WAIT;}
+    esp_err_t error=gpio_wakeup_enable(GPIO_NUM_0,GPIO_INTR_LOW_LEVEL);
+    if(error==ESP_OK)error=gpio_wakeup_enable(GPIO_NUM_11,GPIO_INTR_LOW_LEVEL);
+    if(error==ESP_OK)error=esp_sleep_enable_gpio_wakeup();
+    if(error==ESP_OK)error=esp_sleep_enable_timer_wakeup(20000);
+    if(error==ESP_OK){
+        /* The SAR entropy source is not needed while all tasks sleep. Restore
+           it before another game action can call esp_random(). */
+        bootloader_random_disable();error=esp_light_sleep_start();bootloader_random_enable();
+    }
+    esp_sleep_wakeup_cause_t cause=esp_sleep_get_wakeup_cause();
+    gpio_wakeup_disable(GPIO_NUM_0);gpio_wakeup_disable(GPIO_NUM_11);
+    esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_GPIO);esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_TIMER);
+    return error!=ESP_OK?PD_POWER_ERROR:cause==ESP_SLEEP_WAKEUP_GPIO?PD_POWER_WAKE:PD_POWER_WAIT;
+}
+bool pd_board_power_off(void){return !usb_serial_jtag_is_connected()&&pd_power_off(power_read,power_write,NULL);}
 
 void pd_board_diagnostics(pd_diagnostics *out){
     *out=observations;

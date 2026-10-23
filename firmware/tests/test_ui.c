@@ -7,7 +7,7 @@ static void *ui_malloc(size_t size);
 #undef lv_malloc
 #include <stdlib.h>
 #include <math.h>
-static bool fail_save,fail_canvas,fail_brightness;
+static bool fail_save,fail_canvas,fail_brightness,fail_storage_commit;
 static unsigned brightness_calls,brightness_last;
 static char last_reply[PD_DIAGNOSTICS_MAX+32];
 void pd_ui_reply(const char *text){assert(strlen(text)<sizeof last_reply);strcpy(last_reply,text);}
@@ -21,6 +21,14 @@ void pd_board_diagnostics(pd_diagnostics *out){
 }
 bool pd_board_brightness(unsigned percent,void *unused){(void)unused;brightness_calls++;brightness_last=percent;return !fail_brightness;}
 static void *ui_malloc(size_t size) { return fail_canvas?NULL:lv_malloc(size); }
+static pd_power_info fake_power;
+static bool fail_pause,fail_resume,fail_power_off;
+static unsigned pause_calls,resume_calls,power_off_calls,power_wait_calls,power_wait_result=PD_POWER_WAIT;
+static bool last_low_power;
+void pd_board_power(pd_power_info *out,uint32_t now,bool force){(void)force;*out=fake_power;out->sampled_at=now;}
+bool pd_board_pause(bool paused){if(paused){pause_calls++;return !fail_pause;}resume_calls++;return !fail_resume;}
+unsigned pd_board_power_wait(bool battery_only){power_wait_calls++;last_low_power=battery_only;return power_wait_result;}
+bool pd_board_power_off(void){power_off_calls++;return !fail_power_off;}
 static unsigned random_calls,save_calls,history_save_calls,history_seen;
 static bool fail_history,history_quarantined;static pd_history persisted_history;
 bool pd_history_store_load(uint32_t epoch,pd_history *h){history_quarantined=false;if(persisted_history.epoch==epoch)*h=persisted_history;else pd_history_reset(h,epoch);return true;}
@@ -37,7 +45,7 @@ void pd_history_store_uncertain_restore(void){prepared_ready=false;history_quara
 bool pd_ui_backup_send(const pd_state *s,const pd_history *h){size_t size;char *json=pd_backup_encode(s,h,&size);assert(json);pd_backup *check=malloc(sizeof *check);assert(check&&pd_backup_decode(json,size,check));free(json);free(check);return !fail_backup_send;}
 static uint32_t random_values[2]={9,9};
 uint32_t pd_board_random(void *unused) { return random_values[(random_calls++)%2]; }
-bool pd_storage_save(const pd_state *s) { save_calls++;return !fail_save; }
+bool pd_storage_save(const pd_state *s) { save_calls++;return !fail_save&&!fail_storage_commit; }
 const char *pd_storage_status(void) { return fail_save?"Errore memoria: riavvia":"Salvato offline"; }
 bool pd_storage_writable(void){return !fail_save;}
 static uint16_t pixels[466*466];
@@ -1415,13 +1423,59 @@ int main(void) {
     /* Ordinary consumables do not lock a random result that does not exist. */
     act(502);click("Usa");effects_before=state;effects_calls=random_calls;fail_save=true;click("Conferma");assert(!item_rolled&&random_calls==effects_calls&&!memcmp(&state,&effects_before,sizeof state));fail_save=false;click("Indietro");assert(page==ITEM_DETAIL);
     puts("Practical table UI: home vitals routes, bounded/cancellable keypad, healing/caps, temp grant/correction/clear/no-stacking, modal guards, failed save/undo, unchanged no-write, zero-HP guard, first/extra damage input and frozen potion/hit-die retry passed (synthetic)");
+    /* v0.62: power telemetry never fabricates a percentage or changes game data. */
+    pd_demo(&state);pd_history_reset(&history,state.history_epoch);persisted_history=history;history_pending=false;fail_history=false;history_quarantined=false;
+    fake_power=(pd_power_info){.available=true,.battery=true,.percent_valid=true,.percent=64,.voltage_valid=true,.millivolts=3940};
+    power_off_attempted=power_paused=false;power_wait_result=PD_POWER_WAIT;physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};
+    effects_before=state;effects_saves=save_calls;effects_calls=random_calls;practical_history=history_save_calls;
+    page=HERO;render();power_service();uint32_t power_avatar_clock=avatar_started;lv_tick_inc(1);fake_power.millivolts--;power_service();assert(avatar_started==power_avatar_clock);screenshot("power-home-battery.ppm");click("Aspetto");click("Schermo");click("Alimentazione >");assert(page==POWER_HOME&&power_info.percent==64);screenshot("power-battery.ppm");
+    assert(!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves&&random_calls==effects_calls&&history_save_calls==practical_history);
+    fake_power.vbus=fake_power.charging=true;power_service();screenshot("power-charging.ppm");act(3702);assert(page==POWER_HOME&&!power_off_calls);
+    fake_power.battery=false;fake_power.percent_valid=fake_power.voltage_valid=fake_power.charging=false;power_service();screenshot("power-no-battery.ppm");
+    fake_power.available=false;power_service();screenshot("power-unavailable.ppm");
+    fake_power=(pd_power_info){.available=true,.battery=true,.percent_valid=true,.percent=19,.voltage_valid=true,.millivolts=3600};power_service();assert(pd_power_warning(&power_info,lv_tick_get())==1);screenshot("power-low.ppm");
+    fake_power.percent=5;power_service();assert(pd_power_warning(&power_info,lv_tick_get())==2);screenshot("power-critical.ppm");page=HERO;render();screenshot("power-home-critical.ppm");
+    page=POWER_HOME;power_info.sampled_at=lv_tick_get()-10001;render();screenshot("power-stale.ppm");assert(!pd_power_fresh(&power_info,lv_tick_get()));power_service();
+    /* Pause is reversible and keeps RAM/undo. The wake gesture is swallowed. */
+    fake_power.percent=64;fake_power.vbus=true;power_service();unsigned pauses_before=pause_calls;
+    click("Pausa");assert(power_paused&&pause_calls==pauses_before+1&&save_calls==effects_saves&&!memcmp(&state,&effects_before,sizeof state));
+    assert(!stage_import(&snapshot.state)&&!stage_backup(NULL));for(unsigned gesture=0;gesture<3;gesture++)shortcut(gesture);act(100);assert(power_paused&&page==POWER_HOME);
+    power_service();assert(power_paused&&!last_low_power);power_wait_result=PD_POWER_WAKE;fail_resume=true;power_service();assert(power_paused);fail_resume=false;power_service();assert(!power_paused&&display_screen.swallow_keys&&display_screen.swallow_touch&&page==POWER_HOME);
+    screen_service(1,1);lv_tick_inc(800);screen_service(1,1);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);assert(page==POWER_HOME&&!memcmp(&state,&effects_before,sizeof state)&&random_calls==effects_calls);
+    assert(!pd_screen_touch(&display_screen,true,true,lv_tick_get()));assert(!pd_screen_touch(&display_screen,true,false,lv_tick_get()));
+    fail_pause=true;click("Pausa");assert(!power_paused);screenshot("power-pause-error.ppm");fail_pause=false;
+    fake_power.vbus=false;power_service();power_wait_result=PD_POWER_WAIT;click("Pausa");power_service();assert(power_paused&&last_low_power);
+    power_wait_result=PD_POWER_ERROR;power_service();assert(!power_paused&&strstr(power_notice,"errore sleep"));screenshot("power-sleep-error.ppm");
+    power_wait_result=PD_POWER_WAIT;click("Pausa");fake_power.vbus=true;power_service();assert(!power_paused&&!strcmp(power_notice,"USB collegata"));
+    /* Auto pause uses real inactivity, including at minimum brightness. */
+    fake_power.vbus=false;power_service();state.dim_timeout=1;state.brightness=10;page=HERO;render();physical_keys=(pd_buttons){0};display_screen=(pd_screen){.activity=lv_tick_get()-300000};
+    screen_service(0,0);power_service();assert(power_paused);power_wait_result=PD_POWER_WAKE;power_service();assert(!power_paused);
+    for(unsigned blocked=0;blocked<6;blocked++){
+        page=blocked==3?NUMBER_ENTRY:HERO;number_target=NUMBER_HEAL;vital_kind=PD_VITAL_HEAL;number_value=1;
+        fake_power=(pd_power_info){.available=blocked!=2,.battery=blocked!=1,.vbus=blocked==0,.percent_valid=true,.percent=64};
+        history_pending=blocked==4;state.dim_timeout=blocked==5?0:1;display_screen.touch_down=false;display_screen.activity=lv_tick_get()-300000;render();
+        unsigned before_pause=pause_calls;power_service();assert(!power_paused&&pause_calls==before_pause);
+    }
+    history_pending=false;state.dim_timeout=0;state.brightness=50;effects_before=state;
+    fake_power=(pd_power_info){.available=true,.battery=true,.percent_valid=true,.percent=64};page=POWER_HOME;power_notice="";power_service();render();
+    history_pending=true;render();screenshot("power-pending-history.ppm");act(3702);assert(page==POWER_HOME);history_pending=false;render();
+    click("Spegni");assert(page==POWER_OFF&&confirmation_open());screenshot("power-off-preview.ppm");effects_saves=save_calls;practical_history=history_save_calls;
+    act(100);shortcut(0);assert(page==POWER_OFF&&!stage_import(&snapshot.state)&&!stage_backup(NULL));click("Indietro");assert(page==POWER_HOME&&save_calls==effects_saves&&history_save_calls==practical_history);
+    click("Spegni");fake_power.vbus=true;act(3704);assert(!power_off_attempted&&!power_off_calls);fake_power.vbus=false;power_service();
+    fail_storage_commit=true;click("Salva e spegni");assert(!power_off_attempted&&!power_off_calls&&history_save_calls==practical_history&&!memcmp(&state,&effects_before,sizeof state));screenshot("power-off-state-error.ppm");
+    fail_storage_commit=false;fail_history=true;click("Salva e spegni");assert(!power_off_attempted&&!power_off_calls&&history_save_calls==practical_history+1&&!memcmp(&state,&effects_before,sizeof state));screenshot("power-off-history-error.ppm");
+    fail_history=false;fail_power_off=true;click("Salva e spegni");assert(power_off_attempted&&!power_off_ok&&power_off_calls==1);screenshot("power-off-uncertain.ppm");
+    effects_saves=save_calls;practical_history=history_save_calls;act(3704);act(3703);act(100);assert(power_off_calls==1&&save_calls==effects_saves&&history_save_calls==practical_history);
+    power_off_attempted=false;fail_power_off=false;page=POWER_HOME;power_notice="";render();click("Spegni");click("Salva e spegni");assert(power_off_attempted&&power_off_ok&&power_off_calls==2&&save_calls==effects_saves+1&&history_save_calls==practical_history+1&&!memcmp(&state,&effects_before,sizeof state)&&random_calls==effects_calls);screenshot("power-off-requested.ppm");
+    act(3704);shortcut(1);assert(power_off_calls==2);power_off_attempted=false;page=HERO;fake_power=(pd_power_info){0};power_info=fake_power;
+    puts("Power UI: estimated/unknown/absent/charging/low/critical/stale telemetry, unchanged game/history/RNG, reversible pause, held-input quarantine, USB wake, sleep/panel errors, auto-idle/guards, pending history, save failures and single explicit PMIC shutdown request passed (synthetic; no physical PMIC/sleep tested)");
     unsigned covered=0;
-    for(unsigned p=0;p<=VITAL_CONFIRM;p++){
+    for(unsigned p=0;p<=POWER_OFF;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)VITAL_CONFIRM+1);
-    assert(covered==VITAL_CONFIRM+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)POWER_OFF+1);
+    assert(covered==POWER_OFF+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

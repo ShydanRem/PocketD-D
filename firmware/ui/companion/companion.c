@@ -74,6 +74,14 @@ static void status(void) {
     text(surface,current.name,116,34,234,&lv_font_montserrat_20,IVORY);
     snprintf(value,sizeof value,"LIVELLO %u",current.level);
     text(surface,value,148,59,170,&lv_font_montserrat_16,GOLD);
+    if(current.power_text){
+        unsigned color=current.power_warning==2?RED:current.power_warning?GOLD:current.power_charging?MINT:IVORY;
+        block(surface,320,66,14,8,color,255,0);block(surface,334,68,2,4,color,255,0);
+        block(surface,322,68,10,4,INK,255,0);
+        if(current.power_percent_valid&&current.power_percent){unsigned filled=current.power_percent>=100?10:current.power_percent/10;if(!filled)filled=1;block(surface,322,68,filled,4,color,255,0);}
+        else if(current.power_charging)block(surface,325,67,3,6,MINT,255,0);
+        text(surface,current.power_text,338,59,48,&lv_font_montserrat_16,color);
+    }
     lv_obj_t *hp=control("",90,81,218,46,COMPANION_OPEN_VITALS,INK);
     lv_obj_set_style_bg_opa(hp,160,0);lv_obj_set_style_border_width(hp,0,0);
     heart(hp,7,13);

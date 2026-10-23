@@ -19,6 +19,7 @@ int main(void){
  pd_screen_step(&s,80,0,false,21000,set,0);assert(calls==before+1);fail=false;pd_screen_step(&s,80,0,false,21001,set,0);assert(!s.failed&&s.applied==80);
  before=calls;pd_screen_step(&s,0,0,false,40000,set,0);pd_screen_step(&s,80,4,false,40000,set,0);assert(calls==before);
  pd_screen_step(&s,10,1,false,100000,set,0);assert(!s.dimmed&&s.applied==10);
+ pd_screen minimal={.activity=1};pd_screen_step(&minimal,10,1,false,300001,set,0);assert(minimal.activity==1&&!minimal.dimmed);
  for(unsigned policy=1;policy<=3;policy++){
   pd_screen t={0};unsigned ms=(const unsigned[]){0,30000,60000,120000}[policy];
   pd_screen_step(&t,60,policy,false,ms-1,set,0);assert(!t.dimmed);pd_screen_step(&t,60,policy,false,ms,set,0);assert(t.dimmed);

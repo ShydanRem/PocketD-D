@@ -2,12 +2,13 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.61:** [uso pratico al tavolo](docs/USO-AL-TAVOLO.md): pannello PF con cure di importo noto, temporanei e accesso a Danni/Stato, tastiera numerica per i danni e risultati di pozioni/dadi vita conservati dopo errori di scrittura. Grafica e tasti configurabili conservati; 108/108 viste LVGL host. Formati e backup invariati. Base software verificata; hardware e sessione reale ancora da collaudare.
+**Stato v0.62:** [alimentazione e batteria](docs/ALIMENTAZIONE.md): stima PMIC nella home, stato USB/ricarica, avvisi basso/critico, pausa manuale/automatica con risveglio protetto e spegnimento preceduto dal salvataggio. Grafica e tasti configurabili conservati; 110/110 viste LVGL host. Formati e backup invariati. Software integrato; consumi, autonomia e comportamento fisico ancora da collaudare.
 
 Il firmware comprende borsello, storico, scheda, inventario, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Scheda PDD28 con lettura dei formati precedenti, nuovi registri NVS PDH2 con lettura di PDH1, copia scheda USB9 e backup PC v11. Il backup nativo è un archivio distinto dal backup della raccolta PC. Regole speciali, altri effetti e prodotto fisico restano aperti.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
+- [Batteria, pausa e spegnimento controllato v0.62](docs/ALIMENTAZIONE.md)
 - [Controllo di usabilità e operazioni comuni sul dispositivo v0.61](docs/USO-AL-TAVOLO.md)
 - [Costi alternativi: scelta per colpo, ricevute e backup v0.60](docs/COSTI-ALTERNATIVI.md)
 - [Nomi A/B/C: editor sul dispositivo, persistenza e backup v0.59](docs/NOMI-TURNI.md)
@@ -15,7 +16,7 @@ Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazi
 - [Tiri contro morte: circostanze, bonus, persistenza e limiti v0.57](docs/TIRI-MORTE.md)
 - [Danni a zero PF: regola base esplicita, conferme e limiti v0.56](docs/DANNI-ZERO-PF.md)
 - [Collaudo locale del tocco e dei tasti configurabili v0.55](docs/COLLAUDO-COMANDI.md)
-- [Primo avvio: installazione, diagnostica e sessione guidata v0.61](docs/PRIMO-AVVIO.md)
+- [Primo avvio: installazione, diagnostica e sessione guidata v0.62](docs/PRIMO-AVVIO.md)
 - [Scheda da compilare durante il collaudo hardware](docs/COLLAUDO-HARDWARE.md)
 - [Backup del dispositivo: acquisizione, anteprima, ripristino e compatibilità v0.53](docs/BACKUP-DISPOSITIVO.md)
 - [Storico dei tiri: persistenza, tasti, errori e limiti v0.52](docs/STORICO-TIRI.md)
