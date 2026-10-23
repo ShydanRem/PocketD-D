@@ -1,8 +1,10 @@
-# Firmware PocketD-D 0.60 — costi alternativi delle riduzioni
+# Firmware PocketD-D 0.61 — uso pratico al tavolo
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
+
+[Novità v0.61: controllo pratico, cure/temporanei locali, importi e retry](USO-AL-TAVOLO.md).
 
 [Novità v0.60: scelta esplicita di una spesa per colpo, PDD28 e backup](COSTI-ALTERNATIVI.md).
 
@@ -1283,3 +1285,38 @@ diagnostica v1 e partizioni invariati. Catture `alternative-*.png` e galleria
 native LVGL host con dati inventati. Restano oltre tre fonti, gruppi di costi
 alternativi, variabili/opzionali e requisiti automatici. Nessun flash,
 collaudo fisico, lettura Beyond o modifica della raccolta personale.
+
+## Incremento v0.61 — minimo pratico per la prima sessione
+
+[Controllo dei percorsi, guida e limiti](USO-AL-TAVOLO.md). Il pannello PF
+raggiungibile dalla home aggiunge cura di importo noto, temporanei e accessi
+Danni/Stato. Cura e temporanei hanno tastiera numerica, anteprima, conferma,
+salvataggio e annullamento completo. Cura limitata al massimo effettivo;
+temporanei assegnati conservando il maggiore oppure corretti esplicitamente,
+anche a zero, senza somma o cura dei PF. I comandi ±1 restano correzioni
+manuali dichiarate. La tastiera è disponibile anche per l'importo della prima
+e delle altre componenti del colpo, senza cambiare difese o risoluzione.
+
+Il controllo ha trovato e corretto il rilancio della pozione dopo una scrittura
+fallita e la possibilità di abbandonare il dado vita già tirato dopo un errore.
+Candidato e risultato ora restano fissati; uscita e comandi in coda sono
+bloccati e Riprova salva la stessa cura e lo stesso consumo. Animazione e
+storico vengono presentati dopo il salvataggio; un errore dello storico usa
+il percorso separato di nuovo tentativo già esistente. Il retry host non
+certifica il recupero dopo un vero guasto I/O o perdita di alimentazione.
+
+Passati: 167 test JavaScript, suite firmware completa, 6.720 nuovi casi core
+indipendenti con confronto dell'intero stato, 108/108 viste LVGL host e harness
+del compagno. Verificati limiti/cap e modificatori al massimo, temporanei
+senza somma, registro morte, blocchi, tastiera/annullamento, nessuna scrittura
+per modifiche invariate, retry/undo, import/tasti protetti, prima/altre componenti,
+pozioni/dadi vita fissati, consumo unico, storico unico e fallback senza canvas.
+ASan/UBSan su core PF/temporanei e UI passati. Build Vite/HTML autonomo ed
+ESP32-S3 passate. Binario app 3.400.512 byte (partizione 4 MiB, 19% libera).
+
+PDD28/PDDS, dimensione dei record, PDH2/lettura PDH1, USB9, backup nativo v1,
+backup PC v11, diagnostica v1 e partizioni invariati. Grafica approvata e
+assegnazioni dei tasti conservate. Catture `practical-*.png` e galleria native
+LVGL host con dati sintetici. Nessuna lettura Beyond o modifica della raccolta
+personale. Collaudi fisici ancora da eseguire; il prossimo traguardo pratico
+è la sessione offline via USB, poi alimentazione autonoma e tenuta ai guasti.

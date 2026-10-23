@@ -1,5 +1,10 @@
 # Inventario e attacchi sul dispositivo — v0.21
 
+> Aggiornamento v0.61: [uso pratico al tavolo](USO-AL-TAVOLO.md).
+> Cure note e temporanei si gestiscono dai PF. Dopo un errore di scrittura,
+> pozioni e dadi vita conservano il candidato/tiro con uscita bloccata e Riprova.
+> Le descrizioni e i limiti successivi sono quelli storici della versione del titolo.
+
 **Aggiornamento v0.41:** [cariche degli oggetti](CARICHE-OGGETTI.md) disponibili
 come saldo distinto dalla quantità, con configurazione PC, gestione sul dispositivo,
 costi e recuperi. Formati correnti: backup PC v11, USB8 e PDD21. Le verifiche

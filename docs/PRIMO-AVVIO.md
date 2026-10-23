@@ -1,9 +1,10 @@
-# Primo avvio e sessione di collaudo — v0.60
+# Primo avvio e sessione di collaudo — v0.61
 
 Questa versione prepara il **blocco 3, prodotto fisico**. L'hardware è in
 arrivo: tutte le prove fisiche sotto sono **da eseguire**, nessuna è già passata.
-La grafica approvata è conservata; la v0.60 aggiunge la scelta di una fonte
-alternativa per colpo e porta la copertura host a 106/106, senza attestare un esito fisico.
+La grafica approvata è conservata; la v0.61 migliora i percorsi frequenti di
+PF/temporanei e danni e porta la copertura host a 108/108.
+Il [controllo pratico](USO-AL-TAVOLO.md) separa software verificato e prove fisiche.
 
 L'obiettivo della prima prova è trasferire una scheda nota, giocare offline,
 conservare i progressi dopo un riavvio e recuperarli da un backup. Batteria,
@@ -167,7 +168,8 @@ Beyond, Foundry o rete; non richiede ancora l'avvio a batteria.
 
 Eseguire nell'ordine, annotando facce e risultati casuali effettivi:
 
-1. **PF e annullamento:** −1 assorbe un temporaneo (PF 24, temporanei 2);
+1. **PF e annullamento:** toccare i PF apre Cura, Temp., Danni e Stato.
+   I comandi ±1 sono correzioni manuali. −1 assorbe un temporaneo (PF 24, temporanei 2);
    Annulla riporta a 24 e 3. Il riavvio conserva lo stato salvato; annullamento
    e bozze di sessione non sono persistenti.
 2. **Dadi/prove:** FOR, Atletica, COS e un tiro libero 3d6+2. Il totale deve
@@ -279,6 +281,22 @@ colpo chieda di nuovo la fonte. Provare separatamente la reazione comune e
 il recupero esplicito all'inizio del proprio turno. Riavvio e backup/ripristino
 devono conservare la modalità, senza una scelta del colpo già compilata.
 Registrare H27 secondo [COSTI-ALTERNATIVI.md](COSTI-ALTERNATIVI.md).
+
+## 12. Prova delle azioni frequenti — dopo il backup
+
+Con una scheda sintetica ferita, toccare i PF e aprire **Cura**. Inserire un
+importo noto, verificare prima/dopo e scartare; ripetere e confermare. I PF
+si fermano al massimo, i temporanei restano invariati. Annulla ripristina tutto.
+In **Temp.** assegnare un saldo inferiore a quello corrente: deve restare il
+maggiore, senza scritture se invariato. Provare un saldo superiore e poi
+**correggi** con zero, sempre con anteprima. I temporanei non curano PF.
+Aprire **Danni**, toccare il numero, inserire un importo e tornare al colpo:
+non deve essere applicato fino alla conferma nel percorso danni.
+Controllare Danni/Stato diretti, leggibilità e precisione della tastiera,
+protezione dai tasti nelle bozze, Annulla e riavvio dei saldi salvati.
+Registrare H28 secondo [USO-AL-TAVOLO.md](USO-AL-TAVOLO.md). Le simulazioni di
+errori di scrittura restano sul banco host; evitare guasti indotti fuori dal
+protocollo dedicato H21.
 
 ## Registrazione dell'esito
 

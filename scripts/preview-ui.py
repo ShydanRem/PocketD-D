@@ -104,6 +104,15 @@ alternative_gallery=Image.new('RGB',(466*2,466*2),'black')
 for i,name in enumerate(('editor','choices','selected','not-chosen')):
     alternative_gallery.paste(Image.open(BASE/f'alternative-{name}.png'),(i%2*466,i//2*466))
 alternative_gallery.save(BASE/'alternative-costs-gallery.png')
+practical_views=('vitals','heal-keypad','heal-preview','heal-error','heal-result','temp-kept',
+                 'temp-grant','temp-correction','temp-clear','heal-capped','damage-amount',
+                 'damage-maximum','zero-pf','potion-retry','potion-result','hit-retry')
+for name in practical_views:
+    Image.open(BASE/f'practical-{name}.ppm').save(BASE/f'practical-{name}.png')
+practical_gallery=Image.new('RGB',(466*2,466*2),'black')
+for i,name in enumerate(('vitals','heal-keypad','heal-preview','temp-grant')):
+    practical_gallery.paste(Image.open(BASE/f'practical-{name}.png'),(i%2*466,i//2*466))
+practical_gallery.save(BASE/'practical-table-gallery.png')
 frames=[Image.open(BASE/f'ux-transition-{i:02d}.ppm').convert('RGB') for i in range(5)]
 frames[0].save(BASE/'ui-transition.gif',save_all=True,append_images=frames[1:],duration=[40,40,40,40,1000],loop=0,disposal=2,optimize=True)
 print(f'UI: {len(records)} production views, overview, offline catalog and transition exported')

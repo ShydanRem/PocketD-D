@@ -176,6 +176,11 @@ bool pd_profile_cost_set(pd_reduction_profile *profile,unsigned row,pd_cost cost
 bool pd_reduction_profile_set(pd_state *state,unsigned index,pd_reduction_profile profile);
 int pd_modifier(int score);
 void pd_hp(pd_state *state, int delta);
+enum { PD_VITAL_HEAL,PD_VITAL_TEMP_GRANT,PD_VITAL_TEMP_SET,PD_VITAL_COUNT };
+/* Explicit known healing (1..999), temporary HP grant (keep the larger balance),
+   or manual temporary balance correction (0..999). Never adds temp balances or
+   heals through them; rejects dead-character healing and malformed state/input. */
+bool pd_vitals_apply(pd_state *state,unsigned kind,unsigned amount);
 bool pd_resource_change(pd_state *state, unsigned index, int delta);
 /* Manual balance adjustment; absent/zero-quantity objects reject without mutation. */
 bool pd_item_charges_change(pd_state *state,unsigned index,int delta);

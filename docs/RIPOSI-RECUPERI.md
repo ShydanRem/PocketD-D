@@ -1,5 +1,10 @@
 # Riposi e dadi vita sul dispositivo — v0.23
 
+> Aggiornamento v0.61: [uso pratico al tavolo](USO-AL-TAVOLO.md).
+> Cure note e temporanei si gestiscono dai PF. Dopo un errore di scrittura,
+> pozioni e dadi vita conservano il candidato/tiro con uscita bloccata e Riprova.
+> Le descrizioni e i limiti successivi sono quelli storici della versione del titolo.
+
 > Aggiornamento v0.31: [difese temporanee, concentrazione e round comune](DIFESE-TEMPORANEE.md)
 > con PDD13. I limiti/formati dell’incremento sotto sono storici.
 

@@ -329,6 +329,14 @@ void pd_hp(pd_state *s, int delta) {
     if(s->status.available&&((old&&!s->hp)||(!old&&s->hp))){s->status.successes=0;s->status.failures=0;s->status.stabilized=false;}
     if(!s->hp) {pd_concentration_end(s);s->combat.raging=false;if(s->magic.available)s->training.strength_advantage=false;}
 }
+bool pd_vitals_apply(pd_state *s,unsigned kind,unsigned amount){
+    if(!s||!pd_valid(s)||kind>=PD_VITAL_COUNT||amount>999||(!amount&&kind!=PD_VITAL_TEMP_SET))return false;
+    if(kind==PD_VITAL_HEAL){
+        if(!s->hp&&s->status.available&&s->status.failures==3)return false;
+        pd_hp(s,(int)amount);
+    }else if(kind==PD_VITAL_TEMP_SET||amount>s->temp_hp)s->temp_hp=amount;
+    return true;
+}
 bool pd_resource_change(pd_state *s, unsigned index, int delta) {
     if (index >= s->resource_count) return false;
     int64_t n = (int64_t)s->resources[index].current + delta;

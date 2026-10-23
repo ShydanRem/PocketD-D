@@ -144,22 +144,20 @@ static void menu(void) {
 }
 static void vitals(void) {
     char value[80];block(surface,0,0,466,466,INK,220,0);
-    text(surface,"Punti ferita",98,69,270,&lv_font_montserrat_26,IVORY);
+    text(surface,current.storage_error?"Errore memoria":"Punti ferita",98,69,270,&lv_font_montserrat_26,IVORY);
     snprintf(value,sizeof value,"%u / %u",current.hp,current.maximum);
-    text(surface,value,108,120,250,&lv_font_montserrat_32,current.hp?MINT:RED);
+    text(surface,value,108,112,250,&lv_font_montserrat_32,current.hp?MINT:RED);
     snprintf(value,sizeof value,"Temporanei: %u",current.temporary);
-    text(surface,value,113,167,240,&lv_font_montserrat_20,IVORY);
-    lv_obj_t *minus=control("",105,219,112,64,COMPANION_MINUS,0x4b3032);
-    text(minus,"-1 PF",2,20,108,&lv_font_montserrat_20,IVORY);
-    if(!current.can_hurt)lv_obj_add_state(minus,LV_STATE_DISABLED);
-    lv_obj_t *plus=control("",249,219,112,64,COMPANION_PLUS,0x214c43);
-    text(plus,"+1 PF",2,20,108,&lv_font_montserrat_20,IVORY);
-    if(!current.can_heal)lv_obj_add_state(plus,LV_STATE_DISABLED);
-    lv_obj_t *undo=control("Annulla",153,302,160,48,COMPANION_UNDO,INK);
-    if(!current.can_undo)lv_obj_add_state(undo,LV_STATE_DISABLED);
-    lv_obj_t *back=control("",201,365,64,52,COMPANION_OPEN_HOME,INK);
-    text(back,LV_SYMBOL_LEFT,2,13,60,&lv_font_montserrat_26,IVORY);
-    if(current.storage_error)text(surface,"Errore memoria: non salvato",92,192,282,&lv_font_montserrat_16,RED);
+    text(surface,value,113,159,240,&lv_font_montserrat_20,IVORY);
+    text(surface,"+/-1: correzione manuale",98,184,270,&lv_font_montserrat_16,GOLD);
+    const char *names[]={"-1 PF","+1 PF","Cura","Temp.","Danni","Stato","Annulla","Eroe"};
+    const companion_action actions[]={COMPANION_MINUS,COMPANION_PLUS,COMPANION_HEAL,COMPANION_TEMPORARY,
+        COMPANION_DAMAGE,COMPANION_STATUS,COMPANION_UNDO,COMPANION_OPEN_HOME};
+    for(unsigned i=0;i<8;i++){
+        lv_obj_t *b=control("",105+(i%2)*144,207+(i/2)*54,112,44,actions[i],i==0?0x4b3032:i==1||i==2?0x214c43:INK);
+        text(b,names[i],2,11,108,&lv_font_montserrat_20,IVORY);
+        if((i==0&&!current.can_hurt)||((i==1||i==2)&&!current.can_heal)||(i==6&&!current.can_undo))lv_obj_add_state(b,LV_STATE_DISABLED);
+    }
 }
 static void tick(lv_timer_t *unused) {
     (void)unused;if(current.paused)return;

@@ -110,9 +110,10 @@ static void click(const char *name) {
     /* Existing rule scenarios now take the real touch path through home/menu/PF.
      * No calls to act() stand in for the newly introduced navigation controls. */
     if(!import_pending&&(page==HERO||page==HOME_VITALS)){
-        bool hp=!strcmp(name,"-1 PF")||!strcmp(name,"+1 PF")||!strcmp(name,"Annulla");
+        bool hp=!strcmp(name,"-1 PF")||!strcmp(name,"+1 PF")||!strcmp(name,"Annulla")||!strcmp(name,"Cura")||!strcmp(name,"Temp.")||!strcmp(name,"Danni")||!strcmp(name,"Stato");
+        if(page==HOME_VITALS&&!strcmp(name,"Eroe")){tap(305,391);return;}
         if(hp&&page==HERO){tap(200,104);assert(page==HOME_VITALS);}
-        if(!hp&&page==HOME_VITALS){tap(233,388);assert(page==HERO);}
+        if(!hp&&page==HOME_VITALS){tap(305,391);assert(page==HERO);}
         if(!hp&&!strcmp(name,"Aspetto")){tap(233,264);assert(page==APPEARANCE);return;}
         if(!hp&&(!strcmp(name,"Scheda")||!strcmp(name,"Usi"))){tap(233,375);assert(page==HOME_MENU);}
     }
@@ -386,7 +387,7 @@ int main(void) {
     click("Accelera");screenshot("healing.ppm");click("Eroe");click("Annulla");assert(state.hp==24&&state.temp_hp==4&&state.items[1].quantity==2);
     click("Usi");click("Zaino");click("Torcia  x3");calls=random_calls;click("Usa");click("Conferma");assert(state.items[2].quantity==2&&random_calls==calls);
     click("Zaino");click("Pozione  x2");click("Usa");pd_state before_failed_use=state;fail_save=true;click("Conferma");
-    assert(!memcmp(&state,&before_failed_use,sizeof state)&&page==ITEM_CONFIRM);fail_save=false;click("Indietro");click("Zaino");
+    assert(!memcmp(&state,&before_failed_use,sizeof state)&&page==ITEM_CONFIRM&&item_rolled);calls=random_calls;act(91);assert(page==ITEM_CONFIRM);fail_save=false;click("Riprova");assert(random_calls==calls);click("Accelera");click("Eroe");click("Annulla");click("Usi");click("Zaino");
     state.hp=state.max_hp;click("Pozione  x2");calls=random_calls;
     root=lv_screen_active();for(unsigned i=0;i<lv_obj_get_child_count(root);i++) {
         lv_obj_t *b=lv_obj_get_child(root,i);if(lv_obj_check_type(b,&lv_button_class)&&!strcmp(lv_label_get_text(button_label(b)),"PF al massimo"))lv_obj_send_event(b,LV_EVENT_CLICKED,NULL);
@@ -462,7 +463,7 @@ int main(void) {
     assert(page==HIT_CONFIRM&&random_calls==calls);shortcut(1);act(100);assert(page==HIT_CONFIRM&&!stage_import(&imported_magic));
     click("Indietro");assert(page==HIT_DICE&&state.recovery.pools[0].used==1);click("Spendi 1 dado");
     before_rest=state;random_values[0]=random_values[1]=5;fail_save=true;click("Conferma");assert(hit_rolled&&page==HIT_CONFIRM&&!memcmp(&state,&before_rest,sizeof state)&&random_calls==calls+1);
-    click("Conferma");assert(random_calls==calls+1&&!memcmp(&state,&before_rest,sizeof state));fail_save=false;click("Conferma");
+    act(910);assert(page==HIT_CONFIRM&&hit_rolled);screenshot("practical-hit-retry.ppm");click("Riprova");assert(random_calls==calls+1&&!memcmp(&state,&before_rest,sizeof state));fail_save=false;click("Riprova");
     assert(page==DICE&&combat_roll==4&&state.hp==28&&state.temp_hp==7&&state.recovery.pools[0].used==2&&random_calls==calls+1);
     calls=random_calls;shortcut(1);assert(!dice_animation.active&&random_calls==calls&&state.hp==28);bounds();screenshot("hit-healing.ppm");
     click("Riposo");click("Spendi un dado vita");click("Spendi 1 dado");random_values[0]=random_values[1]=7;click("Conferma");click("Accelera");assert(state.hp==32&&state.recovery.pools[0].used==3&&healing_gained==4);
@@ -900,7 +901,7 @@ int main(void) {
     effects_saves=save_calls;effects_calls=random_calls;
     for(unsigned i=0;i<7;i++){act(100);click("Menu");assert(page==HOME_MENU);if(!i)screenshot("home-menu.ppm");click(menu_names[i]);assert(page==menu_pages[i]&&save_calls==effects_saves&&random_calls==effects_calls);}
     state.equipped=PD_NO_WEAPON;act(100);click("Menu");click("Attacco");assert(page==INVENTORY);screenshot("home-no-weapon.ppm");
-    act(100);tap(200,104);assert(page==HOME_VITALS);screenshot("home-vitals.ppm");tap(233,388);
+    act(100);tap(200,104);assert(page==HOME_VITALS);screenshot("home-vitals.ppm");tap(305,391);
     /* The existing 13 bindings keep their meanings on all three new views. */
     const page_t bound_pages[]={HERO,HERO,SHEET,DICE,INVENTORY,MAGIC_LIST,DICE,REST_HOME,STATUS_HOME,DEVICE_SETTINGS,EFFECT_LIST,EFFECT_ROUND,DAMAGE_HOME};
     for(unsigned screen=0;screen<3;screen++)for(unsigned binding=0;binding<13;binding++)for(unsigned gesture=0;gesture<3;gesture++){
@@ -1378,13 +1379,49 @@ int main(void) {
     /* Each new impact starts without a payment choice. */
     click("Nuovo");assert(!damage_payment_choice&&!damage_profile);
     puts("Alternative cost UI: mode edit/validation, explicit selection, missing balances/no fallback, retry/undo, frozen receipts, reaction, long names/holes, CON frozen retry and zero-HP integration passed (synthetic)");
+    /* v0.61: common table operations use the home vitals and bounded keypad. */
+    pd_demo(&state);state.hp=12;state.temp_hp=3;state.effects[0]=(pd_effect){.active=true,.target=PD_EFFECT_MAX_HP,.value=10};state.effect_count=1;
+    pd_history_reset(&history,state.history_epoch);persisted_history=history;history_pending=false;
+    page=HERO;render();tap(200,104);assert(page==HOME_VITALS);bounds();screenshot("practical-vitals.ppm");
+    effects_before=state;effects_saves=save_calls;effects_calls=random_calls;unsigned practical_history=history_save_calls;
+    click("Cura");assert(page==NUMBER_ENTRY&&!number_value&&number_target==NUMBER_HEAL&&confirmation_open());
+    for(unsigned gesture=0;gesture<3;gesture++)shortcut(gesture);act(100);act(1);assert(page==NUMBER_ENTRY&&!stage_import(&snapshot.state)&&!stage_backup(NULL));
+    click("2");click("7");assert(number_value==27&&!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves);screenshot("practical-heal-keypad.ppm");
+    click("Indietro");assert(page==HOME_VITALS&&!memcmp(&state,&effects_before,sizeof state));click("Cura");click("2");click("7");click("Anteprima");assert(page==VITAL_CONFIRM);screenshot("practical-heal-preview.ppm");
+    act(100);shortcut(0);assert(page==VITAL_CONFIRM&&!stage_import(&snapshot.state)&&!stage_backup(NULL));fail_save=true;click("Conferma");assert(page==VITAL_CONFIRM&&!memcmp(&state,&effects_before,sizeof state));screenshot("practical-heal-error.ppm");
+    fail_save=false;click("Conferma");assert(page==HERO&&state.hp==39&&state.temp_hp==3&&pd_max_hp(&state)==42&&feedback.active&&random_calls==effects_calls&&history_save_calls==practical_history);screenshot("practical-heal-result.ppm");
+    click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));
+    click("Temp.");click("1");click("Anteprima");assert(page==VITAL_CONFIRM);screenshot("practical-temp-kept.ppm");effects_saves=save_calls;act(3621);assert(page==VITAL_CONFIRM&&save_calls==effects_saves&&!memcmp(&state,&effects_before,sizeof state));
+    click("Indietro");click("Azzera");click("1");click("2");click("Anteprima");screenshot("practical-temp-grant.ppm");click("Conferma");assert(page==HERO&&state.temp_hp==12&&state.hp==12);
+    click("Temp.");click("Temp: assegna >");assert(vital_kind==PD_VITAL_TEMP_SET&&!number_value);screenshot("practical-temp-correction.ppm");click("Anteprima");assert(page==VITAL_CONFIRM);screenshot("practical-temp-clear.ppm");click("Conferma");assert(!state.temp_hp&&state.hp==12);click("Annulla");assert(state.temp_hp==12&&state.hp==12);
+    /* Bounded keypad, full-heal cap, no write for cancelling or an unchanged result. */
+    click("Cura");click("9");click("9");click("9");click("9");assert(number_value==999);click("Canc.");assert(number_value==99);click("Azzera");assert(!number_value);act(3606);assert(page==NUMBER_ENTRY);click("9");click("9");click("9");click("Anteprima");screenshot("practical-heal-capped.ppm");click("Conferma");assert(state.hp==42&&state.temp_hp==12);click("Annulla");assert(state.hp==12&&state.temp_hp==12);
+    click("Danni");assert(page==DAMAGE_HOME&&damage_plan.amount==1);click("1 danno >");assert(page==NUMBER_ENTRY&&number_fresh&&number_target==NUMBER_DAMAGE);click("2");click("7");click("Usa numero");assert(page==DAMAGE_HOME&&damage_plan.amount==27&&state.hp==12);screenshot("practical-damage-amount.ppm");
+    click("27 danni >");click("9");click("9");click("9");click("9");click("9");assert(number_value==9999);screenshot("practical-damage-maximum.ppm");click("Indietro");assert(damage_plan.amount==27);
+    click("Componenti");click("Aggiungi");assert(page==DAMAGE_PART_EDIT);click("1 danni >");click("4");click("2");click("Usa numero");assert(page==DAMAGE_PART_EDIT&&damage_part_draft.amount==42);click("Usa parte");assert(damage_extra_count==1&&damage_extra[0].amount==42);click("Indietro");
+    act(100);click("Stato");assert(page==STATUS_HOME&&state.hp==12&&state.temp_hp==12&&random_calls==effects_calls&&history_save_calls==practical_history);
+    /* Temp HP never revive a dead character; the healing control remains blocked. */
+    state.hp=0;state.temp_hp=0;state.status.available=true;state.status.failures=3;act(100);click("Temp.");click("5");click("Anteprima");click("Conferma");assert(page==HERO&&!state.hp&&state.temp_hp==5&&state.status.failures==3);
+    tap(200,104);effects_saves=save_calls;act(3600);assert(page==HOME_VITALS&&save_calls==effects_saves);screenshot("practical-zero-pf.ppm");
+    /* A failed potion write freezes its candidate/dice. No cancel, import,
+       shortcut or duplicate button can reroll or consume twice. */
+    pd_demo(&state);state.hp=12;state.temp_hp=7;act(100);act(501);click("Usa");effects_before=state;effects_calls=random_calls;effects_saves=save_calls;
+    pd_history_reset(&history,state.history_epoch);persisted_history=history;history_pending=false;practical_history=history_save_calls;random_values[0]=random_values[1]=0;
+    fail_save=true;click("Conferma");assert(page==ITEM_CONFIRM&&item_rolled&&random_calls==effects_calls+2&&!memcmp(&state,&effects_before,sizeof state));screenshot("practical-potion-retry.ppm");
+    pd_state potion_candidate=hit_candidate;pd_pool potion_roll=item_result;act(91);act(100);act(88);for(unsigned gesture=0;gesture<3;gesture++)shortcut(gesture);assert(page==ITEM_CONFIRM&&item_rolled&&!stage_import(&snapshot.state)&&!stage_backup(NULL));
+    random_values[0]=random_values[1]=3;click("Riprova");assert(random_calls==effects_calls+2&&!memcmp(&state,&effects_before,sizeof state)&&!memcmp(&hit_candidate,&potion_candidate,sizeof hit_candidate)&&!memcmp(&item_result,&potion_roll,sizeof item_result));
+    fail_save=false;fail_canvas=true;click("Riprova");fail_canvas=false;assert(page==DICE&&has_roll&&!dice_animation.active&&!item_rolled&&random_calls==effects_calls+2&&state.hp==16&&state.temp_hp==7&&state.items[1].quantity==1&&history.count==1&&history_save_calls==practical_history+1);screenshot("practical-potion-result.ppm");
+    act(89);assert(state.items[1].quantity==1&&random_calls==effects_calls+2&&history.count==1);click("Eroe");click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));
+    /* Ordinary consumables do not lock a random result that does not exist. */
+    act(502);click("Usa");effects_before=state;effects_calls=random_calls;fail_save=true;click("Conferma");assert(!item_rolled&&random_calls==effects_calls&&!memcmp(&state,&effects_before,sizeof state));fail_save=false;click("Indietro");assert(page==ITEM_DETAIL);
+    puts("Practical table UI: home vitals routes, bounded/cancellable keypad, healing/caps, temp grant/correction/clear/no-stacking, modal guards, failed save/undo, unchanged no-write, zero-HP guard, first/extra damage input and frozen potion/hit-die retry passed (synthetic)");
     unsigned covered=0;
-    for(unsigned p=0;p<=PAYMENT_CHOICE;p++){
+    for(unsigned p=0;p<=VITAL_CONFIRM;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)PAYMENT_CHOICE+1);
-    assert(covered==PAYMENT_CHOICE+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)VITAL_CONFIRM+1);
+    assert(covered==VITAL_CONFIRM+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

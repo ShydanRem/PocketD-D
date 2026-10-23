@@ -56,7 +56,7 @@ Non fanno parte di questo traguardo: importazione Beyond, editor completo, incan
 
 L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco non impedisce le altre fasi. L'ordine delle fasi 0 e 1 può sovrapporsi se l'hardware non è immediatamente disponibile.
 
-## Punto attuale — v0.60
+## Punto attuale — v0.61
 
 La [home del compagno](HOME-COMPAGNO.md) è integrata: menu a icone, PF,
 salvataggi e accesso alle funzioni esistenti, con tasti configurati conservati.
@@ -94,10 +94,15 @@ La [v0.60](COSTI-ALTERNATIVI.md) aggiunge la modalità Una scelta ai profili:
 una fonte esplicita per colpo, costi non scelti invariati, reazione comune,
 ricevute e candidato COS coerenti. PDD28 della stessa dimensione, backup
 aggiornato e copertura host 106/106.
+La [v0.61](USO-AL-TAVOLO.md) verifica il minimo pratico per la prima sessione:
+cure di importo noto, gestione locale dei temporanei, tastiera per i danni,
+accessi diretti dai PF e risultati di pozioni/dadi vita fissati dopo errori di
+scrittura. Copertura host 108/108, formati invariati. La priorità passa al
+collaudo della sessione via USB; le regole avanzate restano successive.
 
 | Blocco | Stato software | Cosa manca |
 | --- | --- | --- |
-| Scheda individuale offline | PF/temporanei, prove, abilità/salvezze, zaino/cariche/monete, armi, magie, risorse, riposi, dadi vita e ultimi 20 tiri persistenti nel firmware | Effetti completi e regole speciali; sessione reale |
+| Scheda individuale offline | PF/temporanei con importi e conferme locali, prove, abilità/salvezze, zaino/cariche/monete, armi, magie, risorse, riposi, dadi vita e ultimi 20 tiri persistenti nel firmware | Effetti completi e regole speciali; sessione reale |
 | Effetti numerici | Otto modificatori CA/PF massimi, basi separate, cure integrate, durate manuali/a round/inizio-fine turno proprio o A/B/C/minuti-ore e vincolo esplicito alla concentrazione con fine congiunta | Altre durate/regole, proprietà speciali e ricalcolo da equipaggiamento |
 | Danni e difese | Profili manuali per 13 tipi, base/tre extra separati, durate/vincoli e scadenze comuni, PF/temporanei, salvezza COS, sei componenti per colpo, fonte esplicita e riduzioni manuali prima/dopo, tre profili locali con budget, conto completo, fino a tre spese congiunte o alternative esplicite da contatori/usi/slot ordinari-patto/cariche e reazione | Condizioni arbitrarie, più di tre extra per tipo, catalogo/requisiti automatici, oltre tre spese, gruppi di costi alternativi ed eventi/formule di ricarica automatici, eccezioni alle salvezze e alla morte; risoluzione base dei danni a zero PF esplicita dalla v0.56 |
 | Stato e morte | Note separate dagli effetti sui tiri di Avvelenato/Accecato/Spaventato/Prono/Trattenuto, d20 morte base e correzioni, reazione e inizio turno espliciti, danni a zero PF e morte istantanea base con conferma, tiro morte con vantaggio/svantaggio e bonus espliciti | Altri effetti/condizioni, durate e fonti multiple, eccezioni alla morte |
@@ -111,11 +116,11 @@ sono portate nel firmware, ma i criteri di completamento richiedono ancora una
 sessione fisica, trasferimento/ripristino e misure. Non sono percentuali di
 completamento né una dichiarazione di collaudo.
 
-## Quattro blocchi concordati — v0.60
+## Quattro blocchi concordati — v0.61
 
 | Blocco | Punto attuale | Prossimo lavoro |
 | --- | --- | --- |
-| 1 — Scheda sul dispositivo | Percorsi base nel firmware: magie/slot/usi, concentrazione, riposi, dadi vita, morte base; v0.51 borsello, v0.52 storico dei tiri e v0.56 danni/morte base espliciti e v0.57 circostanze/bonus nel tiro morte | Regole/eccezioni e verifica nell'uso reale |
+| 1 — Scheda sul dispositivo | Percorsi base nel firmware: magie/slot/usi, concentrazione, riposi, dadi vita, morte base; v0.51 borsello, v0.52 storico dei tiri e v0.56 danni/morte base espliciti e v0.57 circostanze/bonus nel tiro morte; v0.61 cure/temporanei locali, importi numerici e retry coerenti | Sessione reale e affinamenti emersi dall’uso; regole/eccezioni e verifica nell'uso reale |
 | 2 — Effetti | Modificatori, round, concentrazione, difese, danni e riduzioni con costi/reazione; v0.38 aggiunge slot ordinari/patto; v0.39 durate del proprio turno; v0.40 minuti/ore; v0.41 cariche distinte dalla quantità; v0.42 tre spese congiunte; v0.43 ricarica parziale a dado esplicita; v0.44 quattro effetti di condizione sui tiri e v0.58 durate per riferimenti esterni A/B/C, nominabili sul dispositivo dalla v0.59; v0.60 scelta di una spesa alternativa per colpo | Identità verificate e oltre tre soggetti esterni, gruppi di costi alternativi o oltre tre fonti, eventi/formule di ricarica automatici e requisiti/effetti automatici |
 | 3 — Prodotto fisico | Luminosità, attenuazione/risveglio, salvataggi, tasti configurabili, diagnostica USB v0.54, collaudo locale v0.55 e firmware compilato | Batteria, sospensione/spegnimento e collaudi reali touch/USB/memoria/alimentazione |
 | 4 — Estetica | v0.50: completato nel software; home/avatar e 85 viste interne, icone, feedback, transizioni e navigazione verificati su 88/88 viste | Collaudo sul display reale nel blocco 3; ulteriori affinamenti artistici sono evoluzioni successive |
@@ -130,6 +135,17 @@ automatici, identità verificate e oltre tre soggetti esterni e altri effetti/re
 Accecato, Spaventato, Prono e Trattenuto hanno ora effetti sui tiri espliciti,
 con contesto e blocchi sui fatti necessari, senza dedurre regole dalle note. Hardware e qualità visiva restano
 traguardi del dispositivo, senza espandere il PC in un prodotto di gioco separato.
+
+## Minimo utilizzabile — priorità dopo il controllo v0.61
+
+Il [controllo pratico](USO-AL-TAVOLO.md) distingue i percorsi ordinari già
+rappresentati dai limiti avanzati. Le lacune immediate di PF/temporanei e
+inserimento dei danni sono risolte; le cure a dado conservano il candidato
+in caso di errore di scrittura. Il prossimo traguardo è una sessione su
+hardware via USB: avvio, touch/tasti, trasferimento, gioco offline, riavvio
+e backup/ripristino. Batteria e tenuta ai guasti restano verifiche dedicate.
+La completezza delle regole non è un prerequisito per questa prima prova;
+le eccezioni supportate solo manualmente devono restare esplicite.
 
 ## Priorità confermata: dispositivo prima del PC
 

@@ -98,6 +98,10 @@ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as out:
                  ('incomplete','editor','profile-confirm','unresolved','choices','selected',
                   'save-error','result','paid','not-chosen','reaction-block','hole-long',
                   'concentration-retry','death-result')]
+    ui_files += ['practical-table-gallery.png']+[f'practical-{name}.png' for name in
+                 ('vitals','heal-keypad','heal-preview','heal-error','heal-result','temp-kept',
+                  'temp-grant','temp-correction','temp-clear','heal-capped','damage-amount',
+                  'damage-maximum','zero-pf','potion-retry','potion-result','hit-retry')]
     for name in ui_files:
         image=preview/name
         if not image.is_file():raise SystemExit(f'Missing UI capture: {name}')

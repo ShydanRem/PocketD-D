@@ -1,5 +1,10 @@
 # Home del compagno integrata — v0.48
 
+> Aggiornamento v0.61: [uso pratico al tavolo](USO-AL-TAVOLO.md).
+> Pannello PF esteso, cure/temporanei locali e tastiera per gli importi;
+> pozioni e dadi vita conservano il tiro dopo un errore di salvataggio.
+> Il contenuto successivo descrive la versione storica del titolo.
+
 **Stato storico della v0.48.** La [v0.49](AVATAR-ILLUSTRATO.md) sostituisce lo sprite
 procedurale con le varianti illustrate e introduce pose di cura/danno. Dimensioni
 dei buffer, asset e verifiche aggiornati sono nel documento successivo.

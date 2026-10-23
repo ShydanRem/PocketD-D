@@ -104,13 +104,13 @@ int main(void) {
     companion_focus_step(1);companion_focus_step(1);assert(companion_focus_index()==1);
     screenshot("companion-focus.ppm");companion_activate();assert(last_action==COMPANION_DICE);
     tap(310,389);assert(view.page==COMPANION_HOME);tap(210,105);assert(view.page==COMPANION_VITALS);
-    screenshot("companion-vitals.ppm");tap(302,251);assert(state.hp==25&&view.applied_hp==1&&view.page==COMPANION_HOME);
-    tap(210,105);tap(230,326);assert(state.hp==24&&!undo_available);
+    screenshot("companion-vitals.ppm");tap(302,245);assert(state.hp==25&&view.applied_hp==1&&view.page==COMPANION_HOME);
+    tap(210,105);tap(155,391);assert(state.hp==24&&!undo_available);
     apply_hp(4);show();assert(state.hp==28&&view.applied_hp==4);screenshot("companion-heal.ppm");
     for(unsigned frame=0;frame<24;frame++){char name[48];snprintf(name,sizeof name,"companion-heal-%02u.ppm",frame);screenshot(name);lv_tick_inc(80);lv_timer_handler();}
     screenshot("companion-expired.ppm");assert(state.hp==28);
     /* Failed storage cannot update displayed values or celebrate a requested delta. */
-    tap(210,105);fail_save=true;before=mutations;tap(150,251);
+    tap(210,105);fail_save=true;before=mutations;tap(150,245);
     assert(view.page==COMPANION_VITALS&&state.hp==28&&!view.applied_hp&&view.storage_error&&mutations==before);
     screenshot("companion-storage-error.ppm");fail_save=false;view.storage_error=false;
     /* Damage absorbed by temporary HP must show temporary loss, not a false HP loss. */
@@ -129,8 +129,8 @@ int main(void) {
     assert(memcmp(static_frame,pixels,sizeof pixels)&&mutations==before);
     /* Disabled events and configurable-focus hooks never bypass availability. */
     state.hp=pd_max_hp(&state);state.temp_hp=0;view.page=COMPANION_VITALS;show();before=mutations;
-    tap(300,251);assert(mutations==before&&view.page==COMPANION_VITALS);
-    companion_focus_step(-1);assert(companion_focus_index()==3);companion_activate();assert(view.page==COMPANION_HOME);
+    tap(300,245);assert(mutations==before&&view.page==COMPANION_VITALS);
+    companion_focus_step(-1);assert(companion_focus_index()==7);companion_activate();assert(view.page==COMPANION_HOME);
     memset(state.name,'W',PD_NAME_BYTES-1);state.name[PD_NAME_BYTES-1]=0;
     state.hp=state.max_hp=999;state.temp_hp=999;state.armor=40;state.level=20;
     view.applied_hp=view.applied_temporary=0;show();screenshot("companion-maximum.ppm");

@@ -39,7 +39,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM } page_t;
 static const pd_theme_kind page_themes[]={
     [HERO]=PD_THEME_NONE,
     [SHEET]=PD_THEME_SHEET,
@@ -147,6 +147,8 @@ static const pd_theme_kind page_themes[]={
     [TURN_NAME_EDIT]=PD_THEME_EFFECTS,
     [TURN_NAME_CONFIRM]=PD_THEME_EFFECTS,
     [PAYMENT_CHOICE]=PD_THEME_DAMAGE,
+    [NUMBER_ENTRY]=PD_THEME_STATUS,
+    [VITAL_CONFIRM]=PD_THEME_STATUS,
 };
 PD_EXT static pd_state state,previous,pending,scratch;
 static bool undo_available,import_pending,has_roll;
@@ -221,7 +223,13 @@ static bool rest_active,hit_rolled;
 PD_EXT static pd_state hit_candidate;
 static pd_pool hit_result;
 static unsigned hit_gained;
-static bool confirmation_open(void){return page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
+enum { NUMBER_HEAL,NUMBER_TEMP,NUMBER_DAMAGE,NUMBER_PART };
+static unsigned number_target,number_value,vital_kind;
+static bool number_fresh;
+static bool item_rolled;
+static pd_pool item_result;
+static unsigned item_gained;
+static bool confirmation_open(void){return page==NUMBER_ENTRY||page==VITAL_CONFIRM||page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
 static pd_damage_plan damage_plan; /* First component + explicit concentration choice. */
 static pd_damage_component damage_extra[PD_DAMAGE_COMPONENTS-1],damage_part_draft;
 static pd_damage_context damage_context,damage_extra_context[PD_DAMAGE_COMPONENTS-1],damage_part_context,source_context_draft;
@@ -481,7 +489,7 @@ static void invalidate_strike(void) {
     if(combat_roll) {combat_roll=0;pool_view=false;has_roll=false;ability=-1;pd_dice_idle(&dice_animation,1);}
 }
 static void adopt_pending_state(void){
-    clear_damage_reductions();state=pending;rest_active=false;hit_rolled=false;combat_roll=0;strike_ready=false;inventory_page=0;item_index=0;undo_available=false;resource_index=0;has_roll=false;ability=-1;mode=0;page=HERO;pool_view=false;dice_setup=false;die_picker=false;pd_dice_idle(&dice_animation,1);
+    clear_damage_reductions();state=pending;item_rolled=false;rest_active=false;hit_rolled=false;combat_roll=0;strike_ready=false;inventory_page=0;item_index=0;undo_available=false;resource_index=0;has_roll=false;ability=-1;mode=0;page=HERO;pool_view=false;dice_setup=false;die_picker=false;pd_dice_idle(&dice_animation,1);
 }
 static void apply(pd_state *next) {
     if (pd_storage_save(next)) { previous=state; undo_available=true; state=*next;invalidate_strike(); }
@@ -519,7 +527,7 @@ static lv_obj_t *art(const lv_image_dsc_t *source,int x,int y,lv_obj_t *parent) 
     return o;
 }
 static bool feedback_action(intptr_t a){
-    return a==2411||a==2414||a==1||a==2||a==20||a==21||a==89||a==832||a==840||a==841||a==848||a==849||a==907||a==914||a==1805||a==1865||a==2168||a==2179;
+    return a==3621||a==2411||a==2414||a==1||a==2||a==20||a==21||a==89||a==832||a==840||a==841||a==848||a==849||a==907||a==914||a==1805||a==1865||a==2168||a==2179;
 }
 static void feedback_capture(feedback_snapshot *out){
     out->hp=state.hp;out->temp=state.temp_hp;out->wallet=state.wallet;unsigned n=0;
@@ -648,6 +656,9 @@ static void act(intptr_t action) {
     if(input_check_open())return;
     if((action==2300||action==2301)&&(import_pending||confirmation_open()))return;
     if(import_pending&&action!=30&&action!=31)return;
+    if(page==NUMBER_ENTRY&&(action<3603||action>3619))return;
+    if(page==VITAL_CONFIRM&&action!=3620&&action!=3621)return;
+    if(page==ITEM_CONFIRM&&item_rolled&&action!=89)return;
     if(page==BACKUP_SEND_CONFIRM&&action!=2801&&action!=2802)return;
     if(page==BACKUP_RESTORE_CONFIRM&&action!=2801&&action!=2803)return;
     if(page==HISTORY_DISCARD&&action!=2607&&action!=2608)return;
@@ -692,10 +703,11 @@ static void act(intptr_t action) {
     if(page==STATUS_CONFIRM&&action!=1505&&action!=1506)return;
     if(page==STATUS_CONFIRM&&status_command==STATUS_ROLL&&status_rolled&&action!=1505)return;
     if(page==REST_PREVIEW&&action!=902&&action!=907)return;
-    if(page==HIT_CONFIRM&&action!=910&&action!=914)return;
+    if(page==HIT_CONFIRM&&(action!=910&&action!=914))return;
+    if(page==HIT_CONFIRM&&hit_rolled&&action!=914)return;
     /* Disabled controls also reject queued/synthetic events while dice are in flight. */
     if (dice_animation.active && action!=13 && action!=16) return;
-    bool new_roll=((action==13||action==72)&&!dice_animation.active)||action==46||(action==89&&item_index<state.item_count&&state.items[item_index].kind==PD_HEALING)||action==90||action==914||action==1865||action==2179||(action==1505&&status_command==STATUS_ROLL);
+    bool new_roll=((action==13||action==72)&&!dice_animation.active)||action==46||(action==89&&!item_rolled&&item_index<state.item_count&&state.items[item_index].kind==PD_HEALING)||action==90||action==914||action==1865||action==2179||(action==1505&&status_command==STATUS_ROLL);
     if(new_roll&&history_pending){history_return=HERO;history_page=0;page=HISTORY_HOME;render();return;}
     pd_screen_activity(&display_screen,lv_tick_get());
     feedback.active=false;bool report_feedback=feedback_action(action);if(report_feedback)feedback_capture(&feedback_before);
@@ -712,6 +724,32 @@ static void act(intptr_t action) {
     }
     else if(action==2300)page=HOME_MENU;
     else if(action==2301)page=HOME_VITALS;
+    else if((action==3600||action==3601)&&page==HOME_VITALS){
+        number_target=action==3600?NUMBER_HEAL:NUMBER_TEMP;vital_kind=action==3600?PD_VITAL_HEAL:PD_VITAL_TEMP_GRANT;
+        if(vital_kind==PD_VITAL_HEAL&&(!pd_vitals_apply(&next,vital_kind,1)||state.hp==pd_max_hp(&state)))return;
+        number_value=0;number_fresh=true;page=NUMBER_ENTRY;
+    }
+    else if(action==3602&&(page==DAMAGE_HOME||page==DAMAGE_PART_EDIT)){
+        number_target=page==DAMAGE_HOME?NUMBER_DAMAGE:NUMBER_PART;number_value=number_target==NUMBER_DAMAGE?damage_plan.amount:damage_part_draft.amount;number_fresh=true;page=NUMBER_ENTRY;
+    }
+    else if(page==NUMBER_ENTRY){
+        unsigned maximum=number_target>=NUMBER_DAMAGE?9999:999;
+        if(action>=3610&&action<=3619){unsigned digit=action-3610,value=(number_fresh?0:number_value)*10+digit;if(value>maximum)return;number_value=value;number_fresh=false;}
+        else if(action==3603){number_value=0;number_fresh=false;}
+        else if(action==3604){number_value/=10;number_fresh=false;}
+        else if(action==3605)page=number_target==NUMBER_DAMAGE?DAMAGE_HOME:number_target==NUMBER_PART?DAMAGE_PART_EDIT:HOME_VITALS;
+        else if(action==3606){
+            if(number_target==NUMBER_DAMAGE||number_target==NUMBER_PART){if(!number_value)return;if(number_target==NUMBER_DAMAGE)damage_plan.amount=number_value;else damage_part_draft.amount=number_value;damage_plan.concentration=0;page=number_target==NUMBER_DAMAGE?DAMAGE_HOME:DAMAGE_PART_EDIT;}
+            else {if(!pd_vitals_apply(&next,vital_kind,number_value))return;page=VITAL_CONFIRM;}
+        }else if(action==3607&&number_target==NUMBER_TEMP)vital_kind=vital_kind==PD_VITAL_TEMP_GRANT?PD_VITAL_TEMP_SET:PD_VITAL_TEMP_GRANT;
+        else return;
+    }
+    else if(action==3620&&page==VITAL_CONFIRM){number_fresh=false;page=NUMBER_ENTRY;}
+    else if(action==3621&&page==VITAL_CONFIRM){
+        if(!pd_vitals_apply(&next,vital_kind,number_value)||!memcmp(&next,&state,sizeof state))return;
+        apply(&next);if(!memcmp(&next,&state,sizeof state))page=HERO;
+    }
+
     else if(action==2800){page=BACKUP_HOME;}
     else if(action==2801&&(page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM)){pd_history_store_cancel_restore();page=BACKUP_HOME;backup_notice="Richiesta annullata";reply("PDD CANCELLED backup\n");}
     else if(action==2802&&page==BACKUP_SEND_CONFIRM){
@@ -1331,17 +1369,20 @@ static void act(intptr_t action) {
     else if(action==88&&page==ITEM_DETAIL&&item_index<state.item_count) {
         const pd_item *v=&state.items[item_index];
         if(!v->quantity||(v->kind!=PD_CONSUMABLE&&v->kind!=PD_HEALING)||(v->kind==PD_HEALING&&(state.hp==pd_max_hp(&state)||(!state.hp&&state.status.available&&state.status.failures==3))))return;
-        page=ITEM_CONFIRM;
+        item_rolled=false;page=ITEM_CONFIRM;
     }
     else if(action==89&&page==ITEM_CONFIRM) {
-        pd_pool roll;unsigned gained;
-        if(!pd_use_item(&state,item_index,pd_board_random,NULL,&next,&roll,&gained))return;
+        if(!item_rolled){
+            if(!pd_use_item(&state,item_index,pd_board_random,NULL,&hit_candidate,&item_result,&item_gained))return;
+            item_rolled=item_result.count!=0;
+        }
+        next=hit_candidate;
         if(pd_storage_save(&next)) {
-            previous=state;undo_available=true;state=next;invalidate_strike();
-            if(roll.count) {
-                char note[49];snprintf(note,sizeof note,"Cura +%u; PF %u/%u",gained,state.hp,pd_max_hp(&state));journal_pool(PD_H_HEAL,state.items[item_index].name,&roll,note);
-                healing_gained=gained;combat_roll=3;pool_view=true;has_roll=false;page=DICE;
-                pd_dice_pool_start(&dice_animation,&roll,lv_tick_get());
+            previous=state;undo_available=true;state=next;invalidate_strike();item_rolled=false;
+            if(item_result.count) {
+                char note[49];snprintf(note,sizeof note,"Cura +%u; PF %u/%u",item_gained,state.hp,pd_max_hp(&state));journal_pool(PD_H_HEAL,state.items[item_index].name,&item_result,note);
+                healing_gained=item_gained;combat_roll=3;pool_view=true;has_roll=false;page=DICE;
+                pd_dice_pool_start(&dice_animation,&item_result,lv_tick_get());
             } else page=ITEM_DETAIL;
         }
     }
@@ -1509,7 +1550,7 @@ static void render_item(void) {
         else snprintf(text,sizeof text,"Altri effetti: gestisci con il DM");
         small_label(text,83,237,300,PD_GOLD);
         small_label("PF e quantita salvati insieme",83,273,300,PD_MUTED);
-        button("Indietro",83,359,144,48,91,true);button("Conferma",239,359,144,48,89,true);return;
+        button("Indietro",83,359,144,48,91,!item_rolled);button(item_rolled?"Riprova":"Conferma",239,359,144,48,89,true);if(item_rolled)small_label("Tiro fissato: riprova a salvare",83,307,300,PD_GOLD);return;
     }
     if(v->kind==PD_WEAPON) {
         pd_weapon_info w={0};bool available=pd_weapon_stats(&state,item_index,&w);
@@ -1834,8 +1875,8 @@ static void render_rest(void) {
         snprintf(text,sizeof text,"1d%u %+d COS | minimo 0 PF",h->die,pd_modifier(state.abilities[2]));label(text,83,201,300,false);
         snprintf(text,sizeof text,"PF attuali %u/%u",state.hp,pd_max_hp(&state));label(text,83,241,300,false);
         small_label("Consuma il dado anche con cura zero",83,285,300,PD_GOLD);
-        small_label("Bonus speciali: verifica con il DM",83,314,300,PD_MUTED);
-        button("Indietro",83,359,144,48,910,true);button("Conferma",239,359,144,48,914,true);
+        small_label(hit_rolled?"Tiro fissato: riprova a salvare":"Bonus speciali: verifica con il DM",83,314,300,hit_rolled?PD_GOLD:PD_MUTED);
+        button("Indietro",83,359,144,48,910,!hit_rolled);button(hit_rolled?"Riprova":"Conferma",239,359,144,48,914,true);
     }
 }
 
@@ -2218,6 +2259,29 @@ static void render_roll_conditions(void){
     if(page==CONDITION_EFFECTS){label("Effetti sui tiri",83,111,300,true);for(unsigned i=0;i<4;i++){snprintf(text,sizeof text,"%s: %s >",roll_condition_names[i],condition_effects_draft&(1u<<i)?"si":"no");button(text,83,157+i*48,300,44,2201+i,true);}button("Indietro",83,359,144,48,2205,true);button("Anteprima",239,359,144,48,2206,true);return;}
     label("Salvare gli effetti?",83,111,300,false);for(unsigned i=0;i<4;i++){snprintf(text,sizeof text,"%s: %s -> %s",roll_condition_names[i],state.roll_conditions&(1u<<i)?"si":"no",condition_effects_draft&(1u<<i)?"si":"no");small_label(text,83,169+i*38,300,PD_TEXT);}small_label("Note, durate e PF invariati",83,325,300,PD_MUTED);button("Indietro",83,359,144,48,2207,true);button("Conferma",239,359,144,48,2208,true);
 }
+static void render_number_entry(void){
+    char text[120];
+    if(number_target==NUMBER_TEMP){lv_obj_t *mode_button=button(vital_kind==PD_VITAL_TEMP_GRANT?"Temp: assegna >":"Temp: correggi >",83,99,300,44,3607,true);lv_obj_set_style_text_font(mode_button,&lv_font_montserrat_20,0);}
+    else label(number_target==NUMBER_HEAL?"Cura ricevuta":number_target==NUMBER_DAMAGE?"Importo del danno":"Importo componente",83,111,300,false);
+    snprintf(text,sizeof text,"%u | massimo %u",number_value,number_target>=NUMBER_DAMAGE?9999:999);small_label(text,83,145,300,number_fresh?PD_GOLD:PD_TEXT);
+    const char *keys[]={"1","2","3","4","5","6","7","8","9","Azzera","0","Canc."};
+    const unsigned actions[]={3611,3612,3613,3614,3615,3616,3617,3618,3619,3603,3610,3604};
+    for(unsigned i=0;i<12;i++){lv_obj_t *b=button(keys[i],83+(i%3)*104,167+(i/3)*48,92,44,actions[i],true);if(i==9||i==11)lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
+    bool ready=number_target>=NUMBER_DAMAGE?number_value!=0:pd_vitals_apply(&scratch,vital_kind,number_value);
+    button("Indietro",83,359,144,48,3605,true);lv_obj_t *use=button(number_target>=NUMBER_DAMAGE?"Usa numero":"Anteprima",239,359,144,48,3606,ready);lv_obj_set_style_text_font(use,&lv_font_montserrat_16,0);
+}
+static void render_vital_confirm(void){
+    char text[120];scratch=state;bool valid=pd_vitals_apply(&scratch,vital_kind,number_value),changed=valid&&memcmp(&scratch,&state,sizeof state);
+    label(vital_kind==PD_VITAL_HEAL?"Confermare la cura?":"Punti ferita temporanei",83,111,300,false);
+    snprintf(text,sizeof text,vital_kind==PD_VITAL_HEAL?"Cura dichiarata: %u":vital_kind==PD_VITAL_TEMP_GRANT?"Assegna: %u temporanei":"Correggi saldo: %u",number_value);small_label(text,83,157,300,PD_GOLD);
+    if(valid){
+        snprintf(text,sizeof text,"PF %u -> %u / %u",state.hp,scratch.hp,pd_max_hp(&state));label(text,83,201,300,false);
+        snprintf(text,sizeof text,"Temporanei %u -> %u",state.temp_hp,scratch.temp_hp);label(text,83,243,300,false);
+    }else label("Operazione non disponibile",83,217,300,false);
+    small_label(vital_kind==PD_VITAL_HEAL?"Cura al massimo; temp invariati":vital_kind==PD_VITAL_TEMP_GRANT?"Temp: conserva il saldo maggiore":"Sostituisce il saldo; zero rimuove",83,291,300,PD_GOLD);
+    small_label(!valid?"Tre fallimenti: verifica da Stato":changed?"Conferma salva; Eroe > Annulla":"Nessuna variazione da salvare",83,325,300,valid?PD_MUTED:PD_DANGER);
+    button("Indietro",83,359,144,48,3620,true);button("Conferma",239,359,144,48,3621,changed);
+}
 static void render_payment_choice(void){
     pd_damage_event e=current_damage_event();e.payment_choice=0;pd_damage_event_summary r;if(!pd_damage_event_preview(&state,&e,&r)||!r.profile)return;
     label("Una spesa per il colpo",83,111,300,false);small_label("Scegli la fonte da addebitare",83,143,300,PD_GOLD);
@@ -2254,7 +2318,7 @@ static void render_damage(void) {
     char text[180];
     if(page==DAMAGE_HOME){
         label("Danni ricevuti",83,111,204,false);lv_obj_t *reduce=button("Riduci",299,99,84,44,2040,true);lv_obj_set_style_text_font(reduce,&lv_font_montserrat_16,0);snprintf(text,sizeof text,"Tipo: %s >",pd_damage_name(damage_plan.type));button(text,83,157,300,44,1801,true);
-        if(damage_extra_count)snprintf(text,sizeof text,"1/%u: %u danni",damage_extra_count+1,damage_plan.amount);else snprintf(text,sizeof text,"%u %s",damage_plan.amount,damage_plan.amount==1?"danno":"danni");label(text,83,215,300,true);
+        if(damage_extra_count)snprintf(text,sizeof text,"1/%u: %u danni >",damage_extra_count+1,damage_plan.amount);else snprintf(text,sizeof text,"%u %s >",damage_plan.amount,damage_plan.amount==1?"danno":"danni");button(text,83,203,300,44,3602,true);
         const char *names[]={"-10","-1","+1","+10"};for(unsigned i=0;i<4;i++)button(names[i],83+i*78,251,66,44,1840+i,i<2?damage_plan.amount>1:damage_plan.amount<9999);
         lv_obj_t *parts=button("Componenti",83,305,144,44,1900,true);lv_obj_set_style_text_font(parts,&lv_font_montserrat_16,0);lv_obj_t *def=button("Difese per tipo",239,305,144,44,1802,true);lv_obj_set_style_text_font(def,&lv_font_montserrat_16,0);button("Stato",83,359,144,48,1500,true);button("Anteprima",239,359,144,48,1803,true);
     } else if(page==DAMAGE_PARTS){
@@ -2265,7 +2329,7 @@ static void render_damage(void) {
         button("Indietro",83,359,144,48,1904,true);button("Aggiungi",239,359,144,48,1901,count<PD_DAMAGE_COMPONENTS);
     } else if(page==DAMAGE_PART_EDIT){
         snprintf(text,sizeof text,"Componente %u",damage_part_index+1);label(text,83,111,204,false);lv_obj_t *reduce=button("Riduci",299,99,84,44,2041,true);lv_obj_set_style_text_font(reduce,&lv_font_montserrat_16,0);snprintf(text,sizeof text,"Tipo: %s >",pd_damage_name(damage_part_draft.type));button(text,83,157,300,44,1920,true);
-        snprintf(text,sizeof text,"%u danni",damage_part_draft.amount);label(text,83,215,300,true);const char *names[]={"-10","-1","+1","+10"};for(unsigned i=0;i<4;i++)button(names[i],83+i*78,251,66,44,1921+i,i<2?damage_part_draft.amount>1:damage_part_draft.amount<9999);
+        snprintf(text,sizeof text,"%u danni >",damage_part_draft.amount);button(text,83,203,300,44,3602,true);const char *names[]={"-10","-1","+1","+10"};for(unsigned i=0;i<4;i++)button(names[i],83+i*78,251,66,44,1921+i,i<2?damage_part_draft.amount>1:damage_part_draft.amount<9999);
         const char *actions[]={"Rimuovi","Fonte","Difese"};const unsigned codes[]={1927,2020,1928};for(unsigned i=0;i<3;i++){lv_obj_t *b=button(actions[i],83+i*104,305,92,44,codes[i],i|| (damage_extra_count&&damage_part_index<=damage_extra_count));lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
         button("Indietro",83,359,144,48,1926,true);button("Usa parte",239,359,144,48,1925,true);
     } else if(page==DAMAGE_TYPES){
@@ -2556,6 +2620,10 @@ static void companion_event(companion_action selected,void *unused) {
         case COMPANION_RESOURCES:action=103;break;
         case COMPANION_MINUS:if(page!=HOME_VITALS)return;action=1;break;
         case COMPANION_PLUS:if(page!=HOME_VITALS)return;action=2;break;
+        case COMPANION_HEAL:if(page!=HOME_VITALS)return;action=3600;break;
+        case COMPANION_TEMPORARY:if(page!=HOME_VITALS)return;action=3601;break;
+        case COMPANION_DAMAGE:if(page!=HOME_VITALS)return;action=1800;break;
+        case COMPANION_STATUS:if(page!=HOME_VITALS)return;action=1500;break;
         case COMPANION_UNDO:if(page!=HOME_VITALS)return;action=3;break;
         default:return;
     }
@@ -2624,6 +2692,8 @@ static void render_content(void) {
     if(page==DEATH_ROLL_SETUP){render_death_roll_setup();return;}
     if(page==EXTERNAL_TURN_HOME){render_external_turn();return;}
     if(page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM){render_turn_name();return;}
+    if(page==NUMBER_ENTRY){scratch=state;render_number_entry();return;}
+    if(page==VITAL_CONFIRM){render_vital_confirm();return;}
     if(page==PAYMENT_CHOICE){render_payment_choice();return;}
     if(page==BACKUP_HOME||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM){render_backup();return;}
     if(page==HISTORY_HOME||page==HISTORY_DETAIL||page==HISTORY_DISCARD){render_history();return;}
@@ -2762,7 +2832,7 @@ static void render_content(void) {
     }
 }
 #ifdef PD_UI_TEST
-static bool styled_pages[PAYMENT_CHOICE+1];
+static bool styled_pages[VITAL_CONFIRM+1];
 static void capture_styled_page(unsigned view);
 #endif
 static void render(void){
