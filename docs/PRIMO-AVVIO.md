@@ -1,9 +1,9 @@
-# Primo avvio e sessione di collaudo — v0.58
+# Primo avvio e sessione di collaudo — v0.59
 
 Questa versione prepara il **blocco 3, prodotto fisico**. L'hardware è in
 arrivo: tutte le prove fisiche sotto sono **da eseguire**, nessuna è già passata.
-La grafica approvata è conservata; la v0.58 aggiunge riferimenti esterni
-per le durate di turno e porta la copertura host a 103/103, senza attestare un esito fisico.
+La grafica approvata è conservata; la v0.59 permette di nominare i riferimenti
+esterni sul dispositivo e porta la copertura host a 105/105, senza attestare un esito fisico.
 
 L'obiettivo della prima prova è trasferire una scheda nota, giocare offline,
 conservare i progressi dopo un riavvio e recuperarli da un backup. Batteria,
@@ -253,6 +253,17 @@ modifica nulla; Conferma applica l'intero evento. Annulla recupera tutto.
 Verificare riavvio e backup/ripristino dei riferimenti A/B/C; poi controllare
 che solo Inizio turno proprio recuperi la reazione. Registrare H25 secondo
 [TURNI-ESTERNI.md](TURNI-ESTERNI.md). Nessuna lettura del soggetto è automatica.
+
+## 10. Prova opzionale dei nomi A/B/C — dopo il backup
+
+Aprire il nome di A e inserire un'etichetta con la tastiera a pagine. Controllare
+nome precedente/nuovo e timer associati in anteprima; tornare indietro e scartare
+la bozza senza cambiamenti. Ripetere e confermare: timer, PF e reazione devono
+restare identici. Verificare il nome nel riepilogo del turno, senza confermare
+un avanzamento involontario. Provare un nome di 20 caratteri, Cancella, svuotamento
+e Annulla. Acquisire una nuova copia nativa, confrontare le tre etichette sul
+PC, poi verificare riavvio e ripristino. Usare dati sintetici e registrare H26
+secondo [NOMI-TURNI.md](NOMI-TURNI.md). I nomi non verificano l'identità dei soggetti.
 
 ## Registrazione dell'esito
 

@@ -56,7 +56,7 @@ Non fanno parte di questo traguardo: importazione Beyond, editor completo, incan
 
 L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco non impedisce le altre fasi. L'ordine delle fasi 0 e 1 può sovrapporsi se l'hardware non è immediatamente disponibile.
 
-## Punto attuale — v0.58
+## Punto attuale — v0.59
 
 La [home del compagno](HOME-COMPAGNO.md) è integrata: menu a icone, PF,
 salvataggi e accesso alle funzioni esistenti, con tasti configurati conservati.
@@ -87,6 +87,9 @@ e modalità effettiva nello storico. Copertura host 102/102.
 La [v0.58](TURNI-ESTERNI.md) distingue il proprio turno dai riferimenti esterni
 A/B/C per le 50 durate di effetti/difese/riduzioni. Scadenze e reazione sono
 verificate insieme; associazioni dei soggetti manuali. PDD26, copertura host 103/103.
+La [v0.59](NOMI-TURNI.md) permette di nominare A/B/C sul dispositivo con
+anteprima, conferma e backup nativo; i riferimenti dei timer restano stabili.
+PDD27, nomi inizialmente vuoti nei formati precedenti, copertura host 105/105.
 
 | Blocco | Stato software | Cosa manca |
 | --- | --- | --- |
@@ -104,12 +107,12 @@ sono portate nel firmware, ma i criteri di completamento richiedono ancora una
 sessione fisica, trasferimento/ripristino e misure. Non sono percentuali di
 completamento né una dichiarazione di collaudo.
 
-## Quattro blocchi concordati — v0.58
+## Quattro blocchi concordati — v0.59
 
 | Blocco | Punto attuale | Prossimo lavoro |
 | --- | --- | --- |
 | 1 — Scheda sul dispositivo | Percorsi base nel firmware: magie/slot/usi, concentrazione, riposi, dadi vita, morte base; v0.51 borsello, v0.52 storico dei tiri e v0.56 danni/morte base espliciti e v0.57 circostanze/bonus nel tiro morte | Regole/eccezioni e verifica nell'uso reale |
-| 2 — Effetti | Modificatori, round, concentrazione, difese, danni e riduzioni con costi/reazione; v0.38 aggiunge slot ordinari/patto; v0.39 durate del proprio turno; v0.40 minuti/ore; v0.41 cariche distinte dalla quantità; v0.42 tre spese congiunte; v0.43 ricarica parziale a dado esplicita; v0.44 quattro effetti di condizione sui tiri e v0.58 durate per riferimenti esterni A/B/C | Identità/nomi e oltre tre soggetti esterni, costi alternativi o oltre tre fonti, eventi/formule di ricarica automatici e requisiti/effetti automatici |
+| 2 — Effetti | Modificatori, round, concentrazione, difese, danni e riduzioni con costi/reazione; v0.38 aggiunge slot ordinari/patto; v0.39 durate del proprio turno; v0.40 minuti/ore; v0.41 cariche distinte dalla quantità; v0.42 tre spese congiunte; v0.43 ricarica parziale a dado esplicita; v0.44 quattro effetti di condizione sui tiri e v0.58 durate per riferimenti esterni A/B/C, nominabili sul dispositivo dalla v0.59 | Identità verificate e oltre tre soggetti esterni, costi alternativi o oltre tre fonti, eventi/formule di ricarica automatici e requisiti/effetti automatici |
 | 3 — Prodotto fisico | Luminosità, attenuazione/risveglio, salvataggi, tasti configurabili, diagnostica USB v0.54, collaudo locale v0.55 e firmware compilato | Batteria, sospensione/spegnimento e collaudi reali touch/USB/memoria/alimentazione |
 | 4 — Estetica | v0.50: completato nel software; home/avatar e 85 viste interne, icone, feedback, transizioni e navigazione verificati su 88/88 viste | Collaudo sul display reale nel blocco 3; ulteriori affinamenti artistici sono evoluzioni successive |
 
@@ -118,7 +121,7 @@ configurazione PC, trasferimento, correzione locale, costi e recuperi al riposo.
 Non vengono dedotte automaticamente da Beyond. Tre spese distinte sono ora
 configurabili e addebitate insieme. La ricarica parziale a dado è disponibile
 come evento manuale. Restano costi alternativi o più di tre fonti, eventi/formule
-automatici, identità/nomi e oltre tre soggetti esterni e altri effetti/regole ancora manuali.
+automatici, identità verificate e oltre tre soggetti esterni e altri effetti/regole ancora manuali.
 Accecato, Spaventato, Prono e Trattenuto hanno ora effetti sui tiri espliciti,
 con contesto e blocchi sui fatti necessari, senza dedurre regole dalle note. Hardware e qualità visiva restano
 traguardi del dispositivo, senza espandere il PC in un prodotto di gioco separato.

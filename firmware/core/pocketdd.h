@@ -6,7 +6,8 @@
 #define PD_RESOURCES 8
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
-#define PD_RECORD_SIZE 75119
+#define PD_RECORD_SIZE 75182
+#define PD_TURN_NAME_BYTES 21
 #define PD_COINS 5
 #define PD_COIN_MAX UINT32_C(999999999)
 /* cp/sp/ep/gp/pp, distinct physical counts. Unknown is not a zero balance. */
@@ -108,6 +109,7 @@ typedef struct {
     uint8_t shortcuts[3]; /* PWR short, BOOT short, BOOT long; device-local. */
     pd_wallet wallet;
     uint32_t history_epoch; /* Local import identity; never supplied by USB. */
+    char turn_names[3][PD_TURN_NAME_BYTES]; /* Local aliases for stable A/B/C references. */
 } pd_state;
 typedef struct { uint8_t dice[2], count, natural; int total, bonus; } pd_roll;
 typedef uint32_t (*pd_random)(void *context);
@@ -143,6 +145,9 @@ bool pd_turn_advance(pd_state *state,bool start,pd_round_summary *summary);
 /* Explicit local subject 0=you, 1..3=A/B/C. Only subject 0 start resets reaction.
    No initiative order or participant identity is inferred. Same atomic expiry contract. */
 bool pd_turn_advance_subject(pd_state *state,unsigned owner,bool start,pd_round_summary *summary);
+/* ASCII alias 0..20 bytes, trimmed outer spaces; empty clears the alias.
+   Owner 1..3 only. Does not change timers or participant identity; rejection is atomic. */
+bool pd_turn_name_set(pd_state *state,unsigned owner,const char *name);
 /* Elapsed game time 1..5940 minutes; chronological numeric expiry, atomic rollback. */
 bool pd_time_advance(pd_state *state,unsigned minutes,pd_round_summary *summary);
 unsigned pd_defence_base_flags(const pd_state *state,unsigned type);

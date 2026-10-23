@@ -20,18 +20,20 @@ function record(text,magic,max){
 }
 function text(bytes,start,capacity,empty=false){let end=start;while(end<start+capacity&&bytes[end]){if(bytes[end]<32||bytes[end]>126)fail();end++}if(end===start+capacity||(!empty&&end===start))fail();return String.fromCharCode(...bytes.subarray(start,end))}
 export function inspectDeviceBackup(raw){
-  const packet=envelope(raw),s=record(packet.state,['PDDP','PDDQ'],75119),h=record(packet.history,'PDH1',2481),b=s.bytes,v=s.view;
-  if(b.length<8879||b[5123]>120||b.length!==8879+552*b[5123])fail();
+  const packet=envelope(raw),s=record(packet.state,['PDDP','PDDQ','PDDR'],75182),h=record(packet.history,'PDH1',2481),b=s.bytes,v=s.view;
+  const named=b[3]===82,trailer=named?63:0;
+  if(b.length<8879+trailer||b[5123]>120||b.length!==8879+trailer+552*b[5123])fail();
   // PDD26 packs the local turn subject into the existing timer-selector bytes.
-  const turnSubjects=[0,0,0],packed=b[3]===81;
+  const turnSubjects=[0,0,0],packed=b[3]===81||named;
   for(let i=0;i<50;i++){const value=b[8375+552*b[5123]+i],tick=packed?value&7:value,owner=packed?value>>>3:0;if(tick>4||owner>3||(owner&&tick!==1&&tick!==2))fail();if(owner)turnSubjects[owner-1]++}
   const offset=552*b[5123],name=text(b,8,49),baseHp=v.getUint16(59,true),baseArmor=b[64];let maxHp=baseHp,armor=baseArmor;
   const effects=b[7913+offset];if(effects>8)fail();
   for(let i=0;i<effects;i++){const at=7914+offset+4*i,target=b[at],delta=v.getUint16(at+1,true)-999,active=b[at+3];if(target>1||active>1||Math.abs(delta)>(target?999:20))fail();if(active){if(target)maxHp+=delta;else armor+=delta}}
   const hp=v.getUint16(57,true),tempHp=v.getUint16(61,true),level=b[63];
   if(level<1||level>20||baseHp<1||baseHp>999||maxHp<1||maxHp>999||hp>maxHp||tempHp>999||baseArmor<1||baseArmor>40||armor<1||armor>40||b[435]>60||b[71]>8)fail();
-  const epoch=v.getUint32(b.length-8,true),walletAt=b.length-29,available=b[walletAt];if(available>1)fail();
+  const epoch=v.getUint32(b.length-8-trailer,true),walletAt=b.length-29-trailer,available=b[walletAt];if(available>1)fail();
   const wallet={available:Boolean(available)};['cp','sp','ep','gp','pp'].forEach((key,i)=>{const value=v.getUint32(walletAt+1+4*i,true);if(value>999999999||(!available&&value))fail();wallet[key]=value});
+  const turnNames=named?[0,1,2].map(i=>{const at=b.length-67+i*21,name=text(b,at,21,true);if(name!==name.trim()||b.subarray(at+name.length,at+21).some(x=>x))fail();return name}):['','',''];
   const keys=Array.from(b.subarray(5161,5164)),brightness=b[7911+offset],dim=b[7912+offset];if(keys.some(k=>k>13)||brightness<10||brightness>100||dim>3)fail();
   const hb=h.bytes,hv=h.view;if(hb.length<21)fail();const count=hb[16],sequence=hv.getUint32(12,true);
   if(count>20||hb.length!==21+123*count||hv.getUint32(8,true)!==epoch||sequence<count||(!count&&sequence))fail();
@@ -45,5 +47,5 @@ export function inspectDeviceBackup(raw){
   }
   // This is an integrity check and a bounded preview. The device runs the full
   // native validators for all remaining rules before offering Restore.
-  return {nativeValidation:false,packet,name,level,hp,maxHp,baseHp,tempHp,armor,baseArmor,effects,items:b[435],powers:b[5123],resources:b[71],wallet,keys,brightness,dim,turnSubjects,rolls};
+  return {nativeValidation:false,packet,name,level,hp,maxHp,baseHp,tempHp,armor,baseArmor,effects,items:b[435],powers:b[5123],resources:b[71],wallet,keys,brightness,dim,turnSubjects,turnNames,rolls};
 }

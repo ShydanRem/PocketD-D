@@ -88,7 +88,24 @@ class BackupTests(unittest.TestCase):
         encoded = json.dumps(packet).encode()
         backup.validate(encoded)
         self.assertEqual(backup.acquire(Port(frame(encoded)), lambda _: None), encoded)
+        state[3] = ord('S')
+        state[-4:] = zlib.crc32(state[:-4]).to_bytes(4, 'little')
+        packet['state'] = base64.b64encode(state).decode()
+        with self.assertRaises(ValueError):
+            backup.validate(json.dumps(packet).encode())
+
+    def test_pdd27_alias_trailer_keeps_epoch_and_payload_intact(self):
+        packet = json.loads(RAW)
+        state = bytearray(base64.b64decode(packet['state']))
+        names = b'Ally A'.ljust(21, b'\0') + b'W'*20+b'\0' + b'Mage & Co'.ljust(21, b'\0')
+        state = state[:-4] + names + bytearray(4)
         state[3] = ord('R')
+        state[-4:] = zlib.crc32(state[:-4]).to_bytes(4, 'little')
+        packet['state'] = base64.b64encode(state).decode()
+        encoded = json.dumps(packet).encode()
+        backup.validate(encoded)
+        self.assertEqual(backup.acquire(Port(frame(encoded)), lambda _: None), encoded)
+        state[-71:-67] = (1).to_bytes(4, 'little')
         state[-4:] = zlib.crc32(state[:-4]).to_bytes(4, 'little')
         packet['state'] = base64.b64encode(state).decode()
         with self.assertRaises(ValueError):

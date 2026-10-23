@@ -22,7 +22,7 @@ test('all truncations and corrupt encoded data reject without a partial preview'
 });
 test('canonical base64 padding and bounded native headers are required',()=>{
  const p=JSON.parse(raw),alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';const pos=p.state.length-2;assert.equal(p.state.at(-1),'=');const index=alphabet.indexOf(p.state[pos]);p.state=p.state.slice(0,pos)+alphabet[index+1]+'=';assert.throws(()=>inspectDeviceBackup(JSON.stringify(p)));
- assert.throws(()=>inspectDeviceBackup(edit('state',b=>b[3]=82)));assert.throws(()=>inspectDeviceBackup(edit('state',b=>b[5123]=121)));assert.throws(()=>inspectDeviceBackup(edit('state',b=>b[5123]=120)));
+ assert.throws(()=>inspectDeviceBackup(edit('state',b=>b[3]=83)));assert.throws(()=>inspectDeviceBackup(edit('state',b=>b[5123]=121)));assert.throws(()=>inspectDeviceBackup(edit('state',b=>b[5123]=120)));
 });
 test('even with valid CRC, mismatching epochs and malformed roll math reject',()=>{
  assert.throws(()=>inspectDeviceBackup(edit('history',(b,v)=>v.setUint32(8,1,true))));
@@ -46,4 +46,29 @@ test('PDD26 preserves packed turn subjects; PDD25 remains supported and invalid 
  }
  for(const packed of [5,7,8,11,12,33,255])assert.throws(()=>inspectDeviceBackup(edit('state',b=>{b[3]=81;b[8375]=packed})));
  assert.throws(()=>inspectDeviceBackup(edit('state',b=>b[8375]=9)));
+});
+
+function withTurnNames(names){
+ const packet=JSON.parse(raw),old=Uint8Array.from(atob(packet.state),c=>c.charCodeAt(0)),bytes=new Uint8Array(old.length+63);
+ bytes.set(old.subarray(0,-4));bytes[3]=82;
+ for(let i=0;i<3;i++)bytes.set(new TextEncoder().encode(names[i]),old.length-4+21*i);
+ new DataView(bytes.buffer).setUint32(bytes.length-4,crc32(bytes.subarray(0,-4)),true);
+ packet.state=btoa(String.fromCharCode(...bytes));return JSON.stringify(packet);
+}
+test('PDD27 appended aliases preserve money, epoch, original records and all twenty rolls',()=>{
+ const names=['Ally A','W'.repeat(20),'Mage & Co'],encoded=withTurnNames(names),p=inspectDeviceBackup(encoded);
+ assert.deepEqual(p.turnNames,names);assert.deepEqual(p.packet,JSON.parse(encoded));assert.equal(p.wallet.pp,999999999);assert.equal(p.hp,17);assert.equal(p.rolls.length,20);assert.deepEqual(p.keys,[13,3,5]);
+ for(let size=0;size<=20;size++)assert.deepEqual(inspectDeviceBackup(withTurnNames(['A'.repeat(size),'',''])).turnNames,['A'.repeat(size),'','']);
+});
+test('PDD27 rejects noncanonical, overlong and non-ASCII aliases even with valid CRC',()=>{
+ const encoded=withTurnNames(['Ally','','']);
+ for(const [position,value] of [[0,31],[0,127],[0,195],[0,32],[4,32],[5,65],[20,65]]){
+  const packet=JSON.parse(encoded),bytes=Uint8Array.from(atob(packet.state),c=>c.charCodeAt(0));bytes[bytes.length-67+position]=value;
+  new DataView(bytes.buffer).setUint32(bytes.length-4,crc32(bytes.subarray(0,-4)),true);packet.state=btoa(String.fromCharCode(...bytes));assert.throws(()=>inspectDeviceBackup(JSON.stringify(packet)));
+ }
+ assert.throws(()=>inspectDeviceBackup(withTurnNames(['A'.repeat(21),'',''])));
+});
+test('pre-name PDD25 and PDD26 backups default aliases without inventing participant identity',()=>{
+ assert.deepEqual(inspectDeviceBackup(raw).turnNames,['','','']);
+ assert.deepEqual(inspectDeviceBackup(edit('state',b=>b[3]=81)).turnNames,['','','']);
 });

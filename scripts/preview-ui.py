@@ -87,6 +87,14 @@ external_gallery=Image.new('RGB',(466*2,466*2),'black')
 for i,name in enumerate(('effect','home','preview','details')):
     external_gallery.paste(Image.open(BASE/f'external-turn-{name}.png'),(i%2*466,i//2*466))
 external_gallery.save(BASE/'external-turn-gallery.png')
+name_views=('empty','editor','confirm','save-error','home','preview','maximum',
+            'last-page','maximum-confirm','clear','named-event','restored')
+for name in name_views:
+    Image.open(BASE/f'turn-name-{name}.ppm').save(BASE/f'turn-name-{name}.png')
+name_gallery=Image.new('RGB',(466*2,466*2),'black')
+for i,name in enumerate(('editor','confirm','home','named-event')):
+    name_gallery.paste(Image.open(BASE/f'turn-name-{name}.png'),(i%2*466,i//2*466))
+name_gallery.save(BASE/'turn-name-gallery.png')
 frames=[Image.open(BASE/f'ux-transition-{i:02d}.ppm').convert('RGB') for i in range(5)]
 frames[0].save(BASE/'ui-transition.gif',save_all=True,append_images=frames[1:],duration=[40,40,40,40,1000],loop=0,disposal=2,optimize=True)
 print(f'UI: {len(records)} production views, overview, offline catalog and transition exported')

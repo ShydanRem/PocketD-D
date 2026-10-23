@@ -42,6 +42,7 @@ richiede un'osservazione reale; indicare eventuali prove parziali nelle note.
 | H23 | Scheda sintetica dopo backup: danni a zero PF, critico, morte istantanea, annulla, riavvio/ripristino | Non eseguito | [Procedura v0.56](DANNI-ZERO-PF.md) |
 | H24 | Scheda sintetica: tiro morte base/modificato, annullamento dei segni, bonus, storico, annulla e reset bozza | Non eseguito | [Procedura v0.57](TIRI-MORTE.md) |
 | H25 | Scheda sintetica: riferimenti A/B/C, isolamento turno proprio/reazione, scadenze, cap PF, annulla e backup/riavvio | Non eseguito | [Procedura v0.58](TURNI-ESTERNI.md) |
+| H26 | Scheda sintetica: nomi A/B/C, tastiera/pagine/limite, anteprima, annulla, timer invariati e backup/riavvio | Non eseguito | [Procedura v0.59](NOMI-TURNI.md) |
 
 ## Problema riproducibile
 

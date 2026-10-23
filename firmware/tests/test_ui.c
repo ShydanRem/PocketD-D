@@ -162,6 +162,13 @@ static void probe_key_gesture(unsigned which,unsigned held){
     probe_key_sample(pwr,boot,0);probe_key_sample(pwr,boot,31);
     probe_key_sample(pwr,boot,held);probe_key_sample(0,0,0);probe_key_sample(0,0,31);
 }
+static void type_turn_name(const char *text){
+    for(const char *at=text;*at;at++){
+        const char *key=strchr(name_keys,*at);assert(key);unsigned target=(unsigned)(key-name_keys)/12;
+        while(name_key_page<target)click(">");while(name_key_page>target)click("<");
+        char caption[2]={*at,0};click(*at==' '?"Spazio":caption);
+    }
+}
 int main(void) {
     lv_init();lv_display_t *d=lv_display_create(466,466);static uint16_t buffer[466*40];
     lv_display_set_buffers(d,buffer,NULL,sizeof buffer,LV_DISPLAY_RENDER_MODE_PARTIAL);lv_display_set_flush_cb(d,paint);
@@ -1300,13 +1307,42 @@ int main(void) {
     assert(pd_effect_set(&state,0,(pd_effect){.value=20,.active=true,.timed=true,.rounds=1,.tick=PD_TICK_START,.owner=1}));assert(pd_effect_set(&state,1,(pd_effect){.value=-20,.active=true,.timed=true,.rounds=2,.tick=PD_TICK_START,.owner=2}));
     page=STATUS_HOME;render();click("Reazione");click("Altri turni");click("Inizio turno A");effects_before=state;effects_saves=save_calls;act(2122);assert(page==REACTION_CONFIRM&&save_calls==effects_saves&&!memcmp(&state,&effects_before,sizeof state));screenshot("external-turn-invalid.ppm");
     puts("External turn UI: subject editors, clock reset, three references, own/external reaction isolation, preview/details/cancel, save retry/undo, empty no-write, all 50 expiries and native backup passed (synthetic)");
+    /* v0.59: names label stable references, never rebind or advance their timers. */
+    pd_demo(&state);state.reaction_spent=true;state.hp=32;
+    assert(pd_effect_set(&state,0,(pd_effect){.target=PD_EFFECT_MAX_HP,.value=10,.active=true,.timed=true,.rounds=1,.tick=PD_TICK_END,.owner=1}));state.hp=42;
+    assert(pd_defence_grant_set(&state,12,2,(pd_defence_temporary){.flags=1,.active=true,.timed=true,.rounds=1,.tick=PD_TICK_END,.owner=1}));
+    assert(pd_reduction_profile_set(&state,2,(pd_reduction_profile){.value=1,.types=8191,.active=true,.timed=true,.rounds=2,.tick=PD_TICK_END,.owner=1}));
+    pd_history_reset(&history,state.history_epoch);persisted_history=history;history_pending=false;
+    page=STATUS_HOME;render();click("Reazione");click("Altri turni");click("A: senza nome >");assert(page==TURN_NAME_EDIT&&confirmation_open());screenshot("turn-name-empty.ppm");
+    effects_before=state;effects_saves=save_calls;effects_calls=random_calls;unsigned name_history_saves=history_save_calls;
+    assert(!stage_import(&snapshot.state)&&!stage_backup(NULL));shortcut(0);act(100);assert(page==TURN_NAME_EDIT);
+    type_turn_name("Ally A");assert(!strcmp(name_draft,"Ally A")&&!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves&&random_calls==effects_calls);screenshot("turn-name-editor.ppm");
+    click("Anteprima");assert(page==TURN_NAME_CONFIRM);wrapped_fits();screenshot("turn-name-confirm.ppm");click("Indietro");click("Cancella");type_turn_name("B");click("Indietro");assert(page==EXTERNAL_TURN_HOME&&!state.turn_names[0][0]&&save_calls==effects_saves);
+    click("A: senza nome >");type_turn_name("Ally A");click("Anteprima");fail_save=true;click("Conferma");assert(page==TURN_NAME_CONFIRM&&!memcmp(&state,&effects_before,sizeof state));screenshot("turn-name-save-error.ppm");act(3304);assert(page==TURN_NAME_CONFIRM);
+    fail_save=false;click("Conferma");assert(page==EXTERNAL_TURN_HOME);strcpy(effects_before.turn_names[0],"Ally A");assert(!memcmp(&state,&effects_before,sizeof state));
+    effects_saves=save_calls;act(3307);assert(save_calls==effects_saves&&page==EXTERNAL_TURN_HOME);screenshot("turn-name-home.ppm");
+    click("Fine turno A");wrapped_fits();screenshot("turn-name-preview.ppm");click("Indietro");click("Indietro");click("Indietro");act(100);click("Annulla");
+    effects_before.turn_names[0][0]=0;memset(effects_before.turn_names[0],0,PD_TURN_NAME_BYTES);assert(!memcmp(&state,&effects_before,sizeof state));
+    page=STATUS_HOME;render();click("Reazione");click("Altri turni");click("B");click("B: senza nome >");type_turn_name("WWWWWWWWWWWWWWWWWWWW");act(3400);assert(strlen(name_draft)==20);wrapped_fits();screenshot("turn-name-maximum.ppm");
+    while(name_key_page+1<name_pages())click(">");screenshot("turn-name-last-page.ppm");click("Anteprima");wrapped_fits();screenshot("turn-name-maximum-confirm.ppm");click("Conferma");assert(strlen(state.turn_names[1])==20);
+    click("C");click("C: senza nome >");type_turn_name("Mage-3");click("Anteprima");click("Conferma");assert(!strcmp(state.turn_names[2],"Mage-3"));
+    click("C: Mage-3 >");click("Anteprima");effects_saves=save_calls;effects_before=previous;click("Conferma");assert(save_calls==effects_saves&&!memcmp(&previous,&effects_before,sizeof previous));
+    click("C: Mage-3 >");while(name_draft[0])click("Cancella");type_turn_name("  ");click("Anteprima");assert(!name_draft[0]);screenshot("turn-name-clear.ppm");click("Conferma");assert(!state.turn_names[2][0]&&strlen(state.turn_names[1])==20);
+    click("A");click("A: senza nome >");type_turn_name("The Mage");click("Anteprima");click("Conferma");click("Fine turno A");wrapped_fits();screenshot("turn-name-named-event.ppm");click("Conferma");
+    assert(state.hp==32&&!state.effects[0].active&&state.reductions[2].rounds==1&&state.reaction_spent&&!strcmp(state.turn_names[0],"The Mage"));
+    click("Indietro");click("Indietro");act(100);click("Annulla");assert(state.hp==42&&state.effects[0].active&&state.reductions[2].rounds==2&&!strcmp(state.turn_names[0],"The Mage"));
+    snapshot.state=state;pd_history_reset(&snapshot.history,state.history_epoch);char *named_json=pd_backup_encode(&state,&snapshot.history,&external_size);assert(named_json&&pd_backup_decode(named_json,external_size,&snapshot));free(named_json);
+    assert(!strcmp(snapshot.state.turn_names[0],"The Mage")&&strlen(snapshot.state.turn_names[1])==20&&snapshot.state.effects[0].owner==1&&random_calls==effects_calls&&history_save_calls==name_history_saves);
+    assert(pd_turn_name_set(&state,1,"Changed"));assert(stage_backup(&snapshot));click("Annulla");assert(!strcmp(state.turn_names[0],"Changed"));
+    assert(stage_backup(&snapshot));click("Ripristina");assert(page==HERO&&!strcmp(state.turn_names[0],"The Mage")&&strlen(state.turn_names[1])==20&&state.effects[0].owner==1&&state.hp==42);screenshot("turn-name-restored.ppm");
+    puts("Turn name UI: all keyboard pages, case/digits/space, full-length wrapping, preview/cancel, failed write/retry, unchanged-save no-write, clear, undo, named timer preview and native backup passed (synthetic)");
     unsigned covered=0;
-    for(unsigned p=0;p<=EXTERNAL_TURN_HOME;p++){
+    for(unsigned p=0;p<=TURN_NAME_CONFIRM;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)EXTERNAL_TURN_HOME+1);
-    assert(covered==EXTERNAL_TURN_HOME+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)TURN_NAME_CONFIRM+1);
+    assert(covered==TURN_NAME_CONFIRM+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

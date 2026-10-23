@@ -31,7 +31,7 @@ def validate(raw):
             or obj['format'] != 'pocketdd-device-backup' or type(obj['version']) is not int or obj['version'] != 1):
         raise ValueError('Usa un backup nativo del dispositivo v1')
     records = []
-    for key, magic, maximum in [('state', (b'PDDP', b'PDDQ'), 75119), ('history', (b'PDH1',), 2481)]:
+    for key, magic, maximum in [('state', (b'PDDP', b'PDDQ', b'PDDR'), 75182), ('history', (b'PDH1',), 2481)]:
         text = obj[key]
         if not isinstance(text, str) or not text or len(text) > 4*((maximum+2)//3):
             raise ValueError('Record nativo fuori limite')
@@ -41,9 +41,10 @@ def validate(raw):
             raise ValueError('Record nativo corrotto o non supportato')
         records.append(data)
     state, history = records
-    if (len(state) < 8879 or state[5123] > 120 or len(state) != 8879+552*state[5123]
+    trailer = 63 if state[:4] == b'PDDR' else 0
+    if (len(state) < 8879+trailer or state[5123] > 120 or len(state) != 8879+trailer+552*state[5123]
             or len(history) < 21 or history[16] > 20 or len(history) != 21+123*history[16]
-            or state[-8:-4] != history[8:12]):
+            or state[len(state)-8-trailer:len(state)-4-trailer] != history[8:12]):
         raise ValueError('Scheda e storico non coerenti')
     name = state[8:57].split(b'\0', 1)[0]
     if not name or len(name) > 48 or any(c < 32 or c > 126 for c in name):

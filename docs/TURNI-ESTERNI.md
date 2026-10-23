@@ -1,5 +1,9 @@
 # Durate legate a soggetti esterni — v0.58
 
+> Aggiornamento v0.59: [nomi locali di A/B/C e PDD27](NOMI-TURNI.md).
+> Il backup nativo v1 accetta PDD25/PDD26/PDD27; i riferimenti dei timer restano
+> stabili. Formati e limiti sotto descrivono la versione del titolo.
+
 Effetti numerici, extra difensivi e profili di riduzione possono ora attendere
 l'inizio o la fine del turno di un riferimento esterno **A, B o C**. Il proprio
 turno rimane distinto. Tutto funziona sul dispositivo offline; grafica del

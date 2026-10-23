@@ -1,5 +1,9 @@
 # Backup dal dispositivo al PC — v0.53
 
+> Aggiornamento v0.59: [nomi locali di A/B/C e PDD27](NOMI-TURNI.md).
+> Il backup nativo v1 accetta PDD25/PDD26/PDD27; i riferimenti dei timer restano
+> stabili. Formati e limiti sotto descrivono la versione del titolo.
+
 > Aggiornamento v0.58: [turni esterni A/B/C e PDD26](TURNI-ESTERNI.md).
 > Il backup nativo v1 accetta PDD25/PDD26; round e minuti/ore restano separati
 > dai turni. Formati e limiti sotto descrivono la versione storica del titolo.

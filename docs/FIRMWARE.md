@@ -1,8 +1,10 @@
-# Firmware PocketD-D 0.58 — durate dei turni esterni
+# Firmware PocketD-D 0.59 — nomi dei riferimenti esterni
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
+
+[Novità v0.59: editor dei nomi A/B/C, PDD27 e backup](NOMI-TURNI.md).
 
 [Novità v0.58: durate per i riferimenti esterni A/B/C, PDD26 e compatibilità backup](TURNI-ESTERNI.md).
 
@@ -1217,4 +1219,33 @@ accettano PDD25/PDD26; dieci prove Python del backup e codec/trasferimenti passa
 PDH2/lettura PDH1, USB9, backup PC v11, diagnostica v1 e partizioni invariati.
 Nuove catture `external-turn-*.png` native su host con dati sintetici;
 grafica e tasti conservati. Nessun flash, collaudo fisico, lettura Beyond
+o modifica della raccolta personale.
+
+## Incremento v0.59 — nomi locali dei riferimenti di turno
+
+[Editor, formati e limiti](NOMI-TURNI.md). I riferimenti A/B/C hanno nomi locali
+opzionali da 20 caratteri ASCII, modificabili sul dispositivo con tastiera a
+sei pagine, anteprima precedente/nuovo e conteggio dei timer assegnati/attivi.
+Conferma salva soltanto il nome, senza cambiare riferimenti, durate, PF,
+reazione o risorse; nessun RNG o storico. Il nome compare nella selezione e
+nell'anteprima del turno. Cancellazione, nessuna scrittura se invariato,
+errore di salvataggio con bozza conservata e annullamento completo.
+
+Passati: 165 test JavaScript, suite firmware completa, 28.160 nuovi casi core
+indipendenti e 105/105 viste LVGL host. Codec PDD27 con 0/1/120 poteri,
+migrazione PDD25/PDD26, nomi malformati con CRC valido, auto-copia e spazi,
+tutte le pagine della tastiera, nomi lunghi a capo, preview/cancel, errore e
+nuovo tentativo, cancellazione, salvataggio invariato, annullamento e ripristino
+nel banco host. Backup reale prodotto dal C con nomi e 50 riferimenti letto
+esattamente da PC e accettato dal validatore Python, senza aprire porte seriali;
+11 test Python del trasporto backup e ASan/UBSan su core nomi, timer e UI
+passati. Build PC/HTML autonomo ed ESP32-S3
+passati. Binario app 3.394.576 byte (partizione 4 MiB, 19% libera).
+
+Scritture PDD27/PDDR, fino a 75.182 byte, con lettura dei formati precedenti e
+nomi inizialmente vuoti. Backup nativo v1, anteprima PC e strumento Python
+aggiornati; USB9, PDH2/lettura PDH1, backup PC v11, diagnostica v1 e partizioni
+invariati. Nuove catture `turn-name-*.png` native su host con dati sintetici.
+Grafica e tasti conservati. Identità e associazioni restano manuali; niente
+Unicode o iniziativa automatica. Nessun flash, collaudo fisico, lettura Beyond
 o modifica della raccolta personale.

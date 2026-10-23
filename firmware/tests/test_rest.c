@@ -32,7 +32,7 @@ int main(void){
  for(unsigned i=0;i<20;i++)s.recovery.pools[i]=(pd_hit_die){.name="Classe",.die=12,.maximum=20,.used=i};
  size_t n=pd_encode(&s,15,data);assert(pd_decode(data,n,&next,&generation)&&generation==15&&next.recovery.count==20&&next.recovery.pools[19].used==19);
  /* CRC-valid malformed recovery data still fails without touching outputs. */
- size_t start=n-3715;unsigned offsets[]={0,1,43,44,45};unsigned bad[]={2,21,7,21,21};
+ size_t start=n-3778;unsigned offsets[]={0,1,43,44,45};unsigned bad[]={2,21,7,21,21};
  for(unsigned i=0;i<5;i++) {
   n=pd_encode(&s,15,data);data[start+offsets[i]]=bad[i];uint32_t crc=pd_crc32(data,n-4);for(unsigned j=0;j<4;j++)data[n-4+j]=crc>>(8*j);
   before=next;generation=77;assert(!pd_decode(data,n,&next,&generation)&&generation==77&&!memcmp(&next,&before,sizeof next));
