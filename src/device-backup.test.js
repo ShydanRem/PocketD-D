@@ -22,7 +22,7 @@ test('all truncations and corrupt encoded data reject without a partial preview'
 });
 test('canonical base64 padding and bounded native headers are required',()=>{
  const p=JSON.parse(raw),alphabet='ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';const pos=p.state.length-2;assert.equal(p.state.at(-1),'=');const index=alphabet.indexOf(p.state[pos]);p.state=p.state.slice(0,pos)+alphabet[index+1]+'=';assert.throws(()=>inspectDeviceBackup(JSON.stringify(p)));
- assert.throws(()=>inspectDeviceBackup(edit('state',b=>b[3]=83)));assert.throws(()=>inspectDeviceBackup(edit('state',b=>b[5123]=121)));assert.throws(()=>inspectDeviceBackup(edit('state',b=>b[5123]=120)));
+ assert.throws(()=>inspectDeviceBackup(edit('state',b=>b[3]=84)));assert.throws(()=>inspectDeviceBackup(edit('state',b=>b[5123]=121)));assert.throws(()=>inspectDeviceBackup(edit('state',b=>b[5123]=120)));
 });
 test('even with valid CRC, mismatching epochs and malformed roll math reject',()=>{
  assert.throws(()=>inspectDeviceBackup(edit('history',(b,v)=>v.setUint32(8,1,true))));
@@ -71,4 +71,25 @@ test('PDD27 rejects noncanonical, overlong and non-ASCII aliases even with valid
 test('pre-name PDD25 and PDD26 backups default aliases without inventing participant identity',()=>{
  assert.deepEqual(inspectDeviceBackup(raw).turnNames,['','','']);
  assert.deepEqual(inspectDeviceBackup(edit('state',b=>b[3]=81)).turnNames,['','','']);
+});
+
+function withPayments(values,tag=83){
+ const packet=JSON.parse(withTurnNames(['Ally A','',''])),bytes=Uint8Array.from(atob(packet.state),c=>c.charCodeAt(0));
+ bytes[3]=tag;values.forEach((value,i)=>bytes[8333+552*bytes[5123]+10*i]=value);
+ new DataView(bytes.buffer).setUint32(bytes.length-4,crc32(bytes.subarray(0,-4)),true);
+ packet.state=btoa(String.fromCharCode(...bytes));return JSON.stringify(packet);
+}
+test('PDD28 exposes payment modes, keeps both stages and preserves the original packet',()=>{
+ for(const stage of [0,1]){
+  const encoded=withPayments([2+stage,stage,2+stage]),p=inspectDeviceBackup(encoded);
+  assert.deepEqual(p.payments,[1,0,1]);assert.deepEqual(p.turnNames,['Ally A','','']);
+  assert.deepEqual(p.packet,JSON.parse(encoded));assert.equal(p.rolls.length,20);assert.equal(p.nativeValidation,false);
+ }
+ for(const encoded of [raw,edit('state',b=>b[3]=81),withPayments([0,1,0],82)])assert.deepEqual(inspectDeviceBackup(encoded).payments,[0,0,0]);
+});
+test('PDD28 rejects reserved payment bits and older tags cannot reinterpret alternatives',()=>{
+ for(let row=0;row<3;row++)for(const value of [4,5,128,255]){
+  const values=[0,0,0];values[row]=value;assert.throws(()=>inspectDeviceBackup(withPayments(values)));
+ }
+ assert.throws(()=>inspectDeviceBackup(withPayments([2,0,0],82)));
 });

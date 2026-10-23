@@ -88,7 +88,7 @@ class BackupTests(unittest.TestCase):
         encoded = json.dumps(packet).encode()
         backup.validate(encoded)
         self.assertEqual(backup.acquire(Port(frame(encoded)), lambda _: None), encoded)
-        state[3] = ord('S')
+        state[3] = ord('T')
         state[-4:] = zlib.crc32(state[:-4]).to_bytes(4, 'little')
         packet['state'] = base64.b64encode(state).decode()
         with self.assertRaises(ValueError):
@@ -123,6 +123,22 @@ class BackupTests(unittest.TestCase):
                 backup.save_new(link, RAW)
             self.assertEqual(path.read_bytes(), RAW)
             self.assertEqual(sorted(p.name for p in Path(directory).iterdir()), ['link.json', 'snapshot.json'])
+
+    def test_pdd28_payment_bits_are_transferred_without_changing_the_record(self):
+        packet = json.loads(RAW)
+        state = bytearray(base64.b64decode(packet['state']))
+        state = state[:-4] + bytearray(63+4)
+        state[3] = ord('S')
+        for row, value in enumerate([2, 1, 3]):
+            state[8333+552*state[5123]+10*row] = value
+        state[-4:] = zlib.crc32(state[:-4]).to_bytes(4, 'little')
+        packet['state'] = base64.b64encode(state).decode()
+        encoded = json.dumps(packet).encode()
+        backup.validate(encoded)  # Transport integrity; full rules are checked by firmware.
+        self.assertEqual(backup.acquire(Port(frame(encoded)), lambda _: None), encoded)
+        port = Port(b'PDD BACKUP_READY 1\nPDD WAIT_RESTORE\nPDD RESTORED\n')
+        backup.restore(port, encoded, lambda _: None)
+        self.assertEqual(json.loads(port.sent.splitlines()[-1]), packet)
 
     def test_invalid_file_never_creates_output_or_sends_payload(self):
         with tempfile.TemporaryDirectory() as directory:

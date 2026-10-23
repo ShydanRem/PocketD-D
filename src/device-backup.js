@@ -20,8 +20,8 @@ function record(text,magic,max){
 }
 function text(bytes,start,capacity,empty=false){let end=start;while(end<start+capacity&&bytes[end]){if(bytes[end]<32||bytes[end]>126)fail();end++}if(end===start+capacity||(!empty&&end===start))fail();return String.fromCharCode(...bytes.subarray(start,end))}
 export function inspectDeviceBackup(raw){
-  const packet=envelope(raw),s=record(packet.state,['PDDP','PDDQ','PDDR'],75182),h=record(packet.history,'PDH1',2481),b=s.bytes,v=s.view;
-  const named=b[3]===82,trailer=named?63:0;
+  const packet=envelope(raw),s=record(packet.state,['PDDP','PDDQ','PDDR','PDDS'],75182),h=record(packet.history,'PDH1',2481),b=s.bytes,v=s.view;
+  const named=b[3]===82||b[3]===83,trailer=named?63:0;
   if(b.length<8879+trailer||b[5123]>120||b.length!==8879+trailer+552*b[5123])fail();
   // PDD26 packs the local turn subject into the existing timer-selector bytes.
   const turnSubjects=[0,0,0],packed=b[3]===81||named;
@@ -34,6 +34,7 @@ export function inspectDeviceBackup(raw){
   const epoch=v.getUint32(b.length-8-trailer,true),walletAt=b.length-29-trailer,available=b[walletAt];if(available>1)fail();
   const wallet={available:Boolean(available)};['cp','sp','ep','gp','pp'].forEach((key,i)=>{const value=v.getUint32(walletAt+1+4*i,true);if(value>999999999||(!available&&value))fail();wallet[key]=value});
   const turnNames=named?[0,1,2].map(i=>{const at=b.length-67+i*21,name=text(b,at,21,true);if(name!==name.trim()||b.subarray(at+name.length,at+21).some(x=>x))fail();return name}):['','',''];
+  const payments=[0,1,2].map(i=>{const raw=b[8333+offset+i*10],payment=b[3]===83?raw>>>1:0,stage=b[3]===83?raw&1:raw;if(stage>1||payment>1)fail();return payment});
   const keys=Array.from(b.subarray(5161,5164)),brightness=b[7911+offset],dim=b[7912+offset];if(keys.some(k=>k>13)||brightness<10||brightness>100||dim>3)fail();
   const hb=h.bytes,hv=h.view;if(hb.length<21)fail();const count=hb[16],sequence=hv.getUint32(12,true);
   if(count>20||hb.length!==21+123*count||hv.getUint32(8,true)!==epoch||sequence<count||(!count&&sequence))fail();
@@ -47,5 +48,5 @@ export function inspectDeviceBackup(raw){
   }
   // This is an integrity check and a bounded preview. The device runs the full
   // native validators for all remaining rules before offering Restore.
-  return {nativeValidation:false,packet,name,level,hp,maxHp,baseHp,tempHp,armor,baseArmor,effects,items:b[435],powers:b[5123],resources:b[71],wallet,keys,brightness,dim,turnSubjects,turnNames,rolls};
+  return {nativeValidation:false,packet,name,level,hp,maxHp,baseHp,tempHp,armor,baseArmor,effects,items:b[435],powers:b[5123],resources:b[71],wallet,keys,brightness,dim,turnSubjects,turnNames,payments,rolls};
 }

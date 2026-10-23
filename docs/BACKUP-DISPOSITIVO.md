@@ -1,5 +1,10 @@
 # Backup dal dispositivo al PC — v0.53
 
+> Aggiornamento v0.60: [costi alternativi per colpo](COSTI-ALTERNATIVI.md).
+> Ogni profilo supporta Tutte oppure Una scelta. PDD28/PDDS mantiene la dimensione
+> di PDD27; backup nativo v1 e strumenti aggiornati accettano PDD25–PDD28.
+> Descrizioni e limiti successivi si riferiscono alla versione storica del titolo.
+
 > Aggiornamento v0.59: [nomi locali di A/B/C e PDD27](NOMI-TURNI.md).
 > Il backup nativo v1 accetta PDD25/PDD26/PDD27; i riferimenti dei timer restano
 > stabili. Formati e limiti sotto descrivono la versione del titolo.

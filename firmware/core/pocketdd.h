@@ -80,9 +80,10 @@ typedef struct {
 #define PD_REDUCTION_PROFILES 3
 #define PD_TIMED_DEFENCES (PD_DEFENCE_GRANTS + PD_REDUCTION_PROFILES)
 #define PD_PROFILE_COSTS 3
+enum { PD_PAYMENT_ALL,PD_PAYMENT_CHOOSE };
 typedef struct { uint8_t kind,index; uint16_t amount; } pd_cost;
 /* Local reusable budget; applying it to an impact is always explicit. */
-typedef struct { uint16_t value,types; uint8_t stage,rule; bool active,timed; uint8_t rounds,concentration,cost_kind,cost_index; uint16_t cost; bool reaction; uint8_t tick; uint16_t minutes; pd_cost extra_costs[PD_PROFILE_COSTS-1]; uint8_t owner; } pd_reduction_profile;
+typedef struct { uint16_t value,types; uint8_t stage,rule; bool active,timed; uint8_t rounds,concentration,cost_kind,cost_index; uint16_t cost; bool reaction; uint8_t tick; uint16_t minutes; pd_cost extra_costs[PD_PROFILE_COSTS-1]; uint8_t owner,payment; } pd_reduction_profile;
 typedef struct { uint8_t effects_advanced,effects_expired; uint64_t defences_advanced,defences_expired; /* Extra bits slot*13+type, profile bits 39+index. */ } pd_round_summary;
 typedef struct {
     char name[PD_NAME_BYTES];

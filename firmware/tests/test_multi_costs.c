@@ -48,7 +48,7 @@ int main(void){
  n=pd_encode(&s,220,data);assert(pd_decode(data,n,&out,&gen)&&out.reductions[2].cost_index==119&&out.reductions[2].extra_costs[0].index==59&&out.reductions[2].extra_costs[1].index==8);
  /* All 24 extension bytes checked with valid CRC; maximum record and old L preserved. */
  setup(&s);s.magic.count=120;for(unsigned i=3;i<120;i++)s.magic.powers[i]=(pd_power){.name="Magia",.flags=PD_PREPARED};for(unsigned i=0;i<3;i++){p=(pd_reduction_profile){.cost_kind=PD_COST_COUNTER,.cost=1};pd_profile_cost_set(&p,1,(pd_cost){PD_COST_POWER,1,9});pd_profile_cost_set(&p,2,(pd_cost){PD_COST_ITEM,2,999});assert(pd_reduction_profile_set(&s,i,p));}
- n=pd_encode(&s,220,data);assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDR",4)&&pd_decode(data,n,&out,&gen));
+ n=pd_encode(&s,220,data);assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDS",4)&&pd_decode(data,n,&out,&gen));
  for(unsigned i=0;i<24;i++){pd_encode(&s,220,data);data[n-117+i]=255;crc(data,n);before=out;gen=5;assert(!pd_decode(data,n,&out,&gen)&&gen==5&&!memcmp(&out,&before,sizeof out));}
  for(unsigned i=0;i<3;i++){pd_encode(&s,220,data);data[n-117+i*8]=PD_COST_COUNTER;data[n-117+i*8+1]=0;data[n-117+i*8+2]=1;crc(data,n);assert(!pd_decode(data,n,&out,&gen));}
  pd_encode(&s,220,data);data[3]='L';size_t old=n-113;crc(data,old);assert(pd_decode(data,old,&out,&gen)&&out.reductions[0].cost_kind==PD_COST_COUNTER&&!out.reductions[0].extra_costs[0].kind&&out.items[2].charges.maximum==999);

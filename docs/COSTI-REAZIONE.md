@@ -1,5 +1,10 @@
 # Costi dei profili e reazione — v0.37
 
+> Aggiornamento v0.60: [costi alternativi per colpo](COSTI-ALTERNATIVI.md).
+> Ogni profilo supporta Tutte oppure Una scelta. PDD28/PDDS mantiene la dimensione
+> di PDD27; backup nativo v1 e strumenti aggiornati accettano PDD25–PDD28.
+> Descrizioni e limiti successivi si riferiscono alla versione storica del titolo.
+
 **Aggiornamento v0.42:** [spese multiple](COSTI-MULTIPLI.md) disponibili: fino a
 tre fonti distinte per profilo più reazione, confermate insieme. Formato NVS
 corrente PDD22; USB8 e backup PC v11 invariati. Le misure e le limitazioni

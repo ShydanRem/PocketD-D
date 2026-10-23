@@ -95,6 +95,15 @@ name_gallery=Image.new('RGB',(466*2,466*2),'black')
 for i,name in enumerate(('editor','confirm','home','named-event')):
     name_gallery.paste(Image.open(BASE/f'turn-name-{name}.png'),(i%2*466,i//2*466))
 name_gallery.save(BASE/'turn-name-gallery.png')
+alternative_views=('incomplete','editor','profile-confirm','unresolved','choices','selected',
+                   'save-error','result','paid','not-chosen','reaction-block','hole-long',
+                   'concentration-retry','death-result')
+for name in alternative_views:
+    Image.open(BASE/f'alternative-{name}.ppm').save(BASE/f'alternative-{name}.png')
+alternative_gallery=Image.new('RGB',(466*2,466*2),'black')
+for i,name in enumerate(('editor','choices','selected','not-chosen')):
+    alternative_gallery.paste(Image.open(BASE/f'alternative-{name}.png'),(i%2*466,i//2*466))
+alternative_gallery.save(BASE/'alternative-costs-gallery.png')
 frames=[Image.open(BASE/f'ux-transition-{i:02d}.ppm').convert('RGB') for i in range(5)]
 frames[0].save(BASE/'ui-transition.gif',save_all=True,append_images=frames[1:],duration=[40,40,40,40,1000],loop=0,disposal=2,optimize=True)
 print(f'UI: {len(records)} production views, overview, offline catalog and transition exported')

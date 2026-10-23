@@ -1,9 +1,9 @@
-# Primo avvio e sessione di collaudo — v0.59
+# Primo avvio e sessione di collaudo — v0.60
 
 Questa versione prepara il **blocco 3, prodotto fisico**. L'hardware è in
 arrivo: tutte le prove fisiche sotto sono **da eseguire**, nessuna è già passata.
-La grafica approvata è conservata; la v0.59 permette di nominare i riferimenti
-esterni sul dispositivo e porta la copertura host a 105/105, senza attestare un esito fisico.
+La grafica approvata è conservata; la v0.60 aggiunge la scelta di una fonte
+alternativa per colpo e porta la copertura host a 106/106, senza attestare un esito fisico.
 
 L'obiettivo della prima prova è trasferire una scheda nota, giocare offline,
 conservare i progressi dopo un riavvio e recuperarli da un backup. Batteria,
@@ -264,6 +264,21 @@ un avanzamento involontario. Provare un nome di 20 caratteri, Cancella, svuotame
 e Annulla. Acquisire una nuova copia nativa, confrontare le tre etichette sul
 PC, poi verificare riavvio e ripristino. Usare dati sintetici e registrare H26
 secondo [NOMI-TURNI.md](NOMI-TURNI.md). I nomi non verificano l'identità dei soggetti.
+
+## 11. Prova opzionale delle spese alternative — dopo il backup
+
+Con dati sintetici configurare due fonti distinte di costo 2 in un profilo
+attivo, impostare **Una scelta** e confermare la definizione. Portare il saldo
+di una fonte a 3 e dell'altra a 1. Applicare il profilo a un colpo noto:
+la conferma deve restare bloccata fino alla scelta esplicita. Nel selettore
+la seconda fonte è disabilitata; la prima resta selezionabile. Tornare
+indietro senza confermare conserva tutti i saldi. Ripetere e confermare:
+soltanto la prima fonte scende a 1, PF/temporanei seguono l'anteprima e la
+ricevuta mostra la seconda **Non scelta**. Verificare Annulla e che un nuovo
+colpo chieda di nuovo la fonte. Provare separatamente la reazione comune e
+il recupero esplicito all'inizio del proprio turno. Riavvio e backup/ripristino
+devono conservare la modalità, senza una scelta del colpo già compilata.
+Registrare H27 secondo [COSTI-ALTERNATIVI.md](COSTI-ALTERNATIVI.md).
 
 ## Registrazione dell'esito
 

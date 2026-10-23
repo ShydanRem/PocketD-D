@@ -19,9 +19,10 @@ typedef struct { unsigned type,amount; } pd_damage_component;
 typedef struct { unsigned count,concentration; pd_damage_component components[PD_DAMAGE_COMPONENTS]; pd_damage_context contexts[PD_DAMAGE_COMPONENTS];
     unsigned reductions[PD_DAMAGE_COMPONENTS],reduction_after; /* Explicit per-part before defences, then once per impact; each 0..9999. */
     unsigned profile,allocation[PD_DAMAGE_COMPONENTS]; /* 0:none, otherwise index+1. One shared pre-defence budget, or one final budget. */
+    unsigned payment_choice; /* ALL:0; CHOOSE:0 unresolved, otherwise cost row 1..3. */
 } pd_damage_event;
 typedef struct { unsigned type,amount,adjusted,flags,reduction; /* Actual pre-defence subtraction, before grouping/rounding. */ bool configured; uint8_t unresolved; /* Property bits not decided by the known source facts. */ } pd_damage_group;
-typedef struct { unsigned before,after; char name[41]; bool missing,unavailable; } pd_cost_receipt;
+typedef struct { unsigned before,after; char name[41]; bool missing,unavailable,selected; } pd_cost_receipt;
 typedef struct {
     pd_damage_summary total; /* flags meaningful only when there is one group. */
     unsigned raw,count;
@@ -29,6 +30,7 @@ typedef struct {
     unsigned profile,profile_count,profile_requested,profile_applied,profile_rows[PD_DAMAGE_COMPONENTS],profile_used[PD_DAMAGE_COMPONENTS]; /* Used/applied are zero when total.configured is false. */
     pd_reduction_profile profile_snapshot;
     pd_cost_receipt costs[PD_PROFILE_COSTS]; /* Frozen per-expense names and balances. */
+    unsigned payment_choice; bool payment_missing;
     bool cost_missing,cost_unavailable,reaction_missing,reaction_before,reaction_after; /* Availability blocks configured before RNG. */
     uint8_t profile_ineligible; bool profile_unavailable,profile_budget; /* These block total.configured. */
     uint16_t missing; /* Unconfigured damage-type bits. */

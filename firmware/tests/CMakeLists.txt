@@ -135,3 +135,7 @@ target_compile_options(external-turns PRIVATE -Wall -Wextra -Werror)
 add_executable(turn-names test_turn_names.c ../core/backup.c ../core/history.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
 target_include_directories(turn-names PRIVATE ../core)
 target_compile_options(turn-names PRIVATE -Wall -Wextra -Werror)
+
+add_executable(alternative-costs test_alternative_costs.c ../core/damage.c ../core/status.c ../core/backup.c ../core/history.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
+target_include_directories(alternative-costs PRIVATE ../core)
+target_compile_options(alternative-costs PRIVATE -Wall -Wextra -Werror)

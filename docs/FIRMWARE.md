@@ -1,8 +1,10 @@
-# Firmware PocketD-D 0.59 — nomi dei riferimenti esterni
+# Firmware PocketD-D 0.60 — costi alternativi delle riduzioni
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
+
+[Novità v0.60: scelta esplicita di una spesa per colpo, PDD28 e backup](COSTI-ALTERNATIVI.md).
 
 [Novità v0.59: editor dei nomi A/B/C, PDD27 e backup](NOMI-TURNI.md).
 
@@ -1249,3 +1251,35 @@ invariati. Nuove catture `turn-name-*.png` native su host con dati sintetici.
 Grafica e tasti conservati. Identità e associazioni restano manuali; niente
 Unicode o iniziativa automatica. Nessun flash, collaudo fisico, lettura Beyond
 o modifica della raccolta personale.
+
+## Incremento v0.60 — costi alternativi dei profili
+
+[Configurazione, applicazione e limiti](COSTI-ALTERNATIVI.md). Ogni profilo può
+richiedere Tutte le spese oppure Una scelta esplicita per colpo, con almeno due
+fonti configurate. Le altre fonti restano invariate anche se esaurite; nessun
+pagamento sostitutivo automatico. La reazione è comune al profilo. Anteprima,
+conferma, concentrazione, percorso morte e annullamento usano la stessa scelta;
+le ricevute congelate distinguono le fonti non scelte. La modalità persiste,
+la scelta del singolo colpo resta in RAM e viene azzerata per il nuovo impatto.
+
+Passati: 167 test JavaScript, suite firmware completa, 25.920 nuovi casi core
+indipendenti e 106/106 viste LVGL host. Verificati saldi e danni con stati attesi
+completi, selezione obbligatoria, fonti indisponibili non scelte, buchi, input
+malformati, reazione, danno zero, una/sei componenti, COS senza RNG sui blocchi,
+danni a zero PF/morte istantanea, record massimo e migrazione PDD27.
+UI: editor/anteprima, fonti disabilitate, errore di scrittura e retry,
+annullamento, ricevute congelate, nomi lunghi e candidato COS con un solo tiro.
+ASan/UBSan su core alternative e UI passati. Backup effettivamente prodotto
+in C con 120 poteri sintetici e modalità [1,0,1] letto esattamente dal PC e
+accettato dal validatore Python senza aprire porte seriali; 12 prove Python
+backup passate. Build Vite/HTML autonomo ed ESP32-S3 passate.
+Binario app 3.397.856 byte (partizione 4 MiB, 19% libera).
+
+Scritture PDD28/PDDS: modalità e fase compattate nello stesso byte, dimensione
+8942 + 552 × poteri, massimo 75.182 byte. Lettura dei precedenti formati con
+modalità Tutte; bit riservati rifiutati. Backup nativo v1, anteprima PC e
+trasporto Python aggiornati; USB9, PDH2/lettura PDH1, backup PC v11,
+diagnostica v1 e partizioni invariati. Catture `alternative-*.png` e galleria
+native LVGL host con dati inventati. Restano oltre tre fonti, gruppi di costi
+alternativi, variabili/opzionali e requisiti automatici. Nessun flash,
+collaudo fisico, lettura Beyond o modifica della raccolta personale.

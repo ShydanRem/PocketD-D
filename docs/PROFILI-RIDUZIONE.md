@@ -1,5 +1,10 @@
 # Profili locali di riduzione — v0.36
 
+> Aggiornamento v0.60: [costi alternativi per colpo](COSTI-ALTERNATIVI.md).
+> Ogni profilo supporta Tutte oppure Una scelta. PDD28/PDDS mantiene la dimensione
+> di PDD27; backup nativo v1 e strumenti aggiornati accettano PDD25–PDD28.
+> Descrizioni e limiti successivi si riferiscono alla versione storica del titolo.
+
 **Aggiornamento v0.38:** [costi in slot ordinari/patto](COSTI-SLOT.md), PDD18.
 **Base v0.37:** [costi espliciti e reazione](COSTI-REAZIONE.md), quarto
 confronto Costi e formato PDD17 della v0.37. Questa pagina documenta la base v0.36;

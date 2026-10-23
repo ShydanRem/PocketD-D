@@ -94,6 +94,10 @@ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as out:
     ui_files += ['turn-name-gallery.png']+[f'turn-name-{name}.png' for name in
                  ('empty','editor','confirm','save-error','home','preview','maximum',
                   'last-page','maximum-confirm','clear','named-event','restored')]
+    ui_files += ['alternative-costs-gallery.png']+[f'alternative-{name}.png' for name in
+                 ('incomplete','editor','profile-confirm','unresolved','choices','selected',
+                  'save-error','result','paid','not-chosen','reaction-block','hole-long',
+                  'concentration-retry','death-result')]
     for name in ui_files:
         image=preview/name
         if not image.is_file():raise SystemExit(f'Missing UI capture: {name}')

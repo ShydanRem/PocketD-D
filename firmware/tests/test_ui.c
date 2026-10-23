@@ -1336,13 +1336,55 @@ int main(void) {
     assert(pd_turn_name_set(&state,1,"Changed"));assert(stage_backup(&snapshot));click("Annulla");assert(!strcmp(state.turn_names[0],"Changed"));
     assert(stage_backup(&snapshot));click("Ripristina");assert(page==HERO&&!strcmp(state.turn_names[0],"The Mage")&&strlen(state.turn_names[1])==20&&state.effects[0].owner==1&&state.hp==42);screenshot("turn-name-restored.ppm");
     puts("Turn name UI: all keyboard pages, case/digits/space, full-length wrapping, preview/cancel, failed write/retry, unchanged-save no-write, clear, undo, named timer preview and native backup passed (synthetic)");
+    /* v0.60: explicitly choose exactly one alternative payment for each hit. */
+    pd_demo(&state);state.hp=state.max_hp=30;state.temp_hp=3;state.defences.configured=8191;state.resources[0].maximum=state.resources[0].current=3;
+    state.magic.available=true;state.magic.count=1;state.magic.powers[0]=(pd_power){.name="Limited power",.kind=1,.maximum=3,.remaining=1};state.items[2].quantity=1;state.items[2].charges=(pd_charges){0,3,0};
+    pd_reduction_profile alternative={.value=3,.types=8191,.stage=1,.active=true,.cost_kind=PD_COST_COUNTER,.cost=2};
+    assert(pd_reduction_profile_set(&state,0,alternative));profile_index=0;profile_cost_row=0;profile_cost_editing=true;profile_draft=alternative;page=PROFILE_COST;render();
+    effects_before=state;effects_saves=save_calls;effects_calls=random_calls;unsigned alternative_history=history_save_calls;
+    click("Tutte >");assert(profile_draft.payment==PD_PAYMENT_CHOOSE&&!state.reductions[0].payment);click("Indietro");click("Anteprima");screenshot("alternative-incomplete.ppm");act(2088);assert(page==PROFILE_CONFIRM&&save_calls==effects_saves&&!memcmp(&state,&effects_before,sizeof state));
+    pd_profile_cost_set(&alternative,1,(pd_cost){PD_COST_POWER,0,2});pd_profile_cost_set(&alternative,2,(pd_cost){PD_COST_ITEM,2,2});assert(pd_reduction_profile_set(&state,0,alternative));
+    profile_draft=alternative;profile_cost_row=0;profile_cost_editing=true;page=PROFILE_COST;render();click("Tutte >");screenshot("alternative-editor.ppm");click("Indietro");click("Anteprima");click("Dati >");click("Regola >");click("Durata >");screenshot("alternative-profile-confirm.ppm");
+    effects_before=state;fail_save=true;click("Conferma");assert(page==PROFILE_CONFIRM&&!memcmp(&state,&effects_before,sizeof state));fail_save=false;click("Conferma");assert(state.reductions[0].payment==PD_PAYMENT_CHOOSE);
+    page=STATUS_HOME;render();act(1800);damage_profile=1;damage_plan.amount=5;click("Anteprima");assert(page==DAMAGE_CONFIRM&&!damage_payment_choice);screenshot("alternative-unresolved.ppm");
+    effects_before=state;effects_saves=save_calls;act(1805);assert(save_calls==effects_saves&&!memcmp(&state,&effects_before,sizeof state));click("Spesa: da scegliere >");assert(page==PAYMENT_CHOICE&&confirmation_open());screenshot("alternative-choices.ppm");
+    assert(!stage_import(&snapshot.state)&&!stage_backup(NULL));shortcut(0);act(100);act(3503);act(3504);assert(page==PAYMENT_CHOICE&&!damage_payment_choice&&save_calls==effects_saves);
+    click("1. Slancio");assert(page==DAMAGE_CONFIRM&&damage_payment_choice==1&&!memcmp(&state,&effects_before,sizeof state));screenshot("alternative-selected.ppm");act(3500);click("Indietro");assert(damage_payment_choice==1);
+    fail_save=true;click("Conferma");assert(page==DAMAGE_CONFIRM&&!memcmp(&state,&effects_before,sizeof state));screenshot("alternative-save-error.ppm");fail_save=false;click("Conferma");
+    assert(page==DAMAGE_RESULT&&state.resources[0].current==1&&state.magic.powers[0].remaining==1&&!state.items[2].charges.current&&state.temp_hp==1&&state.hp==30);
+    assert(incoming_event.payment_choice==1&&incoming_event.costs[0].selected&&!incoming_event.costs[1].selected&&incoming_event.costs[1].before==incoming_event.costs[1].after&&random_calls==effects_calls&&history_save_calls==alternative_history);
+    screenshot("alternative-result.ppm");act(1805);assert(state.resources[0].current==1);click("Tipi");act(2050);act(2090);act(2105);assert(page==PROFILE_COST_IMPACT);screenshot("alternative-paid.ppm");click("Spesa 1/3 >");screenshot("alternative-not-chosen.ppm");
+    state.magic.powers[0].remaining=0;state.resources[0].current=0;strcpy(state.resources[0].name,"Changed");state.reductions[0].payment=PD_PAYMENT_ALL;render();assert(damage_details.payment_choice==1&&damage_details.costs[0].before==3&&damage_details.costs[0].after==1&&!strcmp(damage_details.costs[0].name,"Slancio"));
+    page=HERO;render();click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));
+    /* Explicitly changing choice is allowed before the hit; reaction remains common. */
+    state.magic.powers[0].remaining=3;state.items[2].charges.current=3;state.reductions[0].reaction=true;state.reaction_spent=true;
+    page=STATUS_HOME;render();act(1800);damage_profile=1;damage_plan.amount=5;click("Anteprima");act(3500);click("2. Limited power");assert(damage_payment_choice==2);screenshot("alternative-reaction-block.ppm");
+    click("Gestisci reazione");click("Inizio turno");click("Conferma");click("Indietro");assert(page==DAMAGE_CONFIRM&&damage_payment_choice==2&&!state.reaction_spent);click("Conferma");assert(state.magic.powers[0].remaining==1&&state.resources[0].current==3&&state.items[2].charges.current==3&&state.reaction_spent);
+    /* A long source name is clipped only in the compact picker, not the receipt. */
+    pd_demo(&state);state.hp=state.max_hp=30;state.temp_hp=3;state.defences.configured=8191;state.resources[0].maximum=state.resources[0].current=3;memset(state.resources[0].name,'W',32);state.resources[0].name[32]=0;state.items[2].quantity=0;state.items[2].charges=(pd_charges){3,3,0};
+    alternative=(pd_reduction_profile){.value=3,.types=8191,.stage=1,.active=true,.cost_kind=PD_COST_COUNTER,.cost=2,.payment=PD_PAYMENT_CHOOSE};pd_profile_cost_set(&alternative,2,(pd_cost){PD_COST_ITEM,2,2});assert(pd_reduction_profile_set(&state,0,alternative));
+    page=STATUS_HOME;render();act(1800);damage_profile=1;damage_plan.amount=5;click("Anteprima");act(3500);screenshot("alternative-hole-long.ppm");act(3503);act(3504);assert(page==PAYMENT_CHOICE&&!damage_payment_choice);act(3502);assert(page==DAMAGE_CONFIRM&&damage_payment_choice==1);
+    /* Concentration retry freezes payment and RNG together. */
+    pd_demo(&state);state.hp=state.max_hp=30;state.temp_hp=3;state.defences.configured=8191;state.resources[0].maximum=3;state.resources[0].current=0;state.items[2].quantity=0;state.items[2].charges=(pd_charges){0,3,0};
+    state.magic.available=true;state.magic.count=2;state.magic.powers[0]=(pd_power){.name="Limited power",.kind=1,.maximum=3,.remaining=3};state.magic.powers[1]=(pd_power){.name="Concentration",.flags=PD_PREPARED|PD_CONCENTRATES};state.magic.concentration=2;
+    alternative=(pd_reduction_profile){.value=3,.types=8191,.stage=1,.active=true,.cost_kind=PD_COST_COUNTER,.cost=2,.payment=PD_PAYMENT_CHOOSE,.concentration=2};pd_profile_cost_set(&alternative,1,(pd_cost){PD_COST_POWER,0,2});pd_profile_cost_set(&alternative,2,(pd_cost){PD_COST_ITEM,2,2});assert(pd_reduction_profile_set(&state,0,alternative));
+    pd_history_reset(&history,state.history_epoch);persisted_history=history;history_pending=false;page=STATUS_HOME;render();act(1800);damage_profile=1;damage_plan.amount=20;click("Anteprima");effects_calls=random_calls;act(1860);assert(page==DAMAGE_CONFIRM&&random_calls==effects_calls);act(3500);click("2. Limited power");click("Tira COS");assert(page==CONCENTRATION_SETUP);
+    effects_before=state;random_values[random_calls%2]=0;fail_save=true;click("Tira e applica");assert(concentration_rolled&&random_calls==effects_calls+1&&!memcmp(&state,&effects_before,sizeof state));act(3500);assert(page==CONCENTRATION_SETUP);screenshot("alternative-concentration-retry.ppm");
+    fail_save=false;click("Riprova");click("Accelera");assert(random_calls==effects_calls+1&&state.hp==16&&state.magic.powers[0].remaining==1&&!state.magic.concentration&&!state.reductions[0].active&&incoming_event.payment_choice==2&&incoming_event.costs[1].selected&&!incoming_event.costs[0].selected);
+    click("Eroe");click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));
+    /* Zero-HP resolution keeps the selected payment and never rolls here. */
+    state.hp=0;state.magic.concentration=0;state.reductions[0].concentration=0;state.status.available=true;state.magic.powers[0].remaining=0;state.resources[0].current=3;state.items[2].quantity=0;state.reductions[0].active=true;
+    page=STATUS_HOME;render();act(1800);damage_profile=1;damage_plan.amount=5;click("Anteprima");act(3500);click("1. Slancio");click("Risolvi registro morte");click("Colpo critico: da verificare >");click("Base 2014: da verificare");effects_calls=random_calls;click("Conferma");assert(state.resources[0].current==1&&!state.magic.powers[0].remaining&&state.status.failures==1&&state.temp_hp==1&&random_calls==effects_calls);screenshot("alternative-death-result.ppm");
+    /* Each new impact starts without a payment choice. */
+    click("Nuovo");assert(!damage_payment_choice&&!damage_profile);
+    puts("Alternative cost UI: mode edit/validation, explicit selection, missing balances/no fallback, retry/undo, frozen receipts, reaction, long names/holes, CON frozen retry and zero-HP integration passed (synthetic)");
     unsigned covered=0;
-    for(unsigned p=0;p<=TURN_NAME_CONFIRM;p++){
+    for(unsigned p=0;p<=PAYMENT_CHOICE;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)TURN_NAME_CONFIRM+1);
-    assert(covered==TURN_NAME_CONFIRM+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)PAYMENT_CHOICE+1);
+    assert(covered==PAYMENT_CHOICE+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

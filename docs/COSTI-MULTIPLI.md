@@ -1,5 +1,10 @@
 # Spese multiple sul dispositivo — v0.42
 
+> Aggiornamento v0.60: [costi alternativi per colpo](COSTI-ALTERNATIVI.md).
+> Ogni profilo supporta Tutte oppure Una scelta. PDD28/PDDS mantiene la dimensione
+> di PDD27; backup nativo v1 e strumenti aggiornati accettano PDD25–PDD28.
+> Descrizioni e limiti successivi si riferiscono alla versione storica del titolo.
+
 **Aggiornamento v0.43:** le [ricariche a dado](RICARICHE-OGGETTI.md) sono disponibili
 come evento esplicito, senza rilevare automaticamente alba o frequenza.
 PDD22/USB8/backup v11 invariati. Le limitazioni storiche sotto si riferiscono
