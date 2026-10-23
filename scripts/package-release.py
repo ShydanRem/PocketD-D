@@ -88,6 +88,9 @@ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as out:
     ui_files += ['death-roll-preview-gallery.png']+[f'death-roll-{name}.png' for name in
                  ('setup','cancelled','preview-cancelled','preview','save-error',
                   'advantage','disadvantage','minimum','twenty','maximum','one','no-canvas')]
+    ui_files += ['external-turn-gallery.png']+[f'external-turn-{name}.png' for name in
+                 ('effect','effect-confirm','defence','profile','home','empty',
+                  'preview','details','save-error','last','invalid')]
     for name in ui_files:
         image=preview/name
         if not image.is_file():raise SystemExit(f'Missing UI capture: {name}')

@@ -127,3 +127,7 @@ target_compile_options(death-damage PRIVATE -Wall -Wextra -Werror)
 add_executable(death-roll test_death_roll.c ../core/status.c ../core/history.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
 target_include_directories(death-roll PRIVATE ../core)
 target_compile_options(death-roll PRIVATE -Wall -Wextra -Werror)
+
+add_executable(external-turns test_external_turns.c ../core/backup.c ../core/history.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
+target_include_directories(external-turns PRIVATE ../core)
+target_compile_options(external-turns PRIVATE -Wall -Wextra -Werror)

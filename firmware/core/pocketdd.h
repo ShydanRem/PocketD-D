@@ -61,7 +61,7 @@ typedef struct { bool available; uint8_t count,successes,failures; bool stabiliz
 #define PD_EFFECTS 8
 enum { PD_EFFECT_ARMOR,PD_EFFECT_MAX_HP };
 /* Explicit additive deltas to the imported bases; no rule inferred from a label. */
-typedef struct { uint8_t target; int16_t value; bool active,timed; uint8_t rounds,concentration,tick; uint16_t minutes; /* concentration: 0 or current magic index + 1; tick: PD_TICK_*. */ } pd_effect;
+typedef struct { uint8_t target; int16_t value; bool active,timed; uint8_t rounds,concentration,tick; uint16_t minutes; uint8_t owner; /* 0 own turn, 1..3 external A/B/C. concentration: 0 or current magic index + 1; tick: PD_TICK_*. */ } pd_effect;
 #define PD_DAMAGE_TYPES 13
 enum { PD_RESISTANCE=1,PD_VULNERABILITY=2,PD_IMMUNITY=4 };
 enum { PD_RULE_ALWAYS,PD_RULE_MAGICAL,PD_RULE_NONMAGICAL,PD_RULE_NONMAGICAL_ATTACK,
@@ -69,7 +69,7 @@ enum { PD_RULE_ALWAYS,PD_RULE_MAGICAL,PD_RULE_NONMAGICAL,PD_RULE_NONMAGICAL_ATTA
 /* Three independent grants per type. Equal flags do not stack; base stays separate. */
 #define PD_DEFENCE_SLOTS 3
 #define PD_DEFENCE_GRANTS (PD_DAMAGE_TYPES * PD_DEFENCE_SLOTS)
-typedef struct { uint8_t flags; bool active,timed; uint8_t rounds,concentration,conditions[3],tick; uint16_t minutes; } pd_defence_temporary;
+typedef struct { uint8_t flags; bool active,timed; uint8_t rounds,concentration,conditions[3],tick; uint16_t minutes; uint8_t owner; } pd_defence_temporary;
 typedef struct {
     uint16_t configured,resistance,vulnerability,immunity;
     pd_defence_temporary temporary[PD_DAMAGE_TYPES];
@@ -81,7 +81,7 @@ typedef struct {
 #define PD_PROFILE_COSTS 3
 typedef struct { uint8_t kind,index; uint16_t amount; } pd_cost;
 /* Local reusable budget; applying it to an impact is always explicit. */
-typedef struct { uint16_t value,types; uint8_t stage,rule; bool active,timed; uint8_t rounds,concentration,cost_kind,cost_index; uint16_t cost; bool reaction; uint8_t tick; uint16_t minutes; pd_cost extra_costs[PD_PROFILE_COSTS-1]; } pd_reduction_profile;
+typedef struct { uint16_t value,types; uint8_t stage,rule; bool active,timed; uint8_t rounds,concentration,cost_kind,cost_index; uint16_t cost; bool reaction; uint8_t tick; uint16_t minutes; pd_cost extra_costs[PD_PROFILE_COSTS-1]; uint8_t owner; } pd_reduction_profile;
 typedef struct { uint8_t effects_advanced,effects_expired; uint64_t defences_advanced,defences_expired; /* Extra bits slot*13+type, profile bits 39+index. */ } pd_round_summary;
 typedef struct {
     char name[PD_NAME_BYTES];
@@ -139,6 +139,10 @@ bool pd_round_advance(pd_state *state,pd_round_summary *summary);
 enum { PD_TICK_ROUND,PD_TICK_START,PD_TICK_END,PD_TICK_MINUTES,PD_TICK_HOURS,PD_TICK_COUNT };
 /* Explicit own-turn edge; start also resets reaction, atomically with expiry. */
 bool pd_turn_advance(pd_state *state,bool start,pd_round_summary *summary);
+#define PD_TURN_SUBJECTS 4
+/* Explicit local subject 0=you, 1..3=A/B/C. Only subject 0 start resets reaction.
+   No initiative order or participant identity is inferred. Same atomic expiry contract. */
+bool pd_turn_advance_subject(pd_state *state,unsigned owner,bool start,pd_round_summary *summary);
 /* Elapsed game time 1..5940 minutes; chronological numeric expiry, atomic rollback. */
 bool pd_time_advance(pd_state *state,unsigned minutes,pd_round_summary *summary);
 unsigned pd_defence_base_flags(const pd_state *state,unsigned type);

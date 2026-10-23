@@ -61,7 +61,7 @@ int main(void){
  pd_demo(&s);for(unsigned i=0;i<PD_DAMAGE_TYPES;i++)assert(pd_defence_set(&s,i,true,i%8));
  s.magic.count=PD_POWERS;for(unsigned i=0;i<PD_POWERS;i++)s.magic.powers[i]=(pd_power){.name="Magia",.flags=PD_PREPARED};s.shortcuts[0]=12;
  static uint8_t data[PD_RECORD_SIZE];size_t n=pd_encode(&s,131,data);uint32_t gen;
- assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDP",4)&&pd_decode(data,n,&next,&gen)&&gen==131&&next.defences.configured==8191&&next.shortcuts[0]==12);
+ assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDQ",4)&&pd_decode(data,n,&next,&gen)&&gen==131&&next.defences.configured==8191&&next.shortcuts[0]==12);
  for(unsigned i=0;i<PD_DAMAGE_TYPES;i++)assert(pd_defence_flags(&next,i)==i%8);
  size_t start=n-917;const unsigned offsets[]={1,3,5,7};
  for(unsigned i=0;i<4;i++){pd_encode(&s,131,data);data[start+offsets[i]]|=0x80;crc(data,n);before=next;gen=99;assert(!pd_decode(data,n,&next,&gen)&&gen==99&&!memcmp(&next,&before,sizeof next));}

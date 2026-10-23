@@ -79,6 +79,14 @@ death_roll_gallery=Image.new('RGB',(466*2,466*2),'black')
 for i,name in enumerate(('setup','cancelled','save-error','advantage')):
     death_roll_gallery.paste(Image.open(BASE/f'death-roll-{name}.png'),(i%2*466,i//2*466))
 death_roll_gallery.save(BASE/'death-roll-preview-gallery.png')
+external_views=('effect','effect-confirm','defence','profile','home','empty',
+                'preview','details','save-error','last','invalid')
+for name in external_views:
+    Image.open(BASE/f'external-turn-{name}.ppm').save(BASE/f'external-turn-{name}.png')
+external_gallery=Image.new('RGB',(466*2,466*2),'black')
+for i,name in enumerate(('effect','home','preview','details')):
+    external_gallery.paste(Image.open(BASE/f'external-turn-{name}.png'),(i%2*466,i//2*466))
+external_gallery.save(BASE/'external-turn-gallery.png')
 frames=[Image.open(BASE/f'ux-transition-{i:02d}.ppm').convert('RGB') for i in range(5)]
 frames[0].save(BASE/'ui-transition.gif',save_all=True,append_images=frames[1:],duration=[40,40,40,40,1000],loop=0,disposal=2,optimize=True)
 print(f'UI: {len(records)} production views, overview, offline catalog and transition exported')

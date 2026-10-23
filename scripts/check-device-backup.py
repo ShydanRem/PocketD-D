@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Synthetic native backup transport/file tests. Never opens a serial port."""
+import base64
 import importlib.util
 import json
 from pathlib import Path
@@ -76,6 +77,22 @@ class BackupTests(unittest.TestCase):
         p = json.loads(RAW);p['state'] = '!'+p['state'][1:]
         with self.assertRaises(ValueError):
             backup.validate(json.dumps(p).encode())
+
+    def test_pdd26_records_are_transferred_intact_and_future_tags_reject(self):
+        packet = json.loads(RAW)
+        state = bytearray(base64.b64decode(packet['state']))
+        state[3] = ord('Q')
+        state[8375+552*state[5123]] = 9  # Explicit beginning of A, transport only.
+        state[-4:] = zlib.crc32(state[:-4]).to_bytes(4, 'little')
+        packet['state'] = base64.b64encode(state).decode()
+        encoded = json.dumps(packet).encode()
+        backup.validate(encoded)
+        self.assertEqual(backup.acquire(Port(frame(encoded)), lambda _: None), encoded)
+        state[3] = ord('R')
+        state[-4:] = zlib.crc32(state[:-4]).to_bytes(4, 'little')
+        packet['state'] = base64.b64encode(state).decode()
+        with self.assertRaises(ValueError):
+            backup.validate(json.dumps(packet).encode())
 
     def test_private_complete_file_and_existing_paths_preserved(self):
         with tempfile.TemporaryDirectory() as directory:

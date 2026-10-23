@@ -1,5 +1,9 @@
 # Backup dal dispositivo al PC — v0.53
 
+> Aggiornamento v0.58: [turni esterni A/B/C e PDD26](TURNI-ESTERNI.md).
+> Il backup nativo v1 accetta PDD25/PDD26; round e minuti/ore restano separati
+> dai turni. Formati e limiti sotto descrivono la versione storica del titolo.
+
 La v0.53 completa il percorso software di **acquisizione, anteprima e ripristino
 del backup nativo**. Il dispositivo resta il prodotto principale; il PC
 conserva i file e prepara il ripristino. Il trasferimento USB fisico, la tenuta

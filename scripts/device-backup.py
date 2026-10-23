@@ -31,13 +31,13 @@ def validate(raw):
             or obj['format'] != 'pocketdd-device-backup' or type(obj['version']) is not int or obj['version'] != 1):
         raise ValueError('Usa un backup nativo del dispositivo v1')
     records = []
-    for key, magic, maximum in [('state', b'PDDP', 75119), ('history', b'PDH1', 2481)]:
+    for key, magic, maximum in [('state', (b'PDDP', b'PDDQ'), 75119), ('history', (b'PDH1',), 2481)]:
         text = obj[key]
         if not isinstance(text, str) or not text or len(text) > 4*((maximum+2)//3):
             raise ValueError('Record nativo fuori limite')
         data = base64.b64decode(text, validate=True)
         if (base64.b64encode(data).decode('ascii') != text or len(data) < 8 or len(data) > maximum
-                or data[:4] != magic or zlib.crc32(data[:-4]) != int.from_bytes(data[-4:], 'little')):
+                or data[:4] not in magic or zlib.crc32(data[:-4]) != int.from_bytes(data[-4:], 'little')):
             raise ValueError('Record nativo corrotto o non supportato')
         records.append(data)
     state, history = records

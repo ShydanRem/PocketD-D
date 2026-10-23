@@ -1,8 +1,10 @@
-# Firmware PocketD-D 0.57 — tiri contro morte configurabili
+# Firmware PocketD-D 0.58 — durate dei turni esterni
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
+
+[Novità v0.58: durate per i riferimenti esterni A/B/C, PDD26 e compatibilità backup](TURNI-ESTERNI.md).
 
 [Novità v0.57: vantaggio, svantaggio e bonus espliciti nel tiro morte](TIRI-MORTE.md).
 
@@ -1193,3 +1195,26 @@ diagnostica v1 e partizioni invariati. Le nuove catture `death-roll-*.png`
 sono native su host con dati sintetici. Grafica e tasti conservati;
 bonus a dado, reroll e altre eccezioni restano manuali. Nessun flash,
 collaudo fisico, lettura Beyond o modifica della raccolta personale.
+
+## Incremento v0.58 — turni esterni e PDD26
+
+[Uso, formato e limiti](TURNI-ESTERNI.md). Le 50 durate di effetti numerici,
+extra difensivi e profili possono riferirsi al proprio turno oppure ad A/B/C.
+Gli editor dichiarano fase/soggetto e Altri turni apre selezione, anteprima,
+dettagli e conferma. Solo l'inizio del proprio turno recupera la reazione.
+Scadenze fuori limite rifiutano l'intero evento; nessun RNG o storico dei tiri.
+Le associazioni A/B/C restano manuali, senza identità, nomi o iniziativa automatica.
+
+Passati: 162 test JavaScript, suite firmware completa, 38.400 nuovi casi core
+indipendenti e 103/103 viste LVGL host. Verificati i tre editor, fasi e soggetti
+separati, pause, cap PF, rollback, conferma/annulla, nuovo tentativo dopo errore,
+annullamento completo, eventi vuoti senza scrittura, 50 scadenze e ultima pagina.
+ASan/UBSan su core e UI, build PC/HTML autonomo ed ESP32-S3 passati.
+Binario app 3.391.872 byte (partizione 4 MiB, 19% libera).
+Scritture PDD26/PDDQ con selettori compattati, dimensione record invariata e
+lettura dei precedenti formati. Backup nativo v1, decoder PC e trasporto Python
+accettano PDD25/PDD26; dieci prove Python del backup e codec/trasferimenti passati.
+PDH2/lettura PDH1, USB9, backup PC v11, diagnostica v1 e partizioni invariati.
+Nuove catture `external-turn-*.png` native su host con dati sintetici;
+grafica e tasti conservati. Nessun flash, collaudo fisico, lettura Beyond
+o modifica della raccolta personale.

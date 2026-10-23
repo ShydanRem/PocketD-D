@@ -1255,13 +1255,58 @@ int main(void) {
     roll_calls=random_calls;click("Stato");click("Lancia d20 base");click("Conferma");assert(page==HISTORY_HOME&&history_pending&&random_calls==roll_calls&&state.status.successes==1);
     fail_history=false;click("Riprova");assert(!history_pending&&history.entries[0].kind==PD_H_DEATH&&history.entries[0].mode==1&&random_calls==roll_calls);
     puts("Death roll UI: explicit advantage/disadvantage/cancellation/bonus, preview/cancel, natural 1/20 priority, signed totals, stable/dead/legacy blocks, frozen write retry, undo, canvas failure and journal retry passed (synthetic)");
+    /* v0.58: explicit external turn references and isolated timer expiry. */
+    pd_demo(&state);state.reaction_spent=true;state.hp=32;
+    assert(pd_effect_set(&state,0,(pd_effect){.target=PD_EFFECT_MAX_HP,.value=10,.active=true,.timed=true,.rounds=7,.tick=PD_TICK_END}));state.hp=42;
+    effect_index=0;effect_removing=false;effect_draft=state.effects[0];page=EFFECT_DURATION;render();effects_before=state;effects_calls=random_calls;effects_saves=save_calls;
+    click("Turno: mio >");assert(effect_draft.owner==1&&effect_draft.rounds==1);screenshot("external-turn-effect.ppm");
+    click("Anteprima");assert(page==EFFECT_CONFIRM&&!memcmp(&state,&effects_before,sizeof state));screenshot("external-turn-effect-confirm.ppm");
+    click("Conferma");assert(state.effects[0].owner==1&&state.effects[0].rounds==1&&state.hp==42);
+    assert(pd_effect_set(&state,1,(pd_effect){.value=2,.active=true,.timed=true,.rounds=2,.tick=PD_TICK_START,.owner=2}));
+    assert(pd_effect_set(&state,2,(pd_effect){.value=1,.active=true,.timed=true,.rounds=1,.tick=PD_TICK_START}));
+    assert(pd_defence_grant_set(&state,12,2,(pd_defence_temporary){.flags=1,.active=true,.timed=true,.rounds=1,.tick=PD_TICK_END,.owner=1}));
+    assert(pd_reduction_profile_set(&state,2,(pd_reduction_profile){.value=1,.types=8191,.active=true,.timed=true,.rounds=2,.tick=PD_TICK_END,.owner=1}));
+    /* The same subject selectors are available for defences and profiles. */
+    defence_index=12;defence_slot=2;defence_temporary_draft=*pd_defence_grant(&state,12,2);page=DEFENCE_DURATION;render();
+    click("Turno: A >");assert(defence_temporary_draft.owner==2&&defence_temporary_draft.rounds==1);screenshot("external-turn-defence.ppm");
+    act(1877);assert(!defence_temporary_draft.owner); /* Switching clock removes external ownership. */
+    profile_index=2;profile_draft=state.reductions[2];profile_number_rounds=true;profile_number_cost=false;page=PROFILE_NUMBER;render();
+    click("Turno: A >");click("Turno: B >");assert(profile_draft.owner==3&&profile_draft.rounds==1);screenshot("external-turn-profile.ppm");
+    act(2085);assert(page==PROFILE_DETAILS);act(2077);assert(!profile_draft.owner);
+    /* A/B/C selection is read-only; ordinary start/end remain the player's own. */
+    page=STATUS_HOME;render();click("Reazione");click("Altri turni");assert(page==EXTERNAL_TURN_HOME&&turn_owner==1&&confirmation_open());screenshot("external-turn-home.ppm");
+    effects_before=state;effects_saves=save_calls;effects_calls=random_calls;
+    assert(!stage_import(&snapshot.state)&&!stage_backup(NULL));shortcut(0);act(100);assert(page==EXTERNAL_TURN_HOME);
+    click("B");click("C");click("A");assert(!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves&&random_calls==effects_calls);
+    click("Inizio turno A");assert(page==REACTION_CONFIRM);screenshot("external-turn-empty.ppm");click("Conferma");assert(page==EXTERNAL_TURN_HOME&&save_calls==effects_saves&&!memcmp(&state,&effects_before,sizeof state));
+    click("Fine turno A");screenshot("external-turn-preview.ppm");click("Scadenze");assert(page==TURN_DETAILS);screenshot("external-turn-details.ppm");click("Riepilogo");click("Indietro");assert(!memcmp(&state,&effects_before,sizeof state));
+    click("Fine turno A");fail_save=true;click("Conferma");assert(page==REACTION_CONFIRM&&!memcmp(&state,&effects_before,sizeof state));screenshot("external-turn-save-error.ppm");fail_save=false;click("Conferma");
+    assert(page==EXTERNAL_TURN_HOME&&state.hp==32&&pd_max_hp(&state)==32&&!state.effects[0].active&&state.effects[1].rounds==2&&state.effects[2].active&&state.reaction_spent);
+    assert(!pd_defence_grant(&state,12,2)->active&&state.reductions[2].rounds==1&&random_calls==effects_calls);
+    act(2122);assert(page==EXTERNAL_TURN_HOME&&state.reductions[2].rounds==1); /* No queued duplicate confirmation. */
+    click("Indietro");click("Indietro");act(100);click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));
+    page=STATUS_HOME;render();click("Reazione");click("Altri turni");click("B");click("Inizio turno B");click("Conferma");assert(state.effects[1].rounds==1&&state.effects[2].active&&state.reaction_spent&&state.hp==42);
+    click("Indietro");click("Inizio turno");click("Conferma");assert(!state.effects[2].active&&!state.reaction_spent&&state.effects[1].rounds==1&&state.effects[0].active);
+    /* Backup/restore preserves references, including inactive definitions. */
+    snapshot.state=state;pd_history_reset(&snapshot.history,state.history_epoch);size_t external_size;char *external_json=pd_backup_encode(&state,&snapshot.history,&external_size);assert(external_json);
+    assert(pd_backup_decode(external_json,external_size,&snapshot)&&snapshot.state.effects[1].owner==2&&snapshot.state.reductions[2].owner==1);free(external_json);
+    /* All 50 eligible timers use the selected external edge, including the last bit. */
+    pd_demo(&state);state.reaction_spent=true;state.effect_count=8;
+    for(unsigned i=0;i<8;i++)state.effects[i]=(pd_effect){.value=1,.active=true,.timed=true,.rounds=1,.tick=PD_TICK_END,.owner=3};
+    for(unsigned slot=0;slot<3;slot++)for(unsigned type=0;type<13;type++)assert(pd_defence_grant_set(&state,type,slot,(pd_defence_temporary){.flags=1,.active=true,.timed=true,.rounds=1,.tick=PD_TICK_END,.owner=3}));
+    for(unsigned i=0;i<3;i++)assert(pd_reduction_profile_set(&state,i,(pd_reduction_profile){.value=1,.types=1,.active=true,.timed=true,.rounds=1,.tick=PD_TICK_END,.owner=3}));
+    page=STATUS_HOME;render();click("Reazione");click("Altri turni");click("C");click("Fine turno C");click("Scadenze");for(unsigned i=0;i<16;i++)click(">");screenshot("external-turn-last.ppm");assert(turn_detail_page==16);click("Riepilogo");click("Conferma");assert(state.reaction_spent&&pd_armor(&state)==state.armor&&!state.effects[7].active&&!state.reductions[2].active);
+    pd_demo(&state);state.armor=20;state.reaction_spent=true;
+    assert(pd_effect_set(&state,0,(pd_effect){.value=20,.active=true,.timed=true,.rounds=1,.tick=PD_TICK_START,.owner=1}));assert(pd_effect_set(&state,1,(pd_effect){.value=-20,.active=true,.timed=true,.rounds=2,.tick=PD_TICK_START,.owner=2}));
+    page=STATUS_HOME;render();click("Reazione");click("Altri turni");click("Inizio turno A");effects_before=state;effects_saves=save_calls;act(2122);assert(page==REACTION_CONFIRM&&save_calls==effects_saves&&!memcmp(&state,&effects_before,sizeof state));screenshot("external-turn-invalid.ppm");
+    puts("External turn UI: subject editors, clock reset, three references, own/external reaction isolation, preview/details/cancel, save retry/undo, empty no-write, all 50 expiries and native backup passed (synthetic)");
     unsigned covered=0;
-    for(unsigned p=0;p<=DEATH_ROLL_SETUP;p++){
+    for(unsigned p=0;p<=EXTERNAL_TURN_HOME;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)DEATH_ROLL_SETUP+1);
-    assert(covered==DEATH_ROLL_SETUP+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)EXTERNAL_TURN_HOME+1);
+    assert(covered==EXTERNAL_TURN_HOME+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

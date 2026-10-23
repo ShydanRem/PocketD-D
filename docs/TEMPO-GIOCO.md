@@ -1,5 +1,9 @@
 # Durate in minuti e ore — v0.40
 
+> Aggiornamento v0.58: [turni esterni A/B/C e PDD26](TURNI-ESTERNI.md).
+> Il backup nativo v1 accetta PDD25/PDD26; round e minuti/ore restano separati
+> dai turni. Formati e limiti sotto descrivono la versione storica del titolo.
+
 **Aggiornamento v0.41:** [cariche degli oggetti](CARICHE-OGGETTI.md) disponibili
 come saldo distinto dalla quantità, con configurazione PC, gestione sul dispositivo,
 costi e recuperi. Formati correnti: backup PC v11, USB8 e PDD21. Le verifiche

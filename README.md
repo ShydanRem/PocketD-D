@@ -2,16 +2,17 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.57:** [tiri contro morte configurabili](docs/TIRI-MORTE.md) sul dispositivo, con vantaggio/svantaggio, bonus numerico e anteprima. Naturale e totale restano distinti; 1 e 20 conservano gli effetti speciali. Scrittura fallita: tiro fissato e nuovo tentativo senza rilancio. Conservati il lancio base rapido, la grafica del compagno e i tasti configurabili; 102/102 viste LVGL host. Hardware in arrivo: nessuna prova fisica ancora eseguita.
+**Stato v0.58:** [durate legate a turni esterni A/B/C](docs/TURNI-ESTERNI.md) per effetti CA/PF massimi, difese e riduzioni. Selezione esplicita del soggetto, anteprima delle scadenze e conferma; solo il proprio inizio turno recupera la reazione. Conservati grafica e tasti configurabili; 103/103 viste LVGL host. Le associazioni dei riferimenti restano manuali. Hardware in arrivo: nessuna prova fisica ancora eseguita.
 
-Il firmware comprende borsello, storico, scheda, inventario, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Scheda PDD25, nuovi registri NVS PDH2 con lettura di PDH1, copia scheda USB9 e backup PC v11. Il backup nativo è un archivio distinto dal backup della raccolta PC. Regole speciali, altri effetti e prodotto fisico restano aperti.
+Il firmware comprende borsello, storico, scheda, inventario, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Scheda PDD26 con lettura dei formati precedenti, nuovi registri NVS PDH2 con lettura di PDH1, copia scheda USB9 e backup PC v11. Il backup nativo è un archivio distinto dal backup della raccolta PC. Regole speciali, altri effetti e prodotto fisico restano aperti.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
+- [Turni esterni A/B/C: scadenze, salvataggi e limiti v0.58](docs/TURNI-ESTERNI.md)
 - [Tiri contro morte: circostanze, bonus, persistenza e limiti v0.57](docs/TIRI-MORTE.md)
 - [Danni a zero PF: regola base esplicita, conferme e limiti v0.56](docs/DANNI-ZERO-PF.md)
 - [Collaudo locale del tocco e dei tasti configurabili v0.55](docs/COLLAUDO-COMANDI.md)
-- [Primo avvio: installazione, diagnostica e sessione guidata v0.57](docs/PRIMO-AVVIO.md)
+- [Primo avvio: installazione, diagnostica e sessione guidata v0.58](docs/PRIMO-AVVIO.md)
 - [Scheda da compilare durante il collaudo hardware](docs/COLLAUDO-HARDWARE.md)
 - [Backup del dispositivo: acquisizione, anteprima, ripristino e compatibilità v0.53](docs/BACKUP-DISPOSITIVO.md)
 - [Storico dei tiri: persistenza, tasti, errori e limiti v0.52](docs/STORICO-TIRI.md)

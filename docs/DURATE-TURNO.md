@@ -1,5 +1,9 @@
 # Durate del proprio turno — v0.39
 
+> Aggiornamento v0.58: [turni esterni A/B/C e PDD26](TURNI-ESTERNI.md).
+> Il backup nativo v1 accetta PDD25/PDD26; round e minuti/ore restano separati
+> dai turni. Formati e limiti sotto descrivono la versione storica del titolo.
+
 **Aggiornamento v0.40:** [minuti/ore e tempo di gioco](TEMPO-GIOCO.md), PDD20.
 Le limitazioni sui minuti/ore e il formato PDD19 sotto descrivono la v0.39.
 

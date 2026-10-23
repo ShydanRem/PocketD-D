@@ -39,7 +39,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME } page_t;
 static const pd_theme_kind page_themes[]={
     [HERO]=PD_THEME_NONE,
     [SHEET]=PD_THEME_SHEET,
@@ -143,6 +143,7 @@ static const pd_theme_kind page_themes[]={
     [INPUT_CHECK_KEYS]=PD_THEME_CHECK,
     [DAMAGE_DEATH]=PD_THEME_DAMAGE,
     [DEATH_ROLL_SETUP]=PD_THEME_STATUS,
+    [EXTERNAL_TURN_HOME]=PD_THEME_EFFECTS,
 };
 PD_EXT static pd_state state,previous,pending,scratch;
 static bool undo_available,import_pending,has_roll;
@@ -217,7 +218,7 @@ static bool rest_active,hit_rolled;
 PD_EXT static pd_state hit_candidate;
 static pd_pool hit_result;
 static unsigned hit_gained;
-static bool confirmation_open(void){return page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
+static bool confirmation_open(void){return page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
 static pd_damage_plan damage_plan; /* First component + explicit concentration choice. */
 static pd_damage_component damage_extra[PD_DAMAGE_COMPONENTS-1],damage_part_draft;
 static pd_damage_context damage_context,damage_extra_context[PD_DAMAGE_COMPONENTS-1],damage_part_context,source_context_draft;
@@ -273,17 +274,21 @@ static pd_reduction_profile profile_draft;
 static unsigned profile_cost_row;
 static bool profile_number_rounds,profile_number_cost,profile_cost_editing,reaction_draft,turn_end;
 static page_t reaction_return;
-static unsigned turn_detail_page,time_minutes=1,time_detail_page;
+static unsigned turn_detail_page,time_minutes=1,time_detail_page,turn_owner;
 static bool preview_time(pd_state *next,pd_round_summary *r){*next=state;return pd_time_advance(next,time_minutes,r);}
 static const char *duration_mark(unsigned tick){return (const char *const[]){"r","i","f","m","m"}[tick];}
 static unsigned duration_left(unsigned tick,unsigned rounds,unsigned minutes){return tick>=PD_TICK_MINUTES?minutes:rounds;}
 static void time_text(char *text,size_t size,unsigned minutes){snprintf(text,size,"%uh %umin",minutes/60,minutes%60);}
-static bool preview_turn(pd_state *next,pd_round_summary *r){*next=state;return pd_turn_advance(next,!turn_end,r);}
+static bool preview_turn(pd_state *next,pd_round_summary *r){*next=state;return pd_turn_advance_subject(next,turn_owner,!turn_end,r);}
 static const char *duration_mode(bool timed,unsigned tick){return !timed?"manuale":(const char *const[]){"round","inizio turno","fine turno","minuti","ore"}[tick];}
 static const char *duration_short(unsigned tick){return (const char *const[]){"round","inizio","fine","min","min"}[tick];}
-static void duration_next(bool *timed,uint8_t *tick,uint8_t *count,uint16_t *minutes){
+static const char *turn_subject(unsigned owner){return (const char *const[]){"mio","A","B","C"}[owner];}
+static const char *duration_owned(bool timed,unsigned tick,unsigned owner){return owner?(tick==PD_TICK_START?(const char *const[]){"","inizio A","inizio B","inizio C"}[owner]:(const char *const[]){"","fine A","fine B","fine C"}[owner]):duration_mode(timed,tick);}
+static const char *duration_owned_mark(unsigned tick,unsigned owner){return owner?(tick==PD_TICK_START?(const char *const[]){"","iA","iB","iC"}[owner]:(const char *const[]){"","fA","fB","fC"}[owner]):duration_mark(tick);}
+static bool turn_clock(unsigned tick){return tick==PD_TICK_START||tick==PD_TICK_END;}
+static void duration_next(bool *timed,uint8_t *tick,uint8_t *count,uint16_t *minutes,uint8_t *owner){
     if(!*timed){*timed=true;*tick=0;}else if(++*tick>=PD_TICK_COUNT){*timed=false;*tick=0;}
-    *count=*timed&&*tick<PD_TICK_MINUTES?1:0;*minutes=*timed&&*tick>=PD_TICK_MINUTES?(*tick==PD_TICK_HOURS?60:1):0;
+    *owner=0;*count=*timed&&*tick<PD_TICK_MINUTES?1:0;*minutes=*timed&&*tick>=PD_TICK_MINUTES?(*tick==PD_TICK_HOURS?60:1):0;
 }
 static void duration_adjust(unsigned tick,uint8_t *count,uint16_t *minutes,unsigned button){
     int delta=(tick==PD_TICK_HOURS?(const int[]){-60,-1,1,60}:(const int[]){-10,-1,1,10})[button];
@@ -638,14 +643,15 @@ static void act(intptr_t action) {
     if(page==DEFENCE_GRANT_REVIEW&&action!=1817&&action!=2010&&action!=2035&&action!=2036)return;
     if(page==DEFENCE_RULE_REVIEW&&action!=1817&&(action<2011||action>2014))return;
     if(page==DAMAGE_CONTEXT&&(action<2022||action>2027))return;
+    if(page==EXTERNAL_TURN_HOME&&(action<3201||action>3206))return;
     if(page==DEATH_ROLL_SETUP&&(action<3101||action>3106))return;
     if(page==DAMAGE_DEATH&&action!=1930&&(action<3001||action>3004))return;
     if(page==DAMAGE_CONFIRM&&action!=3000&&action!=1804&&action!=1805&&action!=1806&&action!=1807&&action!=1860&&action!=1930&&action!=2021&&action!=2117)return;
     if(page==DAMAGE_TYPES&&action!=2050&&(action<1931||action>1933))return;
     if(page==DAMAGE_REDUCTION&&action!=2060&&(action<2042||action>2048))return;
     if(page==DAMAGE_MATH&&action!=2051&&action!=2090)return;
-    if(page>=PROFILE_LIST&&page<=PROFILE_COST_IMPACT&&(action<2061||action>2110))return;
-    if(page==REACTION_HOME&&(action<2118||action>2123))return;
+    if(page>=PROFILE_LIST&&page<=PROFILE_COST_IMPACT&&(action<2061||action>2110)&&!(page==PROFILE_NUMBER&&action==3212))return;
+    if(page==REACTION_HOME&&(action<2118||action>2123)&&action!=3200)return;
     if(page==TIME_HOME&&(action<2141||action>2146))return;
     if(page==TIME_CONFIRM&&action!=2147&&action!=2148&&action!=2149)return;
     if(page==TIME_DETAILS&&(action<2150||action>2152))return;
@@ -991,7 +997,7 @@ static void act(intptr_t action) {
     else if(action==2074&&page==PROFILE_EDIT)page=PROFILE_DETAILS;
     else if(action==2075&&(page==PROFILE_EDIT||page==PROFILE_DETAILS)){profile_confirm_tab=0;profile_cost_row=0;page=PROFILE_CONFIRM;}
     else if(action==2076&&page==PROFILE_DETAILS)profile_draft.rule=(profile_draft.rule+1)%PD_RULE_COUNT;
-    else if(action==2077&&page==PROFILE_DETAILS){duration_next(&profile_draft.timed,&profile_draft.tick,&profile_draft.rounds,&profile_draft.minutes);}
+    else if(action==2077&&page==PROFILE_DETAILS){duration_next(&profile_draft.timed,&profile_draft.tick,&profile_draft.rounds,&profile_draft.minutes,&profile_draft.owner);}
     else if(action==2078&&page==PROFILE_DETAILS&&(profile_draft.concentration||state.magic.concentration))profile_draft.concentration=profile_draft.concentration?0:state.magic.concentration;
     else if(action==2079&&page==PROFILE_DETAILS&&profile_draft.timed){profile_number_cost=false;profile_number_rounds=true;page=PROFILE_NUMBER;}
     else if(action==2080&&page==PROFILE_DETAILS)page=PROFILE_EDIT;
@@ -1065,11 +1071,20 @@ static void act(intptr_t action) {
     else if(action==2166&&page==ITEM_CHARGES&&pd_item_charges_change(&next,item_index,(int)charge_draft-state.items[item_index].charges.current))page=ITEM_CHARGE_CONFIRM;
     else if(action==2167&&page==ITEM_CHARGE_CONFIRM)page=ITEM_CHARGES;
     else if(action==2168&&page==ITEM_CHARGE_CONFIRM){if(!pd_item_charges_change(&next,item_index,(int)charge_draft-state.items[item_index].charges.current))return;bool changed=memcmp(&next,&state,sizeof state)!=0;if(!changed||pd_storage_save(&next)){if(changed){previous=state;undo_available=true;state=next;invalidate_strike();}page=ITEM_CHARGES;}}
-    else if(action==2117&&(page==STATUS_HOME||page==DAMAGE_CONFIRM)){if(page==DAMAGE_CONFIRM){pd_damage_event e=current_damage_event();pd_damage_event_summary r;if(!pd_damage_event_preview(&state,&e,&r)||!r.reaction_missing)return;}reaction_return=page;page=REACTION_HOME;}
+    else if(action==2117&&(page==STATUS_HOME||page==DAMAGE_CONFIRM)){if(page==DAMAGE_CONFIRM){pd_damage_event e=current_damage_event();pd_damage_event_summary r;if(!pd_damage_event_preview(&state,&e,&r)||!r.reaction_missing)return;}reaction_return=page;turn_owner=0;page=REACTION_HOME;}
     else if(action==2118&&page==REACTION_HOME)page=reaction_return;
-    else if((action==2119||action==2120||action==2123)&&page==REACTION_HOME){if(action==2119&&state.reaction_spent)return;reaction_draft=action==2119;turn_end=action==2123;turn_detail_page=0;page=REACTION_CONFIRM;}
-    else if(action==2121&&page==REACTION_CONFIRM)page=REACTION_HOME;
-    else if(action==2122&&page==REACTION_CONFIRM){pd_round_summary r;if(reaction_draft?!pd_reaction_change(&next,true):!preview_turn(&next,&r))return;bool changed=memcmp(&next,&state,sizeof state)!=0;if(!changed||pd_storage_save(&next)){if(changed){previous=state;undo_available=true;state=next;invalidate_strike();}page=REACTION_HOME;}}
+    else if((action==2119||action==2120||action==2123)&&page==REACTION_HOME){if(action==2119&&state.reaction_spent)return;turn_owner=0;reaction_draft=action==2119;turn_end=action==2123;turn_detail_page=0;page=REACTION_CONFIRM;}
+    else if(action==2121&&page==REACTION_CONFIRM)page=turn_owner?EXTERNAL_TURN_HOME:REACTION_HOME;
+    else if(action==2122&&page==REACTION_CONFIRM){pd_round_summary r;if(reaction_draft?!pd_reaction_change(&next,true):!preview_turn(&next,&r))return;bool changed=memcmp(&next,&state,sizeof state)!=0;if(!changed||pd_storage_save(&next)){if(changed){previous=state;undo_available=true;state=next;invalidate_strike();}page=turn_owner?EXTERNAL_TURN_HOME:REACTION_HOME;}}
+    else if(action==3200&&page==REACTION_HOME){turn_owner=1;page=EXTERNAL_TURN_HOME;}
+    else if(page==EXTERNAL_TURN_HOME&&action>=3201&&action<=3206){
+        if(action<=3203)turn_owner=action-3200;
+        else if(action==3206){turn_owner=0;page=REACTION_HOME;}
+        else{reaction_draft=false;turn_end=action==3205;turn_detail_page=0;page=REACTION_CONFIRM;}
+    }
+    else if(action==3210&&page==EFFECT_DURATION&&effect_draft.timed&&turn_clock(effect_draft.tick)){effect_draft.owner=(effect_draft.owner+1)%PD_TURN_SUBJECTS;effect_draft.rounds=1;}
+    else if(action==3211&&page==DEFENCE_DURATION&&defence_temporary_draft.timed&&turn_clock(defence_temporary_draft.tick)){defence_temporary_draft.owner=(defence_temporary_draft.owner+1)%PD_TURN_SUBJECTS;defence_temporary_draft.rounds=1;}
+    else if(action==3212&&page==PROFILE_NUMBER&&profile_number_rounds&&profile_draft.timed&&turn_clock(profile_draft.tick)){profile_draft.owner=(profile_draft.owner+1)%PD_TURN_SUBJECTS;profile_draft.rounds=1;}
     else if(action==2124&&page==REACTION_CONFIRM&&!reaction_draft){pd_round_summary r;if(preview_turn(&next,&r)&&(r.effects_advanced||r.defences_advanced))page=TURN_DETAILS;}
     else if(action==2125&&page==TURN_DETAILS)page=REACTION_CONFIRM;
     else if(action==2126&&page==TURN_DETAILS&&turn_detail_page)turn_detail_page--;
@@ -1123,7 +1138,7 @@ static void act(intptr_t action) {
     else if(action>=1871&&action<=1874&&page==DEFENCE_TEMPORARY){if(action==1874)defence_temporary_draft.active=!defence_temporary_draft.active;else{defence_temporary_draft.flags^=1u<<(action-1871);if(!(defence_temporary_draft.flags&(1u<<(action-1871))))defence_temporary_draft.conditions[action-1871]=0;}}
     else if(action==1875&&page==DEFENCE_TEMPORARY)page=DEFENCE_EDIT;
     else if(action==1876&&page==DEFENCE_TEMPORARY)page=DEFENCE_DURATION;
-    else if(action==1877&&page==DEFENCE_DURATION){duration_next(&defence_temporary_draft.timed,&defence_temporary_draft.tick,&defence_temporary_draft.rounds,&defence_temporary_draft.minutes);}
+    else if(action==1877&&page==DEFENCE_DURATION){duration_next(&defence_temporary_draft.timed,&defence_temporary_draft.tick,&defence_temporary_draft.rounds,&defence_temporary_draft.minutes,&defence_temporary_draft.owner);}
     else if(action==1878&&page==DEFENCE_DURATION)page=DEFENCE_LINK;
     else if(action==1879&&page==DEFENCE_DURATION)page=DEFENCE_TEMPORARY;
     else if(action>=1880&&action<=1883&&page==DEFENCE_DURATION&&defence_temporary_draft.timed)duration_adjust(defence_temporary_draft.tick,&defence_temporary_draft.rounds,&defence_temporary_draft.minutes,action-1880);
@@ -1149,7 +1164,7 @@ static void act(intptr_t action) {
     else if(action==1707&&(effect_page+1)*3<state.effect_count)effect_page++;
     else if(action==1708&&page==EFFECT_CONFIRM)page=EFFECT_EDIT;
     else if(action==1710&&page==EFFECT_EDIT)page=EFFECT_DURATION;
-    else if(action==1711&&page==EFFECT_DURATION){duration_next(&effect_draft.timed,&effect_draft.tick,&effect_draft.rounds,&effect_draft.minutes);}
+    else if(action==1711&&page==EFFECT_DURATION){duration_next(&effect_draft.timed,&effect_draft.tick,&effect_draft.rounds,&effect_draft.minutes,&effect_draft.owner);}
     else if(action>=1712&&action<=1715&&page==EFFECT_DURATION&&effect_draft.timed)duration_adjust(effect_draft.tick,&effect_draft.rounds,&effect_draft.minutes,action-1712);
     else if(action==1716&&page==EFFECT_DURATION)page=EFFECT_EDIT;
     else if(action==1750&&page==EFFECT_DURATION)page=EFFECT_LINK;
@@ -1888,6 +1903,17 @@ static void render_settings(void){
     for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names[i],83+i*104,359,92,48,actions[i],true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
 }
 
+static void render_external_turn(void){
+    char text[100];label("Turni esterni",83,111,300,false);
+    for(unsigned i=1;i<PD_TURN_SUBJECTS;i++){
+        lv_obj_t *b=button(turn_subject(i),83+(i-1)*104,151,92,44,3200+i,true);
+        if(i==turn_owner)lv_obj_set_style_border_color(b,lv_color_hex(PD_GOLD),0);
+    }
+    small_label("Associa A/B/C ai soggetti con il DM",83,207,300,PD_GOLD);
+    snprintf(text,sizeof text,"Inizio turno %s",turn_subject(turn_owner));button(text,83,247,300,44,3204,true);
+    snprintf(text,sizeof text,"Fine turno %s",turn_subject(turn_owner));button(text,83,301,300,44,3205,true);
+    button("Indietro",83,359,300,48,3206,true);
+}
 static void render_death_roll_setup(void){
     char text[120];label("Tiro contro morte",83,111,300,false);
     snprintf(text,sizeof text,"Vantaggio: %s",status_options.advantage?"si":"no");lv_obj_t *a=button(text,83,151,144,44,3101,true);lv_obj_set_style_text_font(a,&lv_font_montserrat_16,0);
@@ -1989,7 +2015,7 @@ static void render_effects(void) {
             unsigned i=effect_page*3+row;if(i>=state.effect_count)break;
             const pd_effect *e=&state.effects[i];
             char duration[24];if(!e->timed)snprintf(duration,sizeof duration,"%s",e->active?"si":"no");
-            else if(!duration_left(e->tick,e->rounds,e->minutes))strcpy(duration,"scaduto");else snprintf(duration,sizeof duration,"%u%s%s",duration_left(e->tick,e->rounds,e->minutes),duration_mark(e->tick),e->active?"":" pausa");
+            else if(!duration_left(e->tick,e->rounds,e->minutes))strcpy(duration,"scaduto");else snprintf(duration,sizeof duration,"%u%s%s",duration_left(e->tick,e->rounds,e->minutes),duration_owned_mark(e->tick,e->owner),e->active?"":" pausa");
             snprintf(text,sizeof text,"%u. %s %+d | %s",i+1,e->target==PD_EFFECT_ARMOR?"CA":"PF max",e->value,duration);
             if(e->concentration)strcat(text," | C");
             lv_obj_t *b=button(text,83,159+row*48,300,44,1720+i,true);if(e->timed||e->concentration)lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
@@ -2009,12 +2035,12 @@ static void render_effects(void) {
         for(unsigned i=0;i<3;i++){lv_obj_t *b=button(actions[i],83+i*104,359,92,48,codes[i],true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
     } else if(page==EFFECT_DURATION) {
         label("Durata dell'effetto",83,111,300,true);
-        snprintf(text,sizeof text,"Durata: %s >",duration_mode(effect_draft.timed,effect_draft.tick));lv_obj_t *duration=button(text,83,157,300,44,1711,true);lv_obj_set_style_text_font(duration,&lv_font_montserrat_16,0);
+        snprintf(text,sizeof text,"Durata: %s >",duration_owned(effect_draft.timed,effect_draft.tick,effect_draft.owner));lv_obj_t *duration=button(text,83,157,300,44,1711,true);lv_obj_set_style_text_font(duration,&lv_font_montserrat_16,0);
         if(effect_draft.timed&&effect_draft.tick>=PD_TICK_MINUTES){if(effect_draft.tick==PD_TICK_HOURS)time_text(text,sizeof text,effect_draft.minutes);else snprintf(text,sizeof text,"%u minuti residui",effect_draft.minutes);}else if(effect_draft.timed)snprintf(text,sizeof text,effect_draft.tick?"%u passaggi residui":"%u round residui",effect_draft.rounds);else strcpy(text,"Senza scadenza");label(text,83,215,300,true);
         const char *names[]={"-10","-1","+1","+10"};
         for(unsigned i=0;i<4;i++)button(effect_draft.tick==PD_TICK_HOURS?(const char *const[]){"-1h","-1m","+1m","+1h"}[i]:names[i],83+i*78,263,66,44,1712+i,effect_draft.timed&&(i<2?duration_left(effect_draft.tick,effect_draft.rounds,effect_draft.minutes)>0:duration_left(effect_draft.tick,effect_draft.rounds,effect_draft.minutes)<(effect_draft.tick==PD_TICK_HOURS?5940:99)));
-        small_label(effect_draft.tick>=PD_TICK_MINUTES?"Tempo dal menu Stato":effect_draft.tick?"Passaggi dal menu Reazione":"Round manuali dal menu Effetti",83,319,300,PD_GOLD);
-        small_label("Disattivato: conteggio in pausa",83,339,300,PD_MUTED);
+        if(effect_draft.timed&&turn_clock(effect_draft.tick)){snprintf(text,sizeof text,"Turno: %s >",turn_subject(effect_draft.owner));button(text,83,311,300,44,3210,true);}
+        else{small_label(effect_draft.tick>=PD_TICK_MINUTES?"Tempo dal menu Stato":"Round manuali dal menu Effetti",83,319,300,PD_GOLD);small_label("Disattivato: conteggio in pausa",83,339,300,PD_MUTED);}
         const char *names2[]={"Indietro","Vincolo","Anteprima"};const unsigned codes[]={1716,1750,1704};
         for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names2[i],83+i*104,359,92,48,codes[i],true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
     } else if(page==EFFECT_LINK) {
@@ -2032,7 +2058,7 @@ static void render_effects(void) {
         snprintf(text,sizeof text,"Base: CA %u | PF max %u",state.armor,state.max_hp);small_label(text,83,151,300,PD_GOLD);
         small_label("Aggiungi solo bonus non gia inclusi",83,179,300,PD_GOLD);
         const pd_effect *e=effect_removing?&state.effects[effect_index]:&effect_draft;
-        if(e->timed)snprintf(text,sizeof text,"%u %s | %s",duration_left(e->tick,e->rounds,e->minutes),duration_short(e->tick),e->active?"attivo":"pausa");else strcpy(text,"Manuale");strcat(text,e->concentration?" | conc. si":" | conc. no");small_label(text,83,199,300,PD_MUTED);
+        if(e->timed)snprintf(text,sizeof text,"%u %s | %s",duration_left(e->tick,e->rounds,e->minutes),duration_owned(e->timed,e->tick,e->owner),e->active?"attivo":"pausa");else strcpy(text,"Manuale");strcat(text,e->concentration?" | conc. si":" | conc. no");small_label(text,83,199,300,PD_MUTED);
         if(valid){
             snprintf(text,sizeof text,"CA %u -> %u",pd_armor(&state),pd_armor(&scratch));label(text,83,219,300,false);
             snprintf(text,sizeof text,"PF massimi %u -> %u",pd_max_hp(&state),pd_max_hp(&scratch));label(text,83,251,300,false);
@@ -2181,10 +2207,11 @@ static void render_damage(void) {
         for(unsigned i=0;i<3;i++){lv_obj_t *b=button(actions[i],83+i*104,359,92,48,codes[i],true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
     } else if(page==DEFENCE_DURATION){
         label("Durata della difesa",83,111,300,true);
-        snprintf(text,sizeof text,"Durata: %s >",duration_mode(defence_temporary_draft.timed,defence_temporary_draft.tick));lv_obj_t *duration=button(text,83,157,300,44,1877,true);lv_obj_set_style_text_font(duration,&lv_font_montserrat_16,0);
+        snprintf(text,sizeof text,"Durata: %s >",duration_owned(defence_temporary_draft.timed,defence_temporary_draft.tick,defence_temporary_draft.owner));lv_obj_t *duration=button(text,83,157,300,44,1877,true);lv_obj_set_style_text_font(duration,&lv_font_montserrat_16,0);
         if(defence_temporary_draft.timed&&defence_temporary_draft.tick>=PD_TICK_MINUTES){if(defence_temporary_draft.tick==PD_TICK_HOURS)time_text(text,sizeof text,defence_temporary_draft.minutes);else snprintf(text,sizeof text,"%u minuti residui",defence_temporary_draft.minutes);}else if(defence_temporary_draft.timed)snprintf(text,sizeof text,defence_temporary_draft.tick?"%u passaggi residui":"%u round residui",defence_temporary_draft.rounds);else strcpy(text,"Senza scadenza");label(text,83,215,300,true);
         const char *names[]={"-10","-1","+1","+10"};for(unsigned i=0;i<4;i++)button(defence_temporary_draft.tick==PD_TICK_HOURS?(const char *const[]){"-1h","-1m","+1m","+1h"}[i]:names[i],83+i*78,263,66,44,1880+i,defence_temporary_draft.timed&&(i<2?duration_left(defence_temporary_draft.tick,defence_temporary_draft.rounds,defence_temporary_draft.minutes)>0:duration_left(defence_temporary_draft.tick,defence_temporary_draft.rounds,defence_temporary_draft.minutes)<(defence_temporary_draft.tick==PD_TICK_HOURS?5940:99)));
-        small_label(defence_temporary_draft.tick>=PD_TICK_MINUTES?"Tempo dal menu Stato":defence_temporary_draft.tick?"Passaggi dal menu Reazione":"1 round avanza anche gli effetti",83,319,300,PD_GOLD);small_label("Disattivata: conteggio in pausa",83,339,300,PD_MUTED);
+        if(defence_temporary_draft.timed&&turn_clock(defence_temporary_draft.tick)){snprintf(text,sizeof text,"Turno: %s >",turn_subject(defence_temporary_draft.owner));button(text,83,311,300,44,3211,true);}
+        else{small_label(defence_temporary_draft.tick>=PD_TICK_MINUTES?"Tempo dal menu Stato":"1 round avanza anche gli effetti",83,319,300,PD_GOLD);small_label("Disattivata: conteggio in pausa",83,339,300,PD_MUTED);}
         const char *actions[]={"Indietro","Vincolo","Anteprima"};const unsigned codes[]={1879,1878,1887};for(unsigned i=0;i<3;i++){lv_obj_t *b=button(actions[i],83+i*104,359,92,48,codes[i],true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
     } else if(page==DEFENCE_LINK){
         label("Vincolo della difesa",83,111,300,true);
@@ -2202,7 +2229,7 @@ static void render_damage(void) {
                 snprintf(text,sizeof text,"Base %s -> %s | #%u %s -> %s",pd_defence_base_flags(&state,defence_index)&(1u<<i)?"si":"no",defence_flags&(1u<<i)?"si":"no",defence_slot+1,old_defence()->flags&(1u<<i)?"si":"no",defence_temporary_draft.flags&(1u<<i)?"si":"no");small_label(text,83,177+i*52,300,PD_MUTED);
             }
             snprintf(text,sizeof text,"Base verificata: %s -> %s",state.defences.configured&(1u<<defence_index)?"si":"no",defence_configured?"si":"no");small_label(text,83,311,300,defence_configured?PD_GOLD:PD_DANGER);
-            if(defence_temporary_draft.timed)snprintf(text,sizeof text,"#%u: %s %u%s | conc. %s",defence_slot+1,defence_temporary_draft.active?"attiva":"pausa",duration_left(defence_temporary_draft.tick,defence_temporary_draft.rounds,defence_temporary_draft.minutes),duration_mark(defence_temporary_draft.tick),defence_temporary_draft.concentration?"si":"no");else snprintf(text,sizeof text,"#%u: %s | conc. %s",defence_slot+1,defence_temporary_draft.active?"attiva":"inattiva",defence_temporary_draft.concentration?"si":"no");small_label(text,83,333,300,PD_MUTED);
+            if(defence_temporary_draft.timed)snprintf(text,sizeof text,"#%u: %s %u%s | conc. %s",defence_slot+1,defence_temporary_draft.active?"attiva":"pausa",duration_left(defence_temporary_draft.tick,defence_temporary_draft.rounds,defence_temporary_draft.minutes),duration_owned_mark(defence_temporary_draft.tick,defence_temporary_draft.owner),defence_temporary_draft.concentration?"si":"no");else snprintf(text,sizeof text,"#%u: %s | conc. %s",defence_slot+1,defence_temporary_draft.active?"attiva":"inattiva",defence_temporary_draft.concentration?"si":"no");small_label(text,83,333,300,PD_MUTED);
         }else{
             label("Difesa da verificare",83,203,300,false);small_label("Attiva: scegli almeno una difesa",83,251,300,PD_DANGER);small_label("Timer: serve durata positiva",83,281,300,PD_DANGER);small_label("Vincolo: magia concentrata attuale",83,311,300,PD_MUTED);
         }
@@ -2236,7 +2263,7 @@ static void render_damage(void) {
         snprintf(text,sizeof text,"Prima: %s%s",a->flags?defence_caption(true,a->flags):"assente",(a->conditions[0]||a->conditions[1]||a->conditions[2])?" | cond.":"");small_label(text,83,211,300,PD_MUTED);
         snprintf(text,sizeof text,"Dopo: %s%s",d->flags?defence_caption(true,d->flags):"assente",(d->conditions[0]||d->conditions[1]||d->conditions[2])?" | cond.":"");small_label(text,83,241,300,PD_GOLD);
         snprintf(text,sizeof text,"Attivo: %s -> %s",a->active?"si":"no",d->active?"si":"no");small_label(text,83,273,300,PD_TEXT);
-        char old[24],updated[24];if(a->timed)snprintf(old,sizeof old,"%u%s",duration_left(a->tick,a->rounds,a->minutes),a->tick>=PD_TICK_MINUTES?"min":a->tick==PD_TICK_START?" inizio":a->tick==PD_TICK_END?" fine":"r");else strcpy(old,"manuale");if(d->timed)snprintf(updated,sizeof updated,"%u%s",duration_left(d->tick,d->rounds,d->minutes),d->tick>=PD_TICK_MINUTES?"min":d->tick==PD_TICK_START?" inizio":d->tick==PD_TICK_END?" fine":"r");else strcpy(updated,"manuale");snprintf(text,sizeof text,"Durata: %s -> %s",old,updated);small_label(text,83,303,300,PD_TEXT);
+        char old[24],updated[24];if(a->timed)snprintf(old,sizeof old,"%u%s",duration_left(a->tick,a->rounds,a->minutes),duration_owned_mark(a->tick,a->owner));else strcpy(old,"manuale");if(d->timed)snprintf(updated,sizeof updated,"%u%s",duration_left(d->tick,d->rounds,d->minutes),duration_owned_mark(d->tick,d->owner));else strcpy(updated,"manuale");snprintf(text,sizeof text,"Durata: %s -> %s",old,updated);small_label(text,83,303,300,PD_TEXT);
         snprintf(text,sizeof text,"Concentrazione: %s -> %s",a->concentration?"si":"no",d->concentration?"si":"no");small_label(text,83,333,300,PD_MUTED);
         button("Indietro",83,359,144,48,2035,true);button("Conferma",239,359,144,48,1817,valid);
     } else if(page==DAMAGE_REDUCTION){
@@ -2262,7 +2289,7 @@ static void render_damage(void) {
         const pd_reduction_profile *p=&state.reductions[profile_index];snprintf(text,sizeof text,"Profilo %u",profile_index+1);label(text,83,111,204,false);lv_obj_t *cost=button("Costi",299,99,84,44,2100,true);lv_obj_set_style_text_font(cost,&lv_font_montserrat_16,0);snprintf(text,sizeof text,"Budget %u per colpo",p->value);label(text,83,159,300,false);
         snprintf(text,sizeof text,"Tipi: %s",profile_types(p->types));small_label(text,83,205,300,PD_GOLD);snprintf(text,sizeof text,"%s difese | %s",p->stage?"Dopo":"Prima",p->active?"attivo":"inattivo");small_label(text,83,239,300,PD_TEXT);
         lv_obj_t *r=small_label(rule_descriptions[p->rule],83,273,300,PD_MUTED);lv_label_set_long_mode(r,LV_LABEL_LONG_WRAP);lv_obj_set_height(r,42);
-        if(p->timed)snprintf(text,sizeof text,"%u %s | conc. %s",duration_left(p->tick,p->rounds,p->minutes),duration_short(p->tick),p->concentration?"si":"no");else snprintf(text,sizeof text,"Manuale | concentrazione %s",p->concentration?"si":"no");small_label(text,83,325,300,PD_MUTED);
+        if(p->timed)snprintf(text,sizeof text,"%u %s | conc. %s",duration_left(p->tick,p->rounds,p->minutes),duration_owned(p->timed,p->tick,p->owner),p->concentration?"si":"no");else snprintf(text,sizeof text,"Manuale | concentrazione %s",p->concentration?"si":"no");small_label(text,83,325,300,PD_MUTED);
         const char *names[]={"Indietro","Modifica","Usa"};for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names[i],83+i*104,359,92,48,2066+i,i!=2||p->active);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
     } else if(page==PROFILE_EDIT){
         snprintf(text,sizeof text,"Configura profilo %u",profile_index+1);label(text,83,111,300,true);
@@ -2272,7 +2299,7 @@ static void render_damage(void) {
         const char *names[]={"Indietro","Dettagli","Anteprima"};for(unsigned i=0;i<3;i++){lv_obj_t *a=button(names[i],83+i*104,359,92,48,2073+i,true);lv_obj_set_style_text_font(a,&lv_font_montserrat_16,0);}
     } else if(page==PROFILE_DETAILS){
         label("Regola e durata",83,111,204,false);lv_obj_t *cost=button("Costi",299,99,84,44,2100,true);lv_obj_set_style_text_font(cost,&lv_font_montserrat_16,0);snprintf(text,sizeof text,"Regola: %s >",rule_names[profile_draft.rule]);lv_obj_t *b=button(text,83,157,300,44,2076,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
-        snprintf(text,sizeof text,"Durata: %s >",duration_mode(profile_draft.timed,profile_draft.tick));lv_obj_t *duration=button(text,83,205,300,44,2077,true);lv_obj_set_style_text_font(duration,&lv_font_montserrat_16,0);
+        snprintf(text,sizeof text,"Durata: %s >",duration_owned(profile_draft.timed,profile_draft.tick,profile_draft.owner));lv_obj_t *duration=button(text,83,205,300,44,2077,true);lv_obj_set_style_text_font(duration,&lv_font_montserrat_16,0);
         b=button(profile_draft.concentration?"Concentrazione: si >":"Concentrazione: no >",83,253,300,44,2078,profile_draft.concentration||state.magic.concentration);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
         snprintf(text,sizeof text,profile_draft.tick>=PD_TICK_MINUTES?"Minuti residui: %u >":profile_draft.tick?"Passaggi residui: %u >":"Round residui: %u >",duration_left(profile_draft.tick,profile_draft.rounds,profile_draft.minutes));button(text,83,301,300,44,2079,profile_draft.timed);
         button("Indietro",83,359,144,48,2080,true);button("Anteprima",239,359,144,48,2075,true);
@@ -2282,12 +2309,13 @@ static void render_damage(void) {
         if(profile_number_rounds&&profile_draft.tick==PD_TICK_HOURS)time_text(text,sizeof text,n);else snprintf(text,sizeof text,"%u",n);label(text,83,199,300,true);
         const char *names[]={"-10","-1","+1","+10"};unsigned maximum=profile_number_cost?pd_reduction_cost_max(&state,pd_profile_cost(&profile_draft,profile_cost_row).kind,pd_profile_cost(&profile_draft,profile_cost_row).index):profile_number_rounds?(profile_draft.tick==PD_TICK_HOURS?5940:99):9999;
         for(unsigned i=0;i<4;i++)button(profile_number_rounds&&profile_draft.tick==PD_TICK_HOURS?(const char *const[]){"-1h","-1m","+1m","+1h"}[i]:names[i],83+i*78,251,66,44,2081+i,i<2?n>0:n<maximum);
-        small_label(profile_number_cost?"Costo positivo richiesto":profile_number_rounds?"Attivo: durata positiva richiesta":"Un budget condiviso per colpo",83,319,300,PD_GOLD);button("Indietro",83,359,300,48,2085,true);
+        if(profile_number_rounds&&profile_draft.timed&&turn_clock(profile_draft.tick)){snprintf(text,sizeof text,"Turno: %s >",turn_subject(profile_draft.owner));button(text,83,305,300,44,3212,true);}
+        else {small_label(profile_number_cost?"Costo positivo richiesto":profile_number_rounds?"Attivo: durata positiva richiesta":"Un budget condiviso per colpo",83,319,300,PD_GOLD);}button("Indietro",83,359,300,48,2085,true);
     } else if(page==PROFILE_CONFIRM){
         bool valid=preview_profile(&scratch);label(valid?"Salvare il profilo?":"Profilo da verificare",83,111,300,true);snprintf(text,sizeof text,"%s >",(const char *const[]){"Dati","Regola","Durata","Costi"}[profile_confirm_tab]);button(text,83,157,profile_confirm_tab==3?144:300,44,2086,true);if(profile_confirm_tab==3){snprintf(text,sizeof text,"Spesa %u/3 >",profile_cost_row+1);lv_obj_t *b=button(text,239,157,144,44,2109,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}const pd_reduction_profile *a=&state.reductions[profile_index],*p=&profile_draft;
         if(!profile_confirm_tab){snprintf(text,sizeof text,"Quantita: %u -> %u",a->value,p->value);small_label(text,83,211,300,PD_TEXT);snprintf(text,sizeof text,"Tipi: %s -> %s",profile_types(a->types),profile_types(p->types));lv_obj_t *types=small_label(text,83,243,300,PD_GOLD);lv_label_set_long_mode(types,LV_LABEL_LONG_WRAP);lv_obj_set_height(types,38);snprintf(text,sizeof text,"Fase: %s -> %s",a->stage?"dopo":"prima",p->stage?"dopo":"prima");small_label(text,83,287,300,PD_TEXT);snprintf(text,sizeof text,"Attivo: %s -> %s",a->active?"si":"no",p->active?"si":"no");small_label(text,83,325,300,PD_MUTED);}
         else if(profile_confirm_tab==1){snprintf(text,sizeof text,"Prima: %s",rule_descriptions[a->rule]);lv_obj_t *r=small_label(text,83,211,300,PD_MUTED);lv_label_set_long_mode(r,LV_LABEL_LONG_WRAP);lv_obj_set_height(r,50);snprintf(text,sizeof text,"Dopo: %s",rule_descriptions[p->rule]);r=small_label(text,83,287,300,PD_GOLD);lv_label_set_long_mode(r,LV_LABEL_LONG_WRAP);lv_obj_set_height(r,50);}
-        else if(profile_confirm_tab==2){snprintf(text,sizeof text,"Durata: %s -> %s",duration_mode(a->timed,a->tick),duration_mode(p->timed,p->tick));small_label(text,83,211,300,PD_TEXT);char before[24],after[24];if(a->tick==PD_TICK_HOURS)time_text(before,sizeof before,a->minutes);else snprintf(before,sizeof before,"%u%s",duration_left(a->tick,a->rounds,a->minutes),a->tick==PD_TICK_MINUTES?"min":"");if(p->tick==PD_TICK_HOURS)time_text(after,sizeof after,p->minutes);else snprintf(after,sizeof after,"%u%s",duration_left(p->tick,p->rounds,p->minutes),p->tick==PD_TICK_MINUTES?"min":"");snprintf(text,sizeof text,"Residui: %s -> %s",before,after);small_label(text,83,249,300,PD_TEXT);snprintf(text,sizeof text,"Concentrazione: %s -> %s",a->concentration?"si":"no",p->concentration?"si":"no");small_label(text,83,287,300,PD_GOLD);small_label(valid?(p->timed?"Scade: disattiva il profilo":"Fine concentrazione: scollega"):"Verifica quantita, tipi e durata",83,325,300,PD_MUTED);}
+        else if(profile_confirm_tab==2){snprintf(text,sizeof text,"Durata: %s -> %s",duration_owned(a->timed,a->tick,a->owner),duration_owned(p->timed,p->tick,p->owner));small_label(text,83,211,300,PD_TEXT);char before[24],after[24];if(a->tick==PD_TICK_HOURS)time_text(before,sizeof before,a->minutes);else snprintf(before,sizeof before,"%u%s",duration_left(a->tick,a->rounds,a->minutes),a->tick==PD_TICK_MINUTES?"min":"");if(p->tick==PD_TICK_HOURS)time_text(after,sizeof after,p->minutes);else snprintf(after,sizeof after,"%u%s",duration_left(p->tick,p->rounds,p->minutes),p->tick==PD_TICK_MINUTES?"min":"");snprintf(text,sizeof text,"Residui: %s -> %s",before,after);small_label(text,83,249,300,PD_TEXT);snprintf(text,sizeof text,"Concentrazione: %s -> %s",a->concentration?"si":"no",p->concentration?"si":"no");small_label(text,83,287,300,PD_GOLD);small_label(valid?(p->timed?"Scade: disattiva il profilo":"Fine concentrazione: scollega"):"Verifica quantita, tipi e durata",83,325,300,PD_MUTED);}
         else{snprintf(text,sizeof text,"Prima | costo %u | reazione %s",pd_profile_cost(a,profile_cost_row).amount,a->reaction?"si":"no");small_label(text,83,205,300,PD_MUTED);lv_obj_t *r=small_label(cost_name(a),83,225,300,PD_MUTED);lv_label_set_long_mode(r,LV_LABEL_LONG_WRAP);lv_obj_set_height(r,54);snprintf(text,sizeof text,"Dopo | costo %u | reazione %s",pd_profile_cost(p,profile_cost_row).amount,p->reaction?"si":"no");small_label(text,83,281,300,PD_GOLD);r=small_label(cost_name(p),83,301,300,PD_GOLD);lv_label_set_long_mode(r,LV_LABEL_LONG_WRAP);lv_obj_set_height(r,54);}
         button("Indietro",83,359,144,48,2087,true);button("Conferma",239,359,144,48,2088,valid);
     } else if(page==PROFILE_ALLOCATE){
@@ -2316,11 +2344,11 @@ static void render_damage(void) {
         small_label("Spese insieme anche a danno zero",83,325,300,PD_MUTED);button("Indietro",83,359,300,48,2106,true);
     } else if(page==REACTION_HOME){
         label("Turni e reazione",83,111,300,true);label(state.reaction_spent?"Gia utilizzata":"Disponibile",83,151,300,false);small_label("Round e turni sono separati",83,185,300,PD_GOLD);
-        button("Usa reazione",83,215,300,44,2119,!state.reaction_spent);button("Inizio turno",83,263,300,44,2120,true);button("Fine turno",83,311,300,44,2123,true);button("Indietro",83,363,300,44,2118,true);
+        button("Usa reazione",83,215,300,44,2119,!state.reaction_spent);button("Inizio turno",83,263,300,44,2120,true);button("Fine turno",83,311,300,44,2123,true);button("Indietro",83,363,144,44,2118,true);lv_obj_t *other=button("Altri turni",239,363,144,44,3200,true);lv_obj_set_style_text_font(other,&lv_font_montserrat_16,0);
     } else if(page==REACTION_CONFIRM){
         if(reaction_draft){label("Usare la reazione?",83,111,300,true);label("pronta -> usata",83,211,300,false);small_label("Annota una reazione esterna",83,267,300,PD_GOLD);small_label("Non avanza durate o risorse",83,305,300,PD_MUTED);button("Indietro",83,359,144,48,2121,true);button("Conferma",239,359,144,48,2122,true);}
         else{
-            pd_round_summary r={0};bool valid=preview_turn(&scratch,&r);label(turn_end?"Termina il tuo turno?":"Inizia il tuo turno?",83,111,300,false);
+            pd_round_summary r={0};bool valid=preview_turn(&scratch,&r);if(turn_owner)snprintf(text,sizeof text,"%s turno %s?",turn_end?"Termina":"Inizia",turn_subject(turn_owner));else snprintf(text,sizeof text,turn_end?"Termina il tuo turno?":"Inizia il tuo turno?");label(text,83,111,300,false);
             if(valid){
                 snprintf(text,sizeof text,"Avanzano %u | scadono %u",bit_count(r.effects_advanced)+bit_count(r.defences_advanced),bit_count(r.effects_expired)+bit_count(r.defences_expired));small_label(text,83,151,300,PD_GOLD);
                 snprintf(text,sizeof text,"Reazione: %s -> %s",state.reaction_spent?"usata":"pronta",scratch.reaction_spent?"usata":"pronta");small_label(text,83,183,300,PD_TEXT);
@@ -2347,7 +2375,7 @@ static void render_damage(void) {
         bool time=page==TIME_DETAILS;unsigned *detail=time?&time_detail_page:&turn_detail_page;
         pd_round_summary r={0};if(!(time?preview_time(&scratch,&r):preview_turn(&scratch,&r))){label("Scadenze fuori limite",83,211,300,false);button("Riepilogo",83,359,300,48,time?2150:2125,true);return;}
         unsigned indices[PD_EFFECTS+PD_TIMED_DEFENCES],count=0;for(unsigned i=0;i<PD_EFFECTS;i++)if(r.effects_advanced&(1u<<i))indices[count++]=i;for(unsigned i=0;i<PD_TIMED_DEFENCES;i++)if(r.defences_advanced&(UINT64_C(1)<<i))indices[count++]=PD_EFFECTS+i;
-        unsigned pages=count?(count+2)/3:1;if(*detail>=pages)*detail=pages-1;label(time?"Scadenze del tempo":turn_end?"Scadenze a fine turno":"Scadenze a inizio turno",83,99,300,false);snprintf(text,sizeof text,time?"Minuti | pagina %u/%u":"Passaggi | pagina %u/%u",*detail+1,pages);small_label(text,83,133,300,PD_GOLD);
+        unsigned pages=count?(count+2)/3:1;if(*detail>=pages)*detail=pages-1;if(time)snprintf(text,sizeof text,"Scadenze del tempo");else if(turn_owner)snprintf(text,sizeof text,"%s %s: scadenze",turn_end?"Fine":"Inizio",turn_subject(turn_owner));else snprintf(text,sizeof text,turn_end?"Scadenze a fine turno":"Scadenze a inizio turno");label(text,83,99,300,false);snprintf(text,sizeof text,time?"Minuti | pagina %u/%u":"Passaggi | pagina %u/%u",*detail+1,pages);small_label(text,83,133,300,PD_GOLD);
         for(unsigned row=0;row<3;row++){
             unsigned at=*detail*3+row;if(at>=count)break;unsigned bit=indices[at],a,b;
             if(bit<PD_EFFECTS){a=time?state.effects[bit].minutes:state.effects[bit].rounds;b=time?scratch.effects[bit].minutes:scratch.effects[bit].rounds;snprintf(text,sizeof text,"%s #%u: %u -> %u",state.effects[bit].target==PD_EFFECT_ARMOR?"CA":"PF max",bit+1,a,b);}
@@ -2501,6 +2529,7 @@ static void render_content(void) {
     if(input_check_open()){render_input_check();return;}
     if(page==DAMAGE_DEATH){render_death_damage();return;}
     if(page==DEATH_ROLL_SETUP){render_death_roll_setup();return;}
+    if(page==EXTERNAL_TURN_HOME){render_external_turn();return;}
     if(page==BACKUP_HOME||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM){render_backup();return;}
     if(page==HISTORY_HOME||page==HISTORY_DETAIL||page==HISTORY_DISCARD){render_history();return;}
     if(page==WALLET_HOME||page==WALLET_EDIT||page==WALLET_CONFIRM){render_wallet();return;}
@@ -2638,7 +2667,7 @@ static void render_content(void) {
     }
 }
 #ifdef PD_UI_TEST
-static bool styled_pages[DEATH_ROLL_SETUP+1];
+static bool styled_pages[EXTERNAL_TURN_HOME+1];
 static void capture_styled_page(unsigned view);
 #endif
 static void render(void){

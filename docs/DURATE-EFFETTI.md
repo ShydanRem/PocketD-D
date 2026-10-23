@@ -1,5 +1,9 @@
 # Durate e scadenze degli effetti — v0.27
 
+> Aggiornamento v0.58: [turni esterni A/B/C e PDD26](TURNI-ESTERNI.md).
+> Il backup nativo v1 accetta PDD25/PDD26; round e minuti/ore restano separati
+> dai turni. Formati e limiti sotto descrivono la versione storica del titolo.
+
 **Aggiornamento v0.39:** [durate del proprio turno](DURATE-TURNO.md), PDD19.
 Inizio turno avanza ora anche i timer Inizio; Fine turno è separato dal Round.
 I timer dei salvataggi precedenti mantengono la modalità Round.

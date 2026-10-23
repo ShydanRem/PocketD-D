@@ -15,13 +15,16 @@ function record(text,magic,max){
   let decoded;try{decoded=atob(text)}catch{fail()}
   if(btoa(decoded)!==text)fail();
   const bytes=Uint8Array.from(decoded,c=>c.charCodeAt(0)),view=new DataView(bytes.buffer);
-  if(bytes.length<8||bytes.length>max||decoded.slice(0,4)!==magic||crc32(bytes.subarray(0,-4))!==view.getUint32(bytes.length-4,true))fail();
+  if(bytes.length<8||bytes.length>max||!(Array.isArray(magic)?magic:[magic]).includes(decoded.slice(0,4))||crc32(bytes.subarray(0,-4))!==view.getUint32(bytes.length-4,true))fail();
   return {bytes,view};
 }
 function text(bytes,start,capacity,empty=false){let end=start;while(end<start+capacity&&bytes[end]){if(bytes[end]<32||bytes[end]>126)fail();end++}if(end===start+capacity||(!empty&&end===start))fail();return String.fromCharCode(...bytes.subarray(start,end))}
 export function inspectDeviceBackup(raw){
-  const packet=envelope(raw),s=record(packet.state,'PDDP',75119),h=record(packet.history,'PDH1',2481),b=s.bytes,v=s.view;
+  const packet=envelope(raw),s=record(packet.state,['PDDP','PDDQ'],75119),h=record(packet.history,'PDH1',2481),b=s.bytes,v=s.view;
   if(b.length<8879||b[5123]>120||b.length!==8879+552*b[5123])fail();
+  // PDD26 packs the local turn subject into the existing timer-selector bytes.
+  const turnSubjects=[0,0,0],packed=b[3]===81;
+  for(let i=0;i<50;i++){const value=b[8375+552*b[5123]+i],tick=packed?value&7:value,owner=packed?value>>>3:0;if(tick>4||owner>3||(owner&&tick!==1&&tick!==2))fail();if(owner)turnSubjects[owner-1]++}
   const offset=552*b[5123],name=text(b,8,49),baseHp=v.getUint16(59,true),baseArmor=b[64];let maxHp=baseHp,armor=baseArmor;
   const effects=b[7913+offset];if(effects>8)fail();
   for(let i=0;i<effects;i++){const at=7914+offset+4*i,target=b[at],delta=v.getUint16(at+1,true)-999,active=b[at+3];if(target>1||active>1||Math.abs(delta)>(target?999:20))fail();if(active){if(target)maxHp+=delta;else armor+=delta}}
@@ -42,5 +45,5 @@ export function inspectDeviceBackup(raw){
   }
   // This is an integrity check and a bounded preview. The device runs the full
   // native validators for all remaining rules before offering Restore.
-  return {nativeValidation:false,packet,name,level,hp,maxHp,baseHp,tempHp,armor,baseArmor,effects,items:b[435],powers:b[5123],resources:b[71],wallet,keys,brightness,dim,rolls};
+  return {nativeValidation:false,packet,name,level,hp,maxHp,baseHp,tempHp,armor,baseArmor,effects,items:b[435],powers:b[5123],resources:b[71],wallet,keys,brightness,dim,turnSubjects,rolls};
 }

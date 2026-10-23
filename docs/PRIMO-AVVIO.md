@@ -1,9 +1,9 @@
-# Primo avvio e sessione di collaudo — v0.57
+# Primo avvio e sessione di collaudo — v0.58
 
 Questa versione prepara il **blocco 3, prodotto fisico**. L'hardware è in
 arrivo: tutte le prove fisiche sotto sono **da eseguire**, nessuna è già passata.
-La grafica approvata è conservata; la v0.57 aggiunge circostanze e bonus
-nel tiro morte e porta la copertura host a 102/102, senza attestare un esito fisico.
+La grafica approvata è conservata; la v0.58 aggiunge riferimenti esterni
+per le durate di turno e porta la copertura host a 103/103, senza attestare un esito fisico.
 
 L'obiettivo della prima prova è trasferire una scheda nota, giocare offline,
 conservare i progressi dopo un riavvio e recuperarli da un backup. Batteria,
@@ -240,6 +240,19 @@ La successiva apertura di Modifica deve ripartire da bonus zero e segni spenti;
 Lancia d20 base deve restare un solo dado senza bonus. Non cercare guasti NVS
 per forzare il caso di nuovo tentativo: resta una prova host e il taglio fisico
 richiede il protocollo separato già indicato. Registrare H24.
+
+## 9. Prova opzionale dei turni esterni — dopo il backup
+
+Su una scheda sintetica, configurare PF massimi +10 fino a fine A con un
+passaggio residuo; portare i PF entro il nuovo massimo e annotarli. Associare
+A a un partecipante preciso per tutta la prova. Dichiarare usata la reazione.
+Da Reazione → Altri turni, l'anteprima di inizio A o fine B non deve terminare
+il bonus. Fine A deve proporre la sua scadenza, il massimo precedente e
+l'eventuale riduzione dei PF, conservando la reazione usata. Indietro non
+modifica nulla; Conferma applica l'intero evento. Annulla recupera tutto.
+Verificare riavvio e backup/ripristino dei riferimenti A/B/C; poi controllare
+che solo Inizio turno proprio recuperi la reazione. Registrare H25 secondo
+[TURNI-ESTERNI.md](TURNI-ESTERNI.md). Nessuna lettura del soggetto è automatica.
 
 ## Registrazione dell'esito
 
