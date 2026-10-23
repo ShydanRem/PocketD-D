@@ -1,5 +1,9 @@
 # Stato, condizioni e salvezze contro morte — v0.24
 
+> Aggiornamento v0.57: [tiri contro morte con circostanze e bonus espliciti](TIRI-MORTE.md).
+> Il lancio base è conservato; gli effetti delle condizioni non vengono dedotti
+> automaticamente per questi tiri. I limiti sotto descrivono la versione del titolo.
+
 > Aggiornamento v0.56: [danni a zero PF e morte istantanea](DANNI-ZERO-PF.md)
 > con risoluzione base esplicita e verifica del critico. I blocchi descritti
 > sotto per questi casi si riferiscono al percorso ordinario o alla versione storica.

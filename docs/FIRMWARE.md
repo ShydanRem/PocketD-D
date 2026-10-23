@@ -1,8 +1,10 @@
-# Firmware PocketD-D 0.56 — danni a zero PF e morte istantanea
+# Firmware PocketD-D 0.57 — tiri contro morte configurabili
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
+
+[Novità v0.57: vantaggio, svantaggio e bonus espliciti nel tiro morte](TIRI-MORTE.md).
 
 [Novità v0.56: risoluzione esplicita di danni a zero PF e morte istantanea](DANNI-ZERO-PF.md).
 
@@ -1166,3 +1168,28 @@ PDD25/PDH2/USB9, backup, diagnostica v1 e partizioni invariati. Catture
 `death-damage-*.png` native su host con dati sintetici, incluse nel pacchetto.
 Grafica e tasti configurabili conservati. Nessun flash, collaudo fisico,
 lettura Beyond o modifica della raccolta personale.
+
+## Incremento v0.57 — circostanze e bonus nel tiro morte
+
+[Uso, salvataggi e limiti](TIRI-MORTE.md). Modifica dal registro prepara
+vantaggio/svantaggio separati e bonus da −30 a +30 per il singolo tiro,
+con anteprima e conferma. Segni opposti si annullano; la faccia naturale
+scelta conserva la priorità di 1/20 sul totale modificato. Il comando base
+rimane un d20 senza bonus. Nessuna deduzione da testi, statistiche o condizioni.
+La scheda viene salvata prima dell'animazione; un errore mantiene il tiro
+fissato e blocca Indietro/modifiche fino al nuovo tentativo, anche nel flusso
+base. Lo storico conserva dadi, bonus, totale e modalità effettiva con la
+persistenza separata già presente e il blocco sui nuovi tiri pendenti.
+
+Passati: 161 test JavaScript, suite firmware completa, 102.020 casi core
+indipendenti e 102/102 viste LVGL host. Verificati tutte le coppie di d20,
+segni opposti, bonus estremi e soglie, naturali speciali, registri bloccati,
+compatibilità API base, codec PDH2, anteprima/annulla, scrittura fallita e
+nuovo tentativo senza RNG aggiuntivo, storico pendente, ricevuta congelata,
+annullamento completo e canvas assente. ASan/UBSan su core, stato e UI,
+build PC/HTML autonomo ed ESP32-S3 passati. Binario app 3.389.920 byte
+(partizione 4 MiB, 19% libera). PDD25/PDH2/USB9, backup,
+diagnostica v1 e partizioni invariati. Le nuove catture `death-roll-*.png`
+sono native su host con dati sintetici. Grafica e tasti conservati;
+bonus a dado, reroll e altre eccezioni restano manuali. Nessun flash,
+collaudo fisico, lettura Beyond o modifica della raccolta personale.

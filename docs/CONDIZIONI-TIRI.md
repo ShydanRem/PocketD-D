@@ -1,5 +1,9 @@
 # Condizioni ed effetti sui tiri — v0.44
 
+> Aggiornamento v0.57: [tiri contro morte con circostanze e bonus espliciti](TIRI-MORTE.md).
+> Il lancio base è conservato; gli effetti delle condizioni non vengono dedotti
+> automaticamente per questi tiri. I limiti sotto descrivono la versione del titolo.
+
 Il dispositivo gestisce un sottoinsieme esplicito degli effetti di **Accecato,
 Spaventato, Prono e Trattenuto**, oltre ad Avvelenato già presente. Si tratta di
 effetti sui tiri del personaggio, non dell'intera definizione delle condizioni.

@@ -1,9 +1,9 @@
-# Primo avvio e sessione di collaudo — v0.56
+# Primo avvio e sessione di collaudo — v0.57
 
 Questa versione prepara il **blocco 3, prodotto fisico**. L'hardware è in
 arrivo: tutte le prove fisiche sotto sono **da eseguire**, nessuna è già passata.
-La grafica approvata è conservata; la v0.56 aggiunge la risoluzione esplicita
-dei danni a zero PF e porta la copertura host a 101/101, senza attestare un esito fisico.
+La grafica approvata è conservata; la v0.57 aggiunge circostanze e bonus
+nel tiro morte e porta la copertura host a 102/102, senza attestare un esito fisico.
 
 L'obiettivo della prima prova è trasferire una scheda nota, giocare offline,
 conservare i progressi dopo un riavvio e recuperarli da un backup. Batteria,
@@ -226,6 +226,20 @@ morte istantanea e tre fallimenti. Conservare la copia precedente e verificare
 riavvio/ripristino; non usare una scheda personale per queste prove.
 I dettagli e i limiti sono in [DANNI-ZERO-PF.md](DANNI-ZERO-PF.md).
 Registrare H23 senza dedurre un esito fisico dai test host.
+
+## 8. Prova opzionale dei tiri contro morte — scheda sintetica
+
+Dopo il backup, con registro disponibile a zero PF, aprire Modifica: attivare
+entrambi i segni deve mostrare che si annullano. Impostare un bonus, controllare
+l'anteprima e tornare indietro senza lancio: scheda e storico restano invariati.
+Confermare poi un tiro valido e confrontare naturale, bonus, totale ed esito,
+con la priorità di 1/20 descritta in [TIRI-MORTE.md](TIRI-MORTE.md).
+Controllare nello storico facce e modalità. Annullare dall'Eroe deve recuperare
+la scheda precedente, conservando il tiro avvenuto nello storico.
+La successiva apertura di Modifica deve ripartire da bonus zero e segni spenti;
+Lancia d20 base deve restare un solo dado senza bonus. Non cercare guasti NVS
+per forzare il caso di nuovo tentativo: resta una prova host e il taglio fisico
+richiede il protocollo separato già indicato. Registrare H24.
 
 ## Registrazione dell'esito
 

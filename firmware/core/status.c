@@ -19,14 +19,21 @@ bool pd_death_change(pd_state *s,unsigned action) {
     return true;
 }
 bool pd_death_face(pd_state *s,unsigned face) {
-    if(!s||!pd_valid(s)||!pd_death_ready(s)||face<1||face>20)return false;
+    return pd_death_face_bonus(s,face,0);
+}
+int pd_death_mode(pd_death_roll_options options){return (int)options.advantage-(int)options.disadvantage;}
+bool pd_death_face_bonus(pd_state *s,unsigned face,int bonus) {
+    if(!s||!pd_valid(s)||!pd_death_ready(s)||face<1||face>20||bonus< -30||bonus>30)return false;
     if(face==20){pd_hp(s,1);return true;}
-    return pd_death_change(s,face==1?PD_DEATH_CRITICAL:face>=10?PD_DEATH_SUCCESS:PD_DEATH_FAILURE);
+    return pd_death_change(s,face==1?PD_DEATH_CRITICAL:(int)face+bonus>=10?PD_DEATH_SUCCESS:PD_DEATH_FAILURE);
 }
 bool pd_death_roll(const pd_state *s,pd_random random,void *context,pd_state *next,pd_roll *roll) {
-    if(!s||!next||s==next||!roll||!random||!pd_valid(s)||!pd_death_ready(s))return false;
-    pd_roll r=pd_d20(0,0,random,context);*next=*s;
-    if(!pd_death_face(next,r.natural))return false;
+    return pd_death_roll_configured(s,(pd_death_roll_options){0},random,context,next,roll);
+}
+bool pd_death_roll_configured(const pd_state *s,pd_death_roll_options options,pd_random random,void *context,pd_state *next,pd_roll *roll) {
+    if(!s||!next||s==next||!roll||!random||options.bonus< -30||options.bonus>30||!pd_valid(s)||!pd_death_ready(s))return false;
+    pd_roll r=pd_d20(options.bonus,pd_death_mode(options),random,context);*next=*s;
+    if(!pd_death_face_bonus(next,r.natural,options.bonus))return false;
     *roll=r;return true;
 }
 bool pd_condition_add(pd_state *s,const char *name,unsigned level) {

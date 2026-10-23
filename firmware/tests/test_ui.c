@@ -490,8 +490,8 @@ int main(void) {
     click("Indietro");click("Salvezze contro morte");screenshot("death-tracker.ppm");
     state.training.poisoned=true;before_status=state;calls=random_calls;status_saves=save_calls;click("Lancia d20 base");screenshot("death-confirm.ppm");assert(page==STATUS_CONFIRM&&save_calls==status_saves&&random_calls==calls);
     shortcut(1);assert(page==STATUS_CONFIRM);click("Indietro");assert(!memcmp(&state,&before_status,sizeof state));click("Lancia d20 base");random_values[0]=random_values[1]=9;
-    fail_save=true;click("Conferma");assert(status_rolled&&random_calls==calls+1&&page==STATUS_CONFIRM&&!memcmp(&state,&before_status,sizeof state));click("Conferma");assert(random_calls==calls+1);
-    fail_save=false;click("Conferma");assert(page==DICE&&combat_roll==5&&result.count==1&&!result.bonus&&state.status.successes==2&&state.status.failures==1&&random_calls==calls+1);
+    fail_save=true;click("Conferma");assert(status_rolled&&random_calls==calls+1&&page==STATUS_CONFIRM&&!memcmp(&state,&before_status,sizeof state));click("Riprova");assert(random_calls==calls+1);
+    fail_save=false;click("Riprova");assert(page==DICE&&combat_roll==5&&result.count==1&&!result.bonus&&state.status.successes==2&&state.status.failures==1&&random_calls==calls+1);
     calls=random_calls;shortcut(1);assert(!dice_animation.active&&random_calls==calls);bounds();screenshot("death-result.ppm");act(13);assert(random_calls==calls&&state.status.successes==2);
     click("Stato");click("Correggi / stabilizza");screenshot("death-edit.ppm");click("Riuscita +");click("Conferma");assert(state.status.stabilized&&!state.status.successes&&!state.status.failures&&state.hp==0);screenshot("death-stable.ppm");act(1510);assert(page==DEATH_VIEW&&random_calls==calls);
     click("Correggi / stabilizza");click("Critico +2");click("Conferma");assert(!state.status.stabilized&&state.status.failures==2);
@@ -1195,13 +1195,73 @@ int main(void) {
     click("Anteprima");click("Risolvi registro morte");click("Base 2014: da verificare");screenshot("death-damage-maximum.ppm");click("Conferma");assert(incoming_death.instant&&incoming_result.adjusted==119988&&state.status.failures==3&&!state.hp&&!state.temp_hp);
     assert(random_calls==effects_calls&&history_save_calls==before_journal);
     puts("Death damage UI: explicit critical/base acknowledgement, normal/stable/instant/dead/legacy/reaction cases, six parts, costs/linked effects, save failure/undo, frozen receipt, duplicate guard and zero RNG/history writes passed (synthetic)");
+    /* v0.57: explicit death-save circumstances, signed bonus and frozen retry. */
+    pd_demo(&state);state.hp=0;state.temp_hp=3;state.status.available=true;state.status.successes=1;state.status.failures=1;
+    state.training.poisoned=true;state.roll_conditions=PD_ROLL_CONDITIONS;
+    pd_history_reset(&history,state.history_epoch);persisted_history=history;history_pending=false;fail_history=false;
+    effects_before=state;unsigned roll_calls=random_calls,roll_saves=save_calls,roll_history_saves=history_save_calls;
+    act(1501);click("Modifica");assert(page==DEATH_ROLL_SETUP&&confirmation_open());screenshot("death-roll-setup.ppm");
+    assert(!stage_import(&snapshot.state)&&!stage_backup(NULL));shortcut(0);act(100);assert(page==DEATH_ROLL_SETUP);
+    click("Vantaggio: no");click("Svantaggio: no");for(unsigned i=0;i<9;i++)click("+1");
+    assert(!pd_death_mode(status_options)&&status_options.bonus==9);screenshot("death-roll-cancelled.ppm");
+    click("Anteprima");assert(page==STATUS_CONFIRM&&status_return_page==DEATH_ROLL_SETUP);screenshot("death-roll-preview-cancelled.ppm");
+    click("Indietro");assert(page==DEATH_ROLL_SETUP&&status_options.bonus==9);click("Indietro");assert(page==DEATH_VIEW&&!status_options.bonus&&!status_options.advantage&&!status_options.disadvantage);
+    assert(random_calls==roll_calls&&save_calls==roll_saves&&history_save_calls==roll_history_saves&&!memcmp(&state,&effects_before,sizeof state));
+    click("Modifica");click("Vantaggio: no");click("+1");click("Anteprima");screenshot("death-roll-preview.ppm");
+    random_values[random_calls%2]=0;random_values[(random_calls+1)%2]=8;fail_save=true;click("Conferma");
+    assert(page==STATUS_CONFIRM&&status_rolled&&random_calls==roll_calls+2&&!memcmp(&state,&effects_before,sizeof state));
+    assert(status_result.natural==9&&status_result.total==10&&status_result.count==2&&status_result.bonus==1);
+    screenshot("death-roll-save-error.ppm");act(1506);act(3101);assert(page==STATUS_CONFIRM&&status_rolled&&status_options.advantage);
+    click("Riprova");assert(random_calls==roll_calls+2&&history_save_calls==roll_history_saves);
+    fail_save=false;click("Riprova");assert(page==DICE&&combat_roll==5&&state.status.successes==2&&state.status.failures==1&&state.temp_hp==3);
+    assert(history_save_calls==roll_history_saves+1&&history.entries[0].mode==1&&history.entries[0].bonus==1&&history.entries[0].total==10&&history.entries[0].dice[0]==1&&history.entries[0].dice[1]==9);
+    act(1505);assert(random_calls==roll_calls+2);click("Accelera");assert(status_outcome==1&&result.natural==9&&result.total==10);screenshot("death-roll-advantage.ppm");
+    act(13);assert(random_calls==roll_calls+2);click("Eroe");click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state)&&history.count==1);
+    act(1501);click("Modifica");assert(!status_options.bonus&&!status_options.advantage);click("Svantaggio: no");click("-1");click("Anteprima");
+    roll_calls=random_calls;random_values[random_calls%2]=18;random_values[(random_calls+1)%2]=9;click("Conferma");click("Accelera");
+    assert(random_calls==roll_calls+2&&result.natural==10&&result.total==9&&status_outcome==0&&state.status.failures==2&&state.status.successes==1);
+    assert(history.entries[0].mode==-1&&history.entries[0].bonus==-1&&history.entries[0].total==9);screenshot("death-roll-disadvantage.ppm");
+    /* Both signs cancel to ONE die; a natural 20 revives even with total -10. */
+    click("Stato");click("Modifica");click("Vantaggio: no");click("Svantaggio: no");for(unsigned i=0;i<30;i++)click("-1");
+    act(3103);assert(status_options.bonus==-30);screenshot("death-roll-minimum.ppm");click("Anteprima");
+    roll_calls=random_calls;random_values[random_calls%2]=19;click("Conferma");click("Accelera");
+    assert(random_calls==roll_calls+1&&result.count==1&&result.natural==20&&result.total==-10&&status_outcome==4&&state.hp==1&&!state.status.failures&&!state.status.successes);
+    assert(history.entries[0].mode==0&&history.entries[0].bonus==-30&&history.entries[0].total==-10);screenshot("death-roll-twenty.ppm");
+    /* The receipt stays attached to the resolved roll, independently of later state. */
+    state.hp=0;state.status.failures=3;render();assert(status_outcome==4);state.hp=1;state.status.failures=0;
+    click("Eroe");click("Annulla");assert(!state.hp&&state.status.failures==2);
+    act(1501);click("Modifica");for(unsigned i=0;i<30;i++)click("+1");act(3104);assert(status_options.bonus==30);screenshot("death-roll-maximum.ppm");click("Anteprima");
+    random_values[random_calls%2]=0;click("Conferma");click("Accelera");assert(result.natural==1&&result.total==31&&state.status.failures==3&&status_outcome==3);screenshot("death-roll-one.ppm");
+    /* No canvas still resolves and journals once; third ordinary success stabilizes. */
+    click("Eroe");pd_demo(&state);state.hp=0;state.status.available=true;state.status.successes=2;state.status.failures=2;
+    act(1501);click("Modifica");click("+1");click("Anteprima");random_values[random_calls%2]=8;
+    roll_calls=random_calls;fail_canvas=true;click("Conferma");assert(!dice_animation.active&&has_roll);screenshot("death-roll-no-canvas.ppm");fail_canvas=false;
+    assert(random_calls==roll_calls+1&&state.status.stabilized&&!state.status.successes&&!state.status.failures&&status_outcome==2);
+    /* A missing/dead/stable/positive-HP registry cannot enter either roll path. */
+    click("Eroe");
+    for(unsigned blocked=0;blocked<5;blocked++){
+        pd_demo(&state);state.hp=0;state.status.available=true;
+        if(blocked==0)state.status.available=false;
+        if(blocked==1)state.status.failures=3;
+        if(blocked==2)state.status.stabilized=true;
+        if(blocked==3)state.hp=1;
+        if(blocked==4)state.status.successes=3;
+        act(1501);effects_before=state;roll_calls=random_calls;roll_saves=save_calls;act(3100);act(1510);
+        assert(page==DEATH_VIEW&&random_calls==roll_calls&&save_calls==roll_saves&&!memcmp(&state,&effects_before,sizeof state));
+    }
+    /* Historical pending write prevents a second roll before RNG; retry saves it once. */
+    pd_demo(&state);state.hp=0;state.status.available=true;act(1501);click("Modifica");click("Vantaggio: no");click("Anteprima");
+    fail_history=true;random_values[0]=random_values[1]=9;click("Conferma");click("Accelera");assert(history_pending&&state.status.successes==1);
+    roll_calls=random_calls;click("Stato");click("Lancia d20 base");click("Conferma");assert(page==HISTORY_HOME&&history_pending&&random_calls==roll_calls&&state.status.successes==1);
+    fail_history=false;click("Riprova");assert(!history_pending&&history.entries[0].kind==PD_H_DEATH&&history.entries[0].mode==1&&random_calls==roll_calls);
+    puts("Death roll UI: explicit advantage/disadvantage/cancellation/bonus, preview/cancel, natural 1/20 priority, signed totals, stable/dead/legacy blocks, frozen write retry, undo, canvas failure and journal retry passed (synthetic)");
     unsigned covered=0;
-    for(unsigned p=0;p<=DAMAGE_DEATH;p++){
+    for(unsigned p=0;p<=DEATH_ROLL_SETUP;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)DAMAGE_DEATH+1);
-    assert(covered==DAMAGE_DEATH+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)DEATH_ROLL_SETUP+1);
+    assert(covered==DEATH_ROLL_SETUP+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

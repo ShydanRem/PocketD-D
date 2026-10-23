@@ -1,5 +1,8 @@
 # Danni a zero PF e morte istantanea — v0.56
 
+> Aggiornamento v0.57: [circostanze e bonus nei tiri contro morte](TIRI-MORTE.md).
+> La risoluzione dei danni descritta qui conserva le stesse regole e conferme.
+
 Il firmware risolve ora esplicitamente questi due casi, offline e senza
 Foundry. La grafica del compagno e le assegnazioni PWR/BOOT sono conservate.
 La raccolta PC non viene aperta o modificata e non è stata letta una scheda Beyond.

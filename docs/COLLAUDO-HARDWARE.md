@@ -40,6 +40,7 @@ richiede un'osservazione reale; indicare eventuali prove parziali nelle note.
 | H21 | Interruzioni durante scritture: protocollo concordato e recupero | Non eseguito | |
 | H22 | Batteria, consumi, sospensione e spegnimento | Non eseguito | Funzioni ancora da completare |
 | H23 | Scheda sintetica dopo backup: danni a zero PF, critico, morte istantanea, annulla, riavvio/ripristino | Non eseguito | [Procedura v0.56](DANNI-ZERO-PF.md) |
+| H24 | Scheda sintetica: tiro morte base/modificato, annullamento dei segni, bonus, storico, annulla e reset bozza | Non eseguito | [Procedura v0.57](TIRI-MORTE.md) |
 
 ## Problema riproducibile
 
