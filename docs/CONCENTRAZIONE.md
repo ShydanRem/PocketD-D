@@ -1,5 +1,9 @@
 # Salvezza di concentrazione nel flusso danni — v0.29
 
+> Aggiornamento v0.56: [danni a zero PF e morte istantanea](DANNI-ZERO-PF.md)
+> con risoluzione base esplicita e verifica del critico. I blocchi descritti
+> sotto per questi casi si riferiscono al percorso ordinario o alla versione storica.
+
 > Aggiornamento v0.33: [condizioni difensive e fonte esplicita](DIFESE-CONDIZIONALI.md),
 > raggruppamento per applicabilità e PDD14. Le omissioni/formati sotto sono storici.
 

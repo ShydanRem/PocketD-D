@@ -1138,13 +1138,70 @@ int main(void) {
     dice_animation.active=true;act(2900);assert(page==KEY_SETTINGS);dice_animation.active=false;
     page=MAGIC_CONFIRM;act(2900);assert(page==MAGIC_CONFIRM);page=HERO;
     puts("Local input check: real LVGL pointer stream, five targets/drag/held/reset, production key gestures/held exit, busy USB, unchanged state/history/preferences/NVS/RNG and all three timeout/wrap views passed (synthetic)");
+    /* Explicit death resolution is separate from the ordinary damage button. */
+    pd_demo(&state);state.hp=0;state.temp_hp=3;state.status.available=true;state.status.successes=2;state.status.failures=1;state.defences.configured=8191;
+    pd_history_reset(&history,state.history_epoch);history_pending=false;
+    effects_before=state;effects_saves=save_calls;effects_calls=random_calls;before_journal=history_save_calls;
+    act(1800);click("Anteprima");click("Risolvi registro morte");assert(page==DAMAGE_DEATH&&confirmation_open());screenshot("death-damage-choice.ppm");
+    act(3004);assert(save_calls==effects_saves&&!memcmp(&state,&effects_before,sizeof state));
+    assert(!stage_import(&snapshot.state)&&!stage_backup(NULL));shortcut(0);act(100);assert(page==DAMAGE_DEATH);
+    click("Base 2014: da verificare");act(3004);assert(death_damage_choice.verified&&save_calls==effects_saves);
+    click("Colpo critico: da verificare >");assert(death_damage_choice.critical==1&&!death_damage_choice.verified);
+    click("Base 2014: da verificare");click("Tipi");assert(page==DAMAGE_TYPES&&damage_details_return==DAMAGE_DEATH);click("Riepilogo");assert(page==DAMAGE_DEATH&&death_damage_choice.verified);
+    fail_save=true;click("Conferma");assert(page==DAMAGE_DEATH&&!memcmp(&state,&effects_before,sizeof state)&&random_calls==effects_calls);screenshot("death-damage-save-error.ppm");
+    fail_save=false;click("Conferma");assert(page==DAMAGE_RESULT&&state.hp==0&&state.temp_hp==2&&state.status.failures==2&&state.status.successes==2&&incoming_death_used&&incoming_death.failures_added==1);screenshot("death-damage-result.ppm");
+    unsigned death_writes=save_calls;act(3004);assert(save_calls==death_writes);act(100);click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));
+    act(1800);click("Anteprima");click("Risolvi registro morte");click("Colpo critico: da verificare >");click("Colpo critico: no >");click("Base 2014: da verificare");
+    click("Indietro");click("Risolvi registro morte");assert(!death_damage_choice.critical&&!death_damage_choice.verified); /* No stale acknowledgement. */
+    click("Colpo critico: da verificare >");click("Colpo critico: no >");click("Base 2014: da verificare");screenshot("death-damage-critical.ppm");click("Conferma");
+    assert(state.status.failures==3&&state.temp_hp==2&&incoming_death.impact.total.adjusted==1&&incoming_death.failures_added==2);
+    effects_before=state;death_writes=save_calls;act(2);assert(!memcmp(&state,&effects_before,sizeof state)&&save_calls==death_writes);
+    pd_demo(&state);state.hp=0;state.temp_hp=9;state.status.available=true;state.status.stabilized=true;assert(pd_defence_set(&state,0,true,PD_RESISTANCE));
+    act(1800);damage_plan.amount=3;render();click("Anteprima");click("Risolvi registro morte");click("Colpo critico: da verificare >");click("Base 2014: da verificare");screenshot("death-damage-stable.ppm");click("Conferma");
+    assert(!state.status.stabilized&&state.status.failures==1&&state.temp_hp==8);
+    /* Instant threshold includes all three costs and ends linked effects in the
+       same saved candidate. Failed writes and undo preserve the whole impact. */
+    pd_demo(&state);state.status.available=true;state.temp_hp=3;state.defences.configured=8191;state.magic.available=true;state.magic.count=1;
+    state.magic.powers[0]=(pd_power){.name="Magia originale",.flags=PD_PREPARED|PD_CONCENTRATES};state.magic.concentration=1;
+    assert(pd_effect_set(&state,0,(pd_effect){.target=PD_EFFECT_ARMOR,.value=2,.active=true,.concentration=1}));
+    state.magic.slots[0]=(pd_slot){2,3};state.items[1].charges=(pd_charges){2,3,0};
+    state.reductions[0]=(pd_reduction_profile){.value=1,.types=8191,.active=true,.stage=1,.reaction=true,.cost_kind=PD_COST_COUNTER,.cost=1,.extra_costs={{PD_COST_SLOT,0,1},{PD_COST_ITEM,1,1}}};
+    assert(pd_valid(&state));effects_before=state;effects_saves=save_calls;
+    act(1800);damage_plan.amount=60;damage_profile=1;render();click("Anteprima");click("Risolvi registro morte");
+    assert(page==DAMAGE_DEATH);click("Base 2014: da verificare");screenshot("death-damage-instant.ppm");
+    fail_save=true;click("Conferma");assert(page==DAMAGE_DEATH&&!memcmp(&state,&effects_before,sizeof state));fail_save=false;
+    click("Conferma");assert(page==DAMAGE_RESULT&&incoming_death.instant&&!state.hp&&!state.temp_hp&&state.status.failures==3&&!state.magic.concentration&&!state.effects[0].active);
+    assert(!state.resources[0].current&&state.magic.slots[0].current==1&&state.items[1].charges.current==1&&state.reaction_spent&&save_calls==effects_saves+2);screenshot("death-damage-instant-result.ppm");
+    assert(incoming_event.costs[0].before==1&&incoming_event.costs[0].after==0&&incoming_event.costs[1].after==1&&incoming_event.costs[2].after==1);
+    act(100);click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));
+    /* Missing/contradictory registries and a reaction at zero stay blocked. */
+    for(unsigned problem=0;problem<4;problem++){
+        pd_demo(&state);state.hp=0;state.defences.configured=8191;state.status.available=problem!=0;
+        if(problem==1)state.status.failures=3;
+        if(problem==2){state.status.failures=1;state.status.stabilized=true;}
+        if(problem==3)state.reductions[0]=(pd_reduction_profile){.value=1,.types=8191,.active=true,.stage=1,.reaction=true};
+        act(1800);damage_plan.amount=2;if(problem==3)damage_profile=1;render();click("Anteprima");click("Risolvi registro morte");
+        effects_before=state;death_writes=save_calls;act(3002);act(3003);act(3004);assert(page==DAMAGE_DEATH&&save_calls==death_writes&&!memcmp(&state,&effects_before,sizeof state));
+        char file[64];snprintf(file,sizeof file,"death-damage-blocked-%u.ppm",problem);screenshot(file);click("Indietro");click("Indietro");
+    }
+    /* Immunity and ordinary descent to zero never add a death failure. */
+    pd_demo(&state);state.hp=0;state.status.available=true;assert(pd_defence_set(&state,0,true,PD_IMMUNITY));
+    act(1800);click("Anteprima");act(3000);assert(page==DAMAGE_CONFIRM);death_writes=save_calls;click("Conferma");assert(page==DAMAGE_RESULT&&!incoming_death_used&&!state.status.failures&&save_calls==death_writes);
+    pd_demo(&state);state.hp=1;state.status.available=true;state.status.failures=2;state.defences.configured=8191;
+    act(1800);click("Anteprima");act(3000);assert(page==DAMAGE_CONFIRM);click("Conferma");assert(!state.hp&&!state.status.failures&&!incoming_death_used);
+    /* All six largest vulnerable components remain one lethal impact. */
+    pd_demo(&state);state.hp=state.max_hp=999;state.temp_hp=999;state.status.available=true;state.defences.configured=state.defences.vulnerability=8191;
+    act(1800);damage_plan.amount=9999;damage_extra_count=5;for(unsigned i=1;i<6;i++)damage_extra[i-1]=(pd_damage_component){i,9999};render();
+    click("Anteprima");click("Risolvi registro morte");click("Base 2014: da verificare");screenshot("death-damage-maximum.ppm");click("Conferma");assert(incoming_death.instant&&incoming_result.adjusted==119988&&state.status.failures==3&&!state.hp&&!state.temp_hp);
+    assert(random_calls==effects_calls&&history_save_calls==before_journal);
+    puts("Death damage UI: explicit critical/base acknowledgement, normal/stable/instant/dead/legacy/reaction cases, six parts, costs/linked effects, save failure/undo, frozen receipt, duplicate guard and zero RNG/history writes passed (synthetic)");
     unsigned covered=0;
-    for(unsigned p=0;p<=INPUT_CHECK_KEYS;p++){
+    for(unsigned p=0;p<=DAMAGE_DEATH;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)INPUT_CHECK_KEYS+1);
-    assert(covered==INPUT_CHECK_KEYS+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)DAMAGE_DEATH+1);
+    assert(covered==DAMAGE_DEATH+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

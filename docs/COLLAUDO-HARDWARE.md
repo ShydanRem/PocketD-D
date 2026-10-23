@@ -39,6 +39,7 @@ richiede un'osservazione reale; indicare eventuali prove parziali nelle note.
 | H20 | Ripetizione dei percorsi: heap, stack e fluidità | Non eseguito | |
 | H21 | Interruzioni durante scritture: protocollo concordato e recupero | Non eseguito | |
 | H22 | Batteria, consumi, sospensione e spegnimento | Non eseguito | Funzioni ancora da completare |
+| H23 | Scheda sintetica dopo backup: danni a zero PF, critico, morte istantanea, annulla, riavvio/ripristino | Non eseguito | [Procedura v0.56](DANNI-ZERO-PF.md) |
 
 ## Problema riproducibile
 

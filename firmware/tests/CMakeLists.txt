@@ -119,3 +119,7 @@ target_compile_options(diagnostics PRIVATE -Wall -Wextra -Werror)
 add_executable(input-check test_input_check.c ../core/input_check.c ../core/buttons.c)
 target_include_directories(input-check PRIVATE ../core)
 target_compile_options(input-check PRIVATE -Wall -Wextra -Werror)
+
+add_executable(death-damage test_death_damage.c ../core/damage.c ../core/status.c ../core/rest.c ../core/dice_pool.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
+target_include_directories(death-damage PRIVATE ../core)
+target_compile_options(death-damage PRIVATE -Wall -Wextra -Werror)

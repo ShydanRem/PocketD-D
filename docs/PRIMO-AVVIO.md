@@ -1,9 +1,9 @@
-# Primo avvio e sessione di collaudo — v0.55
+# Primo avvio e sessione di collaudo — v0.56
 
 Questa versione prepara il **blocco 3, prodotto fisico**. L'hardware è in
 arrivo: tutte le prove fisiche sotto sono **da eseguire**, nessuna è già passata.
-La grafica approvata è conservata; le tre viste di collaudo v0.55 portano
-la copertura host a 100/100, senza attestare un esito fisico.
+La grafica approvata è conservata; la v0.56 aggiunge la risoluzione esplicita
+dei danni a zero PF e porta la copertura host a 101/101, senza attestare un esito fisico.
 
 L'obiettivo della prima prova è trasferire una scheda nota, giocare offline,
 conservare i progressi dopo un riavvio e recuperarli da un backup. Batteria,
@@ -213,6 +213,19 @@ insieme le interruzioni durante salvataggio/import/ripristino. Un normale
 riavvio dopo un salvataggio **non** certifica la resistenza al taglio durante
 la scrittura. Scheda e registro dei normali tiri restano due commit distinti:
 [garanzie e limiti](BACKUP-DISPOSITIVO.md). Non cancellare NVS per superare un errore.
+
+## 7. Prova opzionale dei danni a zero PF — dopo il backup
+
+Su una scheda sintetica con registro disponibile, massimo 32, PF 0 e
+3 temporanei, applicare un danno effettivo normale di 1: l'anteprima deve
+mostrare temporanei 2 e un fallimento aggiunto. Verificare Base 2014,
+confermare e controllare Stato. Annullare deve ripristinare tutta la scheda.
+Ripetere dichiarando critico: due fallimenti, senza raddoppiare il danno.
+Provare separatamente PF 24, temporanei 3 e danno effettivo 59: eccedenza 32,
+morte istantanea e tre fallimenti. Conservare la copia precedente e verificare
+riavvio/ripristino; non usare una scheda personale per queste prove.
+I dettagli e i limiti sono in [DANNI-ZERO-PF.md](DANNI-ZERO-PF.md).
+Registrare H23 senza dedurre un esito fisico dai test host.
 
 ## Registrazione dell'esito
 

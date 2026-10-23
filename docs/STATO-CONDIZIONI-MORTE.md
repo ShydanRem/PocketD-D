@@ -1,5 +1,9 @@
 # Stato, condizioni e salvezze contro morte — v0.24
 
+> Aggiornamento v0.56: [danni a zero PF e morte istantanea](DANNI-ZERO-PF.md)
+> con risoluzione base esplicita e verifica del critico. I blocchi descritti
+> sotto per questi casi si riferiscono al percorso ordinario o alla versione storica.
+
 **Aggiornamento v0.44:** [effetti espliciti sui tiri](CONDIZIONI-TIRI.md) per
 Accecato, Spaventato, Prono e Trattenuto, separati dalle note, con circostanze
 e blocchi prima di RNG. Non sono condizioni complete. PDD23, USB8/backup v11.

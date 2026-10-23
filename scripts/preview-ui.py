@@ -63,6 +63,14 @@ input_gallery=Image.new('RGB',(466*2,466*2),'black')
 for i,name in enumerate(('home','touch','keys-done','timeout')):
     input_gallery.paste(Image.open(BASE/f'input-check-{name}.png'),(i%2*466,i//2*466))
 input_gallery.save(BASE/'input-check-preview.png')
+death_views=('choice','save-error','result','critical','stable','instant','instant-result',
+             'blocked-0','blocked-1','blocked-2','blocked-3','maximum')
+for name in death_views:
+    Image.open(BASE/f'death-damage-{name}.ppm').save(BASE/f'death-damage-{name}.png')
+death_gallery=Image.new('RGB',(466*2,466*2),'black')
+for i,name in enumerate(('choice','critical','instant','instant-result')):
+    death_gallery.paste(Image.open(BASE/f'death-damage-{name}.png'),(i%2*466,i//2*466))
+death_gallery.save(BASE/'death-damage-preview.png')
 frames=[Image.open(BASE/f'ux-transition-{i:02d}.ppm').convert('RGB') for i in range(5)]
 frames[0].save(BASE/'ui-transition.gif',save_all=True,append_images=frames[1:],duration=[40,40,40,40,1000],loop=0,disposal=2,optimize=True)
 print(f'UI: {len(records)} production views, overview, offline catalog and transition exported')

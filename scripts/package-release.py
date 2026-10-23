@@ -82,6 +82,9 @@ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as out:
                  ('home','send','send-error','sent','timeout','restore','history-error','state-error','restored')]
     ui_files += ['input-check-preview.png']+[f'input-check-{name}.png' for name in
                  ('entry','home','touch','touch-2','touch-3','touch-4','touch-5','touch-done','keys','keys-done','unavailable','maximum','timeout')]
+    ui_files += ['death-damage-preview.png']+[f'death-damage-{name}.png' for name in
+                 ('choice','save-error','result','critical','stable','instant','instant-result',
+                  'blocked-0','blocked-1','blocked-2','blocked-3','maximum')]
     for name in ui_files:
         image=preview/name
         if not image.is_file():raise SystemExit(f'Missing UI capture: {name}')

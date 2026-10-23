@@ -1,5 +1,9 @@
 # Danni ricevuti e difese per tipo — v0.28
 
+> Aggiornamento v0.56: [danni a zero PF e morte istantanea](DANNI-ZERO-PF.md)
+> con risoluzione base esplicita e verifica del critico. I blocchi descritti
+> sotto per questi casi si riferiscono al percorso ordinario o alla versione storica.
+
 > Aggiornamento v0.35: [riduzioni esplicite prima/dopo e conto del colpo](RIDUZIONI-DANNI.md).
 > PDD15/USB v7/layout invariati; le regole automatiche di riduzione restano successive.
 

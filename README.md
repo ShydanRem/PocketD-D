@@ -2,14 +2,15 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.55:** [collaudo locale dei comandi](docs/COLLAUDO-COMANDI.md) da Aspetto → Tasti: cinque bersagli per il tocco e monitor PWR/BOOT con le scorciatoie assegnate. Prove isolate dal gioco, azzeramento, uscita e timeout protetti, senza modificare scheda o salvataggi. La diagnostica USB v0.54 e il backup nativo restano disponibili. Grafica del compagno conservata; 100/100 viste esercitate su LVGL host. Hardware in arrivo: nessuna prova fisica ancora eseguita.
+**Stato v0.56:** [danni a zero PF e morte istantanea](docs/DANNI-ZERO-PF.md), con anteprima, verifica della regola base 2014 e dichiarazione del critico. PF, temporanei, registro morte e costi sono salvati insieme, con annullamento. Grafica del compagno e tasti configurabili conservati; 101/101 viste esercitate su LVGL host. Eccezioni e altre regole restano manuali. Hardware in arrivo: nessuna prova fisica ancora eseguita.
 
 Il firmware comprende borsello, storico, scheda, inventario, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Scheda PDD25, nuovi registri NVS PDH2 con lettura di PDH1, copia scheda USB9 e backup PC v11. Il backup nativo è un archivio distinto dal backup della raccolta PC. Regole speciali, altri effetti e prodotto fisico restano aperti.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
+- [Danni a zero PF: regola base esplicita, conferme e limiti v0.56](docs/DANNI-ZERO-PF.md)
 - [Collaudo locale del tocco e dei tasti configurabili v0.55](docs/COLLAUDO-COMANDI.md)
-- [Primo avvio: installazione, diagnostica e sessione guidata v0.55](docs/PRIMO-AVVIO.md)
+- [Primo avvio: installazione, diagnostica e sessione guidata v0.56](docs/PRIMO-AVVIO.md)
 - [Scheda da compilare durante il collaudo hardware](docs/COLLAUDO-HARDWARE.md)
 - [Backup del dispositivo: acquisizione, anteprima, ripristino e compatibilità v0.53](docs/BACKUP-DISPOSITIVO.md)
 - [Storico dei tiri: persistenza, tasti, errori e limiti v0.52](docs/STORICO-TIRI.md)
@@ -45,7 +46,7 @@ Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazi
 
 ## Primo traguardo
 
-Scheda → caratteristica → d20 → risultato → PF → salvataggio offline sul dispositivo. Il firmware include Elian originale e una copia limitata della scheda preparata da PC, con avatar personale. Inventario, attacchi e cure sono portati nel firmware; magie/capacità e tasti sono portati nella v0.22. La v0.23 porta riposi espliciti e dadi vita. La v0.24 porta registro morte base e annotazioni delle condizioni. Effetti completi, eccezioni e morte istantanea restano successivi. Non considerare una build riuscita equivalente a una prova fisica.
+Scheda → caratteristica → d20 → risultato → PF → salvataggio offline sul dispositivo. Il firmware include Elian originale e una copia limitata della scheda preparata da PC, con avatar personale. Inventario, attacchi e cure sono portati nel firmware; magie/capacità e tasti sono portati nella v0.22. La v0.23 porta riposi espliciti e dadi vita. La v0.24 porta registro morte base e annotazioni delle condizioni. La v0.56 aggiunge danni a zero PF e morte istantanea con verifica esplicita della regola base. Effetti completi ed eccezioni restano successivi. Non considerare una build riuscita equivalente a una prova fisica.
 
 ## Avvio del prototipo
 

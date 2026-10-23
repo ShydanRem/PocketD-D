@@ -1,8 +1,10 @@
-# Firmware PocketD-D 0.55 — collaudo locale dei comandi
+# Firmware PocketD-D 0.56 — danni a zero PF e morte istantanea
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
+
+[Novità v0.56: risoluzione esplicita di danni a zero PF e morte istantanea](DANNI-ZERO-PF.md).
 
 [Novità v0.55: prova locale di tocco e tasti configurabili](COLLAUDO-COMANDI.md).
 [Novità v0.54: primo avvio, diagnostica e sessione guidata](PRIMO-AVVIO.md).
@@ -1052,7 +1054,6 @@ ESP32-S3: **988800 byte**, partizione app 4 MiB **76% libera**, ESP-IDF 5.5.5 e
 LVGL 9.4.0. PDD23/USB8/backup v11/layout e tasti configurabili invariati.
 Nessun flash, collaudo fisico, lettura Beyond o modifica della raccolta personale.
 
-
 ## Verifiche v0.47 — pannelli, icone e feedback
 
 Pannelli con bordi bronzo, icone di lista e messaggi transitori dei PF/risorse
@@ -1141,3 +1142,27 @@ ed ESP32-S3 passati. Binario app 3.385.632 byte, partizione app 4 MiB 19% libera
 PDD25/PDH2/USB9, backup, diagnostica v1 e partizioni invariati. Nuove catture
 `input-check-*.png` nel pacchetto, tutte native su host con periferiche sintetiche.
 Nessun flash, collaudo fisico, lettura Beyond o modifica della raccolta personale.
+
+## Incremento v0.56 — danni a zero PF e morte istantanea
+
+[Regola rappresentata, percorso e limiti](DANNI-ZERO-PF.md). L'anteprima dei
+danni apre una risoluzione separata per i casi prima bloccati: verifica Base
+2014, dichiarazione esplicita del critico quando serve, PF/temporanei e
+registro prima/dopo. Un colpo misto produce un solo evento del registro;
+il critico non moltiplica l'importo già inserito. Il massimo è quello al
+momento dell'impatto. Costi, reazione, effetti collegati e registro sono
+salvati nella stessa candidata, con annullamento completo. Nessun RNG o
+elemento aggiunto allo storico dei tiri. Eccezioni e cause persistenti
+separate restano fuori da questo incremento.
+
+Passati: 161 test JavaScript, suite firmware completa, 67.584 combinazioni
+indipendenti del nuovo core e 101/101 viste LVGL host. Verificati critici,
+temporanei anche a zero PF, stabilizzazione, soglie esatte, sei componenti,
+tre costi, reazione, effetti collegati, codec PDD25, registri indisponibili
+o incoerenti, scrittura fallita/nuovo tentativo, ricevuta e annullamento.
+ASan/UBSan sul nuovo core e sulla UI, build PC/HTML autonomo ed ESP32-S3
+passati. Binario app 3.388.624 byte, partizione app 4 MiB 19% libera.
+PDD25/PDH2/USB9, backup, diagnostica v1 e partizioni invariati. Catture
+`death-damage-*.png` native su host con dati sintetici, incluse nel pacchetto.
+Grafica e tasti configurabili conservati. Nessun flash, collaudo fisico,
+lettura Beyond o modifica della raccolta personale.

@@ -39,7 +39,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH } page_t;
 static const pd_theme_kind page_themes[]={
     [HERO]=PD_THEME_NONE,
     [SHEET]=PD_THEME_SHEET,
@@ -141,6 +141,7 @@ static const pd_theme_kind page_themes[]={
     [INPUT_CHECK_HOME]=PD_THEME_CHECK,
     [INPUT_CHECK_TOUCH]=PD_THEME_CHECK,
     [INPUT_CHECK_KEYS]=PD_THEME_CHECK,
+    [DAMAGE_DEATH]=PD_THEME_DAMAGE,
 };
 PD_EXT static pd_state state,previous,pending,scratch;
 static bool undo_available,import_pending,has_roll;
@@ -215,7 +216,7 @@ static bool rest_active,hit_rolled;
 PD_EXT static pd_state hit_candidate;
 static pd_pool hit_result;
 static unsigned hit_gained;
-static bool confirmation_open(void){return input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
+static bool confirmation_open(void){return page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
 static pd_damage_plan damage_plan; /* First component + explicit concentration choice. */
 static pd_damage_component damage_extra[PD_DAMAGE_COMPONENTS-1],damage_part_draft;
 static pd_damage_context damage_context,damage_extra_context[PD_DAMAGE_COMPONENTS-1],damage_part_context,source_context_draft;
@@ -241,6 +242,9 @@ static bool current_concentration_info(int mode,int extra,pd_check_info *info,pd
     if(!pd_concentration_event_info(&state,&event,mode,extra,info,&report,cap30))return false;
     *summary=report.total;return true;
 }
+static pd_death_damage_choice death_damage_choice;
+static pd_death_damage_summary incoming_death;
+static bool incoming_death_used;
 static pd_damage_summary incoming_result;
 static pd_damage_summary concentration_damage;
 static pd_roll concentration_result;
@@ -631,7 +635,8 @@ static void act(intptr_t action) {
     if(page==DEFENCE_GRANT_REVIEW&&action!=1817&&action!=2010&&action!=2035&&action!=2036)return;
     if(page==DEFENCE_RULE_REVIEW&&action!=1817&&(action<2011||action>2014))return;
     if(page==DAMAGE_CONTEXT&&(action<2022||action>2027))return;
-    if(page==DAMAGE_CONFIRM&&action!=1804&&action!=1805&&action!=1806&&action!=1807&&action!=1860&&action!=1930&&action!=2021&&action!=2117)return;
+    if(page==DAMAGE_DEATH&&action!=1930&&(action<3001||action>3004))return;
+    if(page==DAMAGE_CONFIRM&&action!=3000&&action!=1804&&action!=1805&&action!=1806&&action!=1807&&action!=1860&&action!=1930&&action!=2021&&action!=2117)return;
     if(page==DAMAGE_TYPES&&action!=2050&&(action<1931||action>1933))return;
     if(page==DAMAGE_REDUCTION&&action!=2060&&(action<2042||action>2048))return;
     if(page==DAMAGE_MATH&&action!=2051&&action!=2090)return;
@@ -857,7 +862,7 @@ static void act(intptr_t action) {
         pd_damage_event event=current_damage_event();pd_damage_event_summary report;if(!pd_damage_event_apply(&next,&event,&report))return;pd_damage_summary r=report.total;
         bool changed=memcmp(&next,&state,sizeof state)!=0;
         if(!changed||pd_storage_save(&next)){
-            damage_hp_before=state.hp;damage_temp_before=state.temp_hp;incoming_result=r;incoming_event=report;incoming_components=event.count;
+            incoming_death_used=false;damage_hp_before=state.hp;damage_temp_before=state.temp_hp;incoming_result=r;incoming_event=report;incoming_components=event.count;
             if(changed){previous=state;undo_available=true;state=next;invalidate_strike();}page=DAMAGE_RESULT;
         }
     }
@@ -869,6 +874,27 @@ static void act(intptr_t action) {
     }
     else if(action==1808&&page==DAMAGE_RESULT){damage_plan.amount=1;damage_plan.concentration=0;damage_extra_count=0;damage_context=(pd_damage_context){0};memset(damage_extra_context,0,sizeof damage_extra_context);damage_part_page=0;clear_damage_reductions();page=DAMAGE_HOME;}
     else if(action==1809&&page==DICE&&combat_roll==6){page=DAMAGE_RESULT;}
+    else if(action==3000&&page==DAMAGE_CONFIRM){
+        pd_damage_event event=current_damage_event();pd_death_damage_summary r;
+        if(!pd_death_damage_preview(&state,&event,(pd_death_damage_choice){0},&r)||!r.eligible)return;
+        death_damage_choice=(pd_death_damage_choice){0};page=DAMAGE_DEATH;
+    }
+    else if(action==3001&&page==DAMAGE_DEATH){death_damage_choice=(pd_death_damage_choice){0};page=DAMAGE_CONFIRM;}
+    else if((action==3002||action==3003)&&page==DAMAGE_DEATH){
+        pd_damage_event event=current_damage_event();pd_death_damage_summary r;
+        if(!pd_death_damage_preview(&state,&event,death_damage_choice,&r)||!r.eligible||!r.registry_available||r.registry_conflict||r.already_dead||r.reaction_at_zero)return;
+        if(action==3002){if(!r.critical_needed)return;death_damage_choice.critical=(death_damage_choice.critical+1)%3;death_damage_choice.verified=false;}
+        else death_damage_choice.verified=!death_damage_choice.verified;
+    }
+    else if(action==3004&&page==DAMAGE_DEATH){
+        pd_damage_event event=current_damage_event();pd_death_damage_summary r;
+        if(!pd_death_damage_apply(&next,&event,death_damage_choice,&r))return;
+        if(pd_storage_save(&next)){
+            damage_hp_before=state.hp;damage_temp_before=state.temp_hp;incoming_death=r;incoming_death_used=true;
+            incoming_result=r.impact.total;incoming_event=r.impact;incoming_components=event.count;
+            previous=state;undo_available=true;state=next;invalidate_strike();page=DAMAGE_RESULT;
+        }
+    }
     else if(action==1860&&page==DAMAGE_CONFIRM){
         pd_check_info info;pd_damage_summary summary;
         if(!current_concentration_info(0,0,&info,&summary,false))return;
@@ -886,7 +912,7 @@ static void act(intptr_t action) {
         }
         next=hit_candidate;
         if(pd_storage_save(&next)){
-            damage_hp_before=state.hp;damage_temp_before=state.temp_hp;incoming_result=concentration_damage;incoming_event=concentration_event_report;incoming_components=damage_extra_count+1;
+            incoming_death_used=false;damage_hp_before=state.hp;damage_temp_before=state.temp_hp;incoming_result=concentration_damage;incoming_event=concentration_event_report;incoming_components=damage_extra_count+1;
             previous=state;undo_available=true;state=next;invalidate_strike();
             char note[49];snprintf(note,sizeof note,"CD %u; %s; PF %u",concentration_damage.concentration_dc,concentration_damage.ends_concentration?"persa":"mantenuta",state.hp);
             journal_d20(PD_H_CONCENTRATION,"Concentrazione",&concentration_result,concentration_mode,note);
@@ -922,7 +948,7 @@ static void act(intptr_t action) {
         damage_plan.concentration=0;page=DAMAGE_PARTS;
     }
     else if(action==1928&&page==DAMAGE_PART_EDIT)edit_defence(damage_part_draft.type,DAMAGE_PART_EDIT);
-    else if(action==1930&&(page==DAMAGE_CONFIRM||page==DAMAGE_RESULT)){
+    else if(action==1930&&(page==DAMAGE_CONFIRM||page==DAMAGE_DEATH||page==DAMAGE_RESULT)){
         damage_details_return=page;damage_type_page=0;
         if(page==DAMAGE_RESULT)damage_details=incoming_event;
         else{pd_damage_event event=current_damage_event();if(!pd_damage_event_preview(&state,&event,&damage_details))return;}
@@ -1791,6 +1817,31 @@ static void render_input_check(void){
         button("Azzera",83,359,144,48,2902,true);button("Indietro",239,359,144,48,2903,true);
     }
 }
+static void render_death_damage(void){
+    pd_damage_event event=current_damage_event();pd_death_damage_summary r;
+    if(!pd_death_damage_preview(&state,&event,death_damage_choice,&r))return;
+    char text[160];
+    label("Danni e morte",83,111,228,false);lv_obj_t *types=button("Tipi",323,99,60,44,1930,true);lv_obj_set_style_text_font(types,&lv_font_montserrat_16,0);
+    snprintf(text,sizeof text,"Danni %u | temp %u -> %u",r.impact.total.adjusted,state.temp_hp,r.impact.total.temp_after);small_label(text,83,151,300,PD_GOLD);
+    snprintf(text,sizeof text,"PF %u -> %u | massimo %u",state.hp,r.impact.total.hp_after,r.maximum);label(text,83,179,300,false);
+    const char *problem=!r.eligible?"Colpo da ripreparare":!r.registry_available?"Registro non disponibile":r.already_dead?"Tre fallimenti gia presenti":r.registry_conflict?"Registro da correggere":r.reaction_at_zero?"Reazione a zero PF: verifica col DM":NULL;
+    if(problem){
+        small_label(problem,83,213,300,PD_DANGER);
+        small_label(!r.registry_available?"Stato > Avvia registro; poi nuovo colpo":r.reaction_at_zero?"Indietro > Riduci: rimuovi la reazione":"Correggi con il DM; poi nuovo colpo",83,235,300,PD_MUTED);
+    }else{
+        if(r.instant)snprintf(text,sizeof text,"Morte base: fallite %u -> 3",r.failures_before);
+        else if(r.critical_needed&&death_damage_choice.critical==PD_HIT_UNRESOLVED)snprintf(text,sizeof text,"Fallite %u -> ? | riuscite %u",r.failures_before,r.successes_before);
+        else snprintf(text,sizeof text,"Fallite %u -> %u | riuscite %u -> %u",r.failures_before,r.failures_after,r.successes_before,r.successes_after);
+        small_label(text,83,213,300,r.instant||r.failures_after==3?PD_DANGER:PD_MINT);
+        if(r.instant)snprintf(text,sizeof text,"%s %u >= massimo %u",state.hp?"Eccedenza":"Danno a 0 PF",r.excess,r.maximum);
+        else snprintf(text,sizeof text,r.stable_before?"Stabile: si -> no; danni gia completi":"Un solo colpo; importo gia completo");
+        small_label(text,83,235,300,PD_MUTED);
+    }
+    snprintf(text,sizeof text,r.critical_needed?"Colpo critico: %s >":"Critico: non necessario",(const char *const[]){"da verificare","no","si"}[death_damage_choice.critical]);
+    lv_obj_t *critical=button(text,83,255,300,44,3002,r.critical_needed&&!problem);lv_obj_set_style_text_font(critical,&lv_font_montserrat_16,0);
+    lv_obj_t *verified=button(death_damage_choice.verified?"Base 2014: verificata":"Base 2014: da verificare",83,305,300,44,3003,!problem);lv_obj_set_style_text_font(verified,&lv_font_montserrat_16,0);
+    button("Indietro",83,359,144,48,3001,true);button("Conferma",239,359,144,48,3004,r.allowed);
+}
 static void render_backup(void){
     char text[160];
     if(page==BACKUP_HOME){
@@ -2286,7 +2337,7 @@ static void render_damage(void) {
             snprintf(text,sizeof text,"Danni %u -> %u",report.raw,r.adjusted);label(text,83,171,300,false);
             snprintf(text,sizeof text,"Temporanei %u -> %u",state.temp_hp,r.temp_after);label(text,83,207,300,false);
             snprintf(text,sizeof text,"PF %u -> %u",state.hp,r.hp_after);label(text,83,239,300,false);
-            if(r.massive||r.at_zero){small_label(r.massive?"Possibile morte istantanea: DM":"Zero PF: usa il registro con il DM",83,285,300,PD_DANGER);small_label("Nessun danno applicato da questo flusso",83,317,300,PD_MUTED);}
+            if(r.massive||r.at_zero){small_label(r.massive?"Possibile morte istantanea: DM":"Gia a zero PF: verifica il colpo",83,273,300,PD_DANGER);button("Risolvi registro morte",83,303,300,44,3000,true);}
             else if(r.needs_concentration){
                 pd_check_info info;pd_damage_summary summary;
                 bool known=current_concentration_info(0,0,&info,&summary,false);
@@ -2303,6 +2354,14 @@ static void render_damage(void) {
     } else if(page==DAMAGE_RESULT){
         if(incoming_components>1||has_reductions(&incoming_event)){label("Colpo confermato",83,111,228,false);lv_obj_t *b=button("Tipi",323,99,60,44,1930,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);snprintf(text,sizeof text,"%u %s: %u -> %u",incoming_components,incoming_components==1?"parte":"parti",incoming_event.raw,incoming_result.adjusted);}
         else{label("Danni confermati",83,111,300,true);snprintf(text,sizeof text,"%s: %u -> %u",pd_damage_name(damage_plan.type),damage_plan.amount,incoming_result.adjusted);}small_label(text,83,161,300,PD_GOLD);
+        if(incoming_death_used){
+            snprintf(text,sizeof text,"Temporanei %u -> %u",damage_temp_before,incoming_death.impact.total.temp_after);label(text,83,195,300,false);
+            snprintf(text,sizeof text,"PF %u -> %u",damage_hp_before,incoming_death.impact.total.hp_after);label(text,83,231,300,true);
+            snprintf(text,sizeof text,"Fallite %u -> %u | riuscite %u -> %u",incoming_death.failures_before,incoming_death.failures_after,incoming_death.successes_before,incoming_death.successes_after);small_label(text,83,279,300,incoming_death.failures_after==3?PD_DANGER:PD_MINT);
+            small_label(incoming_death.instant?"Morte: regola base confermata":incoming_death.stable_before?"Stabilizzazione terminata":"Esito del singolo colpo confermato",83,305,300,PD_GOLD);
+            small_label("Eroe > Annulla ripristina il colpo",83,331,300,PD_MUTED);
+            button("Stato",83,359,144,48,1500,true);button("Nuovo",239,359,144,48,1808,true);return;
+        }
         snprintf(text,sizeof text,"Temporanei %u -> %u",damage_temp_before,state.temp_hp);label(text,83,211,300,false);
         snprintf(text,sizeof text,"PF %u -> %u",damage_hp_before,state.hp);label(text,83,251,300,true);
         small_label(incoming_result.ends_concentration?"Concentrazione terminata":incoming_result.needs_concentration?(combat_roll==6?"Concentrazione mantenuta dal tiro":"Concentrazione mantenuta con il DM"):"Concentrazione: non richiesta",83,299,300,PD_MINT);
@@ -2407,6 +2466,7 @@ static void render_content(void) {
         return;
     }
     if(input_check_open()){render_input_check();return;}
+    if(page==DAMAGE_DEATH){render_death_damage();return;}
     if(page==BACKUP_HOME||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM){render_backup();return;}
     if(page==HISTORY_HOME||page==HISTORY_DETAIL||page==HISTORY_DISCARD){render_history();return;}
     if(page==WALLET_HOME||page==WALLET_EDIT||page==WALLET_CONFIRM){render_wallet();return;}
@@ -2544,7 +2604,7 @@ static void render_content(void) {
     }
 }
 #ifdef PD_UI_TEST
-static bool styled_pages[INPUT_CHECK_KEYS+1];
+static bool styled_pages[DAMAGE_DEATH+1];
 static void capture_styled_page(unsigned view);
 #endif
 static void render(void){

@@ -107,9 +107,8 @@ bool pd_damage_event_preview(const pd_state *s,const pd_damage_event *event,pd_d
     }
     *out=report;return true;
 }
-bool pd_damage_event_apply(pd_state *s,const pd_damage_event *event,pd_damage_event_summary *out) {
-    pd_damage_event_summary report;if(!out||!pd_damage_event_preview(s,event,&report)||!report.total.allowed)return false;
-    if(report.profile){const pd_reduction_profile *p=&report.profile_snapshot;
+static void apply_impact(pd_state *s,const pd_damage_event_summary *report) {
+    if(report->profile){const pd_reduction_profile *p=&report->profile_snapshot;
         for(unsigned row=0;row<PD_PROFILE_COSTS;row++){pd_cost c=pd_profile_cost(p,row);
             if(c.kind==PD_COST_COUNTER)s->resources[c.index].current-=c.amount;
             else if(c.kind==PD_COST_POWER)s->magic.powers[c.index].remaining-=c.amount;
@@ -117,9 +116,48 @@ bool pd_damage_event_apply(pd_state *s,const pd_damage_event *event,pd_damage_ev
             else if(c.kind==PD_COST_SLOT||c.kind==PD_COST_PACT)(c.kind==PD_COST_PACT?s->magic.pact:s->magic.slots)[c.index].current-=c.amount;
         }if(p->reaction)s->reaction_spent=true;
     }
-    if(report.total.adjusted)pd_hp(s,-(int)report.total.adjusted);
-    if(report.total.ends_concentration)pd_concentration_end(s);
+    if(report->total.adjusted)pd_hp(s,-(int)report->total.adjusted);
+    if(report->total.ends_concentration)pd_concentration_end(s);
+}
+bool pd_damage_event_apply(pd_state *s,const pd_damage_event *event,pd_damage_event_summary *out) {
+    pd_damage_event_summary report;if(!out||!pd_damage_event_preview(s,event,&report)||!report.total.allowed)return false;
+    apply_impact(s,&report);
     *out=report;return true;
+}
+bool pd_death_damage_preview(const pd_state *s,const pd_damage_event *event,pd_death_damage_choice choice,pd_death_damage_summary *out){
+    pd_death_damage_summary r={0};
+    if(!out||choice.critical>PD_HIT_CRITICAL||!pd_damage_event_preview(s,event,&r.impact))return false;
+    const pd_damage_summary *d=&r.impact.total;
+    r.maximum=pd_max_hp(s);r.registry_available=s->status.available;
+    r.failures_before=r.failures_after=s->status.failures;
+    r.successes_before=r.successes_after=s->status.successes;
+    r.stable_before=r.stable_after=s->status.stabilized;
+    r.already_dead=!s->hp&&s->status.available&&s->status.failures==3;
+    r.registry_conflict=!s->hp&&s->status.available&&(s->status.successes==3||
+        (s->status.stabilized&&(s->status.successes||s->status.failures)));
+    r.eligible=d->configured&&(d->at_zero||d->massive);
+    r.reaction_at_zero=!s->hp&&r.impact.profile&&r.impact.profile_snapshot.reaction;
+    if(r.eligible){
+        unsigned remainder=d->adjusted-d->absorbed;
+        r.excess=s->hp?(remainder>s->hp?remainder-s->hp:0):d->adjusted;
+        r.instant=r.excess>=r.maximum;
+        r.critical_needed=d->at_zero&&!r.instant;
+        if(r.instant){r.failures_after=3;r.successes_after=0;r.stable_after=false;}
+        else if(choice.critical!=PD_HIT_UNRESOLVED){
+            unsigned n=s->status.failures+(choice.critical==PD_HIT_CRITICAL?2:1);
+            r.failures_after=n>3?3:n;r.stable_after=false;
+        }
+        r.failures_added=r.failures_after-r.failures_before;
+        r.allowed=r.registry_available&&!r.registry_conflict&&!r.already_dead&&!r.reaction_at_zero&&choice.verified&&
+            (!r.critical_needed||choice.critical!=PD_HIT_UNRESOLVED);
+    }
+    *out=r;return true;
+}
+bool pd_death_damage_apply(pd_state *s,const pd_damage_event *event,pd_death_damage_choice choice,pd_death_damage_summary *out){
+    pd_death_damage_summary r;if(!out||!pd_death_damage_preview(s,event,choice,&r)||!r.allowed)return false;
+    apply_impact(s,&r.impact);
+    s->status.successes=r.successes_after;s->status.failures=r.failures_after;s->status.stabilized=r.stable_after;
+    *out=r;return true;
 }
 bool pd_concentration_event_info(const pd_state *s,const pd_damage_event *event,int mode,int extra,pd_check_info *out,pd_damage_event_summary *damage,bool cap30) {
     pd_damage_event_summary report;pd_check_info info;

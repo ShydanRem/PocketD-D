@@ -39,6 +39,23 @@ typedef struct {
    case total HP/temp stay unchanged and total.adjusted is not a partial sum. */
 bool pd_damage_event_preview(const pd_state *state,const pd_damage_event *event,pd_damage_event_summary *out);
 bool pd_damage_event_apply(pd_state *state,const pd_damage_event *event,pd_damage_event_summary *out);
+enum { PD_HIT_UNRESOLVED,PD_HIT_NORMAL,PD_HIT_CRITICAL };
+typedef struct { unsigned critical; bool verified; } pd_death_damage_choice;
+typedef struct {
+    pd_damage_event_summary impact;
+    unsigned maximum,excess,failures_before,failures_after,successes_before,successes_after,failures_added;
+    bool eligible,registry_available,registry_conflict,already_dead,critical_needed,instant,reaction_at_zero;
+    bool stable_before,stable_after,allowed;
+} pd_death_damage_summary;
+/* Separate, explicit base-rule resolution for the previously blocked cases.
+   One impact -> at most one/two failures, even with six damage components.
+   At zero HP the effective damage, including absorption by temporary HP,
+   triggers failures and is compared with the maximum. Dropping from positive
+   HP uses the excess after temporary/current HP. No automatic legacy registry. */
+bool pd_death_damage_preview(const pd_state *state,const pd_damage_event *event,pd_death_damage_choice choice,pd_death_damage_summary *out);
+/* Requires verified base rule and resolved critical where needed. No RNG;
+   rejected input leaves both state and report unchanged. */
+bool pd_death_damage_apply(pd_state *state,const pd_damage_event *event,pd_death_damage_choice choice,pd_death_damage_summary *out);
 /* One CON save on the combined effective damage. Same validation/frozen-candidate
    contract as the single-component APIs below; no new persistence fields. */
 bool pd_concentration_event_info(const pd_state *state,const pd_damage_event *event,int mode,int extra,pd_check_info *out,pd_damage_event_summary *damage,bool cap30);
