@@ -17,6 +17,10 @@ try:
   context.add_init_script("Object.defineProperty(navigator, 'serial', {value: {requestPort: async () => {window.chooserCalls=(window.chooserCalls||0)+1;throw new DOMException('No port selected','NotFoundError')}}});")
   page=context.new_page();page.on('pageerror',lambda e:errors.append(str(e)));requests=[];page.on('request',lambda req:requests.append(req.url));page.goto(url)
   expect(page.locator('#status')).to_contain_text('Firmware pronto');expect(page.locator('#install')).to_be_disabled();page.locator('#board').check();expect(page.locator('#install')).to_be_enabled()
+  with page.expect_download() as download:
+   page.get_by_role('link',name='Scarica app PC per Windows').click()
+  artifact=download.value;assert artifact.suggested_filename=='PocketDD-PC.zip'
+  assert Path(artifact.path()).read_bytes()==(ROOT/'dist/install/downloads/PocketDD-PC.zip').read_bytes()
   page.screenshot(path='/workspace/PocketD-D-installer-preview.png',full_page=True)
   page.locator('input[value=update]').check();page.locator('#install').click();expect(page.locator('#status')).to_contain_text('annullata');expect(page.locator('#install')).to_be_enabled();assert page.evaluate('window.chooserCalls')==1
   assert not errors,errors;assert all(u.startswith(url) for u in requests),requests
@@ -28,5 +32,5 @@ try:
   unsupported=browser.new_context();unsupported.add_init_script('delete Navigator.prototype.serial');other=unsupported.new_page();other.goto(url);expect(other.locator('#status')).to_contain_text('Chrome o Edge');other.locator('#board').check();expect(other.locator('#install')).to_be_disabled()
   # The real production library is bundled. This deliberately does not test USB flashing.
   browser.close()
- print('Installer browser: local assets/no CDN, SHA256-ready state, model gate, chooser cancel/retry, corrupt download/retry, unsupported browser and mobile layout passed; USB/hardware not tested')
+ print('Installer browser: exact PC ZIP download, local assets/no CDN, SHA256-ready state, model gate, chooser cancel/retry, corrupt download/retry, unsupported browser and mobile layout passed; USB/hardware not tested')
 finally:server.terminate();server.wait(timeout=5)

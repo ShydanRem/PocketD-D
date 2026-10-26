@@ -42,6 +42,15 @@ Dopo l'installazione si trasferisce il personaggio con il [percorso USB dal
 browser](USB-BROWSER.md), con anteprima e conferma sul dispositivo. L'installer non esegue l'importazione
 della scheda e non legge né modifica la raccolta PC o Beyond.
 
+## Scaricare l'app PC
+
+La pagina dell'installer offre **Scarica app PC per Windows**, con download HTTPS
+del file [PocketDD-PC.zip](https://pocketdd-installer.shydan.chatgpt.site/downloads/PocketDD-PC.zip).
+È un pacchetto separato e già compilato, di circa 220 KB, per importazione Beyond,
+trasferimento della scheda e backup. Estrarre tutto e aprire Avvia-PocketDD.cmd;
+Node.js 24 attuale è l'unico requisito runtime. Non serve compilare o eseguire
+npm install. I link a file interni del workspace non sono usati per questo download.
+
 ## Pacchetto locale e manutenzione
 
 Il pacchetto `PocketD-D-installer-*.zip` include pagina, librerie, firmware,
@@ -59,7 +68,8 @@ npm run installer:build
 npm run installer
 ```
 
-`installer:build` costruisce anche l'app PC e produce `dist/install/`. L'avvio
+`installer:build` costruisce anche l'app PC e produce `dist/install/`, incluso
+`downloads/PocketDD-PC.zip` generato da `scripts/package-pc.py`. L'avvio
 Node serve solo l'installer in loopback, senza servizi Beyond. Il pacchetto
 completo contiene anch'esso `dist/install/` e i sorgenti di manutenzione.
 Per preparare lo ZIP ridotto:

@@ -71,6 +71,14 @@ e ripristinarlo via USB dal browser**, con conferma sul display:
 [procedura e limiti](docs/USB-BROWSER.md). Gli script Python restano alternativi.
 Installazione, trasferimento e avvio sull'hardware reale restano da collaudare.
 
+## App PC pronta per Windows
+
+[Scarica PocketD-D PC](https://pocketdd-installer.shydan.chatgpt.site/downloads/PocketDD-PC.zip),
+estrai tutta la cartella e apri **Avvia-PocketDD.cmd**. Richiede Node.js 24
+attuale; UI e connettore locale sono inclusi e non richiedono compilazione.
+Si apre `http://127.0.0.1:5173/`: lascia aperta la finestra e usa Chrome o Edge
+per trasferire la scheda via USB. Il pacchetto PC non contiene il firmware.
+
 ## Avvio del prototipo
 
 Richiede Node.js 22.12+ (verificato con Node 24) e npm.

@@ -10,9 +10,9 @@ export function createInstallerServer(root=new URL('../dist/install/',import.met
     if(req.headers.origin&&![`http://localhost:${port}`,`http://127.0.0.1:${port}`].includes(req.headers.origin)){res.writeHead(403);res.end();return;}
     if(req.method!=='GET'&&req.method!=='HEAD'){res.writeHead(405);res.end();return;}
     const name=req.url==='/'?'index.html':req.url.slice(1);
-    if(!/^(index\.html|manifest\.json|assets\/[\w.-]+\.(js|css)|firmware\/(bootloader|partitions|app)\.bin|licenses\/[\w.-]+\.txt)$/.test(name)){res.writeHead(404);res.end();return;}
+    if(!/^(index\.html|manifest\.json|downloads\/PocketDD-PC\.zip|assets\/[\w.-]+\.(js|css)|firmware\/(bootloader|partitions|app)\.bin|licenses\/[\w.-]+\.txt)$/.test(name)){res.writeHead(404);res.end();return;}
     try{
-      const data=await readFile(new URL(name,root));const ext=name.split('.').pop(),type={html:'text/html; charset=utf-8',js:'text/javascript; charset=utf-8',css:'text/css; charset=utf-8',json:'application/json',bin:'application/octet-stream',txt:'text/plain; charset=utf-8'}[ext];
+      const data=await readFile(new URL(name,root));const ext=name.split('.').pop(),type={html:'text/html; charset=utf-8',js:'text/javascript; charset=utf-8',css:'text/css; charset=utf-8',json:'application/json',zip:'application/zip',bin:'application/octet-stream',txt:'text/plain; charset=utf-8'}[ext];
       res.writeHead(200,{'Content-Type':type,'Content-Length':data.length});res.end(req.method==='HEAD'?undefined:data);
     }catch{res.writeHead(404);res.end('Installer assente. Esegui npm run installer:build oppure usa il pacchetto compilato.');}
   });server.headersTimeout=10000;server.requestTimeout=15000;return server;

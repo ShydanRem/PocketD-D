@@ -6,11 +6,11 @@ ROOT=Path(__file__).resolve().parent
 if not (ROOT/'index.html').exists():ROOT=ROOT.parent/'dist/install'
 if not (ROOT/'manifest.json').is_file():raise SystemExit('Usa il pacchetto installer compilato oppure esegui npm run installer:build.')
 class Handler(http.server.SimpleHTTPRequestHandler):
- extensions_map={**http.server.SimpleHTTPRequestHandler.extensions_map,'.js':'text/javascript','.css':'text/css','.bin':'application/octet-stream','.json':'application/json'}
+ extensions_map={**http.server.SimpleHTTPRequestHandler.extensions_map,'.js':'text/javascript','.css':'text/css','.bin':'application/octet-stream','.json':'application/json','.zip':'application/zip'}
  def do_GET(self):
   if self.headers.get('Host') not in (f'127.0.0.1:{self.server.server_port}',f'localhost:{self.server.server_port}'):
    self.send_error(403);return
-  if not re.fullmatch(r'/(?:index\.html|manifest\.json|assets/[\w.-]+\.(?:js|css)|firmware/(?:bootloader|partitions|app)\.bin|licenses/[\w.-]+\.txt)?',self.path):
+  if not re.fullmatch(r'/(?:index\.html|manifest\.json|downloads/PocketDD-PC\.zip|assets/[\w.-]+\.(?:js|css)|firmware/(?:bootloader|partitions|app)\.bin|licenses/[\w.-]+\.txt)?',self.path):
    self.send_error(404);return
   super().do_GET()
  def do_HEAD(self):self.send_error(405)

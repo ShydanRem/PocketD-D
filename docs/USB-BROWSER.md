@@ -5,7 +5,9 @@ ricevere il backup nativo e ripristinarlo direttamente da **Chrome o Edge sul
 PC**. Non occorrono gli script Python per questi tre passaggi. Il dispositivo
 rimane il prodotto di gioco; il PC prepara la scheda e conserva le copie.
 
-Usare l'app compilata tramite `npm start` e aprire `http://127.0.0.1:5173/`,
+Su Windows il [pacchetto PC pronto](https://pocketdd-installer.shydan.chatgpt.site/downloads/PocketDD-PC.zip)
+si estrae e si avvia con **Avvia-PocketDD.cmd** (Node.js 24 attuale).
+In alternativa usare l'app compilata tramite `npm start` e aprire `http://127.0.0.1:5173/`,
 oppure un'origine HTTPS compatibile con Web Serial. Un HTML aperto direttamente
 non abilita questi comandi: resta disponibile il download dei file. Chiudere
 l'installer firmware, monitor seriali e altre applicazioni che usano la porta.

@@ -13,7 +13,7 @@
     "beyond:lab": "node --use-env-proxy scripts/beyond-lab.js",
     "firmware:deps": "python3 scripts/firmware-deps.py",
     "firmware:test": "bash scripts/check-firmware.sh",
-    "installer:build": "npm run build && vite build --config vite.installer.config.js && python3 scripts/build-installer.py",
+    "installer:build": "npm run build && vite build --config vite.installer.config.js && python3 scripts/build-installer.py && python3 scripts/package-pc.py",
     "installer": "node scripts/installer-server.js"
   },
   "devDependencies": {
