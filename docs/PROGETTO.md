@@ -120,7 +120,7 @@ momento della scelta restano manuali. Copertura host 114/114, formati invariati.
 | Stato e morte | Note separate dagli effetti sui tiri di Avvelenato/Accecato/Spaventato/Prono/Trattenuto, d20 morte base e correzioni, reazione e inizio turno espliciti, danni a zero PF e morte istantanea base con conferma, tiro morte con vantaggio/svantaggio e bonus espliciti | Altri effetti/condizioni, durate e fonti multiple, eccezioni alla morte |
 | Grafica e comandi | v0.50: home, menu e tutte le 85 viste interne coerenti, avatar con 81 aspetti/quattro pose, transizioni e PWR/BOOT configurabili | Resa, fluidità e touch sul pannello reale (blocco 3) |
 | Impostazioni schermo/alimentazione | Luminosità, inattività, letture batteria/ricarica, avvisi, pausa/light sleep a intervalli e richiesta di spegnimento con salvataggio v0.62 | Consumi/autonomia, stima calibrata, accensione/arresto/risveglio e alimentazione fisici da verificare |
-| Preparazione PC | Importazione Beyond, raccolta, configurazione, backup PC, copia USB con conferma e backup nativo dispositivo → PC con ripristino | USB fisico; sincronizzazione dei progressi con la raccolta PC |
+| Preparazione PC | Importazione Beyond, raccolta, configurazione, backup PC, copia USB con conferma e backup nativo dispositivo → PC con ripristino; invio/acquisizione/ripristino direttamente dal browser via USB con conferma | USB fisico; sincronizzazione dei progressi con la raccolta PC |
 | Party e griglia | Prototipi nel browser | Trasporto e interfaccia sul dispositivo |
 
 Le fasi hardware 0 e 2 restano aperte. Le funzioni individuali delle fasi 3–4

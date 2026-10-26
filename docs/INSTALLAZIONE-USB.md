@@ -38,8 +38,8 @@ automaticamente alla prima installazione. Una copia nativa dei progressi resta
 consigliata prima dell'aggiornamento. Scheda, preferenze e storico PocketD-D
 rimangono nelle aree NVS separate, escluse dalla scrittura del firmware.
 
-Dopo l'installazione si trasferisce il personaggio con il percorso USB già
-esistente, con conferma sul dispositivo. L'installer non esegue l'importazione
+Dopo l'installazione si trasferisce il personaggio con il [percorso USB dal
+browser](USB-BROWSER.md), con anteprima e conferma sul dispositivo. L'installer non esegue l'importazione
 della scheda e non legge né modifica la raccolta PC o Beyond.
 
 ## Pacchetto locale e manutenzione

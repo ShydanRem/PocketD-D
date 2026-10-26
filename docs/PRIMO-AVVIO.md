@@ -368,6 +368,22 @@ su conferma. I guasti NVS simulati restano nel banco host. Registrare H31
 secondo [PREPARAZIONE-MAGIE.md](PREPARAZIONE-MAGIE.md); limiti e momento della
 preparazione richiedono verifica manuale con il DM.
 
+## 16. Collegamento USB dal browser — dopo l'installazione
+
+In Chrome/Edge sul PC aprire l'app tramite localhost, poi Prepara per dispositivo.
+Usare una scheda sintetica, controllare l'anteprima e Invio USB. Annullare una
+volta sul dispositivo e verificare che non compaia successo; ripetere,
+confermare e confrontare caratteristiche, PF, CA, inventario e risorse.
+Verificare che raccolta PC e preferenze locali importate restino conservate.
+
+Ricevere il backup dal browser, confermare sul display, scaricare il file e
+conservarlo prima di modificare la scheda. Ripristinare la copia da anteprima,
+provando prima l'annullamento e poi la conferma. Controllare scheda, storico,
+tasti e riavvio. Chiudere l'installer firmware prima di aprire questo collegamento.
+Verificare l'interruzione dell'attesa distinguendola dall'annullamento sul display;
+non indurre guasti alle scritture fuori dal protocollo H21. Registrare H33 secondo
+[USB-BROWSER.md](USB-BROWSER.md). Gli errori NVS restano simulati sul banco host.
+
 ## Registrazione dell'esito
 
 Copiare [COLLAUDO-HARDWARE.md](COLLAUDO-HARDWARE.md) fuori dal repository e

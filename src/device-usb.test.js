@@ -1,0 +1,81 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import {initialState} from './model.js';
+import {projectDevice} from './device-export.js';
+import {crc32} from './device-backup.js';
+import {sendDeviceCopy,receiveDeviceBackup,restoreDeviceBackup} from './device-usb.js';
+const raw=readFileSync(new URL('../firmware/tests/fixtures/device-backup-v1.synthetic.json',import.meta.url),'utf8');
+const packet=()=>projectDevice(initialState()).packet,encode=x=>new TextEncoder().encode(x);
+function fake({version=9,fragment=23,backup=raw,header='',error='',cancel=false,noAck=false,eof=false,unexpected='',openError=false,confirm=null,writeError=false}={}){
+ const log=[],sent=[],writes=[];let controller,frame='',chooser=0,closed=0,cancelled=0,aborted=0,opened=false;
+ const push=text=>{const bytes=typeof text==='string'?encode(text):text;for(let i=0;i<bytes.length;i+=fragment)controller.enqueue(bytes.subarray(i,i+fragment));};
+ const ack=text=>{if(error)push('PDD ERROR '+error+'\n');else if(cancel)push('PDD CANCELLED user\n');else if(!noAck)push(unexpected||text);if(eof)controller.close();};
+ const port={
+  readable:new ReadableStream({start(c){controller=c;},cancel(){cancelled++;}}),
+  writable:new WritableStream({write(bytes){if(writeError)throw Error('USB write failed');writes.push(bytes.slice());frame+=new TextDecoder().decode(bytes);let at;while((at=frame.indexOf('\n'))>=0){const line=frame.slice(0,at);frame=frame.slice(at+1);sent.push(line);
+   if(line==='PDD HELLO')push(`\nPDD READY ${version}\r\n`);
+   else if(line==='PDD BACKUP HELLO')push(`PDD BACKUP_READY ${version===9?1:version}\n`);
+   else if(line==='PDD BACKUP GET 1'){
+    push('PDD WAIT_BACKUP\n');confirm?.();
+    if(cancel||error||noAck||unexpected)ack('');else{push(header||`PDD BACKUP_DATA ${encode(backup).length} ${crc32(encode(backup)).toString(16).padStart(8,'0')}\n`);push(backup);push('\nPDD BACKUP_DONE\n');if(eof)controller.close();}
+   }else if(line.startsWith('{')){const data=JSON.parse(line);push(data.format==='pocketdd-device'?'PDD WAIT_CONFIRM\n':'PDD WAIT_RESTORE\n');confirm?.();ack(data.format==='pocketdd-device'?'PDD IMPORTED\n':'PDD RESTORED\n');}
+  }},abort(){aborted++;}}),
+  async open(options){log.push(options);if(openError)throw Error('USB busy');opened=true;},async close(){closed++;opened=false;}
+ };
+ const serial={async requestPort(){chooser++;return port;}};
+ return {serial,port,push,sent,writes,log,get chooser(){return chooser},get closed(){return closed},get cancelled(){return cancelled},get aborted(){return aborted},get opened(){return opened}};
+}
+const times={open:500,hello:500,send:500,confirm:30,data:2000};
+function options(f,onProgress){return {serial:f.serial,timeouts:times,onProgress};}
+function released(f){assert.equal(f.closed,1);assert.equal(f.port.readable.locked,false);assert.equal(f.port.writable.locked,false);assert.equal(f.cancelled,1);assert.equal(f.aborted,1);assert.deepEqual(f.log,[{baudRate:115200,bufferSize:8192}]);}
+test('USB browser: fragmented real streams negotiate USB9, send the frozen copy and require the final hardware ACK',async()=>{
+ for(const fragment of [1,7,4096]){
+  const f=fake({fragment}),states=[],p=packet(),before=JSON.stringify(p);await sendDeviceCopy(p,options(f,s=>states.push(s)));
+  assert.deepEqual(states,['connect','send','confirm-import','imported']);assert.deepEqual(f.sent.slice(0,2),['','PDD HELLO']);assert.equal(f.sent[2],before);assert.equal(JSON.stringify(p),before);assert.ok(f.writes.every(w=>w.length<=1024));released(f);
+ }
+});
+test('USB browser: old/future protocol, malformed copy, chooser cancellation and occupied port do not send a candidate',async()=>{
+ for(const version of [1,8,10]){const f=fake({version});await assert.rejects(sendDeviceCopy(packet(),options(f)));assert.deepEqual(f.sent,['','PDD HELLO']);released(f);}
+ for(const p of [{},null,{format:'pocketdd-device',version:true},{format:'pocketdd-device',version:9,name:'é'},{format:'pocketdd-device',version:9,name:'x'.repeat(262144)}]){const f=fake();await assert.rejects(sendDeviceCopy(p,options(f)));assert.equal(f.chooser,0);}
+ await assert.rejects(sendDeviceCopy(packet(),{serial:{requestPort:async()=>{throw new DOMException('No port','NotFoundError')}}}),/annullata/);
+ const busy=fake({openError:true});await assert.rejects(sendDeviceCopy(packet(),options(busy)),/busy/);assert.equal(busy.writes.length,0);
+});
+test('USB browser: device cancellation/storage/busy errors, timeout, wrong ACK and unplug are never reported as success',async()=>{
+ for(const settings of [{cancel:true},{error:'storage'},{error:'busy'},{noAck:true},{unexpected:'PDD RESTORED\n'},{noAck:true,eof:true},{writeError:true}]){
+  const f=fake(settings),states=[];await assert.rejects(sendDeviceCopy(packet(),options(f,s=>states.push(s))));assert.ok(!states.includes('imported'));assert.equal(f.port.readable.locked,false);assert.equal(f.port.writable.locked,false);assert.equal(f.closed,1);
+ }
+});
+test('USB browser: native backup exact bytes/CRC and integrity verified across fragmented headers and payload',async()=>{
+ for(const fragment of [1,13,4096]){const f=fake({fragment}),states=[];assert.equal(await receiveDeviceBackup(options(f,s=>states.push(s))),raw);assert.deepEqual(f.sent,['','PDD BACKUP HELLO','PDD BACKUP GET 1']);assert.deepEqual(states,['connect','confirm-backup','receive','received']);released(f);}
+});
+test('USB browser: oversized/corrupt/truncated backup or unsupported protocol never yields a verified copy',async()=>{
+ const corrupt=JSON.parse(raw);corrupt.state='AAAA'+corrupt.state.slice(4);
+ for(const settings of [{header:'PDD BACKUP_DATA 110001 00000000\n'},{header:`PDD BACKUP_DATA ${encode(raw).length} 00000000\n`},{header:`PDD BACKUP_DATA ${encode(raw).length+10} 00000000\n`,eof:true},{backup:JSON.stringify(corrupt)},{backup:'{}'},{version:2},{cancel:true},{error:'backup-history'},{noAck:true}]){
+  const f=fake(settings),states=[];await assert.rejects(receiveDeviceBackup(options(f,s=>states.push(s))));assert.ok(!states.includes('received'));assert.equal(f.closed,1);
+ }
+});
+test('USB browser: native restore validates before choosing a port and requires the separate restore confirmation/ACK',async()=>{
+ const f=fake(),states=[];await restoreDeviceBackup(raw,options(f,s=>states.push(s)));assert.deepEqual(JSON.parse(f.sent[2]),JSON.parse(raw));assert.deepEqual(states,['connect','send','confirm-restore','restored']);released(f);
+ for(const bad of ['{}',raw+'garbage',raw.replace('"version":1','"version":2')]){const f=fake();await assert.rejects(restoreDeviceBackup(bad,options(f)));assert.equal(f.chooser,0);}
+ const old=fake({version:2});await assert.rejects(restoreDeviceBackup(raw,options(old)));assert.deepEqual(old.sent,['','PDD BACKUP HELLO']);
+ for(const settings of [{cancel:true},{error:'storage'},{noAck:true},{unexpected:'PDD IMPORTED\n'}]){const f=fake(settings),states=[];await assert.rejects(restoreDeviceBackup(raw,options(f,s=>states.push(s))));assert.ok(!states.includes('restored'));}
+});
+test('USB browser: one task at a time, explicit abort releases the port, and a new transaction works afterward',async()=>{
+ const controller=new AbortController(),f=fake({noAck:true,confirm:()=>controller.abort()}),states=[];
+ const first=sendDeviceCopy(packet(),{...options(f,s=>states.push(s)),signal:controller.signal});
+ const g=fake();await assert.rejects(receiveDeviceBackup(options(g)),/già in corso/);assert.equal(g.chooser,0);await assert.rejects(first,/interrotto/);assert.ok(!states.includes('imported'));released(f);
+ await sendDeviceCopy(packet(),options(g));released(g);
+});
+test('USB browser: bounded line/buffer, stale ACK and corrupt negotiation are rejected',async()=>{
+ for(const text of ['x'.repeat(257)+'\n','PDD IMPORTED\n','\u0000\n','PDD READY 10\n','x'.repeat(112000)]){
+  const f=fake();f.serial.requestPort=async()=>{f.push(text);return f.port;};await assert.rejects(sendDeviceCopy(packet(),options(f)));assert.ok(!f.sent.some(x=>x.startsWith('{')));
+ }
+});
+test('USB browser: payload/version stay frozen while the chooser is open; late opening after timeout is closed',async()=>{
+ const p=packet(),original=JSON.stringify(p),f=fake();f.serial.requestPort=async()=>{p.hp=0;return f.port;};await sendDeviceCopy(p,options(f));assert.equal(f.sent[2],original);
+ const q=packet(),old=fake({version:8});old.serial.requestPort=async()=>{q.version=1;return old.port;};await assert.rejects(sendDeviceCopy(q,options(old)));assert.deepEqual(old.sent,['','PDD HELLO']);
+ const late=fake();let closedAfterOpening=false;const close=late.port.close;
+ late.port.open=()=>new Promise(resolve=>setTimeout(()=>{closedAfterOpening=false;resolve();},25));late.port.close=async()=>{closedAfterOpening=true;return close();};
+ await assert.rejects(sendDeviceCopy(packet(),{...options(late),timeouts:{...times,open:5}}));await new Promise(r=>setTimeout(r,40));assert.equal(closedAfterOpening,true);assert.equal(late.sent.length,0);
+});

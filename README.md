@@ -8,6 +8,7 @@ Il firmware comprende borsello, storico, scheda, inventario, magie/slot/usi, rip
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
+- [Invia scheda e gestisci backup dal browser via USB](docs/USB-BROWSER.md)
 - [Installa via USB dal browser: pagina, pacchetto e aggiornamenti](docs/INSTALLAZIONE-USB.md)
 - [Preparazione delle magie sul dispositivo v0.64](docs/PREPARAZIONE-MAGIE.md)
 - [Ricerca sul dispositivo: zaino, magie e capacità v0.63](docs/RICERCA-LOCALE.md)
@@ -64,7 +65,10 @@ in Chrome o Edge sul PC, collega la scheda e scegli **Installa via USB**.
 Il Site è privato del proprietario. Firmware e grafica sono già inclusi;
 **Aggiorna PocketD-D** verifica le partizioni e conserva i progressi nelle NVS
 separate. [Procedura, pacchetto locale e limiti](docs/INSTALLAZIONE-USB.md).
-Installazione e avvio sull'hardware reale restano da collaudare.
+Dopo l'installazione, nell'app PC puoi **inviare la scheda, ricevere il backup
+e ripristinarlo via USB dal browser**, con conferma sul display:
+[procedura e limiti](docs/USB-BROWSER.md). Gli script Python restano alternativi.
+Installazione, trasferimento e avvio sull'hardware reale restano da collaudare.
 
 ## Avvio del prototipo
 

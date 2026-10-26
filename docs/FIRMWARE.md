@@ -4,6 +4,8 @@ Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
+[Scheda, acquisizione e ripristino dal browser via USB](USB-BROWSER.md).
+
 [Installer USB da browser e pacchetto pronto, firmware v0.64](INSTALLAZIONE-USB.md).
 
 [Novità v0.64: preparazione locale, conferma e risorse conservate](PREPARAZIONE-MAGIE.md).
@@ -1458,3 +1460,19 @@ non supportato e layout mobile. I test di scrittura sono simulazioni, nessuna
 scheda fisica collegata. Il binario ESP32-S3 v0.64 da 3.419.664 byte è invariato,
 come partizioni e formati; restano validi i controlli firmware sopra. H32 ancora
 Non eseguito. [Uso, distribuzione e limiti](INSTALLAZIONE-USB.md).
+
+## Supporto PC v0.64 — scheda e backup via Web Serial
+
+Il PC usa ora i protocolli esistenti di copia USB9 e backup nativo v1 direttamente
+dal browser. Anteprima congelata, negoziazione prima dell'invio, conferma sul
+display e ACK finale obbligatorio; timeout/interruzione non diventano successo.
+Acquisizione con lunghezza/CRC e record verificati, download dei byte originali,
+ripristino sottoposto alla validazione semantica del dispositivo. Nessuna
+modifica della raccolta PC o lettura remota.
+
+Passati 182 test JavaScript e controlli Chromium sul codice compilato con
+Web Serial simulata, inclusa la conservazione della raccolta sintetica.
+Verificato anche il precedente flusso file/anteprima. Il firmware ESP32-S3,
+formati, partizioni e tasti restano invariati; il binario è quello v0.64 già
+compilato e verificato su host, senza nuova compilazione necessaria. Nessun
+trasferimento fisico eseguito. [Uso, interruzioni e limiti](USB-BROWSER.md).

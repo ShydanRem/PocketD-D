@@ -1,5 +1,10 @@
 # Backup dal dispositivo al PC — v0.53
 
+> Aggiornamento supporto PC v0.64: [ricezione e ripristino dal browser via USB](USB-BROWSER.md),
+> con anteprima, controllo d'integrità e conferma sul dispositivo. Gli script
+> Python descritti sotto restano disponibili come alternativa.
+
+
 > Aggiornamento v0.60: [costi alternativi per colpo](COSTI-ALTERNATIVI.md).
 > Ogni profilo supporta Tutte oppure Una scelta. PDD28/PDDS mantiene la dimensione
 > di PDD27; backup nativo v1 e strumenti aggiornati accettano PDD25–PDD28.
