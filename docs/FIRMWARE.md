@@ -4,6 +4,8 @@ Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
 
+[Installer USB da browser e pacchetto pronto, firmware v0.64](INSTALLAZIONE-USB.md).
+
 [Novità v0.64: preparazione locale, conferma e risorse conservate](PREPARAZIONE-MAGIE.md).
 
 [Novità v0.63: ricerca per nome nello zaino e nelle magie/capacità](RICERCA-LOCALE.md).
@@ -1440,3 +1442,19 @@ Catture `prepare-*.png` e galleria LVGL host con dati inventati. Nessuna nuova
 lettura Beyond, pubblicazione di dati personali o prova hardware. Preparazione
 automatica per classe, apprendimento di nuove magie e regole speciali restano
 successivi; la prova fisica H31 è ancora da eseguire.
+
+## Distribuzione del firmware v0.64 — installer USB
+
+Aggiunto installer statico Chrome/Edge, esptool-js 0.6.0 e crypto-js 4.2.0
+con dipendenze fissate nel lockfile e licenze incluse. Tre immagini separate,
+SHA-256 prima della connessione, controllo ESP32-S3/16 MB, confronto del layout
+per aggiornamento, nessun eraseAll, MD5 per regione e rilascio della porta.
+Riavvio riuscito e firmware verificato con reset manuale necessario sono distinti.
+Pagina e ZIP ridotto funzionano anche tramite server locale, senza CDN.
+
+Passati 173 test JavaScript e controlli Chromium dell'installer compilato:
+caricamento/integrità, annullamento selettore, file corrotto/riprova, browser
+non supportato e layout mobile. I test di scrittura sono simulazioni, nessuna
+scheda fisica collegata. Il binario ESP32-S3 v0.64 da 3.419.664 byte è invariato,
+come partizioni e formati; restano validi i controlli firmware sopra. H32 ancora
+Non eseguito. [Uso, distribuzione e limiti](INSTALLAZIONE-USB.md).

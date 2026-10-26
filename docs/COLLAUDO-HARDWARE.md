@@ -48,6 +48,7 @@ richiede un'osservazione reale; indicare eventuali prove parziali nelle note.
 | H29 | Alimentazione v0.62: telemetria reale, USB/ricarica, avvisi, pausa/risveglio/tasti, arresto e persistenza | Non eseguito | [Procedura](ALIMENTAZIONE.md) |
 | H30 | Ricerca v0.63: tastiera, filtri, nessun risultato, dettagli/consumi originali, tasti, pausa e reset | Non eseguito | [Procedura](RICERCA-LOCALE.md) |
 | H31 | Preparazione v0.64: anteprima, conferma, risorse/concentrazione conservate, innati, ricerca, tasti, Annulla e persistenza | Non eseguito | [Procedura](PREPARAZIONE-MAGIE.md) |
+| H32 | Installer browser: prima installazione, aggiornamento/layout, porta/BOOT, avanzamento, verifica MD5, reset e progressi conservati | Non eseguito | [Procedura](INSTALLAZIONE-USB.md) |
 
 ## Problema riproducibile
 

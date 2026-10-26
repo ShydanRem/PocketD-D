@@ -8,6 +8,7 @@ Il firmware comprende borsello, storico, scheda, inventario, magie/slot/usi, rip
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
+- [Installa via USB dal browser: pagina, pacchetto e aggiornamenti](docs/INSTALLAZIONE-USB.md)
 - [Preparazione delle magie sul dispositivo v0.64](docs/PREPARAZIONE-MAGIE.md)
 - [Ricerca sul dispositivo: zaino, magie e capacità v0.63](docs/RICERCA-LOCALE.md)
 - [Batteria, pausa e spegnimento controllato v0.62](docs/ALIMENTAZIONE.md)
@@ -55,6 +56,15 @@ Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazi
 ## Primo traguardo
 
 Scheda → caratteristica → d20 → risultato → PF → salvataggio offline sul dispositivo. Il firmware include Elian originale e una copia limitata della scheda preparata da PC, con avatar personale. Inventario, attacchi e cure sono portati nel firmware; magie/capacità e tasti sono portati nella v0.22. La v0.23 porta riposi espliciti e dadi vita. La v0.24 porta registro morte base e annotazioni delle condizioni. La v0.56 aggiunge danni a zero PF e morte istantanea con verifica esplicita della regola base. Effetti completi ed eccezioni restano successivi. Non considerare una build riuscita equivalente a una prova fisica.
+
+## Installazione rapida sul dispositivo
+
+Apri l’[installer USB PocketD-D](https://pocketdd-installer.shydan.chatgpt.site)
+in Chrome o Edge sul PC, collega la scheda e scegli **Installa via USB**.
+Il Site è privato del proprietario. Firmware e grafica sono già inclusi;
+**Aggiorna PocketD-D** verifica le partizioni e conserva i progressi nelle NVS
+separate. [Procedura, pacchetto locale e limiti](docs/INSTALLAZIONE-USB.md).
+Installazione e avvio sull'hardware reale restano da collaudare.
 
 ## Avvio del prototipo
 

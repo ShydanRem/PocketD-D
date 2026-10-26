@@ -29,7 +29,11 @@ folder=f'PocketD-D-v{version}-{revision[:7]}/'
 binary_files=['pocketdd.bin','bootloader/bootloader.bin','partition_table/partition-table.bin','flash_args','flasher_args.json']
 for name in binary_files:
     if not (build/name).is_file():raise SystemExit(f'Missing {name}')
-if not (root/'dist/index.html').is_file():raise SystemExit('Run npm run build first')
+if not (root/'dist/index.html').is_file():raise SystemExit('Run npm run installer:build first')
+installer=json.loads((root/'dist/install/manifest.json').read_text())
+if installer['version']!=version:raise SystemExit('Installer firmware version mismatch')
+for part in installer['parts']:
+    if hashlib.sha256((root/'dist/install'/part['path']).read_bytes()).hexdigest()!=part['sha256']:raise SystemExit('Installer firmware hash mismatch')
 args.output.parent.mkdir(parents=True,exist_ok=True)
 with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as out:
     source=tarfile.open(fileobj=io.BytesIO(git('archive','--format=tar','HEAD')))

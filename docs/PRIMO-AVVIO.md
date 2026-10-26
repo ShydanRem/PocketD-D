@@ -42,6 +42,12 @@ entrare nel bootloader. Non sono stati eseguiti sull'hardware in questa fase.
 
 ## 2. Installare il pacchetto compilato
 
+Percorso più rapido: [installer USB nel browser](INSTALLAZIONE-USB.md), con
+firmware già compilato, controllo del modello dichiarato e verifica dei file.
+Chrome/Edge su PC, cavo dati, scelta Prima installazione/Aggiorna e pulsante USB.
+Per gli aggiornamenti vengono confrontate le partizioni prima di scrivere.
+Il percorso da terminale seguente resta disponibile come alternativa.
+
 Usare insieme i file di **un solo archivio**. La procedura sostituisce il
 firmware di fabbrica; eseguirla dopo il backup e la verifica del modello.
 Dalla cartella `firmware-binaries/` dell'archivio:

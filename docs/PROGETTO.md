@@ -134,7 +134,7 @@ completamento né una dichiarazione di collaudo.
 | --- | --- | --- |
 | 1 — Scheda sul dispositivo | Percorsi base nel firmware: magie/slot/usi, concentrazione, riposi, dadi vita, morte base; v0.51 borsello, v0.52 storico dei tiri e v0.56 danni/morte base espliciti e v0.57 circostanze/bonus nel tiro morte; v0.61 cure/temporanei locali, importi numerici e retry coerenti; v0.63 ricerca negli elenchi; v0.64 preparazione locale con conferma e limiti manuali | Sessione reale e affinamenti emersi dall’uso; regole/eccezioni e verifica nell'uso reale |
 | 2 — Effetti | Modificatori, round, concentrazione, difese, danni e riduzioni con costi/reazione; v0.38 aggiunge slot ordinari/patto; v0.39 durate del proprio turno; v0.40 minuti/ore; v0.41 cariche distinte dalla quantità; v0.42 tre spese congiunte; v0.43 ricarica parziale a dado esplicita; v0.44 quattro effetti di condizione sui tiri e v0.58 durate per riferimenti esterni A/B/C, nominabili sul dispositivo dalla v0.59; v0.60 scelta di una spesa alternativa per colpo | Identità verificate e oltre tre soggetti esterni, gruppi di costi alternativi o oltre tre fonti, eventi/formule di ricarica automatici e requisiti/effetti automatici |
-| 3 — Prodotto fisico | Luminosità, attenuazione/risveglio, salvataggi, tasti configurabili, diagnostica USB v0.54, collaudo locale v0.55, telemetria batteria, pausa/risveglio e spegnimento software v0.62 compilati | Misure batteria/consumi e collaudi reali touch/USB/memoria/alimentazione |
+| 3 — Prodotto fisico | Luminosità, attenuazione/risveglio, salvataggi, tasti configurabili, diagnostica USB v0.54, collaudo locale v0.55, telemetria batteria, pausa/risveglio e spegnimento software v0.62 compilati; installer USB da browser per il firmware v0.64 | Misure batteria/consumi e collaudi reali touch/USB/memoria/alimentazione |
 | 4 — Estetica | v0.50: completato nel software; home/avatar e 85 viste interne, icone, feedback, transizioni e navigazione verificati su 88/88 viste | Collaudo sul display reale nel blocco 3; ulteriori affinamenti artistici sono evoluzioni successive |
 
 Il blocco 2 resta aperto. Le cariche hanno ora un modello distinto dalla quantità,
@@ -163,7 +163,7 @@ le eccezioni supportate solo manualmente devono restare esplicite.
 ## Priorità confermata: dispositivo prima del PC
 
 Il dispositivo è il prodotto. Il PC è per importazione, configurazione,
-trasferimento e backup; il simulatore rimane un banco di prova. Il lavoro sulle
+trasferimento, installazione USB del firmware e backup; il simulatore rimane un banco di prova. Il lavoro sulle
 funzioni di gioco procede nel firmware, senza attendere importazione autonoma
 Beyond, Foundry, party o servizi remoti. La v0.15 porta il primo percorso offline
 in ESP-IDF/LVGL: scheda essenziale, d20, PF/annulla, contatori e salvataggio.
