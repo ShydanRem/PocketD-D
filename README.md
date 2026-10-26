@@ -54,6 +54,7 @@ Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazi
 - [Architettura e verifiche tecniche](docs/ARCHITETTURA.md)
 - [Fattibilità dell’importazione diretta D&D Beyond](docs/BEYOND-FATTIBILITA.md)
 - [Banco di prova Beyond: avvio da PC ed esito delle prove](docs/BEYOND-PROVE.md)
+- [Correzione importazione Beyond: scelte e oggetti personalizzati, prova reale e limiti](docs/BEYOND-RICONCILIAZIONE.md)
 
 ## Primo traguardo
 

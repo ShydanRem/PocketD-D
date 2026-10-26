@@ -77,7 +77,7 @@ test('Conversione: nomi, quantità e inventari fuori limite bloccano senza tronc
 test('Conversione: dati principali mancanti, duplicati o personalizzati non diventano valori plausibili',()=>{
   for(const patch of [p=>delete p.data.modifiers,p=>delete p.data.inventory,p=>delete p.data.baseHitPoints,
     p=>p.data.modifiers.race.push(structuredClone(p.data.modifiers.race[0])),p=>p.data.characterValues=[{typeId:1,value:3}],
-    p=>p.data.preferences={enableOptionalOrigins:true},p=>p.data.modifiers.race={},p=>p.data.inventory=[null],p=>p.data.feats={},p=>p.data.choices.class={}]){
+    p=>p.data.optionalOrigins=[{id:1}],p=>p.data.modifiers.race={},p=>p.data.inventory=[null],p=>p.data.feats={},p=>p.data.choices.class={}]){
     const p=beyondCoreFixture();patch(p);blocked(p);
   }
 });

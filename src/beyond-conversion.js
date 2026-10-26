@@ -1,3 +1,4 @@
+import {normalizeBeyondSource,selectedAbilityBonus} from './beyond-normalize.js';
 import {extendBeyond} from './beyond-details.js';
 import {previewBeyond} from './beyond.js';
 import {initialState, parseBackup, serialize} from './model.js';
@@ -18,9 +19,10 @@ export const BEYOND_LIMITATIONS = [
 
 // Deliberately bounded conversion. Unknown core effects block creation instead of
 // turning a successful HTTP request into a claim of mechanical equivalence.
-export function convertBeyondCore(payload, expectedId) {
+function convertCoreNormalized(payload, expectedId, normalization) {
   const report = previewBeyond(payload, expectedId), c = {...payload.data};
-  const blockers = [], evidence = [];
+  report.inventory.items.forEach((item,i)=>{if(c.inventory?.[i]?.pocketddEquipmentUnknown)item.equipped=null;});
+  const blockers = [...normalization.blockers], evidence = [...normalization.evidence];
   const block = message => { if (!blockers.includes(message)) blockers.push(message); };
   for (const key of ['feats','characterValues','customDefenseAdjustments','customItems','optionalOrigins','optionalClassFeatures']) {
     if (c[key]!=null && !Array.isArray(c[key])) block(`Elenco ${key} non valido.`);
@@ -31,8 +33,7 @@ export function convertBeyondCore(payload, expectedId) {
   for (const group of ['race','class','background','feat','item']) {
     if (!Array.isArray(groups?.[group])) block(`Gruppo modificatori ${group} mancante o non valido.`);
   }
-  if (c.preferences?.enableOptionalOrigins || c.preferences?.enableOptionalClassFeatures ||
-      (c.optionalOrigins?.length ?? 0)>0 || (c.optionalClassFeatures?.length ?? 0)>0) {
+  if ((c.optionalOrigins?.length ?? 0)>0 || (c.optionalClassFeatures?.length ?? 0)>0) {
     block('Origini o capacità opzionali richiedono una riconciliazione non ancora supportata.');
   }
   if ((c.characterValues?.length ?? 0)>0 || (c.customDefenseAdjustments?.length ?? 0)>0) {
@@ -78,8 +79,10 @@ export function convertBeyondCore(payload, expectedId) {
         if (!owners.length) { block(`Origine oggetto non risolta: ${m.subType}.`); continue; }
         if (!owners.some(item => item.equipped===true && (!item.definition.canAttune || item.isAttuned===true))) continue;
       }
+      const chosen=m.isGranted===false&&selectedAbilityBonus(c,group,m);
+      if(chosen)evidence.push(`Aumento ${m.subType}: scelta esplicita e opzione concordante, +${m.value}.`);
       if (!['race','class','background','feat','item','condition'].includes(group) ||
-          m.isGranted===false || (typeof m.restriction==='string' ? m.restriction.trim() : m.restriction!=null)) {
+          (m.isGranted===false&&!chosen) || (typeof m.restriction==='string' ? m.restriction.trim() : m.restriction!=null)) {
         block(`Effetto sui valori principali non risolto: ${m.type} ${m.subType}.`); continue;
       }
       active.push({...m, group, classLevel});
@@ -154,11 +157,11 @@ export function convertBeyondCore(payload, expectedId) {
     const name=item?.definition?.name;
     if (typeof name!=='string' || !name.trim() || name.length>40 || !integer(item?.quantity,0,999)) block('Nome o quantità di un oggetto non rappresentabile (40 caratteri, 0–999).');
     return {id:`beyond-item-${index+1}`, type:'gear', name:typeof name==='string'?name:'?', quantity:item?.quantity,
-      notes:`Beyond: ${item?.equipped?'equipaggiato':'non equipaggiato'}${item?.isAttuned?' · in sintonia':''}. ${item?.definition?.filterType==='Weapon'?'Arma: attacco e danni da configurare.':'Effetti da gestire manualmente.'}`};
+      notes:`Beyond: ${item?.pocketddEquipmentUnknown?'equipaggiamento non disponibile':item?.equipped?'equipaggiato':'non equipaggiato'}${item?.isAttuned?' · in sintonia':''}. ${item?.definition?.filterType==='Weapon'?'Arma: attacco e danni da configurare.':'Effetti da gestire manualmente.'}${item?.pocketddNote?' '+item.pocketddNote:''}`.slice(0,400)};
   });
   if (report.character.name.length>24) block('Nome oltre 24 caratteri: scegliere un nome locale in una futura versione.');
   evidence.push(`Inventario: ${inventorySource.length} voci distinte, nomi e quantità conservati; equipaggiamento annotato, nessuna arma attivata.`);
-  const omissions=[...BEYOND_LIMITATIONS];
+  const omissions=[...BEYOND_LIMITATIONS,...normalization.omissions];
   if (report.hp?.temporary) omissions.push(`PF temporanei sorgente: ${report.hp.temporary}; non inclusi nei PF attuali.`);
   const featureNames = (c.feats ?? []).map(f=>f?.definition?.name).filter(n=>typeof n==='string').map(n=>n.slice(0,100));
   if (featureNames.length) omissions.push(`Talenti da gestire manualmente: ${featureNames.slice(0,3).join(', ')}${featureNames.length>3?` (totale ${featureNames.length})`:''}.`);
@@ -171,8 +174,9 @@ export function convertBeyondCore(payload, expectedId) {
       importInfo:{provider:'dndbeyond',characterId:report.character.id,scope:'core-v1',limitations:omissions}}));
   }
   return {...report,version:2,checks:{http:'reported-by-transport',format:'valid',conversion:blockers.length?'blocked':'supported-core'},
-    conversion:{scope:'core-v1',complete:false,blockers,evidence:[...new Set(evidence)],omissions},draft,
+    conversion:{scope:'core-v1',complete:false,sourceCounts:normalization.sourceCounts,blockers,evidence:[...new Set(evidence)],omissions},draft,
     canImport:draft!==null,warnings:[...blockers,...omissions]};
 }
 
-export function convertBeyond(payload,expectedId){return extendBeyond(convertBeyondCore(payload,expectedId),payload.data)}
+export function convertBeyondCore(payload,expectedId){const n=normalizeBeyondSource(payload);return convertCoreNormalized(n.payload,expectedId,n);}
+export function convertBeyond(payload,expectedId){const n=normalizeBeyondSource(payload);return extendBeyond(convertCoreNormalized(n.payload,expectedId,n),n.payload.data);}

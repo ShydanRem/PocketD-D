@@ -4,7 +4,7 @@ export function openBeyondImport({commit}) {
   dialog.setAttribute('aria-label','Importa da D&D Beyond');
   dialog.innerHTML=`<div class="editor-heading"><h2>Importa da D&D Beyond</h2><button type="button" data-close aria-label="Chiudi">×</button></div>
     <p>Leggi un personaggio pubblico. L’anteprima non modifica la raccolta; la conferma aggiunge una nuova scheda parziale.</p>
-    <p>Da PC: avvia PocketD-D con <code>npm start</code>. Usa sempre lo stesso indirizzo locale per ritrovare la raccolta di questo browser.</p>
+    <p>Da Windows: avvia <code>Avvia-PocketDD.cmd</code> dal pacchetto PC estratto e lascia aperta la finestra. Usa sempre lo stesso indirizzo locale per ritrovare la raccolta di questo browser.</p>
     <form data-read><label>Link o ID del personaggio<input name="character" required maxlength="500" autocomplete="off" placeholder="https://www.dndbeyond.com/characters/…"></label><button type="submit">Leggi e verifica</button></form>
     <p data-status role="status" aria-live="polite"></p>
     <section data-preview hidden><h3 data-name></h3><p data-checks></p><dl data-values></dl>
@@ -12,7 +12,7 @@ export function openBeyondImport({commit}) {
       <h4>Campi compilati</h4><ul data-coverage></ul><ul data-training></ul><ul data-attacks></ul><ul data-powers></ul>
       <label data-weapon-label hidden>Arma attiva<select data-weapon></select></label>
       <h4>Inventario sorgente</h4><ul data-items></ul>
-      <h4>Limiti e dati da completare</h4><ul data-omissions></ul><ul data-blockers role="alert"></ul>
+      <h4 data-blocker-title hidden>Problemi che bloccano l’importazione</h4><ul data-blockers role="alert"></ul><h4>Limiti e dati da completare</h4><ul data-omissions></ul>
       <label class="checkbox-label"><input type="checkbox" data-accept>Ho letto le omissioni e accetto di creare una scheda parziale.</label>
       <button type="button" data-create disabled>Crea nuovo personaggio</button>
     </section>`;
@@ -51,9 +51,10 @@ export function openBeyondImport({commit}) {
       $('[data-weapon-label]').hidden=!weapons.length;
       $('[data-weapon]').replaceChildren();
       for(const item of [{id:'',name:'Scegli in seguito'},...weapons]){const option=document.createElement('option');option.value=item.id;option.textContent=item.name;option.selected=item.id===(report.draft?.equippedWeaponId??'');$('[data-weapon]').append(option);}
-      list('[data-items]',report.inventory.items.map(i=>`${i.name} ×${i.quantity??'?'} · ${i.equipped?'equipaggiato':'non equipaggiato'}`));
+      list('[data-items]',report.inventory.items.map(i=>`${i.name} ×${i.quantity??'?'} · ${i.equipped===true?'equipaggiato':i.equipped===false?'non equipaggiato':'equipaggiamento non disponibile'}`));
       list('[data-omissions]',report.conversion?.omissions??report.warnings);
       list('[data-blockers]',report.conversion?.blockers??['Questa versione del connettore non supporta la creazione.']);
+      $('[data-blocker-title]').hidden=!(report.conversion?.blockers?.length);
       $('[data-preview]').hidden=false;
       $('[data-accept]').disabled=!report.canImport;
       $('[data-status]').textContent=report.canImport?'Anteprima pronta. Controlla valori e omissioni prima di confermare.':'Nessuna scheda creata: risolvere i blocchi indicati.';

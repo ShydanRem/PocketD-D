@@ -95,7 +95,7 @@ export function extendBeyond(report,c){
     if(!integer(d.damage?.diceCount,1,6)||!DIE_SIDES.includes(d.damage?.diceValue)||![1,2].includes(d.attackType)||d.fixedDamage||d.damage.fixedValue) return note('danno o attacco non standard; oggetto conservato, arma da configurare.');
     const ranged=d.attackType===2;
     const ability=ranged?'DES':has('finesse')&&state.abilities.DES>state.abilities.FOR?'DES':'FOR';
-    const proficient=mods.some(m=>m.type==='proficiency'&&!m.restriction&&(m.subType===`${d.categoryId===1?'simple':'martial'}-weapons`&&[1,2].includes(d.categoryId)||m.subType===slug(d.type)||m.subType===slug(d.name)));
+    const proficient=mods.some(m=>m.type==='proficiency'&&!m.restriction&&(m.subType===`${d.categoryId===1?'simple':'martial'}-weapons`&&[1,2].includes(d.categoryId)||m.subType===slug(d.type)||m.subType===slug(d.name)||m.subType===slug(src.pocketddOriginalName)));
     const grants=array(d.grantedModifiers);
     let magic=0;
     for(const m of grants){
@@ -114,7 +114,7 @@ export function extendBeyond(report,c){
     if(!integer(range,5,600)||range%5||has('thrown')&&(!integer(d.range,5,600)||d.range%5))return note('portata non rappresentabile in caselle da 5 piedi.');
     const weapon={...item,type:'weapon',ability,proficient,addAbilityToDamage:true,diceCount:d.damage.diceCount,dieSides:d.damage.diceValue,attackModifier,damageModifier,reach:range/5,damageType:typeof d.damageType==='string'?d.damageType:'',profile:{ranged,heavy:has('heavy'),thrownRange:has('thrown')?d.range/5:0,longRange:integer(d.longRange,0,1200)?Math.ceil(d.longRange/5):0,properties:propertyNames}};
     if(weapon.damageType.length>24||propertyNames.some(n=>n.length>60)||propertyNames.length>20)return note('proprietà o tipo di danno oltre i limiti locali.');
-    weapon.notes=`Beyond: ${src.equipped?'equipaggiato':'non equipaggiato'}. Proprietà: ${propertyNames.join(', ')||'nessuna'}. Modalità primaria; maestrie, due armi e danni aggiuntivi condizionali al DM.`.slice(0,400);
+    weapon.notes=`Beyond: ${src.equipped?'equipaggiato':'non equipaggiato'}. Proprietà: ${propertyNames.join(', ')||'nessuna'}. Modalità primaria; maestrie, due armi e danni aggiuntivi condizionali al DM.${src.pocketddNote?' '+src.pocketddNote:''}`.slice(0,400);
     return weapon;
   });
   const equipped=state.inventory.filter((item,index)=>item.type==='weapon'&&item.quantity>0&&c.inventory[index].equipped);
@@ -179,16 +179,23 @@ export function extendBeyond(report,c){
   ext.combat.greatWeaponMasterAvailable=featureDefs.some(f=>f.group==='feat'&&f.d.id===21&&f.d.name==='Great Weapon Master');
   ext.combat.extraMeleeCriticalDice=featureDefs.some(f=>f.group==='race'&&f.d.id===59&&f.d.name==='Savage Attacks')?1:0;
 
-  const slotArray=(values,label)=>{
+  const slotArray=(values,label,maxima=null)=>{
     const result=Array.from({length:9},()=>({max:0,current:0})),seen=new Set();
     if(values!=null&&!Array.isArray(values)){warn(`${label}: elenco non valido.`);return null;}
     for(const s of array(values)){
-      if(!integer(s?.level,1,9)||seen.has(s.level)||!integer(s.available,0,9)||!integer(s.used,0,s.available)){warn(`${label}: contatore non risolto, importazione slot bloccata.`);return null;}
-      seen.add(s.level);result[s.level-1]={max:s.available,current:s.available-s.used};
+      if(!integer(s?.level,1,9)||seen.has(s.level)||!integer(s.available,0,9)||!integer(s.used,0,maxima?.[s.level-1]??s.available)||(maxima&&s.available!==0&&s.available!==maxima[s.level-1])){warn(`${label}: contatore non risolto, importazione slot bloccata.`);return null;}
+      seen.add(s.level);const maximum=maxima?.[s.level-1]??s.available;result[s.level-1]={max:maximum,current:maximum-s.used};
     }
+    if(maxima?.some((n,i)=>n>0&&!seen.has(i+1))){warn(`${label}: consumi mancanti per un livello della tabella, importazione slot bloccata.`);return null;}
     return result;
   };
-  const slots=slotArray(c.spellSlots,'Slot ordinari'),pact=slotArray(c.pactMagic,'Slot del patto');
+  const sole=array(c.classes).length===1?c.classes[0]:null,rules=sole?.definition?.spellRules;
+  const tableCandidate=sole?.definition?.canCastSpells===true&&rules?.multiClassSpellSlotDivisor===2&&array(c.pactMagic).every(s=>s.available===0&&s.used===0);
+  const row=tableCandidate?rules.levelSpellSlots?.[sole.level]:null;
+  const ordinaryTable=Array.isArray(row)&&row.length===9&&row.every(n=>integer(n,0,9))?row:null;
+  if(tableCandidate&&!ordinaryTable)warn('Tabella slot della classe non valida: slot ordinari da configurare.');
+  const slots=tableCandidate&&!ordinaryTable?null:slotArray(c.spellSlots,'Slot ordinari',ordinaryTable),pact=slotArray(c.pactMagic,'Slot del patto');
+  if(slots&&ordinaryTable)evidence.push(`Slot ordinari: massimi dalla tabella della classe al livello ${sole.level}; consumi dal registro sorgente.`);
   state.slots=slots??state.slots;ext.pactSlots=pact??ext.pactSlots;
   const spellEntries=[];
   for(const group of array(c.classSpells)){
@@ -229,7 +236,7 @@ export function extendBeyond(report,c){
   const conditionNames={1:'Blinded',2:'Charmed',3:'Deafened',4:'Exhaustion',5:'Frightened',6:'Grappled',7:'Incapacitated',8:'Invisible',9:'Paralyzed',10:'Petrified',11:'Poisoned',12:'Prone',13:'Restrained',14:'Stunned',15:'Unconscious'};
   ext.conditions=array(c.conditions).map(x=>({name:x.definition?.name??x.name??conditionNames[x.id]??`Beyond ${x.id}`,level:x.level??0}));
   state.condition=ext.conditions.some(x=>slug(x.name)==='poisoned');
-  if(c.deathSaves)ext.deathSaves={successes:c.deathSaves.successCount,failures:c.deathSaves.failCount,stabilized:c.deathSaves.isStabilized};
+  if(c.deathSaves)ext.deathSaves={successes:c.deathSaves.successCount??0,failures:c.deathSaves.failCount??0,stabilized:c.deathSaves.isStabilized??false};
   for(const cl of array(c.classes))if(cl.definition?.hitDice!=null)ext.hitDice.push({name:cl.definition.name??'Classe',die:cl.definition.hitDice,max:cl.level,used:cl.hitDiceUsed??0});
   if(c.currencies){ext.currencies=c.currencies;ext.currenciesAvailable=true;}
   for(const a of array(c.customActions)){
@@ -239,7 +246,7 @@ export function extendBeyond(report,c){
   // Custom-action notes are appended to the same list before final validation.
   state.powers=powers;
   evidence.push(`Magie: ${powers.filter(p=>p.type==='spell').length}; capacità e note: ${powers.filter(p=>p.type==='feature').length}. I contatori usano limitedUse, non limiti inventati dai testi.`);
-  const omissions=[...issues,
+  const omissions=[...issues,...report.conversion.omissions.filter(t=>/Oggetti personalizzati|Note personalizzate/.test(t)),
     'Effetti condizionali, armi versatili, due armi e maestrie restano al DM; Ira, Grande Maestro d’Armi 2014 e dado critico aggiuntivo riconosciuti hanno comandi dedicati.',
     'Condizioni, dadi vita e tiri morte sono conservati e modificabili; solo Avvelenato applica automaticamente svantaggio. Recupero dei dadi vita e stabilizzazione restano manuali.',
     'CA e PF massimi sono una fotografia: dopo modifiche locali vanno aggiornati manualmente. Peso, contenitori, munizioni e sincronizzazione Beyond non sono automatizzati.'
@@ -254,5 +261,5 @@ export function extendBeyond(report,c){
   const saveSummary=abilityKeys.map(key=>({id:key,proficient:draft.saveProficiencies[key],...describeRoll(draft,{kind:'save',key})}));
   const weaponSummary=weapons.map(w=>{const result=weaponStats({...draft,equippedWeaponId:w.id});return{id:w.id,name:w.name,attack:result.attackBonus,damage:`${w.diceCount}d${w.dieSides}${result.damageBonus>=0?'+':''}${result.damageBonus}`,reach:w.reach,properties:w.profile.properties}});
   const coverage=[{section:'Abilità e salvezze',status:ext.blockedChecks.length?'partial':'converted',count:skillSummary.length+saveSummary.length},{section:'Armi e attacchi',status:weaponIssues.length?'partial':'converted',count:weapons.length},{section:'Magie e capacità',status:issues.some(t=>/magia|Magia|risorsa|formula|contatore/.test(t))?'partial':'converted',count:powers.length},{section:'Stato e risorse',status:'data-only',count:ext.conditions.length+ext.hitDice.length}];
-  return {...report,version:3,checks:{...report.checks,conversion:'supported-extended'},conversion:{scope:'extended-v1',complete:false,blockers:[],evidence:[...report.conversion.evidence.filter(t=>!t.startsWith('Inventario:')),...evidence],omissions,coverage},draft,canImport:true,warnings:omissions,details:{skills:skillSummary,saves:saveSummary,weapons:weaponSummary,spells:powers.filter(p=>p.type==='spell').map(p=>({id:p.id,name:p.name,level:p.level,...spellStats(draft,p)})),facts:ext.facts}};
+  return {...report,version:3,checks:{...report.checks,conversion:'supported-extended'},conversion:{scope:'extended-v1',complete:false,sourceCounts:report.conversion.sourceCounts,blockers:[],evidence:[...report.conversion.evidence.filter(t=>!t.startsWith('Inventario:')),...evidence],omissions,coverage},draft,canImport:true,warnings:omissions,details:{skills:skillSummary,saves:saveSummary,weapons:weaponSummary,spells:powers.filter(p=>p.type==='spell').map(p=>({id:p.id,name:p.name,level:p.level,...spellStats(draft,p)})),facts:ext.facts}};
 }

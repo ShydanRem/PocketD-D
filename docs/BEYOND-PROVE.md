@@ -1,5 +1,11 @@
 # Beyond: importazione estesa PC v0.14 — 19 ottobre 2026
 
+**Aggiornamento PC 26 ottobre 2026:** nuova lettura reale del personaggio
+144777811 e correzione della riconciliazione di scelte, nomi/note, oggetti custom,
+contatori morte vuoti e tabella slot. Vedere il [resoconto attuale](BEYOND-RICONCILIAZIONE.md),
+che distingue HTTP, formato, calcoli, test sintetici e limiti residui.
+Il firmware rimane 0.65.0; le prove storiche sotto mantengono la propria data.
+
 **Aggiornamento v0.41:** le [cariche oggetto](CARICHE-OGGETTI.md) sono configurabili
 manualmente e trasferibili al dispositivo; la conversione Beyond non le estrae
 ancora automaticamente. Backup correnti v11, USB9. Nessuna nuova lettura reale
