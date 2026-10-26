@@ -4,7 +4,8 @@ import {readFileSync} from 'node:fs';
 import {initialState} from './model.js';
 import {projectDevice} from './device-export.js';
 import {crc32} from './device-backup.js';
-import {sendDeviceCopy,receiveDeviceBackup,restoreDeviceBackup} from './device-usb.js';
+import {sendDeviceCopy,receiveDeviceBackup,restoreDeviceBackup,checkDeviceConnection} from './device-usb.js';
+import {createUsbDiagnostics,formatUsbDiagnostics} from './device-usb-diagnostics.js';
 const raw=readFileSync(new URL('../firmware/tests/fixtures/device-backup-v1.synthetic.json',import.meta.url),'utf8');
 const packet=()=>projectDevice(initialState()).packet,encode=x=>new TextEncoder().encode(x);
 function fake({version=9,fragment=23,backup=raw,header='',error='',cancel=false,noAck=false,eof=false,unexpected='',openError=false,confirm=null,writeError=false,startup='',missHello=0,lateReady=false,partialReady=false}={}){
@@ -96,7 +97,7 @@ test('USB browser: bounded ESP32 startup lines and one lost HELLO recover withou
  const partial=fake({missHello:1,partialReady:true});await sendDeviceCopy(packet(),{...options(partial),timeouts:{...times,helloAttempt:10}});assert.equal(partial.sent.filter(s=>s.startsWith('{')).length,1);released(partial);
 });
 test('USB browser: bootloader, unrecognized text, excess logs and unknown READY remain errors with no character data exposed',async()=>{
- for(const [startup,pattern] of [['ESP-ROM:esp32s3-20210327\nwaiting for download\n',/bootloader/],['ESP-ROM:esp32s3-20210327\n'.repeat(65),/Troppi messaggi/],['{"name":"private-sheet-marker"}\n',/testo non riconosciuto/],['PDD READY 10\n',/PDD READY 10/]]){
+ for(const [startup,pattern] of [['ESP-ROM:esp32s3-20210327\nwaiting for download\n',/bootloader/],['ESP-ROM:esp32s3-20210327\n'.repeat(513),/Limite dei log/],['{"name":"private-sheet-marker"}\n',/testo non riconosciuto/],['PDD READY 10\n',/PDD READY 10/]]){
   const f=fake({startup});let message='';await assert.rejects(sendDeviceCopy(packet(),options(f)),e=>{message=e.message;return pattern.test(message);});assert.doesNotMatch(message,/private-sheet-marker/);assert.ok(!f.sent.some(s=>s.startsWith('{')));released(f);
  }
  const f=fake({startup:'I (24) boot: starting\n',unexpected:'PDD RESTORED\n'});
@@ -105,4 +106,24 @@ test('USB browser: bootloader, unrecognized text, excess logs and unknown READY 
 test('USB browser: unavailable firmware has a bounded HELLO retry; later missing ACK never retries the candidate',async()=>{
  const silent=fake({missHello:1000});await assert.rejects(sendDeviceCopy(packet(),{...options(silent),timeouts:{...times,hello:35,helloAttempt:10}}),/non risponde/);assert.ok(!silent.sent.some(s=>s.startsWith('{')));released(silent);
  const f=fake({noAck:true,missHello:1}),states=[];await assert.rejects(sendDeviceCopy(packet(),{...options(f,s=>states.push(s)),timeouts:{...times,helloAttempt:10}}),/non confermato/);assert.equal(f.sent.filter(s=>s.startsWith('{')).length,1);assert.ok(!states.includes('imported'));released(f);
+});
+test('USB diagnosis: a long single startup is not a reset-loop verdict and check sends HELLO only',async()=>{
+ const startup='ESP-ROM:esp32s3-20210327\n'+'I (50) boot: synthetic log\n'.repeat(120)+'rst:0x15 (USB_UART_CHIP_RESET),boot:0x8 (SPI_FAST_FLASH_BOOT)\n';
+ const f=fake({startup});f.port.getInfo=()=>({usbVendorId:0x303a,usbProductId:0x1001,serialNumber:'private-serial',name:'private-sheet-marker'});let report;
+ const result=await checkDeviceConnection({...options(f),onDiagnostic:d=>report=d});assert.equal(result.usbVersion,9);assert.deepEqual(f.sent,['','PDD HELLO']);released(f);
+ assert.equal(report.logLines,122);assert.equal(report.romBanners,1);assert.deepEqual(report.resets,[{code:'0x15',reason:'USB_UART_CHIP_RESET'}]);assert.equal(report.outcome,'completed');
+ assert.equal(report.usbVendorId,0x303a);assert.equal(report.usbProductId,0x1001);assert.match(formatUsbDiagnostics(report),/nessun PG inviato/);assert.doesNotMatch(JSON.stringify(report),/private-|synthetic log/);
+});
+test('USB diagnosis: failed handshake and failed save retain distinct phase, reset/fault metadata and unconfirmed outcome',async()=>{
+ const f=fake({missHello:1000,startup:'ESP-ROM:esp32s3-20210327\nrst:0xc (SW_CPU_RESET),boot:0x8\nGuru Meditation Error: Core 0 panic\'ed (LoadProhibited)\nBacktrace: 0x40371234:0x3fc91234 0x42012345:0x3fc91250\n'});let report;
+ await assert.rejects(checkDeviceConnection({...options(f),onDiagnostic:d=>report=d,timeouts:{...times,hello:35,helloAttempt:10}}),e=>e.usbDiagnostic?.fault==='LoadProhibited');
+ assert.equal(report.outcome,'unconfirmed');assert.equal(report.phase,'collegamento');assert.equal(report.usbVersion,null);assert.equal(report.romBanners,1);assert.equal(report.backtrace.length,4);assert.ok(f.sent.every(s=>s===''||s==='PDD HELLO'));released(f);
+ const g=fake({noAck:true});await assert.rejects(sendDeviceCopy(packet(),{...options(g),onDiagnostic:d=>report=d}));assert.equal(report.phase,'salvataggio della scheda');assert.equal(report.usbVersion,9);assert.equal(report.outcome,'unconfirmed');
+});
+test('USB diagnosis: byte/line budgets stay bounded and arbitrary logs/JSON/register text are not disclosed',()=>{
+ const d=createUsbDiagnostics('check');assert.equal(d.line('{"name":"private-sheet-marker"}'),false);
+ assert.equal(d.line('I (12) app: private-sheet-marker'),true);assert.equal(d.line('A0      : 0x12345678 A1 : 0x87654321'),true);
+ assert.equal(d.line('rst:0xc (not a public reason <b>)'),true);assert.deepEqual(d.snapshot().resets,[]);
+ assert.doesNotMatch(formatUsbDiagnostics(d.snapshot()),/private-sheet-marker|12345678|87654321|<b>/);
+ const e=createUsbDiagnostics('check');assert.throws(()=>{for(let i=0;i<100;i++)e.line('I (1) app: '+'x'.repeat(490));},/Limite dei log/);assert.ok(e.snapshot().logLines<100);
 });

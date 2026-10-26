@@ -1,18 +1,12 @@
 import {serializeDevice} from './device-export.js';
 import {crc32,inspectDeviceBackup,DEVICE_BACKUP_MAX} from './device-backup.js';
+import {createUsbDiagnostics} from './device-usb-diagnostics.js';
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
 let active=false;
 export const deviceUsbSupported=()=>globalThis.isSecureContext===true&&globalThis.location?.protocol!=='file:'&&Boolean(globalThis.navigator?.serial?.requestPort);
 const uncertain=()=>new Error('Esito USB non confermato. Controlla il display prima di riprovare.');
 const aborted=()=>new Error('Collegamento interrotto. Controlla il display: una richiesta può essere ancora in attesa o già salvata.');
 const timedOut=()=>Object.assign(uncertain(),{code:'USB_TIMEOUT'});
-// Native ESP32 USB may expose ROM/startup output when the host opens the port.
-// Ignore only recognized, bounded console lines; protocol replies stay strict.
-function startupLine(raw){
-  const text=raw.replace(/\x1b\[[0-9;]*m/g,'');
-  if(/[^\x20-\x7e\r]/.test(text))return false;
-  return /^(?:ESP-ROM:esp32s3-[0-9]+|Build:|rst:0x[0-9a-fA-F]+|Saved PC:0x[0-9a-fA-F]+|SPIWP:0x[0-9a-fA-F]+|mode:(?:DIO|QIO|DOUT|QOUT),|load:0x[0-9a-fA-F]+|entry 0x[0-9a-fA-F]+|[IWE] \([0-9]+\) [A-Za-z0-9_. -]+:)/.test(text);
-}
 const phase=expected=>Array.isArray(expected)||String(expected).includes('READY')?'collegamento':expected==='PDD WAIT_CONFIRM'?'invio della copia':expected==='PDD IMPORTED'?'salvataggio della scheda':String(expected).includes('RESTORE')||expected==='PDD RESTORED'?'ripristino del backup':'trasferimento del backup';
 function unexpected(expected,line){
   const response=/^PDD (?:READY [0-9]+|BACKUP_READY [0-9]+|WAIT_CONFIRM|WAIT_BACKUP|WAIT_RESTORE|IMPORTED|RESTORED|BACKUP_DONE)$/.test(line)?line:'testo non riconosciuto';
@@ -27,8 +21,8 @@ function limited(promise,ms,signal){
   });
 }
 class Channel{
-  constructor(port,signal){
-    this.signal=signal;this.reader=port.readable.getReader();this.writer=port.writable.getWriter();this.chunks=[];this.bytes=0;this.offset=0;this.ended=false;this.error=null;this.closing=false;this.lineBytes=[];this.logLines=0;
+  constructor(port,signal,diagnostics){
+    this.diagnostics=diagnostics;this.signal=signal;this.reader=port.readable.getReader();this.writer=port.writable.getWriter();this.chunks=[];this.bytes=0;this.offset=0;this.ended=false;this.error=null;this.closing=false;this.lineBytes=[];
     this.pump=this.receive();
   }
   async receive(){
@@ -49,7 +43,7 @@ class Channel{
       if(byte===10){
         const text=String.fromCharCode(...chars).replace(/\r$/,'');this.lineBytes=[];
         if(text==='waiting for download')throw new Error('Il dispositivo è nel bootloader. Rilascia BOOT, riavvia con RESET e attendi la schermata PocketD-D prima di riprovare. Nessun salvataggio confermato.');
-        if(startupLine(text)){if(++this.logLines>64)throw new Error('Troppi messaggi di avvio USB: il dispositivo potrebbe riavviarsi. Controlla il display. Nessun salvataggio confermato.');return '';}
+        if(this.diagnostics.line(text))return '';
         if(/[^\x20-\x7e]/.test(text)||text.length>256)throw new Error('Risposta USB non valida.');
         return text;
       }
@@ -66,6 +60,7 @@ class Channel{
     for(let at=0;at<bytes.length;at+=1024){if(this.signal?.aborted)throw aborted();await limited(this.writer.write(bytes.subarray(at,at+1024)),deadline-Date.now(),this.signal);}
   }
   async wait(expected,timeout,{hello=false,prefix=false,duplicates=null}={}){
+    this.diagnostics.data.phase=phase(expected);
     const deadline=Date.now()+timeout;
     for(;;){let line;
       try{line=await this.line(deadline-Date.now());}catch(error){if(error.code==='USB_TIMEOUT')error.message=`Nessuna conferma USB durante ${phase(expected)}. Controlla il display prima di riprovare: esito non confermato.`;throw error;}
@@ -96,10 +91,11 @@ async function session(options,task){
   const serial=options.serial??globalThis.navigator?.serial;
   if(!serial?.requestPort)throw new Error('Per l’USB usa Chrome o Edge su PC, su HTTPS o localhost.');
   if(options.signal?.aborted)throw aborted();
-  active=true;let port,channel;
+  active=true;let port,channel;const diagnostics=createUsbDiagnostics(options.operation);
   try{
     // Called synchronously from the UI click; no await before the chooser.
     port=await serial.requestPort();
+    diagnostics.port(port.getInfo?.());
     if(options.signal?.aborted)throw aborted();
     const opening=port.open({baudRate:115200,bufferSize:8192});
     try{await limited(opening,options.timeouts?.open??10000,options.signal);}
@@ -107,30 +103,38 @@ async function session(options,task){
     // Release modem-control lines together. Never run a bootloader/reset sequence.
     if(typeof port.setSignals==='function')await limited(port.setSignals({dataTerminalReady:false,requestToSend:false}),options.timeouts?.open??10000,options.signal);
     if(!port.readable||!port.writable)throw new Error('Porta USB non disponibile. Chiudi gli altri programmi che la usano.');
-    channel=new Channel(port,options.signal);return await task(channel,{hello:10000,send:30000,confirm:125000,data:30000,...options.timeouts});
+    channel=new Channel(port,options.signal,diagnostics);const result=await task(channel,{hello:10000,send:30000,confirm:125000,data:30000,...options.timeouts});diagnostics.data.outcome='completed';return result;
   }catch(error){
+    error.usbDiagnostic=diagnostics.snapshot();
     if(error?.name==='NotFoundError')throw new Error('Scelta della porta annullata. Nessun invio avviato.');
     throw error;
   }finally{
-    try{if(channel)await channel.close();}finally{try{if(port)await limited(port.close(),1000);}catch{/* Already disconnected/closed. */}active=false;}
+    try{if(channel)await channel.close();}finally{try{if(port)await limited(port.close(),1000);}catch{/* Already disconnected/closed. */}active=false;options.onDiagnostic?.(diagnostics.snapshot());}
   }
 }
 async function handshake(c,t,command,expected){
   const deadline=Date.now()+t.hello;let attempts=0;
   for(;;){
     const remaining=deadline-Date.now();if(remaining<=0)throw new Error('PocketD-D non risponde al collegamento USB. Attendi la schermata del PG, chiudi l’installer e riprova sulla porta del dispositivo. Nessuna copia inviata.');
-    await c.send('\n'+command+'\n',Math.min(t.send,remaining));attempts++;
+    await c.send('\n'+command+'\n',Math.min(t.send,remaining));attempts++;c.diagnostics.data.helloAttempts=attempts;
     try{
       const ready=await c.wait(expected,Math.min(t.helloAttempt??1000,deadline-Date.now()),{hello:true});
+      c.diagnostics.data.usbVersion=Number(ready.split(' ').at(-1));c.diagnostics.data.protocol=command.includes('BACKUP')?'backup':'character';
       return {ready,duplicates:{line:ready,remaining:attempts-1}};
     }catch(error){if(error.code!=='USB_TIMEOUT')throw error;}
   }
+}
+export async function checkDeviceConnection(options={}){
+  return session({...options,operation:'check'},async(c,t)=>{
+    options.onProgress?.('connect');const {ready}=await handshake(c,t,'PDD HELLO',Array.from({length:9},(_,i)=>`PDD READY ${i+1}`));
+    options.onProgress?.('connection-checked');return {usbVersion:Number(ready.split(' ').at(-1))};
+  });
 }
 export async function sendDeviceCopy(packet,options={}){
   const text=serializeDevice(packet);
   if(packet?.format!=='pocketdd-device'||!Number.isInteger(packet.version)||packet.version<1||packet.version>9||typeof text!=='string'||text.length>262144||/[^\x20-\x7e]/.test(text))throw new Error('Copia per dispositivo non valida o fuori limite.');
   const version=packet.version;
-  return session(options,async(c,t)=>{
+  return session({...options,operation:'import'},async(c,t)=>{
     options.onProgress?.('connect');
     const {ready,duplicates}=await handshake(c,t,'PDD HELLO',Array.from({length:9},(_,i)=>`PDD READY ${i+1}`));
     if(version>Number(ready.split(' ').at(-1)))throw new Error(`Aggiorna il firmware: questa copia richiede USB${version}. Nessuna copia inviata.`);
@@ -140,7 +144,7 @@ export async function sendDeviceCopy(packet,options={}){
 }
 async function negotiate(c,t){return handshake(c,t,'PDD BACKUP HELLO','PDD BACKUP_READY 1');}
 export async function receiveDeviceBackup(options={}){
-  return session(options,async(c,t)=>{
+  return session({...options,operation:'receive'},async(c,t)=>{
     options.onProgress?.('connect');const {duplicates}=await negotiate(c,t);await c.send('PDD BACKUP GET 1\n',t.send);await c.wait('PDD WAIT_BACKUP',t.hello,{duplicates});options.onProgress?.('confirm-backup');
     const header=await c.wait('PDD BACKUP_DATA ',t.confirm,{prefix:true}),match=/^PDD BACKUP_DATA ([1-9][0-9]{0,5}) ([0-9a-f]{8})$/.exec(header);
     if(!match||Number(match[1])>DEVICE_BACKUP_MAX)throw new Error('Intestazione del backup USB non valida.');
@@ -151,7 +155,7 @@ export async function receiveDeviceBackup(options={}){
 }
 export async function restoreDeviceBackup(raw,options={}){
   const text=JSON.stringify(inspectDeviceBackup(raw).packet);
-  return session(options,async(c,t)=>{
+  return session({...options,operation:'restore'},async(c,t)=>{
     options.onProgress?.('connect');const {duplicates}=await negotiate(c,t);options.onProgress?.('send');await c.send(text+'\n',t.send);await c.wait('PDD WAIT_RESTORE',t.hello,{duplicates});options.onProgress?.('confirm-restore');
     await c.wait('PDD RESTORED',t.confirm);options.onProgress?.('restored');
   });

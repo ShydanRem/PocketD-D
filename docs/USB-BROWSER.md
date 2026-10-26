@@ -4,6 +4,12 @@
 messaggi ROM/ESP-IDF riconosciuti. Il firmware distribuito rimane 0.65.0;
 non occorre reinstallarlo per aggiornare questo collegamento.
 
+**Diagnosi successiva:** il limite iniziale di 64 righe poteva interrompere
+anche un singolo avvio con molti log. Non dimostra un ciclo di reset.
+È ora disponibile **Verifica collegamento USB**, senza invio del PG, con
+un resoconto selettivo della porta e delle risposte. La causa fisica segnalata
+dall'utente rimane da individuare; non è una dichiarazione di trasferimento riuscito.
+
 Dopo aver installato il firmware, l'app PC può inviare il personaggio,
 ricevere il backup nativo e ripristinarlo direttamente da **Chrome o Edge sul
 PC**. Non occorrono gli script Python per questi tre passaggi. Il dispositivo
@@ -95,7 +101,9 @@ rifiutava ogni riga estranea, compresi eventuali messaggi d'avvio della scheda;
 non ripeteva il saluto se questo veniva perso durante la partenza.
 
 Il client aggiornato riconosce soltanto righe ROM ESP32-S3/ESP-IDF note, con
-limiti di 512 byte per riga e 64 righe per sessione. La colorazione ANSI è
+limiti di 512 byte per riga, 512 righe e 32.768 byte per sessione. Questi sono
+limiti di risorse, non una classificazione automatica di riavvio continuo.
+La colorazione ANSI è
 accettata soltanto su questi log. Testo estraneo, protocolli futuri, risposte
 fuori fase e ACK precedenti continuano a essere rifiutati; l'errore indica la
 fase e riporta soltanto risposte di controllo riconosciute, mai il JSON del PG.
@@ -111,24 +119,43 @@ un salvataggio. Rimangono obbligatori conferma sul display e ACK finale.
 Per riprovare: chiudere l'app PC precedente e l'installer, estrarre il nuovo ZIP,
 avviare `Avvia-PocketDD.cmd`, scollegare/ricollegare il dispositivo senza BOOT e
 attendere la schermata PocketD-D. Con lo stesso browser e indirizzo locale il
-PG già importato sul PC resta disponibile. Ripetere **Prepara per dispositivo
-(USB)** e annotare il nuovo errore e ciò che appare sul display se ancora fallisce.
+PG già importato sul PC resta disponibile. Aprire **Prepara per dispositivo
+(USB)** e, prima di ripetere l'invio, premere **Verifica collegamento USB**.
+
+La verifica invia esclusivamente `PDD HELLO`: nessun JSON, richiesta di backup
+o ripristino. Richiede `PDD READY` supportato per dichiarare il collegamento
+verificato, e non dichiara importato alcun personaggio. Lo stesso comando è
+disponibile nella finestra del backup. Al termine aprire **Dettagli collegamento
+USB** e copiare il testo in caso di errore.
+
+Il resoconto comprende solo VID/PID numerici (senza numero di serie), fase,
+esito, versione di protocollo accettata, tentativi, conteggi log, annunci ROM,
+codici/motivi di reset riconosciuti, ultimo tag del log e categorie di errore
+firmware. Se presenti, conserva indirizzi esadecimali della riga Backtrace;
+non conserva registri, dump di memoria, log integrali, nome o JSON del PG.
+Gli annunci ROM possono provenire da dati accumulati: il loro conteggio da
+solo non prova riavvii attuali. Nessun resoconto viene inviato a un server.
+L'esito della verifica e quello del salvataggio rimangono separati.
 
 ## Verifiche
 
-Dodici test del trasporto usano vere ReadableStream/WritableStream con periferica
+Quindici test del trasporto usano vere ReadableStream/WritableStream con periferica
 **simulata**: frammentazione fino al singolo byte, negoziazione, copia/versione
 congelate, ACK obbligatori, vecchi/futuri protocolli, cancellazione/errori/EOF,
 CRC/record corrotti, limiti di riga/buffer, aborto, esclusione delle operazioni
 contemporanee, riapertura e apertura tardiva dopo timeout. Aggiunti log d'avvio
 frammentati/colorati, HELLO perso, READY parziale/tardivo/duplicato, rilascio
 segnali, bootloader, eccesso di log e timeout; un solo invio effettivo per operazione.
+Inclusi 120 log in un solo avvio, verifica con solo HELLO, metadati selettivi,
+errori di collegamento/salvataggio distinti e limiti per byte/righe.
 Nessuna porta fisica.
 
-La suite JavaScript passa **192 test**. Chromium prova il codice PC compilato
+La suite JavaScript passa **195 test**. Chromium prova il codice PC compilato
 con Web Serial simulata: invio/anteprima, conferma/guardie, aborto, acquisizione
 con download esatto, ripristino, errore d'integrità, browser non supportato e
-raccolta sintetica invariata, anche con log d'avvio e primo HELLO perso.
+raccolta sintetica invariata, anche con 123 righe d'avvio e primo HELLO perso.
+Verifica anche il pulsante di sola diagnosi, successo/errore senza invio del PG,
+resoconto visualizzato come testo e assenza dei contenuti arbitrari dei log.
 Il precedente flusso di esportazione su file e
 anteprima backup resta verificato dal controllo PC esistente.
 
@@ -139,3 +166,8 @@ o modifica della raccolta personale. Il trasferimento di questo PG sul dispositi
 dell'utente resta **da confermare**; H33 in
 [COLLAUDO-HARDWARE.md](COLLAUDO-HARDWARE.md) resta **Non eseguito** come prova
 strutturata completa. Gli script Python rimangono disponibili come alternativa.
+
+Riferimenti di hardware/trasporto consultati: [Waveshare, USB nativa della scheda](https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.75/blob/main/HARDWARE_REFERENCE.md)
+e [Espressif, USB Serial/JTAG su ESP32-S3](https://docs.espressif.com/projects/esp-idf/en/release-v5.5/esp32s3/api-guides/usb-serial-jtag-console.html).
+Non si è introdotto un percorso UART o cambiato firmware senza identificare
+prima la porta e il guasto osservato.
