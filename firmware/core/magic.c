@@ -47,6 +47,12 @@ bool pd_magic_use(pd_state *s,unsigned index,unsigned slot,bool pact) {
     if(v->flags&PD_CONCENTRATES){pd_concentration_end(s);s->magic.concentration=index+1;}
     return true;
 }
+bool pd_magic_prepare(pd_state *s,unsigned index,bool prepared){
+    if(!s||!pd_valid(s)||!s->magic.available||index>=s->magic.count||s->magic.powers[index].kind)return false;
+    if(prepared)s->magic.powers[index].flags|=PD_PREPARED;
+    else s->magic.powers[index].flags&=~PD_PREPARED;
+    return true;
+}
 bool pd_magic_recover(pd_state *s,unsigned index,int delta) {
     if(!s||!s->magic.available||index>=s->magic.count)return false;
     pd_power *v=&s->magic.powers[index];if((v->flags&PD_PASSIVE)||(!v->kind&&!(v->flags&PD_LIMITED)))return false;

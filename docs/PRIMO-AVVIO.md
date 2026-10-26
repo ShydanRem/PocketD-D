@@ -1,9 +1,9 @@
-# Primo avvio e sessione di collaudo — v0.63
+# Primo avvio e sessione di collaudo — v0.64
 
 Questa versione prepara il **blocco 3, prodotto fisico**. L'hardware è in
 arrivo: tutte le prove fisiche sotto sono **da eseguire**, nessuna è già passata.
-La grafica approvata è conservata; la v0.63 aggiunge la ricerca negli elenchi
-e porta la copertura host a 112/112. Il software di alimentazione è integrato.
+La grafica approvata è conservata; la v0.64 aggiunge la preparazione locale delle magie
+e porta la copertura host a 114/114. Il software di alimentazione è integrato.
 Il [controllo pratico](USO-AL-TAVOLO.md) separa software verificato e prove fisiche.
 
 L'obiettivo della prima prova è trasferire una scheda nota, giocare offline,
@@ -343,6 +343,24 @@ confermare la ricerca. Pausa conserva il filtro; riavvio e import/ripristino
 confermati lo azzerano. Verificare precisione e leggibilità delle quattro
 pagine della tastiera e registrare H30 secondo
 [RICERCA-LOCALE.md](RICERCA-LOCALE.md).
+
+## 15. Preparazione locale — con magie sintetiche e backup conservato
+
+Aprire Menu → Magie, anche passando da Cerca. Scegliere una magia non preparata,
+poi Gestisci → Preparazione. Verificare nome e prima/dopo, premere Indietro e
+controllare che nulla cambi. Ripetere e confermare: il dettaglio deve permettere
+il lancio solo con risorse sufficienti. Verificare che slot e utilizzi non
+siano stati recuperati. Menu → Eroe → Annulla ripristina la scelta precedente.
+
+Con una magia concentrata e legami sintetici, togliere la preparazione: la
+concentrazione e i legami devono restare. Provare una magia innata: Utilizzi
+manuali resta disponibile e il saldo non cambia preparando la magia. Le
+capacità non devono offrire preparazione. Provare i tasti nella conferma,
+un nome lungo e una voce trovata tramite filtro; poi riavvio e backup/ripristino
+per la persistenza. Importare una nuova copia adotta la sua selezione soltanto
+su conferma. I guasti NVS simulati restano nel banco host. Registrare H31
+secondo [PREPARAZIONE-MAGIE.md](PREPARAZIONE-MAGIE.md); limiti e momento della
+preparazione richiedono verifica manuale con il DM.
 
 ## Registrazione dell'esito
 

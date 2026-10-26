@@ -131,6 +131,15 @@ search_gallery=Image.new('RGB',(466*2,466*2),'black')
 for i,name in enumerate(('items-draft','items-results','powers-results','features')):
     search_gallery.paste(Image.open(BASE/f'search-{name}.png'),(i%2*466,i//2*466))
 search_gallery.save(BASE/'catalog-search-gallery.png')
+preparation_views=('manage-unprepared','preview','save-error','manage-prepared',
+                   'ready-to-cast','remove-preview','concentration-kept','innate-manage',
+                   'cantrip','last-long-name','long-preview','search-kept','restored','imported')
+for name in preparation_views:
+    Image.open(BASE/f'prepare-{name}.ppm').save(BASE/f'prepare-{name}.png')
+preparation_gallery=Image.new('RGB',(466*2,466*2),'black')
+for i,name in enumerate(('manage-unprepared','preview','manage-prepared','remove-preview')):
+    preparation_gallery.paste(Image.open(BASE/f'prepare-{name}.png'),(i%2*466,i//2*466))
+preparation_gallery.save(BASE/'spell-preparation-gallery.png')
 frames=[Image.open(BASE/f'ux-transition-{i:02d}.ppm').convert('RGB') for i in range(5)]
 frames[0].save(BASE/'ui-transition.gif',save_all=True,append_images=frames[1:],duration=[40,40,40,40,1000],loop=0,disposal=2,optimize=True)
 print(f'UI: {len(records)} production views, overview, offline catalog and transition exported')

@@ -1,8 +1,10 @@
-# Firmware PocketD-D 0.63 — ricerca locale negli elenchi
+# Firmware PocketD-D 0.64 — preparazione locale delle magie
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
+
+[Novità v0.64: preparazione locale, conferma e risorse conservate](PREPARAZIONE-MAGIE.md).
 
 [Novità v0.63: ricerca per nome nello zaino e nelle magie/capacità](RICERCA-LOCALE.md).
 
@@ -1402,3 +1404,39 @@ e galleria native LVGL su host con dati inventati. Nessuna lettura Beyond,
 modifica della raccolta personale o prova fisica. Ricerca nelle descrizioni,
 preferiti e ordinamento restano affinamenti successivi, insieme al collaudo
 sul display reale.
+
+## Incremento v0.64 — preparazione locale delle magie
+
+[Uso e limiti di preparazione/disponibilità](PREPARAZIONE-MAGIE.md).
+Il dettaglio di una magia offre Gestisci, con preparazione e correzione degli
+utilizzi innati. La preparazione richiede anteprima e conferma e modifica
+soltanto PD_PREPARED: nessun recupero di slot/usi, lancio, RNG o tiro nello
+storico. Concentrazione attiva, effetti, difese e riduzioni collegati restano
+invariati anche togliendo la preparazione. I requisiti di lancio già presenti
+restano applicati. Capacità escluse, trucchetti e innate gestiti come
+scelta esplicita di disponibilità; limiti di classe, lista conosciuta e momento
+consentito restano manuali con il DM.
+
+Salvataggio fallito conserva stato e scelta da riprovare; riuscito rende
+annullabile la modifica di gioco. Tasti, import/ripristino e pausa automatica
+non interrompono la conferma. Ricerca e indice originale sono conservati.
+Backup e record includono già il flag; import/ripristino confermati adottano
+la selezione della copia. Nessuna modifica della raccolta PC.
+
+Passati: 167 test JavaScript, suite firmware completa e 3.840 nuovi casi core
+su tutti i 120 indici, quattro tipi di costo, prima/dopo e vincoli attivi.
+Il confronto dell'intera scheda prova che cambi solo il flag; coperti anche
+idempotenza, rifiuti atomici, lancio, riposi, record massimo e backup nativo.
+UI 114/114: anteprima/annulla, salvataggio fallito/riprova/Annulla, input protetti,
+lancio preparato, slot ordinari/patto e utilizzi conservati, concentrazione e
+legami mantenuti, innati/trucchetti, capacità escluse, nome lungo e voce 119
+filtrata, import/ripristino confermati/annullati. ASan/UBSan su preparazione
+e UI passati. Build PC/HTML autonomo ed ESP32-S3 passate.
+Binario app 3.419.664 byte (partizione 4 MiB, 18% libera).
+
+PDD28/PDDS, PDH2/lettura PDH1, USB9, backup nativo v1, backup PC v11,
+diagnostica v1 e partizioni invariati. Nessun campo persistente aggiunto.
+Catture `prepare-*.png` e galleria LVGL host con dati inventati. Nessuna nuova
+lettura Beyond, pubblicazione di dati personali o prova hardware. Preparazione
+automatica per classe, apprendimento di nuove magie e regole speciali restano
+successivi; la prova fisica H31 è ancora da eseguire.

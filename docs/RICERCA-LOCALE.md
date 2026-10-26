@@ -1,5 +1,8 @@
 # Ricerca locale nello zaino e nelle magie — v0.63
 
+Aggiornamento v0.64: [preparazione delle magie sul dispositivo](PREPARAZIONE-MAGIE.md),
+anche dalla voce trovata con Cerca. Le 112 viste citate sotto sono quelle v0.63.
+
 La ricerca per nome sul dispositivo riduce lo scorrimento degli elenchi fino
 a 60 oggetti e 120 magie/capacità. Funziona offline e conserva l'ordine e
 l'identità originali delle voci. Grafica del compagno e tasti configurabili

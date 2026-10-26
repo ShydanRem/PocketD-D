@@ -110,6 +110,10 @@ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as out:
                  ('items-keyboard','items-draft','items-results','items-last','items-empty','symbols',
                   'maximum','last-keyboard','powers-keyboard','powers-results','spells','features',
                   'use-original','separate-queries','powers-empty','restored','imported')]
+    ui_files += ['spell-preparation-gallery.png']+[f'prepare-{name}.png' for name in
+                 ('manage-unprepared','preview','save-error','manage-prepared',
+                  'ready-to-cast','remove-preview','concentration-kept','innate-manage',
+                  'cantrip','last-long-name','long-preview','search-kept','restored','imported')]
     for name in ui_files:
         image=preview/name
         if not image.is_file():raise SystemExit(f'Missing UI capture: {name}')

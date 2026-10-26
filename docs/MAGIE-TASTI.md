@@ -1,5 +1,9 @@
 # Magie, capacità e tasti sul dispositivo — v0.22
 
+**Aggiornamento v0.64:** [preparazione locale](PREPARAZIONE-MAGIE.md) con
+anteprima/conferma; per le magie Gestisci raccoglie preparazione e utilizzi manuali.
+I limiti e i formati dell’incremento sotto sono storici.
+
 **Aggiornamento v0.52:** [Storico](STORICO-TIRI.md) aggiunto alle azioni dei tasti,
 14 scelte incluso Spento; salvataggi PDD25 e vecchie assegnazioni conservate.
 

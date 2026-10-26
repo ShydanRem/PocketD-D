@@ -40,7 +40,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM, POWER_HOME, POWER_OFF, ITEM_SEARCH, POWER_SEARCH } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM, POWER_HOME, POWER_OFF, ITEM_SEARCH, POWER_SEARCH, MAGIC_MANAGE, MAGIC_PREPARATION } page_t;
 static const pd_theme_kind page_themes[]={
     [HERO]=PD_THEME_NONE,
     [SHEET]=PD_THEME_SHEET,
@@ -154,6 +154,8 @@ static const pd_theme_kind page_themes[]={
     [POWER_OFF]=PD_THEME_SCREEN,
     [ITEM_SEARCH]=PD_THEME_PACK,
     [POWER_SEARCH]=PD_THEME_MAGIC,
+    [MAGIC_MANAGE]=PD_THEME_MAGIC,
+    [MAGIC_PREPARATION]=PD_THEME_MAGIC,
 };
 PD_EXT static pd_state state,previous,pending,scratch;
 static bool undo_available,import_pending,has_roll;
@@ -226,7 +228,7 @@ static lv_obj_t *input_check_counts[3];
 static bool input_check_open(void){return page>=INPUT_CHECK_HOME&&page<=INPUT_CHECK_KEYS;}
 static const char *input_check_notice="PWR lungo: alimentazione";
 static unsigned magic_filter=2,magic_page,power_index,cast_level,text_page,slot_index;
-static bool cast_pact,slot_pact,stop_rage;
+static bool cast_pact,slot_pact,stop_rage,preparation_target;
 static const char *const shortcut_names[]={"Spento","Eroe","Scheda","Dadi","Zaino","Magie","Lancia","Riposi","Stato","Schermo","Effetti","Round","Danni","Storico"};
 static void shortcut(unsigned gesture);
 static bool can_use_power(void);
@@ -242,7 +244,7 @@ static bool number_fresh;
 static bool item_rolled;
 static pd_pool item_result;
 static unsigned item_gained;
-static bool confirmation_open(void){return page==ITEM_SEARCH||page==POWER_SEARCH||power_paused||power_off_attempted||page==POWER_OFF||page==NUMBER_ENTRY||page==VITAL_CONFIRM||page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
+static bool confirmation_open(void){return page==MAGIC_PREPARATION||page==ITEM_SEARCH||page==POWER_SEARCH||power_paused||power_off_attempted||page==POWER_OFF||page==NUMBER_ENTRY||page==VITAL_CONFIRM||page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
 static pd_damage_plan damage_plan; /* First component + explicit concentration choice. */
 static pd_damage_component damage_extra[PD_DAMAGE_COMPONENTS-1],damage_part_draft;
 static pd_damage_context damage_context,damage_extra_context[PD_DAMAGE_COMPONENTS-1],damage_part_context,source_context_draft;
@@ -682,6 +684,7 @@ static void act(intptr_t action) {
     if(input_check_open())return;
     if(power_paused||power_off_attempted)return;
     if(page==POWER_OFF&&action!=3703&&action!=3704)return;
+    if(page==MAGIC_PREPARATION&&action!=4002&&action!=4003)return;
     if((page==ITEM_SEARCH||page==POWER_SEARCH)&&(action<3801||action>3806)&&(action<3900||action>=3900+(intptr_t)sizeof search_keys-1))return;
     if((action==2300||action==2301)&&(import_pending||confirmation_open()))return;
     if(import_pending&&action!=30&&action!=31)return;
@@ -753,6 +756,15 @@ static void act(intptr_t action) {
     }
     else if(action==2300)page=HOME_MENU;
     else if(action==2301)page=HOME_VITALS;
+    else if(action==4000&&page==MAGIC_DETAIL&&state.magic.available&&power_index<state.magic.count&&!state.magic.powers[power_index].kind)page=MAGIC_MANAGE;
+    else if(action==4001&&page==MAGIC_MANAGE&&state.magic.available&&power_index<state.magic.count&&!state.magic.powers[power_index].kind){preparation_target=!(state.magic.powers[power_index].flags&PD_PREPARED);page=MAGIC_PREPARATION;}
+    else if(action==4002&&page==MAGIC_PREPARATION)page=MAGIC_MANAGE;
+    else if(action==4003&&page==MAGIC_PREPARATION){
+        if(!pd_magic_prepare(&next,power_index,preparation_target))return;
+        bool changed=memcmp(&next,&state,sizeof state)!=0;
+        if(!changed||pd_storage_save(&next)){if(changed){previous=state;undo_available=true;state=next;invalidate_strike();}page=MAGIC_MANAGE;}
+    }
+
     else if(action==3800&&(page==INVENTORY||page==MAGIC_LIST)){
         bool items=page==INVENTORY;if(items?!state.inventory_available:!state.magic.available)return;
         memcpy(search_draft,items?item_query:power_query,sizeof search_draft);search_key_page=0;page=items?ITEM_SEARCH:POWER_SEARCH;
@@ -1830,7 +1842,26 @@ static void render_magic_detail(void) {
         state.combat.raging?"Ira attiva":!(p->flags&PD_PREPARED)?"Non preparata":(p->flags&PD_LIMITED)&&!p->remaining?"Esaurita":"Lancia";
     lv_obj_t *use=button(use_label,239,301,144,44,831,can_use_power());lv_obj_set_style_text_font(use,&lv_font_montserrat_16,0);
     button("Elenco",83,359,144,48,835,true);
-    button("Utilizzi",239,359,144,48,839,!(p->flags&PD_PASSIVE)&&(p->kind||(p->flags&PD_LIMITED)));
+    button(p->kind?"Utilizzi":"Gestisci",239,359,144,48,p->kind?839:4000,!p->kind||!(p->flags&PD_PASSIVE));
+}
+static void render_magic_management(void){
+    if(!state.magic.available||power_index>=state.magic.count||state.magic.powers[power_index].kind){page=MAGIC_LIST;render_magic_list();return;}
+    const pd_power *p=&state.magic.powers[power_index];bool prepared=(p->flags&PD_PREPARED)!=0;char text[120];
+    label(page==MAGIC_MANAGE?"Gestisci magia":preparation_target?"Preparare la magia?":"Togliere preparazione?",83,111,300,false);
+    lv_obj_t *name=small_label(p->name,83,149,300,PD_GOLD);lv_label_set_long_mode(name,LV_LABEL_LONG_WRAP);lv_obj_set_height(name,58);
+    if(page==MAGIC_MANAGE){
+        small_label(prepared?"Preparata / disponibile":"Non preparata / non disponibile",83,215,300,prepared?PD_MINT:PD_MUTED);
+        button("Preparazione >",83,253,300,44,4001,true);
+        button(p->flags&PD_LIMITED?"Utilizzi manuali":"Utilizzi non previsti",83,305,300,44,839,(p->flags&PD_LIMITED)!=0);
+        button("Indietro",83,359,300,48,833,true);return;
+    }
+    snprintf(text,sizeof text,"Prima: %s",prepared?"preparata":"non preparata");label(text,83,213,300,false);
+    snprintf(text,sizeof text,"Dopo: %s",preparation_target?"preparata":"non preparata");label(text,83,247,300,false);
+    small_label("Slot e utilizzi invariati",83,287,300,PD_TEXT);
+    small_label("Concentrazione invariata",83,309,300,PD_MUTED);
+    small_label("Limiti e requisiti: verifica col DM",83,331,300,PD_GOLD);
+    scratch=state;bool valid=pd_magic_prepare(&scratch,power_index,preparation_target),changed=valid&&memcmp(&scratch,&state,sizeof state);
+    button("Indietro",83,359,144,48,4002,true);button("Conferma",239,359,144,48,4003,changed);
 }
 static void render_magic_text(void) {
     const pd_power *p=&state.magic.powers[power_index];char chunk[PD_POWER_TEXT_BYTES];
@@ -2813,6 +2844,7 @@ static void render_content(void) {
     if(page==DEATH_ROLL_SETUP){render_death_roll_setup();return;}
     if(page==EXTERNAL_TURN_HOME){render_external_turn();return;}
     if(page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM){render_turn_name();return;}
+    if(page==MAGIC_MANAGE||page==MAGIC_PREPARATION){render_magic_management();return;}
     if(page==ITEM_SEARCH||page==POWER_SEARCH){render_search();return;}
     if(page==POWER_HOME||page==POWER_OFF){render_power();return;}
     if(page==NUMBER_ENTRY){scratch=state;render_number_entry();return;}
@@ -2955,7 +2987,7 @@ static void render_content(void) {
     }
 }
 #ifdef PD_UI_TEST
-static bool styled_pages[POWER_SEARCH+1];
+static bool styled_pages[MAGIC_PREPARATION+1];
 static void capture_styled_page(unsigned view);
 #endif
 static void render(void){
