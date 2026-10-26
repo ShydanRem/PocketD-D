@@ -1,5 +1,9 @@
 # Inventario e attacchi sul dispositivo — v0.21
 
+> Aggiornamento v0.63: [ricerca locale per nome](RICERCA-LOCALE.md) nello zaino
+> e nelle magie/capacità. Filtri di sessione, nessuna scrittura o modifica
+> degli indici originali. Le descrizioni successive sono storiche.
+
 > Aggiornamento v0.61: [uso pratico al tavolo](USO-AL-TAVOLO.md).
 > Cure note e temporanei si gestiscono dai PF. Dopo un errore di scrittura,
 > pozioni e dadi vita conservano il candidato/tiro con uscita bloccata e Riprova.

@@ -1,5 +1,9 @@
 # Uso pratico al tavolo — v0.61
 
+> Aggiornamento v0.63: [ricerca locale per nome](RICERCA-LOCALE.md) nello zaino
+> e nelle magie/capacità. Filtri di sessione, nessuna scrittura o modifica
+> degli indici originali. Le descrizioni successive sono storiche.
+
 > Aggiornamento v0.62: [alimentazione e batteria](ALIMENTAZIONE.md).
 > Telemetria, avvisi, pausa/risveglio e spegnimento con salvataggio sono ora
 > implementati; le prove fisiche e le misure restano da eseguire. Descrizioni

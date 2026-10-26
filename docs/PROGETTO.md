@@ -56,7 +56,7 @@ Non fanno parte di questo traguardo: importazione Beyond, editor completo, incan
 
 L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco non impedisce le altre fasi. L'ordine delle fasi 0 e 1 può sovrapporsi se l'hardware non è immediatamente disponibile.
 
-## Punto attuale — v0.62
+## Punto attuale — v0.63
 
 La [home del compagno](HOME-COMPAGNO.md) è integrata: menu a icone, PF,
 salvataggi e accesso alle funzioni esistenti, con tasti configurati conservati.
@@ -103,10 +103,14 @@ La [v0.62](ALIMENTAZIONE.md) integra letture AXP2101, stima batteria/ricarica,
 avvisi, pausa manuale e automatica a batteria, risveglio protetto e richiesta
 di spegnimento dopo salvataggio di scheda e storico. Copertura host 110/110;
 misure energetiche, arresto e risveglio fisici ancora da verificare.
+La [v0.63](RICERCA-LOCALE.md) aggiunge la ricerca per nome a zaino e magie/
+capacità: quattro pagine di tastiera, conteggio, filtri combinati e indici
+originali conservati per gli utilizzi. Query di sessione senza NVS, azzerate
+con import/ripristino confermati. Copertura host 112/112, formati invariati.
 
 | Blocco | Stato software | Cosa manca |
 | --- | --- | --- |
-| Scheda individuale offline | PF/temporanei con importi e conferme locali, prove, abilità/salvezze, zaino/cariche/monete, armi, magie, risorse, riposi, dadi vita e ultimi 20 tiri persistenti nel firmware | Effetti completi e regole speciali; sessione reale |
+| Scheda individuale offline | PF/temporanei con importi e conferme locali, prove, abilità/salvezze, zaino/cariche/monete, armi, magie con ricerca per nome, risorse, riposi, dadi vita e ultimi 20 tiri persistenti nel firmware | Effetti completi e regole speciali; sessione reale |
 | Effetti numerici | Otto modificatori CA/PF massimi, basi separate, cure integrate, durate manuali/a round/inizio-fine turno proprio o A/B/C/minuti-ore e vincolo esplicito alla concentrazione con fine congiunta | Altre durate/regole, proprietà speciali e ricalcolo da equipaggiamento |
 | Danni e difese | Profili manuali per 13 tipi, base/tre extra separati, durate/vincoli e scadenze comuni, PF/temporanei, salvezza COS, sei componenti per colpo, fonte esplicita e riduzioni manuali prima/dopo, tre profili locali con budget, conto completo, fino a tre spese congiunte o alternative esplicite da contatori/usi/slot ordinari-patto/cariche e reazione | Condizioni arbitrarie, più di tre extra per tipo, catalogo/requisiti automatici, oltre tre spese, gruppi di costi alternativi ed eventi/formule di ricarica automatici, eccezioni alle salvezze e alla morte; risoluzione base dei danni a zero PF esplicita dalla v0.56 |
 | Stato e morte | Note separate dagli effetti sui tiri di Avvelenato/Accecato/Spaventato/Prono/Trattenuto, d20 morte base e correzioni, reazione e inizio turno espliciti, danni a zero PF e morte istantanea base con conferma, tiro morte con vantaggio/svantaggio e bonus espliciti | Altri effetti/condizioni, durate e fonti multiple, eccezioni alla morte |
@@ -120,11 +124,11 @@ sono portate nel firmware, ma i criteri di completamento richiedono ancora una
 sessione fisica, trasferimento/ripristino e misure. Non sono percentuali di
 completamento né una dichiarazione di collaudo.
 
-## Quattro blocchi concordati — v0.62
+## Quattro blocchi concordati — v0.63
 
 | Blocco | Punto attuale | Prossimo lavoro |
 | --- | --- | --- |
-| 1 — Scheda sul dispositivo | Percorsi base nel firmware: magie/slot/usi, concentrazione, riposi, dadi vita, morte base; v0.51 borsello, v0.52 storico dei tiri e v0.56 danni/morte base espliciti e v0.57 circostanze/bonus nel tiro morte; v0.61 cure/temporanei locali, importi numerici e retry coerenti | Sessione reale e affinamenti emersi dall’uso; regole/eccezioni e verifica nell'uso reale |
+| 1 — Scheda sul dispositivo | Percorsi base nel firmware: magie/slot/usi, concentrazione, riposi, dadi vita, morte base; v0.51 borsello, v0.52 storico dei tiri e v0.56 danni/morte base espliciti e v0.57 circostanze/bonus nel tiro morte; v0.61 cure/temporanei locali, importi numerici e retry coerenti; v0.63 ricerca negli elenchi | Sessione reale e affinamenti emersi dall’uso; regole/eccezioni e verifica nell'uso reale |
 | 2 — Effetti | Modificatori, round, concentrazione, difese, danni e riduzioni con costi/reazione; v0.38 aggiunge slot ordinari/patto; v0.39 durate del proprio turno; v0.40 minuti/ore; v0.41 cariche distinte dalla quantità; v0.42 tre spese congiunte; v0.43 ricarica parziale a dado esplicita; v0.44 quattro effetti di condizione sui tiri e v0.58 durate per riferimenti esterni A/B/C, nominabili sul dispositivo dalla v0.59; v0.60 scelta di una spesa alternativa per colpo | Identità verificate e oltre tre soggetti esterni, gruppi di costi alternativi o oltre tre fonti, eventi/formule di ricarica automatici e requisiti/effetti automatici |
 | 3 — Prodotto fisico | Luminosità, attenuazione/risveglio, salvataggi, tasti configurabili, diagnostica USB v0.54, collaudo locale v0.55, telemetria batteria, pausa/risveglio e spegnimento software v0.62 compilati | Misure batteria/consumi e collaudi reali touch/USB/memoria/alimentazione |
 | 4 — Estetica | v0.50: completato nel software; home/avatar e 85 viste interne, icone, feedback, transizioni e navigazione verificati su 88/88 viste | Collaudo sul display reale nel blocco 3; ulteriori affinamenti artistici sono evoluzioni successive |

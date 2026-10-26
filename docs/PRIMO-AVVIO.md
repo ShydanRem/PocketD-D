@@ -1,9 +1,9 @@
-# Primo avvio e sessione di collaudo — v0.62
+# Primo avvio e sessione di collaudo — v0.63
 
 Questa versione prepara il **blocco 3, prodotto fisico**. L'hardware è in
 arrivo: tutte le prove fisiche sotto sono **da eseguire**, nessuna è già passata.
-La grafica approvata è conservata; la v0.62 integra il software di alimentazione
-e porta la copertura host a 110/110.
+La grafica approvata è conservata; la v0.63 aggiunge la ricerca negli elenchi
+e porta la copertura host a 112/112. Il software di alimentazione è integrato.
 Il [controllo pratico](USO-AL-TAVOLO.md) separa software verificato e prove fisiche.
 
 L'obiettivo della prima prova è trasferire una scheda nota, giocare offline,
@@ -325,6 +325,24 @@ bassa carica usare una normale scarica controllata secondo le indicazioni del
 produttore, senza aggirare protezioni o modificare soglie elettriche. Le
 simulazioni di guasti I2C/NVS restano nei test host. Registrare H22 e H29 con
 la [procedura e i limiti](ALIMENTAZIONE.md).
+
+## 14. Ricerca sul dispositivo — dopo il trasferimento della scheda sintetica
+
+Nello Zaino aprire Cerca, digitare una parte del nome e tornare indietro:
+il vecchio elenco e la sua pagina devono restare invariati. Ripetere e premere
+Mostra; controllare risultati e dettaglio originale. Aprire una pozione trovata,
+verificare nome/quantità e consumarla solo se la cura è applicabile. Annulla
+ripristina il consumo, conservando il filtro. Provare testo senza risultati,
+Azzera → Mostra, numeri/simboli e un testo di venti caratteri.
+
+Nelle Magie cercare una voce e combinare Magie/Capacità/Tutte. Verificare che
+il dettaglio e gli utilizzi appartengano alla voce selezionata anche con nomi
+uguali. Tornare dall'elenco al dettaglio e viceversa deve conservare il filtro.
+Durante la tastiera provare i tasti configurati: non devono interrompere o
+confermare la ricerca. Pausa conserva il filtro; riavvio e import/ripristino
+confermati lo azzerano. Verificare precisione e leggibilità delle quattro
+pagine della tastiera e registrare H30 secondo
+[RICERCA-LOCALE.md](RICERCA-LOCALE.md).
 
 ## Registrazione dell'esito
 

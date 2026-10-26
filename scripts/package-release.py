@@ -106,6 +106,10 @@ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as out:
                  ('home-battery','battery','charging','no-battery','unavailable','low','critical',
                   'home-critical','stale','pause-error','sleep-error','pending-history','off-preview',
                   'off-state-error','off-history-error','off-uncertain','off-requested')]
+    ui_files += ['catalog-search-gallery.png']+[f'search-{name}.png' for name in
+                 ('items-keyboard','items-draft','items-results','items-last','items-empty','symbols',
+                  'maximum','last-keyboard','powers-keyboard','powers-results','spells','features',
+                  'use-original','separate-queries','powers-empty','restored','imported')]
     for name in ui_files:
         image=preview/name
         if not image.is_file():raise SystemExit(f'Missing UI capture: {name}')

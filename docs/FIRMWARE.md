@@ -1,8 +1,10 @@
-# Firmware PocketD-D 0.62 — alimentazione e batteria
+# Firmware PocketD-D 0.63 — ricerca locale negli elenchi
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
+
+[Novità v0.63: ricerca per nome nello zaino e nelle magie/capacità](RICERCA-LOCALE.md).
 
 [Novità v0.62: telemetria batteria, pausa/risveglio e spegnimento](ALIMENTAZIONE.md).
 
@@ -1370,3 +1372,33 @@ Catture `power-*.png` e galleria LVGL host con dati inventati. Gli adapter
 PMIC/sleep/pannello del test UI sono simulati; la build reale usa le API
 ESP-IDF e il driver del pannello. Nessun flash, misura di autonomia o collaudo
 fisico eseguiti, nessuna lettura Beyond o modifica della raccolta personale.
+
+## Incremento v0.63 — ricerca per nome negli elenchi
+
+[Uso, identità delle voci e limiti](RICERCA-LOCALE.md). Zaino e magie/capacità
+hanno ricerca locale per una parte del nome, senza distinzione maiuscole/
+minuscole, con query fino a 20 caratteri, tastiera in quattro pagine e conteggio
+live. I filtri Magie/Capacità/Tutte si combinano con la query. Liste paginate,
+zero risultati, nomi lunghi e duplicati mantengono l'indice originale per
+dettagli, equipaggiamento e consumi. Due ricerche separate in RAM, nessun
+salvataggio/RNG/storico o sostituzione dell'annullamento durante la ricerca.
+Annullare conserva filtro/pagina precedenti; Mostra applica dalla prima pagina.
+Pausa conserva i filtri, import/ripristino li azzerano solo su conferma.
+
+Passati: 167 test JavaScript, suite firmware completa, 11.506 nuovi casi core
+su sottostringhe/case/indici, dati mancanti, duplicati/voci esaurite, categorie,
+limiti e normalizzazione, con 60 oggetti e 120 poteri. UI 112/112: entrambe
+le tastiere, quattro pagine, trim/clear/cancel/limite, testo completo a capo,
+nessun risultato, memoria non scrivibile senza nuove scritture, filtri incrociati,
+selezione e consumo della pozione originale 59 e della capacità originale 119,
+pausa e import/ripristino confermati/annullati. ASan/UBSan su core catalogo e
+UI passati. Build PC/HTML autonomo ed ESP32-S3 passate.
+Binario app 3.418.352 byte (partizione 4 MiB, 19% libera).
+
+PDD28/PDDS, PDH2/lettura PDH1, USB9, backup nativo v1, backup PC v11,
+diagnostica v1 e partizioni invariati. Nessuna preferenza o query persistente.
+Grafica, alimentazione e tasti configurabili conservati. Catture `search-*.png`
+e galleria native LVGL su host con dati inventati. Nessuna lettura Beyond,
+modifica della raccolta personale o prova fisica. Ricerca nelle descrizioni,
+preferiti e ordinamento restano affinamenti successivi, insieme al collaudo
+sul display reale.

@@ -46,6 +46,7 @@ richiede un'osservazione reale; indicare eventuali prove parziali nelle note.
 | H27 | Scheda sintetica: due/tre alternative, scelta esplicita, blocchi/saldi, reazione, annulla, nuovo colpo e backup/riavvio | Non eseguito | [Procedura v0.60](COSTI-ALTERNATIVI.md) |
 | H28 | Scheda sintetica: pannello PF, cura/cap, temporanei assegna/correggi/zero, importi danni, annulla, tasti e riavvio | Non eseguito | [Procedura v0.61](USO-AL-TAVOLO.md) |
 | H29 | Alimentazione v0.62: telemetria reale, USB/ricarica, avvisi, pausa/risveglio/tasti, arresto e persistenza | Non eseguito | [Procedura](ALIMENTAZIONE.md) |
+| H30 | Ricerca v0.63: tastiera, filtri, nessun risultato, dettagli/consumi originali, tasti, pausa e reset | Non eseguito | [Procedura](RICERCA-LOCALE.md) |
 
 ## Problema riproducibile
 

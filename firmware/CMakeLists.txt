@@ -10,7 +10,7 @@ set(EXTRA_COMPONENT_DIRS
 set(COMPONENTS main cmake_utilities)
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/.deps/esp-iot/tools/cmake_utilities")
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(pocketdd VERSION 0.62.0)
+project(pocketdd VERSION 0.63.0)
 # Registry manifests normally convey this dependency; the offline build is explicit.
 idf_component_get_property(cst_lib esp_lcd_touch_cst9217 COMPONENT_LIB)
 idf_component_get_property(touch_lib esp_lcd_touch COMPONENT_LIB)

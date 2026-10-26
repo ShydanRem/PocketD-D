@@ -178,6 +178,13 @@ static void type_turn_name(const char *text){
         char caption[2]={*at,0};click(*at==' '?"Spazio":caption);
     }
 }
+static void type_search(const char *text){
+    for(const char *at=text;*at;at++){
+        char c=*at>='a'&&*at<='z'?*at-'a'+'A':*at;const char *key=strchr(search_keys,c);assert(key);unsigned target=(unsigned)(key-search_keys)/12;
+        while(search_key_page<target)click(">");while(search_key_page>target)click("<");
+        char caption[2]={c,0};click(c==' '?"Spazio":caption);
+    }
+}
 int main(void) {
     lv_init();lv_display_t *d=lv_display_create(466,466);static uint16_t buffer[466*40];
     lv_display_set_buffers(d,buffer,NULL,sizeof buffer,LV_DISPLAY_RENDER_MODE_PARTIAL);lv_display_set_flush_cb(d,paint);
@@ -1469,13 +1476,43 @@ int main(void) {
     power_off_attempted=false;fail_power_off=false;page=POWER_HOME;power_notice="";render();click("Spegni");click("Salva e spegni");assert(power_off_attempted&&power_off_ok&&power_off_calls==2&&save_calls==effects_saves+1&&history_save_calls==practical_history+1&&!memcmp(&state,&effects_before,sizeof state)&&random_calls==effects_calls);screenshot("power-off-requested.ppm");
     act(3704);shortcut(1);assert(power_off_calls==2);power_off_attempted=false;page=HERO;fake_power=(pd_power_info){0};power_info=fake_power;
     puts("Power UI: estimated/unknown/absent/charging/low/critical/stale telemetry, unchanged game/history/RNG, reversible pause, held-input quarantine, USB wake, sleep/panel errors, auto-idle/guards, pending history, save failures and single explicit PMIC shutdown request passed (synthetic; no physical PMIC/sleep tested)");
+    /* v0.63: search is view state; filtered positions retain original IDs. */
+    pd_demo(&state);state.item_count=60;for(unsigned i=3;i<60;i++)state.items[i]=(pd_item){.name="Ordinary item",.quantity=1};
+    strcpy(state.items[0].name,"Light sword");strcpy(state.items[31].name,"Light token +1");state.items[58]=(pd_item){.name="Light spent",.kind=PD_CONSUMABLE};state.items[59]=(pd_item){.name="Light potion",.quantity=2,.kind=PD_HEALING,.count=2,.sides=4,.healing_modifier=2};
+    state.magic.available=true;state.magic.count=120;for(unsigned i=0;i<120;i++)state.magic.powers[i]=(pd_power){.name="Ordinary spell",.kind=i%2,.maximum=i%2?3:0,.remaining=i%2?3:0,.flags=PD_PREPARED};
+    strcpy(state.magic.powers[0].name,"Light");strcpy(state.magic.powers[61].name,"Light step");strcpy(state.magic.powers[118].name,"Daylight");strcpy(state.magic.powers[119].name,"Light step");assert(pd_valid(&state));
+    power_info=fake_power=(pd_power_info){0};history_pending=false;history_quarantined=false;pd_history_reset(&history,state.history_epoch);persisted_history=history;
+    item_query[0]=power_query[0]=0;inventory_page=19;magic_filter=2;magic_page=39;page=INVENTORY;render();
+    effects_before=state;pd_state search_previous=previous;bool search_undo=undo_available;effects_saves=save_calls;effects_calls=random_calls;practical_history=history_save_calls;
+    click("Cerca nello zaino");assert(page==ITEM_SEARCH&&confirmation_open()&&!search_draft[0]);screenshot("search-items-keyboard.ppm");
+    type_search("light");assert(!strcmp(search_draft,"LIGHT")&&!item_query[0]);screenshot("search-items-draft.ppm");
+    for(unsigned gesture=0;gesture<3;gesture++)shortcut(gesture);act(100);act(83);assert(page==ITEM_SEARCH&&!stage_import(&snapshot.state)&&!stage_backup(NULL));
+    click("Indietro");assert(page==INVENTORY&&inventory_page==19&&!item_query[0]);click("Cerca nello zaino");type_search(" light ");fail_save=true;click("Mostra");fail_save=false;render();
+    assert(page==INVENTORY&&!inventory_page&&!strcmp(item_query,"LIGHT")&&save_calls==effects_saves&&random_calls==effects_calls&&history_save_calls==practical_history&&!memcmp(&state,&effects_before,sizeof state)&&undo_available==search_undo&&!memcmp(&previous,&search_previous,sizeof previous));screenshot("search-items-results.ppm");
+    tap(233,176);assert(page==ITEM_DETAIL&&item_index==0);click("Zaino");assert(!strcmp(item_query,"LIGHT")&&!inventory_page);click(">");assert(inventory_page==1);screenshot("search-items-last.ppm");
+    tap(233,176);assert(item_index==59&&page==ITEM_DETAIL);click("Usa");act(3800);assert(page==ITEM_CONFIRM);random_values[0]=random_values[1]=0;click("Conferma");click("Accelera");assert(state.items[59].quantity==1&&state.items[1].quantity==2&&state.hp==28&&random_calls==effects_calls+2);
+    click("Eroe");click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state)&&!strcmp(item_query,"LIGHT"));click("Zaino");assert(inventory_page==1);click("<");tap(233,274);assert(item_index==58&&page==ITEM_DETAIL);effects_saves=save_calls;act(88);assert(page==ITEM_DETAIL&&!state.items[58].quantity&&save_calls==effects_saves);click("Zaino");
+    click("Cerca: LIGHT >");click("Azzera");type_search("zzzz");click("Mostra");assert(page==INVENTORY&&!inventory_page&&pd_catalog_count(&state,PD_CATALOG_ITEMS,item_query)==0);screenshot("search-items-empty.ppm");act(83);assert(!inventory_page);tap(233,326);click("Azzera");type_search("+1");screenshot("search-symbols.ppm");click("Mostra");tap(233,176);assert(item_index==31);click("Zaino");tap(233,326);click("Azzera");type_search("WWWWWWWWWWWWWWWWWWWW");act(3900);assert(strlen(search_draft)==20);wrapped_fits();screenshot("search-maximum.ppm");while(search_key_page+1<search_pages())click(">");screenshot("search-last-keyboard.ppm");click("Azzera");click("Mostra");assert(!item_query[0]&&!inventory_page&&pd_catalog_count(&state,PD_CATALOG_ITEMS,"")==60);
+    click("Cerca nello zaino");type_search("light");click("Mostra");act(800);assert(page==MAGIC_LIST&&magic_page==39&&!power_query[0]);click("Cerca");assert(page==POWER_SEARCH);type_search("light");screenshot("search-powers-keyboard.ppm");click("Mostra");assert(!magic_page&&!strcmp(power_query,"LIGHT")&&visible_powers()==4);screenshot("search-powers-results.ppm");
+    click("Magie");assert(visible_powers()==2&&visible_power(0)==0&&visible_power(1)==118&&!magic_page);screenshot("search-spells.ppm");click("Capacita");assert(visible_powers()==2&&visible_power(0)==61&&visible_power(1)==119);screenshot("search-features.ppm");
+    tap(233,270);assert(power_index==119&&page==MAGIC_DETAIL);click("Usa");click("Conferma");assert(state.magic.powers[119].remaining==2&&state.magic.powers[61].remaining==3&&state.magic.powers[0].remaining==0);screenshot("search-use-original.ppm");
+    click("Elenco");assert(!strcmp(power_query,"LIGHT")&&visible_power(1)==119);click("Tutte");click(">");assert(magic_page==1&&visible_power(3)==119);tap(233,222);assert(power_index==119);click("Elenco");
+    click("Cerca*");click("Azzera");type_search("step");click("Mostra");assert(!strcmp(power_query,"STEP")&&!strcmp(item_query,"LIGHT")&&visible_powers()==2);screenshot("search-separate-queries.ppm");
+    click("Cerca*");click("Azzera");type_search("nothing");click("Mostra");assert(!magic_page&&!visible_powers());screenshot("search-powers-empty.ppm");tap(233,382);click("Azzera");click("Mostra");assert(!power_query[0]&&visible_powers()==120&&!magic_page);
+    /* Pausing a list preserves its query; import/restore reset queries only on confirmation. */
+    act(80);assert(!strcmp(item_query,"LIGHT"));effects_saves=save_calls;effects_calls=random_calls;assert(power_begin_pause()&&power_paused);power_wait_result=PD_POWER_WAKE;power_service();assert(!power_paused&&!strcmp(item_query,"LIGHT")&&page==INVENTORY&&save_calls==effects_saves&&random_calls==effects_calls);
+    pd_state search_import=state;assert(stage_import(&search_import));click("Annulla");assert(!strcmp(item_query,"LIGHT"));snapshot.state=state;snapshot.history=history;
+    assert(stage_backup(&snapshot));click("Annulla");assert(!strcmp(item_query,"LIGHT"));assert(stage_backup(&snapshot));click("Ripristina");assert(page==HERO&&!item_query[0]&&!power_query[0]&&!inventory_page&&!magic_page&&state.item_count==60&&state.magic.count==120);screenshot("search-restored.ppm");
+    act(80);click("Cerca nello zaino");type_search("light");click("Mostra");assert(stage_import(&search_import));click("Conferma");assert(page==HERO&&!item_query[0]&&!power_query[0]&&!inventory_page&&!magic_page);screenshot("search-imported.ppm");
+    state.inventory_available=false;state.item_count=0;state.equipped=PD_NO_WEAPON;act(80);act(3800);assert(page==INVENTORY);state.magic.available=false;state.magic.count=0;act(800);act(3800);assert(page==MAGIC_LIST);
+    puts("Catalog UI: both search keyboards, trim/case/clear/cancel/limit, four pages, zero results, 60/120 rows, original-ID potion/feature consumption, duplicate/depleted names, type intersections, RAM-only queries, no-write search, pause and import/native-restore reset passed (synthetic)");
     unsigned covered=0;
-    for(unsigned p=0;p<=POWER_OFF;p++){
+    for(unsigned p=0;p<=POWER_SEARCH;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)POWER_OFF+1);
-    assert(covered==POWER_OFF+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)POWER_SEARCH+1);
+    assert(covered==POWER_SEARCH+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }
