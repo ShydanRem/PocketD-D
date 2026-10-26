@@ -1,4 +1,8 @@
-# Scheda e backup via USB dal browser — supporto PC v0.64
+# Scheda e backup via USB dal browser — supporto PC
+
+**Correzione PC del 26 ottobre 2026:** gestiti avvio/riavvio della porta e
+messaggi ROM/ESP-IDF riconosciuti. Il firmware distribuito rimane 0.65.0;
+non occorre reinstallarlo per aggiornare questo collegamento.
 
 Dopo aver installato il firmware, l'app PC può inviare il personaggio,
 ricevere il backup nativo e ripristinarlo direttamente da **Chrome o Edge sul
@@ -78,25 +82,60 @@ La negoziazione dura al massimo 10 secondi, l'invio 30, la conferma 125 e la
 ricezione del corpo 30. Scritture a blocchi fino a 1024 byte, righe di controllo
 fino a 256 caratteri e backup fino a 110.000 byte. Una sola operazione nella
 pagina alla volta; altre pagine/programmi possono comunque occupare la porta.
-Non si comandano reset, flash, erase o cambi DTR/RTS. Il comportamento fisico
-all'apertura della porta dipende anche dal sistema e resta da collaudare.
+All'apertura si rilasciano DTR/RTS insieme (`false/false`), senza sequenze per
+resettare o entrare nel bootloader. Non si comandano flash o erase. Il comportamento
+fisico all'apertura dipende anche dal sistema e resta da verificare sulla scheda.
+
+## Lampo nero, Elian ancora presente o risposta inattesa
+
+L'utente ha segnalato un lampo nero seguito dal PG dimostrativo e l'errore
+«Risposta USB inattesa o protocollo non supportato». Questo è compatibile con
+un riavvio, ma non è una diagnosi fisica confermata. Il client precedente
+rifiutava ogni riga estranea, compresi eventuali messaggi d'avvio della scheda;
+non ripeteva il saluto se questo veniva perso durante la partenza.
+
+Il client aggiornato riconosce soltanto righe ROM ESP32-S3/ESP-IDF note, con
+limiti di 512 byte per riga e 64 righe per sessione. La colorazione ANSI è
+accettata soltanto su questi log. Testo estraneo, protocolli futuri, risposte
+fuori fase e ACK precedenti continuano a essere rifiutati; l'errore indica la
+fase e riporta soltanto risposte di controllo riconosciute, mai il JSON del PG.
+Il messaggio del bootloader dà istruzioni per tornare all'app.
+
+Durante i 10 secondi di collegamento si può ripetere soltanto il saluto HELLO
+(intervalli di circa un secondo). Le righe parziali sono conservate tra i tentativi;
+le eventuali risposte duplicate concordanti vengono consumate in numero limitato
+prima dell'ACK della prima richiesta. **Non si ripetono automaticamente il PG,
+la richiesta di backup o il ripristino**, e non si interpreta il riavvio come
+un salvataggio. Rimangono obbligatori conferma sul display e ACK finale.
+
+Per riprovare: chiudere l'app PC precedente e l'installer, estrarre il nuovo ZIP,
+avviare `Avvia-PocketDD.cmd`, scollegare/ricollegare il dispositivo senza BOOT e
+attendere la schermata PocketD-D. Con lo stesso browser e indirizzo locale il
+PG già importato sul PC resta disponibile. Ripetere **Prepara per dispositivo
+(USB)** e annotare il nuovo errore e ciò che appare sul display se ancora fallisce.
 
 ## Verifiche
 
-Nove test del trasporto usano vere ReadableStream/WritableStream con periferica
+Dodici test del trasporto usano vere ReadableStream/WritableStream con periferica
 **simulata**: frammentazione fino al singolo byte, negoziazione, copia/versione
 congelate, ACK obbligatori, vecchi/futuri protocolli, cancellazione/errori/EOF,
 CRC/record corrotti, limiti di riga/buffer, aborto, esclusione delle operazioni
-contemporanee, riapertura e apertura tardiva dopo timeout. Nessuna porta fisica.
+contemporanee, riapertura e apertura tardiva dopo timeout. Aggiunti log d'avvio
+frammentati/colorati, HELLO perso, READY parziale/tardivo/duplicato, rilascio
+segnali, bootloader, eccesso di log e timeout; un solo invio effettivo per operazione.
+Nessuna porta fisica.
 
-La suite JavaScript passa **182 test**. Chromium prova il codice PC compilato
+La suite JavaScript passa **192 test**. Chromium prova il codice PC compilato
 con Web Serial simulata: invio/anteprima, conferma/guardie, aborto, acquisizione
 con download esatto, ripristino, errore d'integrità, browser non supportato e
-raccolta sintetica invariata. Il precedente flusso di esportazione su file e
+raccolta sintetica invariata, anche con log d'avvio e primo HELLO perso.
+Il precedente flusso di esportazione su file e
 anteprima backup resta verificato dal controllo PC esistente.
 
-Firmware e installer rimangono v0.64; il binario ESP32-S3, le 114 viste LVGL,
-partizioni, PDD28/PDDS, USB9, backup nativo v1 e backup PC v11 sono invariati.
-Non sono stati ripetuti i collaudi fisici né effettuate letture Beyond o
-modifiche della raccolta personale. H33 in [COLLAUDO-HARDWARE.md](COLLAUDO-HARDWARE.md)
-resta **Non eseguito**. Gli script Python rimangono disponibili come alternativa.
+Questa correzione cambia soltanto il client PC. Binario ESP32-S3 0.65.0,
+partizioni, PDD28/PDDS, USB9, backup nativo v1 e backup PC v11 sono invariati;
+non è stata eseguita una nuova build firmware. Nessuna nuova lettura Beyond
+o modifica della raccolta personale. Il trasferimento di questo PG sul dispositivo
+dell'utente resta **da confermare**; H33 in
+[COLLAUDO-HARDWARE.md](COLLAUDO-HARDWARE.md) resta **Non eseguito** come prova
+strutturata completa. Gli script Python rimangono disponibili come alternativa.
