@@ -2,12 +2,13 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.64:** [preparazione locale delle magie](docs/PREPARAZIONE-MAGIE.md) sul dispositivo, con anteprima, conferma e Annulla. Cambia soltanto la disponibilità scelta: slot, utilizzi e concentrazione restano invariati. Gestione manuale dei limiti con il DM. Ricerca, grafica e tasti configurabili conservati; 114/114 viste LVGL host. Formati e backup invariati. Prove fisiche ancora da eseguire.
+**Stato v0.65:** [quantità degli oggetti modificabili sul dispositivo](docs/QUANTITA-OGGETTI.md), con tastiera, anteprima, conferma e Annulla. Cariche, PF ed effetti conservati; un'arma scelta a quantità zero viene riposta. Ricerca, preparazione magie e tasti configurabili disponibili; 115/115 viste LVGL host. Formati e backup invariati. Prove fisiche ancora da eseguire.
 
 Il firmware comprende borsello, storico, scheda, inventario, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Scheda PDD28 con lettura dei formati precedenti, nuovi registri NVS PDH2 con lettura di PDH1, copia scheda USB9 e backup PC v11. Il backup nativo è un archivio distinto dal backup della raccolta PC. Regole speciali, altri effetti e prodotto fisico restano aperti.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
+- [Quantità degli oggetti: modifica sul dispositivo v0.65](docs/QUANTITA-OGGETTI.md)
 - [Invia scheda e gestisci backup dal browser via USB](docs/USB-BROWSER.md)
 - [Installa via USB dal browser: pagina, pacchetto e aggiornamenti](docs/INSTALLAZIONE-USB.md)
 - [Preparazione delle magie sul dispositivo v0.64](docs/PREPARAZIONE-MAGIE.md)
@@ -20,7 +21,7 @@ Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazi
 - [Tiri contro morte: circostanze, bonus, persistenza e limiti v0.57](docs/TIRI-MORTE.md)
 - [Danni a zero PF: regola base esplicita, conferme e limiti v0.56](docs/DANNI-ZERO-PF.md)
 - [Collaudo locale del tocco e dei tasti configurabili v0.55](docs/COLLAUDO-COMANDI.md)
-- [Primo avvio: installazione, diagnostica e sessione guidata v0.64](docs/PRIMO-AVVIO.md)
+- [Primo avvio: installazione, diagnostica e sessione guidata v0.65](docs/PRIMO-AVVIO.md)
 - [Scheda da compilare durante il collaudo hardware](docs/COLLAUDO-HARDWARE.md)
 - [Backup del dispositivo: acquisizione, anteprima, ripristino e compatibilità v0.53](docs/BACKUP-DISPOSITIVO.md)
 - [Storico dei tiri: persistenza, tasti, errori e limiti v0.52](docs/STORICO-TIRI.md)

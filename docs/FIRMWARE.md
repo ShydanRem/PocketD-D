@@ -1,8 +1,10 @@
-# Firmware PocketD-D 0.64 — preparazione locale delle magie
+# Firmware PocketD-D 0.65 — quantità degli oggetti locali
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
+
+[Novità v0.65: quantità degli oggetti con tastiera e conferma](QUANTITA-OGGETTI.md).
 
 [Scheda, acquisizione e ripristino dal browser via USB](USB-BROWSER.md).
 
@@ -1476,3 +1478,27 @@ Verificato anche il precedente flusso file/anteprima. Il firmware ESP32-S3,
 formati, partizioni e tasti restano invariati; il binario è quello v0.64 già
 compilato e verificato su host, senza nuova compilazione necessaria. Nessun
 trasferimento fisico eseguito. [Uso, interruzioni e limiti](USB-BROWSER.md).
+
+## Incremento v0.65 — quantità degli oggetti sul dispositivo
+
+Il saldo 0–999 di una riga esistente si corregge dallo Zaino con tastiera,
+anteprima e conferma. Nessun uso, cura, ricarica di cariche o effetto dedotto.
+Zero sull'arma scelta ripone l'arma e azzera il lancio nello stesso salvataggio;
+una quantità nuovamente positiva richiede una nuova scelta. Tasti/import/
+ripristino/pausa sono protetti durante le bozze. Filtri e indici originali
+restano validi. Salvataggio fallito conserva stato e scelta, Annulla ripristina
+la modifica riuscita; le righe azzerate restano consultabili.
+
+Passati 182 test JavaScript, suite firmware completa e 40.320 nuovi casi core
+con confronto dell'intera scheda, 60 indici, quattro tipi, saldi, equipaggiamento
+e cariche, idempotenza, fuori limite, rifiuti e codec nativi. UI 115/115: tastiera,
+annullamento, conferma invariata senza scritture, retry/Annulla, cariche/PF/
+concentrazione conservati, arma zero/ritorno, nome lungo/indice filtrato 59,
+backup e import/ripristino. ASan/UBSan su quantità e UI passati. Build PC/HTML
+ed ESP32-S3 passate. Binario app 3.420.784 byte, partizione 4 MiB, 18% libera.
+
+PDD28/PDDS, PDH2/lettura PDH1, USB9, backup nativo v1, backup PC v11,
+diagnostica v1 e partizioni invariati. Catture quantity e galleria LVGL host
+con dati inventati. Nessuna lettura Beyond, modifica della raccolta personale
+o prova hardware. Creazione/rinomina delle voci, prezzi, peso e automatismi
+restano successivi. [Uso, salvataggi e limiti](QUANTITA-OGGETTI.md).

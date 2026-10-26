@@ -1,9 +1,9 @@
-# Primo avvio e sessione di collaudo — v0.64
+# Primo avvio e sessione di collaudo — v0.65
 
 Questa versione prepara il **blocco 3, prodotto fisico**. L'hardware è in
 arrivo: tutte le prove fisiche sotto sono **da eseguire**, nessuna è già passata.
-La grafica approvata è conservata; la v0.64 aggiunge la preparazione locale delle magie
-e porta la copertura host a 114/114. Il software di alimentazione è integrato.
+La grafica approvata è conservata; la v0.65 aggiunge le quantità degli oggetti locali
+e porta la copertura host a 115/115. Il software di alimentazione è integrato.
 Il [controllo pratico](USO-AL-TAVOLO.md) separa software verificato e prove fisiche.
 
 L'obiettivo della prima prova è trasferire una scheda nota, giocare offline,
@@ -383,6 +383,20 @@ tasti e riavvio. Chiudere l'installer firmware prima di aprire questo collegamen
 Verificare l'interruzione dell'attesa distinguendola dall'annullamento sul display;
 non indurre guasti alle scritture fuori dal protocollo H21. Registrare H33 secondo
 [USB-BROWSER.md](USB-BROWSER.md). Gli errori NVS restano simulati sul banco host.
+
+## 17. Quantità degli oggetti — con scheda sintetica
+
+Nello Zaino aprire una pozione, toccare Quantita e provare un saldo maggiore.
+Controllare anteprima e annullamento, poi confermare: PF e cariche non devono
+cambiare. Menu → Eroe → Annulla ripristina il saldo precedente. Provare zero,
+999, cancellazione delle cifre e conferma senza variazioni.
+
+Portare a zero l'arma scelta: deve risultare riposta e la modalità lancio deve
+terminare. Aumentare di nuovo la quantità non deve riequipaggiarla; scegliere
+Scegli esplicitamente. Cercare una voce con nome lungo, correggerla e verificare
+identità e filtro. Provare i tasti nelle bozze, riavvio, backup/ripristino e nuova
+importazione. Gli errori di memoria restano simulati su host. Registrare H34
+secondo [QUANTITA-OGGETTI.md](QUANTITA-OGGETTI.md).
 
 ## Registrazione dell'esito
 

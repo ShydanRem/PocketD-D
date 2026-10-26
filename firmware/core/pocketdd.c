@@ -343,6 +343,12 @@ bool pd_resource_change(pd_state *s, unsigned index, int delta) {
     s->resources[index].current = n < 0 ? 0 : n > s->resources[index].maximum ? s->resources[index].maximum : n;
     return true;
 }
+bool pd_item_quantity_set(pd_state *s,unsigned index,unsigned quantity){
+    if(!s||!pd_valid(s)||!s->inventory_available||index>=s->item_count||quantity>999)return false;
+    s->items[index].quantity=quantity;
+    if(!quantity&&s->equipped==index){s->equipped=PD_NO_WEAPON;s->combat.thrown=false;}
+    return true;
+}
 bool pd_item_charges_change(pd_state *s,unsigned index,int delta) {
     if(!s||!pd_valid(s)||!s->inventory_available||index>=s->item_count||!s->items[index].quantity||!s->items[index].charges.maximum)return false;
     pd_charges *c=&s->items[index].charges;int64_t n=(int64_t)c->current+delta;

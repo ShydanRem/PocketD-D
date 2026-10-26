@@ -1,5 +1,8 @@
 # Uso pratico al tavolo — v0.61
 
+> Aggiornamento v0.65: [saldo degli oggetti locale](QUANTITA-OGGETTI.md) con
+> anteprima, conferma e gestione dell’arma a zero. Nessuna ricarica di cariche.
+
 > Aggiornamento v0.63: [ricerca locale per nome](RICERCA-LOCALE.md) nello zaino
 > e nelle magie/capacità. Filtri di sessione, nessuna scrittura o modifica
 > degli indici originali. Le descrizioni successive sono storiche.

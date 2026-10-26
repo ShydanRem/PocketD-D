@@ -182,6 +182,10 @@ enum { PD_VITAL_HEAL,PD_VITAL_TEMP_GRANT,PD_VITAL_TEMP_SET,PD_VITAL_COUNT };
    heals through them; rejects dead-character healing and malformed state/input. */
 bool pd_vitals_apply(pd_state *state,unsigned kind,unsigned amount);
 bool pd_resource_change(pd_state *state, unsigned index, int delta);
+/* Explicit balance 0..999 on an existing row; no charge refill or effects.
+   Zero on the equipped weapon clears equipment and thrown mode atomically.
+   Missing/malformed state rejects without mutation. */
+bool pd_item_quantity_set(pd_state *state,unsigned index,unsigned quantity);
 /* Manual balance adjustment; absent/zero-quantity objects reject without mutation. */
 bool pd_item_charges_change(pd_state *state,unsigned index,int delta);
 pd_roll pd_d20(int bonus, int mode, pd_random random, void *context);

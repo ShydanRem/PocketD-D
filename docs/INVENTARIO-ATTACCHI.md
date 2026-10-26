@@ -1,5 +1,8 @@
 # Inventario e attacchi sul dispositivo — v0.21
 
+> Aggiornamento v0.65: [quantità modificabili sul dispositivo](QUANTITA-OGGETTI.md),
+> con tastiera, conferma e cariche conservate. I limiti seguenti sono storici.
+
 > Aggiornamento v0.63: [ricerca locale per nome](RICERCA-LOCALE.md) nello zaino
 > e nelle magie/capacità. Filtri di sessione, nessuna scrittura o modifica
 > degli indici originali. Le descrizioni successive sono storiche.

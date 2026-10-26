@@ -118,6 +118,10 @@ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as out:
                  ('manage-unprepared','preview','save-error','manage-prepared',
                   'ready-to-cast','remove-preview','concentration-kept','innate-manage',
                   'cantrip','last-long-name','long-preview','search-kept','restored','imported')]
+    ui_files += ['inventory-quantity-gallery.png']+[f'quantity-{name}.png' for name in
+                 ('detail','keypad','preview','save-error','zero','no-change','restocked',
+                  'weapon-preview','weapon-zero','weapon-returned','last-name','long-preview',
+                  'search-kept','restored','imported')]
     for name in ui_files:
         image=preview/name
         if not image.is_file():raise SystemExit(f'Missing UI capture: {name}')

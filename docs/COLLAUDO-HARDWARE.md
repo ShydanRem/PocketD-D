@@ -50,6 +50,7 @@ richiede un'osservazione reale; indicare eventuali prove parziali nelle note.
 | H31 | Preparazione v0.64: anteprima, conferma, risorse/concentrazione conservate, innati, ricerca, tasti, Annulla e persistenza | Non eseguito | [Procedura](PREPARAZIONE-MAGIE.md) |
 | H32 | Installer browser: prima installazione, aggiornamento/layout, porta/BOOT, avanzamento, verifica MD5, reset e progressi conservati | Non eseguito | [Procedura](INSTALLAZIONE-USB.md) |
 | H33 | Web Serial PC: invio/anteprima/conferma, annulla/interrompi, backup esatto e ripristino, porta libera e raccolta conservata | Non eseguito | [Procedura](USB-BROWSER.md) |
+| H34 | Quantità v0.65: tastiera/limiti, prima-dopo, cariche/PF conservati, arma a zero, tasti, Annulla e persistenza | Non eseguito | [Procedura](QUANTITA-OGGETTI.md) |
 
 ## Problema riproducibile
 

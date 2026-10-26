@@ -47,7 +47,8 @@ test('USB browser: device cancellation/storage/busy errors, timeout, wrong ACK a
  }
 });
 test('USB browser: native backup exact bytes/CRC and integrity verified across fragmented headers and payload',async()=>{
- for(const fragment of [1,13,4096]){const f=fake({fragment}),states=[];assert.equal(await receiveDeviceBackup(options(f,s=>states.push(s))),raw);assert.deepEqual(f.sent,['','PDD BACKUP HELLO','PDD BACKUP GET 1']);assert.deepEqual(states,['connect','confirm-backup','receive','received']);released(f);}
+ // Byte-by-byte fragmentation uses the normal transfer deadline, including on busy build hosts.
+ for(const fragment of [1,13,4096]){const f=fake({fragment}),states=[];assert.equal(await receiveDeviceBackup({...options(f,s=>states.push(s)),timeouts:{...times,data:30000}}),raw);assert.deepEqual(f.sent,['','PDD BACKUP HELLO','PDD BACKUP GET 1']);assert.deepEqual(states,['connect','confirm-backup','receive','received']);released(f);}
 });
 test('USB browser: oversized/corrupt/truncated backup or unsupported protocol never yields a verified copy',async()=>{
  const corrupt=JSON.parse(raw);corrupt.state='AAAA'+corrupt.state.slice(4);

@@ -140,6 +140,15 @@ preparation_gallery=Image.new('RGB',(466*2,466*2),'black')
 for i,name in enumerate(('manage-unprepared','preview','manage-prepared','remove-preview')):
     preparation_gallery.paste(Image.open(BASE/f'prepare-{name}.png'),(i%2*466,i//2*466))
 preparation_gallery.save(BASE/'spell-preparation-gallery.png')
+quantity_views=('detail','keypad','preview','save-error','zero','no-change','restocked',
+                'weapon-preview','weapon-zero','weapon-returned','last-name','long-preview',
+                'search-kept','restored','imported')
+for name in quantity_views:
+    Image.open(BASE/f'quantity-{name}.ppm').save(BASE/f'quantity-{name}.png')
+quantity_gallery=Image.new('RGB',(466*2,466*2),'black')
+for i,name in enumerate(('detail','keypad','preview','weapon-preview')):
+    quantity_gallery.paste(Image.open(BASE/f'quantity-{name}.png'),(i%2*466,i//2*466))
+quantity_gallery.save(BASE/'inventory-quantity-gallery.png')
 frames=[Image.open(BASE/f'ux-transition-{i:02d}.ppm').convert('RGB') for i in range(5)]
 frames[0].save(BASE/'ui-transition.gif',save_all=True,append_images=frames[1:],duration=[40,40,40,40,1000],loop=0,disposal=2,optimize=True)
 print(f'UI: {len(records)} production views, overview, offline catalog and transition exported')
