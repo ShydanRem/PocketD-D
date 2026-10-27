@@ -1,0 +1,30 @@
+{
+  "date": "2026-10-27",
+  "provider": "OpenAI ImageGen",
+  "status": "visual proposal; not a production sprite sheet or approved final asset",
+  "source": "concept-board.png",
+  "source_sha256": "88d80697889c0fab80da2e5cb6db174164b1e4c2909ab58487e6d01d57132ed8",
+  "reference": "firmware/ui/companion/source/hero.png",
+  "reference_sha256": "ad53ba654a4ff02c65dff909be9fc402495d7a5379360706f815751e36ffafbe",
+  "species": [
+    "Umano",
+    "Elfo",
+    "Nano",
+    "Halfling",
+    "Gnomo",
+    "Mezzelfo",
+    "Orco",
+    "Mezzorco",
+    "Tiefling",
+    "Dragonide",
+    "Goliath",
+    "Aasimar"
+  ],
+  "prompt_summary": "Premium 3-column by 4-row full-body HD-2D pixel-art character roster. Same cream tunic, brown leather, teal cloak and gold clasp as the approved hero; distinct anatomy and proportional heights. Midnight navy board with Italian labels. No weapons or game interface.",
+  "limitations": [
+    "Presentation board, not game-resolution transparent sprites.",
+    "Drawn example appearances are cosmetic and are not inferred from character data.",
+    "Needs normalized transparent production sprites, reaction poses and reduced-size readability review before integration.",
+    "Beyond automatic matching and manual override are not implemented by this artwork-only change."
+  ]
+}

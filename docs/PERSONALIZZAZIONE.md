@@ -117,3 +117,7 @@ Restano successivi: altri abiti e accessori disegnati, silhouette/specie diverse
 nome e descrizione del PG modificabili sul dispositivo, editor dello sfondo sul
 PC, immagini personali e nuove animazioni. L'abbigliamento illustrato rimane
 decorativo e non rappresenta automaticamente l'equipaggiamento di Beyond.
+
+È disponibile una [prima proposta visiva di dodici specie](design/species/README.md).
+È una tavola di stile da valutare, separata dagli asset di produzione e
+dall'assegnazione automatica all'importazione, che non è ancora implementata.
