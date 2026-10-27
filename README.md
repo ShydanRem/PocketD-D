@@ -2,9 +2,11 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
+**Stato v0.71:** [inventario Beyond operativo e difese ai danni](docs/BEYOND-INVENTARIO-DIFESE.md): cariche separate dalle quantità, consumabili, pozioni con cura esplicita e concessioni incondizionate riconciliate. Anteprima, configurazione dei tipi sconosciuti e trasferimento USB14; backup PC v16 solo con profilo difese. Nuova lettura reale del PG 144777811: caratteristiche, PF 32/73, CA 17, 41 voci e quattro pozioni 2d4+2 verificati anche nel parser C host. Cariche e resistenze provate con dati sintetici. Conversione ancora parziale; collaudo USB fisico aperto.
+
 **Stato v0.70:** [dodici preset di classe su SD](docs/PRESET-CLASSI.md), per tutte le 21 specie e le due silhouette (504 look). Cappucci corretti, scelta sul dispositivo/PC, proposta Beyond per classe singola riconosciuta, anteprima e conferma. Senza SD rimane lo stile originale. Colori e tagli dei preset sono fissi; espressioni aggiuntive, Artificiere e sottoclassi sono successivi. Collaudo SD fisico e diagnosi USB dei riavvii ancora aperti.
 
-Il firmware comprende borsello, storico, scheda, inventario, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Scheda PDD33 con lettura dei formati precedenti, registri NVS PDH2 con lettura di PDH1, copia scheda USB9/USB10/USB11/USB12/USB13 e backup PC v11/v12/v13/v14/v15. Il backup nativo è un archivio distinto dal backup della raccolta PC. Regole speciali, altri effetti e prodotto fisico restano aperti.
+Il firmware comprende borsello, storico, scheda, inventario, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Scheda PDD33 con lettura dei formati precedenti, registri NVS PDH2 con lettura di PDH1, copia scheda USB9/USB10/USB11/USB12/USB13/USB14 e backup PC v11/v12/v13/v14/v15/v16. Il backup nativo è un archivio distinto dal backup della raccolta PC. Regole speciali, altri effetti e prodotto fisico restano aperti.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 

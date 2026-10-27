@@ -23,9 +23,11 @@ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as z:
 5. Usa Chrome o Edge. Importa da D&D Beyond -> link del PG pubblico -> Leggi e verifica.
 6. I look delle classi richiedono firmware 0.70 e il pacchetto SD: dist/assets/PocketDD-SD.zip. Estrai pocketdd nella radice SD FAT32; Aspetto > Modifica > Classe sul dispositivo. Nessun valore di gioco cambia.
 7. Controlla caratteristiche, PF, CA, inventario e omissioni; crea il nuovo personaggio solo dopo la verifica.
-7. Prepara per dispositivo (USB) -> Invia al dispositivo via USB -> conferma sul display.
+8. Prepara per dispositivo (USB) -> Invia al dispositivo via USB -> conferma sul display.
 
 L'app e gia compilata: non servono npm install o una compilazione del firmware.
+Cariche, consumabili e cure esplicite vengono riconciliati; recuperi ambigui restano manuali.
+Un profilo difese richiede firmware 0.71 / USB14: aggiorna PocketD-D conservando i dati.
 La conversione Beyond resta parziale; personaggi privati non sono supportati.
 L'importazione crea una nuova scheda PC; il trasferimento sostituisce la copia sul dispositivo.
 La raccolta resta nel browser: usa sempre lo stesso indirizzo e conserva un backup.

@@ -23,7 +23,7 @@ try:
   context.route('**/*',lambda r:r.continue_() if r.request.url.startswith(address+'/') else r.abort())
   page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
   page.on('dialog',lambda d:d.accept())
-  page.goto(address);key='pocketdd-library-v1'
+  page.goto(address);page.locator('[data-action=beyond-import]').wait_for();key='pocketdd-library-v1'
   def raw():return page.evaluate('(k)=>localStorage.getItem(k)',key)
   def active():
    collection=json.loads(raw());return next(e['state'] for e in collection['characters'] if e['id']==collection['activeId'])

@@ -45,7 +45,7 @@ def validate(raw):
             raise ValueError('Versione firmware/SDK non valida')
     counts(data, 'uptime_ms', 2**64-1);counts(data, 'reset_reason')
     fields(data['formats'], 'usb state history backup');counts(data['formats'], 'usb state history backup')
-    if data['formats'] not in ({'usb': u, 'state': s, 'history': 2, 'backup': 1} for u,s in [(9,25),(10,30),(11,31),(12,32),(13,33)]):
+    if data['formats'] not in ({'usb': u, 'state': s, 'history': 2, 'backup': 1} for u,s in [(9,25),(10,30),(11,31),(12,32),(13,33),(14,33)]):
         raise ValueError('Formati firmware non supportati da questo strumento')
     fields(data['memory'], 'internal psram')
     fields(data['memory']['internal'], 'free minimum_free largest_block')
@@ -94,7 +94,7 @@ def acquire(port):
         line = _line(port, deadline, 256)
         if not line or line in ('PDD ERROR packet', 'PDD ERROR size'):
             continue  # An interrupted prior line is discarded by the leading newline.
-        if not re.fullmatch(r'PDD READY (?:[1-9]|10|11|12|13)', line):
+        if not re.fullmatch(r'PDD READY (?:[1-9]|10|11|12|13|14)', line):
             raise RuntimeError('Protocollo USB non supportato: nessun dato della scheda inviato')
         break
     _write(port, b'PDD DIAGNOSTICS GET 1\n')

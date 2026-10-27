@@ -1,3 +1,4 @@
+import {validateDefences} from './defences.js';
 import {avatarOutfit} from './avatar-classes.js';
 import {avatarIdentity} from './avatar-species.js';
 import {abilityKeys,skills,parseBackup,serialize} from './model.js';
@@ -31,7 +32,7 @@ export function projectDevice(input){
     combat:{rageBonus:s.extended?.combat.rageBonus??0,criticalDice:s.extended?.combat.extraMeleeCriticalDice??0,
       raging:s.extended?.combat.raging??false,powerAttack:Boolean(s.extended?.combat.greatWeaponMaster&&s.extended?.combat.greatWeaponMasterAvailable),thrown:s.extended?.combat.thrown??false}};
   warnings.push('Zaino: nomi, quantità, armi e cure riconosciute dal PC. Note e proprietà descrittive restano sul PC; gli oggetti generici non acquisiscono effetti automatici.');
-  warnings.push('Cariche: un saldo esplicito per voce inventario, distinto dalla quantità. Configurazione manuale sul PC, correzione e spesa sul dispositivo; recupero manuale o pieno da riposo breve/lungo. Nessuna carica dedotta automaticamente da Beyond o dalle note.');
+  warnings.push('Cariche: un saldo esplicito per voce inventario, distinto dalla quantità. Configurazione manuale sul PC, correzione e spesa sul dispositivo; recupero manuale o pieno da riposo breve/lungo. Da Beyond sono trasferiti solo saldi espliciti riconciliati; nessuna carica dedotta dalle note. Recuperi giornalieri o variabili manuali.');
   warnings.push('Attacchi: bonus e danni secondo il modello PC, avvelenato, Ira, attacco potente e critico extra fotografati al trasferimento. CA bersaglio manuale. Nessun consumo automatico di munizioni, resistenze, danni aggiuntivi o regole speciali dalle note.');
   warnings.push('Cambiare arma non ricalcola CA o avatar. Cure e consumabili richiedono conferma; Annulla sull’Eroe ripristina PF e quantità insieme. I progressi possono essere conservati come backup nativo USB; la raccolta PC non viene sincronizzata automaticamente.');
   const magic={powers:s.powers.map(p=>{
@@ -56,13 +57,14 @@ export function projectDevice(input){
   warnings.push('Morte: contatori trasferiti esattamente; d20 base senza bonus, vantaggi o talenti, con conferma e correzioni DM. Tre fallimenti a zero PF bloccano cure ordinarie e riposo lungo fino a correzione esplicita. Nessuna morte istantanea o gestione automatica dei danni a zero PF.');
   const wallet={available:s.extended?.currenciesAvailable??false,...Object.fromEntries(['cp','sp','ep','gp','pp'].map(k=>[k,s.extended?.currenciesAvailable?integer(s.extended.currencies[k],0,999999999,k):0]))};
   warnings.push(wallet.available?'Monete: cinque saldi verificati, separati e modificabili con conferma sul dispositivo. Nessun cambio o acquisto automatico.':'Monete: saldo non verificato, nessuna ricchezza inventata. Verificalo in Stato e risorse sul PC oppure configura il borsello sul dispositivo.');
-  const identity=avatarIdentity(s.avatar),outfit=avatarOutfit(s.avatar),variant=outfit||identity.lineage||identity.body;
-  const packet={format:'pocketdd-device',version:outfit?13:identity.lineage>=16?12:identity.lineage>=12?11:variant?10:9,name:ascii(s.name,48),level:integer(s.level,1,20,'Livello'),hp:integer(s.hp,0,999,'PF'),
+  const identity=avatarIdentity(s.avatar),outfit=avatarOutfit(s.avatar),defences=s.extended?.defences,variant=defences!==undefined||outfit||identity.lineage||identity.body;
+  const packet={format:'pocketdd-device',version:defences!==undefined?14:outfit?13:identity.lineage>=16?12:identity.lineage>=12?11:variant?10:9,name:ascii(s.name,48),level:integer(s.level,1,20,'Livello'),hp:integer(s.hp,0,999,'PF'),
     maxHp:integer(s.maxHp,1,999,'PF massimi'),tempHp:integer(s.extended?.tempHp??0,0,999,'PF temporanei'),armorClass:integer(s.armorClass,1,40,'CA'),
     avatar:Object.fromEntries(['skin','hair','cloak','style'].map(k=>[k,integer(s.avatar[k],0,2,k)])),
     training,inventory,magic,recovery,status,wallet,
     abilities:Object.fromEntries(abilityKeys.map(k=>[k,integer(s.abilities[k],1,30,k)])),
     resources:counters.slice(0,DEVICE_MAX_RESOURCES).map(r=>({name:ascii(r.name,32),current:integer(r.current,0,999,r.name),maximum:integer(r.maximum,1,999,r.name)}))};
+  if(defences!==undefined){packet.defences=validateDefences(defences);Object.assign(packet.avatar,identity,{outfit});warnings.push('Profilo difese: richiede USB14 / firmware 0.71. Solo i tipi verificati si applicano nel calcolo Danni; gli altri richiedono configurazione. Effetti temporanei e condizioni non vengono dedotti.');}
   if(outfit){packet.avatar.outfit=outfit;warnings.push('Look classe: richiede firmware 0.70 / USB13 e pocketdd/classes.pdc sulla SD. Senza asset viene mostrato lo stile originale, mantenendo la scelta. Colori e taglio del preset sono fissi; nessun valore di gioco cambia.');}
   if(variant){Object.assign(packet.avatar,identity);warnings.push(identity.lineage>=16?'Questa specie richiede USB12 / firmware 0.69 o successivo. Aspetto cosmetico: nessun bonus o equipaggiamento dedotto.':identity.lineage>=12?'Questa specie richiede USB11 / firmware 0.68 o successivo. Aspetto cosmetico: nessun bonus o equipaggiamento dedotto.':'Specie e silhouette maschile/femminile richiedono USB10 / firmware 0.67 o successivo. Aspetto cosmetico: nessun bonus o equipaggiamento dedotto.');}
   if(serializeDevice(packet).length>262144)throw new Error('Copia oltre 262144 byte: nessun inventario troncato.');

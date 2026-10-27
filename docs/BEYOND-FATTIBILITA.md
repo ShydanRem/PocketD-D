@@ -1,5 +1,11 @@
 # D&D Beyond: fattibilità per PocketD-D
 
+> Aggiornamento v0.71, 27 ottobre 2026: [inventario operativo e difese Beyond](BEYOND-INVENTARIO-DIFESE.md).
+> Cariche, consumabili e cure esplicite; profilo difese opzionale con USB14 / backup PC v16.
+> Stato nativo PDD33 invariato. Prova reale e dati sintetici distinti; conversione ancora parziale.
+> Le descrizioni e prove datate sotto conservano il proprio contesto; verifica USB fisica ancora aperta.
+
+
 Verifica del 16 ottobre 2026, sulla base di PocketD-D v0.12. Esito: **il codice di MrPrimate supporta la fattibilità tecnica di una lettura diretta. Il percorso richiesto è PocketD-D → Beyond, con un connettore nostro integrato nell’app di supporto. Autenticazione privata e scrittura su Beyond richiedono verifiche separate.** La verifica iniziale riguarda le fonti e il codice; l’aggiornamento delle prove è riportato qui sotto.
 
 Aggiornamento al 19 ottobre 2026, PocketD-D v0.14: lettura reale, struttura JSON e conversione sono verificate separatamente sul personaggio dell'utente. Oltre ai dati principali vengono compilati competenze/salvezze, armi, capacità e risorse riconosciute; magie e slot hanno prove sintetiche dedicate. Anteprima e conferma creano una nuova scheda estesa senza riscrivere le precedenti. Descrizioni e dati importati non equivalgono ad automazione di tutti gli effetti: copertura per sezione e limiti sono in [BEYOND-PROVE.md](BEYOND-PROVE.md).

@@ -1,5 +1,11 @@
 # Beyond: importazione estesa PC v0.14 — 19 ottobre 2026
 
+> Aggiornamento v0.71, 27 ottobre 2026: [inventario operativo e difese Beyond](BEYOND-INVENTARIO-DIFESE.md).
+> Cariche, consumabili e cure esplicite; profilo difese opzionale con USB14 / backup PC v16.
+> Stato nativo PDD33 invariato. Prova reale e dati sintetici distinti; conversione ancora parziale.
+> Le descrizioni e prove datate sotto conservano il proprio contesto; verifica USB fisica ancora aperta.
+
+
 > Aggiornamento v0.69: [21 famiglie e 42 silhouette](AVATAR-SELEZIONE-ESTESA.md),
 > PDD32/PDDW; USB12 e backup PC v14 per gli ID nuovi.
 > Aggiornamento v0.70: [preset di classe su SD](PRESET-CLASSI.md), PDD33/PDDX,

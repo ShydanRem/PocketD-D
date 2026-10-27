@@ -1,5 +1,11 @@
 # Cariche degli oggetti — v0.41
 
+> Aggiornamento v0.71, 27 ottobre 2026: [inventario operativo e difese Beyond](BEYOND-INVENTARIO-DIFESE.md).
+> Cariche, consumabili e cure esplicite; profilo difese opzionale con USB14 / backup PC v16.
+> Stato nativo PDD33 invariato. Prova reale e dati sintetici distinti; conversione ancora parziale.
+> Le descrizioni e prove datate sotto conservano il proprio contesto; verifica USB fisica ancora aperta.
+
+
 **Aggiornamento v0.43:** [ricariche parziali a dado](RICARICHE-OGGETTI.md) disponibili
 sul dispositivo come evento esplicito; alba/frequenza/regole restano manuali.
 Formati PDD22/USB8/backup v11 invariati. Le limitazioni storiche sotto si

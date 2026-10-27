@@ -1,3 +1,4 @@
+import {damageNames,emptyDefences,defenceFlags,defenceLabel} from './defences.js';
 import {parseBackup,serialize} from './model.js';
 export function importedSummary(state){
   const x=state.extended;if(!x)return '';
@@ -13,6 +14,7 @@ export function openExtendedState({getState,commit,escapeHtml}){
     <label class="checkbox-label"><input name="stabilized" type="checkbox" ${x.deathSaves.stabilized?'checked':''}>Stabilizzato</label>
     <label class="checkbox-label"><input name="poisoned-effect" type="checkbox" ${state.condition?'checked':''}>Avvelenato: svantaggio a prove e attacchi, separato dalle note</label>
     <label>Condizioni (una per riga: nome | livello 0–6)<textarea name="conditions" rows="4">${escapeHtml(x.conditions.map(c=>`${c.name} | ${c.level}`).join('\n'))}</textarea></label>
+    <details data-defence-editor><summary>Difese ai danni · dispositivo</summary><p>Si applicano nel calcolo Danni del dispositivo, non ai pulsanti PF del PC. Un tipo da verificare non equivale a normale. Dopo cambi di equipaggiamento o effetti ricontrolla il profilo.</p><label class="checkbox-label"><input name="defences-enabled" type="checkbox" ${x.defences!==undefined?'checked':''}>Trasferisci questo profilo difese (firmware 0.71)</label><div class="inventory-form-grid">${damageNames.map((name,i)=>`<label>${name}<select name="defence-${i}" ${x.defences===undefined?'disabled':''}>${[null,0,1,2,3,4,5,6,7].map(flags=>`<option value="${flags??-1}" ${defenceFlags(x.defences??emptyDefences(),i)===flags?'selected':''}>${defenceLabel(flags)}</option>`).join('')}</select></label>`).join('')}</div></details>
     <h3>Dadi vita</h3>${x.hitDice.map((h,i)=>input(`${escapeHtml(h.name)} · ${h.max}d${h.die}, usati`,`hd-${i}`,h.used,0,h.max)).join('')||'<p>Nessun dado vita disponibile dal sorgente.</p>'}
     <h3>Monete</h3><label class="checkbox-label"><input name="currencies-known" type="checkbox" ${x.currenciesAvailable?'checked':''}>Saldo verificato, anche se zero</label><div class="inventory-form-grid">${Object.entries(x.currencies).map(([k,v])=>input(k.toUpperCase(),`coin-${k}`,v,0,999999999)).join('')}</div>
     <h3>Slot del patto</h3><div class="inventory-form-grid">${x.pactSlots.map((s,i)=>`${input(`${i+1}° attuali`,`pact-current-${i}`,s.current,0,9)}${input(`${i+1}° massimi`,`pact-max-${i}`,s.max,0,9)}`).join('')}</div>
@@ -20,6 +22,7 @@ export function openExtendedState({getState,commit,escapeHtml}){
     <p data-error role="alert"></p><button type="submit">Salva stato e risorse</button></form><h3>Dettagli importati</h3><ul data-facts></ul>`;
   const list=dialog.querySelector('[data-facts]');for(const value of x.facts){const li=document.createElement('li');li.textContent=value;list.append(li);}
   dialog.querySelector('[data-close]').onclick=()=>dialog.close();
+  dialog.querySelector('[name=defences-enabled]').onchange=event=>dialog.querySelectorAll('[name^=defence-]').forEach(e=>e.disabled=!event.target.checked);
   dialog.querySelector('form').onsubmit=event=>{
     event.preventDefault();const data=new FormData(event.target);
     try{
@@ -28,6 +31,8 @@ export function openExtendedState({getState,commit,escapeHtml}){
       const extended={...x,tempHp:Number(data.get('tempHp')),conditions,deathSaves:{successes:Number(data.get('successes')),failures:Number(data.get('failures')),stabilized:data.has('stabilized')},
         currenciesAvailable:data.has('currencies-known'),hitDice:x.hitDice.map((h,i)=>({...h,used:Number(data.get(`hd-${i}`))})),currencies:Object.fromEntries(Object.keys(x.currencies).map(k=>[k,Number(data.get(`coin-${k}`))])),
         pactSlots:x.pactSlots.map((s,i)=>({current:Number(data.get(`pact-current-${i}`)),max:Number(data.get(`pact-max-${i}`))})),blockedChecks:data.has('verify-checks')?[]:x.blockedChecks};
+      delete extended.defences;
+      if(data.has('defences-enabled')){const d=emptyDefences();for(let i=0;i<13;i++){const f=Number(data.get(`defence-${i}`));if(!Number.isInteger(f)||f< -1||f>7)throw new Error('Difesa non valida');if(f>=0){const bit=1<<i;d.configured|=bit;if(f&1)d.resistance|=bit;if(f&2)d.vulnerability|=bit;if(f&4)d.immunity|=bit;}}extended.defences=d;}
       commit(parseBackup(serialize({...state,extended,condition:data.has('poisoned-effect')})));dialog.close();
     }catch(error){dialog.querySelector('[data-error]').textContent=error.message;}
   };

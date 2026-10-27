@@ -15,7 +15,7 @@ export function openBeyondImport({commit}) {
       <section data-appearance><h4>Avatar sul dispositivo</h4><div data-appearance-sprite></div><p data-appearance-status></p><label>Specie · famiglia visiva<select data-lineage></select></label><label>Silhouette<select data-body></select></label><label>Look classe · solo estetica<select data-outfit></select></label><p data-class-status></p><p>Solo aspetto: non cambia caratteristiche, capacità o regole. Puoi modificarlo anche sul dispositivo.</p></section><h4>Verifica dei calcoli</h4><ul data-evidence></ul>
       <h4>Campi compilati</h4><ul data-coverage></ul><ul data-training></ul><ul data-attacks></ul><ul data-powers></ul>
       <label data-weapon-label hidden>Arma attiva<select data-weapon></select></label>
-      <h4>Inventario sorgente</h4><ul data-items></ul>
+      <details data-defence-preview><summary>Difese ai danni · tipi verificati e mancanti</summary><p>Solo le concessioni incondizionate riconciliate vengono proposte al dispositivo. Gli altri tipi non sono dichiarati normali.</p><ul data-defences></ul></details><h4>Inventario sorgente e uso locale</h4><ul data-items></ul>
       <h4 data-blocker-title hidden>Problemi che bloccano l’importazione</h4><ul data-blockers role="alert"></ul><h4>Limiti e dati da completare</h4><ul data-omissions></ul>
       <label class="checkbox-label"><input type="checkbox" data-accept>Ho letto le omissioni e accetto di creare una scheda parziale.</label>
       <button type="button" data-create disabled>Crea nuovo personaggio</button>
@@ -63,7 +63,8 @@ export function openBeyondImport({commit}) {
       $('[data-weapon-label]').hidden=!weapons.length;
       $('[data-weapon]').replaceChildren();
       for(const item of [{id:'',name:'Scegli in seguito'},...weapons]){const option=document.createElement('option');option.value=item.id;option.textContent=item.name;option.selected=item.id===(report.draft?.equippedWeaponId??'');$('[data-weapon]').append(option);}
-      list('[data-items]',report.inventory.items.map(i=>`${i.name} ×${i.quantity??'?'} · ${i.equipped===true?'equipaggiato':i.equipped===false?'non equipaggiato':'equipaggiamento non disponibile'}`));
+      list('[data-defences]',(report.details?.defences??[]).map(d=>`${d.name}: ${d.label}`));
+      list('[data-items]',report.inventory.items.map((i,index)=>{const item=report.draft?.inventory[index];return `${i.name} ×${i.quantity??'?'} · ${i.equipped===true?'equipaggiato':i.equipped===false?'non equipaggiato':'equipaggiamento non disponibile'}${item?.type==='healing'?` · cura ${item.diceCount}d${item.dieSides}+${item.healingModifier}`:item?.type==='consumable'?' · consumo quantità':''}${item?.charges?` · cariche ${item.charges.current}/${item.charges.max}, recupero ${item.charges.recovery==='short'?'breve':item.charges.recovery==='long'?'lungo':'manuale'}`:''}`;}));
       list('[data-omissions]',report.conversion?.omissions??report.warnings);
       list('[data-blockers]',report.conversion?.blockers??['Questa versione del connettore non supporta la creazione.']);
       $('[data-blocker-title]').hidden=!(report.conversion?.blockers?.length);

@@ -17,3 +17,5 @@ print('Appearance gallery: six real LVGL host frames plus error/undo/restore cap
 for path in BASE.glob('species-*.ppm'):Image.open(path).save(path.with_suffix('.png'))
 
 for path in BASE.glob('class-*.ppm'):Image.open(path).save(path.with_suffix('.png'))
+
+for path in BASE.glob('beyond-defences-*.ppm'):Image.open(path).save(path.with_suffix('.png'))

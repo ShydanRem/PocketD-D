@@ -34,7 +34,7 @@ try:
   context=browser.new_context(viewport={'width':1024,'height':900})
   context.route('**/*',lambda r:r.continue_() if r.request.url.startswith(address+'/') else r.abort())
   page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
-  page.goto(address);key='pocketdd-library-v1'
+  page.goto(address);page.locator('[data-action=beyond-import]').wait_for();key='pocketdd-library-v1'
   def raw():return page.evaluate('(k)=>localStorage.getItem(k)',key)
   before=json.loads(raw());page.locator('[data-action=beyond-import]').click()
   def read(id):

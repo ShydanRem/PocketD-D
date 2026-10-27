@@ -1,5 +1,11 @@
 # Riconciliazione Beyond — correzione PC del 26 ottobre 2026
 
+> Aggiornamento v0.71, 27 ottobre 2026: [inventario operativo e difese Beyond](BEYOND-INVENTARIO-DIFESE.md).
+> Cariche, consumabili e cure esplicite; profilo difese opzionale con USB14 / backup PC v16.
+> Stato nativo PDD33 invariato. Prova reale e dati sintetici distinti; conversione ancora parziale.
+> Le descrizioni e prove datate sotto conservano il proprio contesto; verifica USB fisica ancora aperta.
+
+
 Correzione dell'importatore PC sulla base della 0.65.0. Il firmware rimane
 0.65.0; nessuna dipendenza Foundry, autenticazione privata o scrittura verso
 Beyond. La raccolta personale dell'utente non è stata aperta né modificata.

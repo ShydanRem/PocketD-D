@@ -1,5 +1,11 @@
 # Danni ricevuti e difese per tipo — v0.28
 
+> Aggiornamento v0.71, 27 ottobre 2026: [inventario operativo e difese Beyond](BEYOND-INVENTARIO-DIFESE.md).
+> Cariche, consumabili e cure esplicite; profilo difese opzionale con USB14 / backup PC v16.
+> Stato nativo PDD33 invariato. Prova reale e dati sintetici distinti; conversione ancora parziale.
+> Le descrizioni e prove datate sotto conservano il proprio contesto; verifica USB fisica ancora aperta.
+
+
 > Aggiornamento v0.56: [danni a zero PF e morte istantanea](DANNI-ZERO-PF.md)
 > con risoluzione base esplicita e verifica del critico. I blocchi descritti
 > sotto per questi casi si riferiscono al percorso ordinario o alla versione storica.

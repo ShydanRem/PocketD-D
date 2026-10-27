@@ -2774,7 +2774,7 @@ static void render_damage(void) {
         if(damage_extra_count||has_reductions(&report)){label("Conferma colpo",83,111,228,false);lv_obj_t *b=button("Tipi",323,99,60,44,1930,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);if(has_reductions(&report))snprintf(text,sizeof text,"Prima -%u | dopo -%u | vedi Tipi",report.reduction_before,report.reduction_after);else snprintf(text,sizeof text,"%u parti | %u gruppi",event.count,report.count);small_label(text,83,149,300,PD_GOLD);}
         else{label("Confermare i danni?",83,103,300,true);snprintf(text,sizeof text,"%s | %s",pd_damage_name(damage_plan.type),defence_caption(r.configured,r.flags));small_label(text,83,137,300,PD_GOLD);}
         if(!r.configured&&profile_problem(&report)){label(profile_problem(&report),83,203,300,false);small_label(report.reaction_missing?"Apri Gestisci reazione":"Indietro > Riduci > Profili / Usi",83,259,300,PD_GOLD);if(report.reaction_missing)button("Gestisci reazione",83,303,300,44,2117,true);else small_label("Nessun danno applicato",83,303,300,PD_MUTED);}
-        else if(!r.configured){label(report.missing?"Difesa da configurare":"Fonte da verificare",83,203,300,false);small_label(report.missing?"Il profilo non arriva da Beyond":"Dichiara magico, attacco e materiali",83,249,300,PD_GOLD);button(report.missing?"Configura difesa":"Dichiara fonte",83,303,300,44,report.missing?1807:2021,true);}
+        else if(!r.configured){label(report.missing?"Difesa da configurare":"Fonte da verificare",83,203,300,false);small_label(report.missing?"Questo tipo non e verificato":"Dichiara magico, attacco e materiali",83,249,300,PD_GOLD);button(report.missing?"Configura difesa":"Dichiara fonte",83,303,300,44,report.missing?1807:2021,true);}
         else {
             snprintf(text,sizeof text,"Danni %u -> %u",report.raw,r.adjusted);label(text,83,171,300,false);
             snprintf(text,sizeof text,"Temporanei %u -> %u",state.temp_hp,r.temp_after);label(text,83,207,300,false);
@@ -2960,7 +2960,7 @@ static void render_content(void) {
         if(pending.inventory_available)snprintf(items,sizeof items,"%u",pending.item_count);else strcpy(items,"?");
         if(pending.magic.available)snprintf(powers,sizeof powers,"%u",pending.magic.count);else strcpy(powers,"?");
         snprintf(text,sizeof text,"Zaino %s | magie/usi %s",items,powers);small_label(text,83,216,300,PD_GOLD);
-        small_label(pending.wallet.available?"Monete: saldo verificato":"Monete: saldo non disponibile",83,239,300,PD_GOLD);
+        if(pending.defences.configured){unsigned known=0;for(unsigned i=0;i<PD_DAMAGE_TYPES;i++)known+=(pending.defences.configured>>i)&1;snprintf(text,sizeof text,"Monete %s | difese %u/13",pending.wallet.available?"si":"?",known);small_label(text,83,239,300,PD_GOLD);}else small_label(pending.wallet.available?"Monete: saldo verificato":"Monete: saldo non disponibile",83,239,300,PD_GOLD);
         small_label("Sostituisce la copia locale.",83,262,300,PD_TEXT);
         small_label((state.effect_count||state.roll_conditions||local_defences()||state.reaction_spent)?"Stato/storico rimossi; PC intatto":"Nuovo storico; PC conservato",83,287,300,(state.effect_count||state.roll_conditions||local_defences()||state.reaction_spent)?PD_GOLD:PD_TEXT);
         button("Annulla",83,313,144,54,31,true); button("Conferma",239,313,144,54,30,true);
@@ -3255,7 +3255,7 @@ static void usb_task(void *unused) {
             if(c=='\n') {
                 if(!overflow && used) {
                     line[used]=0;
-                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 13\n");
+                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 14\n");
                     else if(!strcmp(line,"PDD BACKUP HELLO"))reply("PDD BACKUP_READY 1\n");
                     else if(!strcmp(line,"PDD DIAGNOSTICS GET 1")){uint8_t request=1;if(xQueueSend(diagnostic_requests,&request,0)!=pdPASS)reply("PDD ERROR busy\n");}
                     else if(!strcmp(line,"PDD BACKUP GET 1")){pd_backup *request=NULL;if(xQueueSend(backup_packets,&request,0)!=pdPASS)reply("PDD ERROR busy\n");}

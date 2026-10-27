@@ -1,6 +1,8 @@
 import {skills,abilityKeys,modifier,proficiency,parseBackup,serialize,describeRoll,weaponStats} from './model.js';
 import {emptyExtended} from './extended.js';
 import {validatePower,spellStats} from './powers.js';
+import {beyondItems} from './beyond-items.js';
+import {beyondDefences} from './beyond-defences.js';
 import {DIE_SIDES} from './inventory.js';
 
 const integer=(n,min,max)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
@@ -117,6 +119,8 @@ export function extendBeyond(report,c){
     weapon.notes=`Beyond: ${src.equipped?'equipaggiato':'non equipaggiato'}. Proprietà: ${propertyNames.join(', ')||'nessuna'}. Modalità primaria; maestrie, due armi e danni aggiuntivi condizionali al DM.${src.pocketddNote?' '+src.pocketddNote:''}`.slice(0,400);
     return weapon;
   });
+  const itemImport=beyondItems(c.inventory,state.inventory,{warn,evidence});state.inventory=itemImport.items;
+  const defenceImport=beyondDefences(c,{warn,fact,evidence});if(defenceImport.profile)ext.defences=defenceImport.profile;
   const equipped=state.inventory.filter((item,index)=>item.type==='weapon'&&item.quantity>0&&c.inventory[index].equipped);
   state.equippedWeaponId=equipped.length===1?equipped[0].id:null;
   if(equipped.length>1)warn('Più armi equipaggiate su Beyond: scegli l’arma attiva nell’anteprima o nelle Azioni; tutte le configurazioni sono conservate.');
@@ -158,7 +162,9 @@ export function extendBeyond(report,c){
     if(!a||typeof a.name!=='string')continue;
     const f=featureDefs.find(f=>f.group===group&&f.d.id===a.componentId);
     if(group==='class'&&!f){warn(`${a.name}: origine o livello non risolti, azione non importata.`);continue;}
-    const resource=getResource(a.limitedUse,a.name);
+    const itemResource=group==='item'&&a.limitedUse;
+    if(itemResource)warn(`${a.name}: utilizzi da oggetto conservati come nota; gestire le cariche dall’inventario, senza contatore duplicato.`);
+    const resource=itemResource?null:getResource(a.limitedUse,a.name);
     let description=text(a.description||f?.d.description||a.snippet,a.name);
     if(f?.scale?.fixedValue!=null)description=description.replace(/\{\{scalevalue#signed\}\}/g,`+${f.scale.fixedValue}`).replace(/\{\{scalevalue\}\}/g,String(f.scale.fixedValue));
     if(/\{\{/.test(description))warn(`${a.name}: descrizione con formula dinamica non risolta.`);
@@ -211,6 +217,7 @@ export function extendBeyond(report,c){
     const d=s?.definition;if(!d||typeof d.name!=='string'){warn('Magia priva di definizione: non importata.');continue;}
     const identity=`${group}:${ownerId}:${s.id??d.id}`;if(spellIds.has(identity))continue;spellIds.add(identity);
     const stat=s.spellCastingAbilityId??s.spellcastingAbilityId??owner?.definition?.spellCastingAbilityId??owner?.subclassDefinition?.spellCastingAbilityId;
+    if(group==='item'&&s.limitedUse){warn(`${d.name}: magia da oggetto conservata come nota; gestire le cariche dall’inventario, senza contatore duplicato.`);addPower({id:`ddb-spell-note-${powers.length+1}`,type:'feature',name:d.name,description:text(d.description,d.name),passive:true});continue;}
     const resource=getResource(s.limitedUse,d.name);
     const usesSlot=s.usesSpellSlot!==false&&d.level>0;
     const validCaster=integer(stat,1,6);
@@ -249,6 +256,8 @@ export function extendBeyond(report,c){
   const omissions=[...issues,...report.conversion.omissions.filter(t=>/Oggetti personalizzati|Note personalizzate/.test(t)),
     'Effetti condizionali, armi versatili, due armi e maestrie restano al DM; Ira, Grande Maestro d’Armi 2014 e dado critico aggiuntivo riconosciuti hanno comandi dedicati.',
     'Condizioni, dadi vita e tiri morte sono conservati e modificabili; solo Avvelenato applica automaticamente svantaggio. Recupero dei dadi vita e stabilizzazione restano manuali.',
+    'Difese ai danni: importate solo concessioni incondizionate riconciliate; tipi mancanti o ambigui da verificare. Le difese si applicano nel calcolo Danni del dispositivo, non alle variazioni dirette dei PF sul PC. Cambiare equipaggiamento o terminare effetti richiede ricontrollarle.',
+    'Cariche: un saldo per oggetto, quantità distinta; recuperi giornalieri/variabili manuali. Le magie e azioni da oggetti con utilizzi restano note per evitare contatori duplicati. Consumabili e cure con formule non supportate richiedono gestione manuale.',
     'CA e PF massimi sono una fotografia: dopo modifiche locali vanno aggiornati manualmente. Peso, contenitori, munizioni e sincronizzazione Beyond non sono automatizzati.'
   ];
   if(omissions.length>100)throw new Error('Troppe eccezioni da rappresentare');
@@ -260,6 +269,6 @@ export function extendBeyond(report,c){
   const skillSummary=skills.map(s=>({id:s.id,name:s.name,rank:draft.skillRanks[s.id],...describeRoll(draft,{kind:'skill',key:s.id})}));
   const saveSummary=abilityKeys.map(key=>({id:key,proficient:draft.saveProficiencies[key],...describeRoll(draft,{kind:'save',key})}));
   const weaponSummary=weapons.map(w=>{const result=weaponStats({...draft,equippedWeaponId:w.id});return{id:w.id,name:w.name,attack:result.attackBonus,damage:`${w.diceCount}d${w.dieSides}${result.damageBonus>=0?'+':''}${result.damageBonus}`,reach:w.reach,properties:w.profile.properties}});
-  const coverage=[{section:'Abilità e salvezze',status:ext.blockedChecks.length?'partial':'converted',count:skillSummary.length+saveSummary.length},{section:'Armi e attacchi',status:weaponIssues.length?'partial':'converted',count:weapons.length},{section:'Magie e capacità',status:issues.some(t=>/magia|Magia|risorsa|formula|contatore/.test(t))?'partial':'converted',count:powers.length},{section:'Stato e risorse',status:'data-only',count:ext.conditions.length+ext.hitDice.length}];
-  return {...report,version:3,checks:{...report.checks,conversion:'supported-extended'},conversion:{scope:'extended-v1',complete:false,sourceCounts:report.conversion.sourceCounts,blockers:[],evidence:[...report.conversion.evidence.filter(t=>!t.startsWith('Inventario:')),...evidence],omissions,coverage},draft,canImport:true,warnings:omissions,details:{skills:skillSummary,saves:saveSummary,weapons:weaponSummary,spells:powers.filter(p=>p.type==='spell').map(p=>({id:p.id,name:p.name,level:p.level,...spellStats(draft,p)})),facts:ext.facts}};
+  const coverage=[{section:'Cariche e consumabili',status:itemImport.unresolved?'partial':'converted',count:itemImport.charges+itemImport.consumables},{section:'Difese ai danni',status:'partial',count:defenceImport.rows.filter(r=>r.flags!==null).length},{section:'Abilità e salvezze',status:ext.blockedChecks.length?'partial':'converted',count:skillSummary.length+saveSummary.length},{section:'Armi e attacchi',status:weaponIssues.length?'partial':'converted',count:weapons.length},{section:'Magie e capacità',status:issues.some(t=>/magia|Magia|risorsa|formula|contatore/.test(t))?'partial':'converted',count:powers.length},{section:'Stato e risorse',status:'data-only',count:ext.conditions.length+ext.hitDice.length}];
+  return {...report,version:3,checks:{...report.checks,conversion:'supported-extended'},conversion:{scope:'extended-v1',complete:false,sourceCounts:report.conversion.sourceCounts,blockers:[],evidence:[...report.conversion.evidence.filter(t=>!t.startsWith('Inventario:')),...evidence],omissions,coverage},draft,canImport:true,warnings:omissions,details:{skills:skillSummary,saves:saveSummary,weapons:weaponSummary,spells:powers.filter(p=>p.type==='spell').map(p=>({id:p.id,name:p.name,level:p.level,...spellStats(draft,p)})),facts:ext.facts,items:{charges:itemImport.charges,consumables:itemImport.consumables,healing:itemImport.healing},defences:defenceImport.rows}};
 }
