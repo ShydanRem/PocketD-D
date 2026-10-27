@@ -2,6 +2,7 @@ import {validateExtended,adjustHeroHp} from './extended.js';
 import {startingInventory,validateInventory,equippedWeapon,adjustQuantity,DIE_SIDES} from './inventory.js';
 import {emptyEncounter,validateEncounter} from './encounter.js';
 import {emptyMagic,validateMagic} from './powers.js';
+import {avatarOutfit} from './avatar-classes.js';
 import {avatarIdentity} from './avatar-species.js';
 export const abilityKeys = ['FOR', 'DES', 'COS', 'INT', 'SAG', 'CAR'];
 export const skills = [
@@ -133,18 +134,19 @@ function validInteger(value, min, max) {
 }
 export function parseBackup(raw) {
   const s = JSON.parse(raw);
-  if (!s || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].includes(s.version)) throw new Error('Versione backup non supportata');
+  if (!s || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].includes(s.version)) throw new Error('Versione backup non supportata');
   if(s.version<10&&s.extended!==undefined)throw new Error('I dati estesi richiedono il formato v10');
   const base = initialState();
   if (s.version >= 3) {
     if (typeof s.name !== 'string' || !s.name.trim() || s.name.length > 24 || typeof s.title !== 'string' || s.title.length > 40 || !validInteger(s.level, 1, 20) || !validInteger(s.maxHp, 1, 999) || !validInteger(s.armorClass, 1, 30)) throw new Error('Profilo non valido');
     if (!s.abilities || !abilityKeys.every(key => validInteger(s.abilities[key], 1, 30))) throw new Error('Caratteristiche non valide');
     if (!s.avatar || !['skin','hair','cloak','style'].every(key => validInteger(s.avatar[key], 0, 2))) throw new Error('Avatar non valido');
-    const identity=avatarIdentity(s.avatar);
+    const identity=avatarIdentity(s.avatar),outfit=avatarOutfit(s.avatar);
+    if((s.version<15&&outfit)||(s.version>=15&&s.avatar.outfit===undefined))throw new Error('Il preset classe richiede il formato v15');
     if((s.version<12&&(identity.lineage||identity.body))||(s.version>=12&&(s.avatar.lineage===undefined||s.avatar.body===undefined))||(s.version===12&&identity.lineage>=12)||(s.version===13&&identity.lineage>=16))throw new Error('La silhouette richiede il formato v12');
     Object.assign(base, {name:s.name.trim(), title:s.title.trim(), level:s.level, maxHp:s.maxHp, armorClass:s.armorClass,
       abilities:Object.fromEntries(abilityKeys.map(key=>[key,s.abilities[key]])),
-      avatar:{...Object.fromEntries(['skin','hair','cloak','style'].map(key=>[key,s.avatar[key]])),...(s.version>=12?identity:{})}});
+      avatar:{...Object.fromEntries(['skin','hair','cloak','style'].map(key=>[key,s.avatar[key]])),...(s.version>=12?identity:{}),...(s.version>=15?{outfit}:{})}});
   }
   if (s.version >= 4) {
     if(!s.skillRanks || !skills.every(skill=>validInteger(s.skillRanks[skill.id],0,2)) || !s.saveProficiencies || !abilityKeys.every(key=>typeof s.saveProficiencies[key]==='boolean'))throw new Error('Competenze non valide');
@@ -176,8 +178,8 @@ export function parseBackup(raw) {
   return {...base,...core,resolve:s.resolve};
 }
 export function serialize(state) {
-  const identity=avatarIdentity(state.avatar),variant=identity.lineage!==0||identity.body!==0;
-  return JSON.stringify({...state,...(variant?{avatar:{...state.avatar,...identity}}:{}),version:identity.lineage>=16?14:identity.lineage>=12?13:variant?12:11},null,2);
+  const identity=avatarIdentity(state.avatar),outfit=avatarOutfit(state.avatar),variant=Boolean(outfit||identity.lineage||identity.body);
+  return JSON.stringify({...state,...(variant?{avatar:{...state.avatar,...identity}}:{}),version:outfit?15:identity.lineage>=16?14:identity.lineage>=12?13:variant?12:11},null,2);
 }
 export function restore(raw) {
   try { return parseBackup(raw); } catch { return initialState(); }

@@ -19,6 +19,8 @@ with zipfile.ZipFile(archive) as z:
      time.sleep(.1)
    else:raise RuntimeError('Packaged app not ready')
    for asset in re.findall(r'(?:src|href)="(/assets/[^\"]+)"',html):assert urllib.request.urlopen(base+asset).status==200
+   assert urllib.request.urlopen(base+'/assets/classes.pdc').read()==(ROOT/'public/assets/classes.pdc').read_bytes()
+   assert urllib.request.urlopen(base+'/assets/PocketDD-SD.zip').read()==(ROOT/'public/assets/PocketDD-SD.zip').read_bytes()
    req=urllib.request.Request(base+'/api/probe',data=json.dumps({'character':'not-a-character'}).encode(),headers={'Content-Type':'application/json'})
    try:urllib.request.urlopen(req);raise AssertionError('Invalid Beyond URL accepted')
    except urllib.error.HTTPError as e:assert e.code==400

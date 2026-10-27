@@ -5,6 +5,10 @@
  * AXP register meanings checked against the pinned official example/datasheet.
  * See THIRD_PARTY.md and docs/ALIMENTAZIONE.md. */
 #include "board.h"
+#include "class_looks.h"
+#include "esp_vfs_fat.h"
+#include "driver/sdmmc_host.h"
+#include "sdmmc_cmd.h"
 #include "esp_lcd_co5300.h"
 #include "esp_lcd_touch_cst9217.h"
 #include "esp_lcd_panel_ops.h"
@@ -79,6 +83,16 @@ static void read_touch(lv_indev_t *indev,lv_indev_data_t *data) {
     bool allow=screen_control?pd_screen_touch(screen_control,valid,pressed,lv_tick_get()):pressed;
     if(allow&&point.x<RES&&point.y<RES){data->state=LV_INDEV_STATE_PRESSED;data->point.x=point.x;data->point.y=point.y;}
 
+}
+static sdmmc_card_t *asset_card;
+void pd_board_assets_refresh(void){
+    pd_looks_set_file(NULL);
+    if(asset_card){esp_vfs_fat_sdcard_unmount("/sdcard",asset_card);asset_card=NULL;}
+    const sdmmc_host_t host=SDMMC_HOST_DEFAULT();
+    const sdmmc_slot_config_t slot={.clk=2,.cmd=1,.d0=3,.d1=GPIO_NUM_NC,.d2=GPIO_NUM_NC,.d3=GPIO_NUM_NC,.d4=GPIO_NUM_NC,.d5=GPIO_NUM_NC,.d6=GPIO_NUM_NC,.d7=GPIO_NUM_NC,.cd=SDMMC_SLOT_NO_CD,.wp=SDMMC_SLOT_NO_WP,.width=1,.flags=0};
+    const esp_vfs_fat_sdmmc_mount_config_t config={.format_if_mount_failed=false,.max_files=2,.allocation_unit_size=16*1024};
+    if(esp_vfs_fat_sdmmc_mount("/sdcard",&host,&slot,&config,&asset_card)==ESP_OK)pd_looks_set_file("/sdcard/pocketdd/classes.pdc");
+    else asset_card=NULL;
 }
 void pd_board_init(void) {
     /* RF stays off. SAR-ADC entropy source remains enabled for esp_random().

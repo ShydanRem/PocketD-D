@@ -200,8 +200,8 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
     const char *const fields[]={"format","version","name","level","hp","maxHp","tempHp","armorClass","abilities","resources","avatar","training","inventory","magic","recovery","status","wallet"};
     const char *const abilities[]={"FOR","DES","COS","INT","SAG","CAR"};
     const char *const resource_keys[]={"name","current","maximum"};
-    const char *const avatar_keys[]={"skin","hair","cloak","style","lineage","body"};
-    int version=number(root,"version",1,12);
+    const char *const avatar_keys[]={"skin","hair","cloak","style","lineage","body","outfit"};
+    int version=number(root,"version",1,13);
     cJSON *fmt=cJSON_GetObjectItemCaseSensitive(root,"format");
     if (version<0 || end!=json+size || !keys(root,fields,version==1?10:version==2?11:version==3?12:version==4?13:version==5?14:version==6?15:version<9?16:17) || !cJSON_IsString(fmt) ||
         strcmp(fmt->valuestring,"pocketdd-device") ||
@@ -212,12 +212,13 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
     candidate.level=level; candidate.hp=hp; candidate.max_hp=max; candidate.temp_hp=temp; candidate.armor=armor;
     if(version>=2) {
         cJSON *avatar=cJSON_GetObjectItemCaseSensitive(root,"avatar");
-        if(!keys(avatar,avatar_keys,version>=10?6:4))goto done;
+        if(!keys(avatar,avatar_keys,version>=13?7:version>=10?6:4))goto done;
         int skin=number(avatar,"skin",0,2),hair=number(avatar,"hair",0,2),
             cloak=number(avatar,"cloak",0,2),style=number(avatar,"style",0,2);
         if(skin<0||hair<0||cloak<0||style<0)goto done;
         candidate.avatar=(pd_avatar){skin,hair,cloak,style};
         if(version>=10){int lineage=number(avatar,"lineage",0,version>=12?PD_SPECIES_COUNT-1:version>=11?15:11),body=number(avatar,"body",0,1);if(lineage<0||body<0)goto done;candidate.lineage=lineage;candidate.body=body;}
+        if(version>=13){int outfit=number(avatar,"outfit",0,PD_OUTFITS-1);if(outfit<0)goto done;candidate.outfit=outfit;}
     }
     if(version>=3&&!training(cJSON_GetObjectItemCaseSensitive(root,"training"),&candidate.training))goto done;
     if(version>=4&&!inventory(cJSON_GetObjectItemCaseSensitive(root,"inventory"),&candidate,version>=8))goto done;

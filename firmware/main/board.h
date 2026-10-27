@@ -5,6 +5,8 @@
 #include "power.h"
 /* All LVGL calls, including board initialization, belong to the main task. */
 void pd_board_init(void);
+/* Read-only optional SD catalog. Never formats a card. Main task only. */
+void pd_board_assets_refresh(void);
 void pd_board_tick(void);
 uint32_t pd_board_random(void *unused);
 

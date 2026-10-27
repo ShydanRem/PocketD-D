@@ -1,3 +1,4 @@
+import {classLookPixels} from './class-looks.js';
 import speciesMasks from './device-species-masks.json' with {type:'json'};
 import {avatarIdentity} from './avatar-species.js';
 import materials from './device-avatar-colors.json' with {type:'json'};
@@ -5,6 +6,7 @@ import masks from './device-avatar-masks.json' with {type:'json'};
 
 export function deviceAvatarPixels(avatar,pose=0){
   if(!avatar||!['skin','hair','cloak','style'].every(k=>Number.isInteger(avatar[k])&&avatar[k]>=0&&avatar[k]<=2)||!Number.isInteger(pose)||pose<0||pose>3)throw new Error('Avatar non valido');
+  const look=classLookPixels(avatar);if(look)return look;
   const {lineage,body}=avatarIdentity(avatar);
   if(lineage||body){
     const decode=frame=>{
@@ -26,7 +28,8 @@ export function deviceAvatarPixels(avatar,pose=0){
 
 // Same I8 masks and precomputed material shades as firmware, at its native grid.
 export function deviceAvatarSvg(avatar,pose=0){
-  const {width,height,colors,pixels}=deviceAvatarPixels(avatar,pose);
+  const data=deviceAvatarPixels(avatar,pose),{width,height,colors,pixels,rgba}=data;
+  if(rgba){let shapes='';for(let y=0;y<height;y++)for(let x=0;x<width;x++){const at=(y*width+x)*4;if(rgba[at+3])shapes+=`<rect x="${x}" y="${y}" width="1" height="1" fill="rgb(${rgba[at]},${rgba[at+1]},${rgba[at+2]})" opacity="${rgba[at+3]/255}"/>`;}return `<svg class="device-avatar-sprite" viewBox="0 0 ${width} ${height}" role="img" aria-label="Look classe da SD" shape-rendering="crispEdges">${shapes}</svg>`;}
   let shapes='';
   for(let y=0;y<height;y++)for(let x=0;x<width;){
     const index=pixels[y*width+x];let end=x+1;

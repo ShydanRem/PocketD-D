@@ -2,13 +2,13 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.69:** [selezione a 21 razze e 42 silhouette](docs/AVATAR-SELEZIONE-ESTESA.md), con Goblin, Hobgoblin, Bugbear, Kobold e Lizardfolk. Proposta da Beyond, modifica sul dispositivo e conservazione della grafica precedente; sfondi memorizzati senza duplicazione dei blocchi di pixel. Pronto lo [studio dei preset di classe](docs/PRESET-CLASSI.md), ancora da integrare. Prove fisiche e diagnosi USB ancora aperte.
+**Stato v0.70:** [dodici preset di classe su SD](docs/PRESET-CLASSI.md), per tutte le 21 specie e le due silhouette (504 look). Cappucci corretti, scelta sul dispositivo/PC, proposta Beyond per classe singola riconosciuta, anteprima e conferma. Senza SD rimane lo stile originale. Colori e tagli dei preset sono fissi; espressioni aggiuntive, Artificiere e sottoclassi sono successivi. Collaudo SD fisico e diagnosi USB dei riavvii ancora aperti.
 
-Il firmware comprende borsello, storico, scheda, inventario, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Scheda PDD32 con lettura dei formati precedenti, registri NVS PDH2 con lettura di PDH1, copia scheda USB9/USB10/USB11/USB12 e backup PC v11/v12/v13/v14. Il backup nativo è un archivio distinto dal backup della raccolta PC. Regole speciali, altri effetti e prodotto fisico restano aperti.
+Il firmware comprende borsello, storico, scheda, inventario, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Scheda PDD33 con lettura dei formati precedenti, registri NVS PDH2 con lettura di PDH1, copia scheda USB9/USB10/USB11/USB12/USB13 e backup PC v11/v12/v13/v14/v15. Il backup nativo è un archivio distinto dal backup della raccolta PC. Regole speciali, altri effetti e prodotto fisico restano aperti.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
-- [SD: archivio previsto per cataloghi e preset, caricatore da integrare](docs/ASSET-SD.md)
+- [SD: caricatore e pacchetto dei look classe, istruzioni e limiti](docs/ASSET-SD.md)
 - [Avatar e sfondi: editor sul dispositivo v0.66](docs/PERSONALIZZAZIONE.md)
 - [Quantità degli oggetti: modifica sul dispositivo v0.65](docs/QUANTITA-OGGETTI.md)
 - [Invia scheda e gestisci backup dal browser via USB](docs/USB-BROWSER.md)

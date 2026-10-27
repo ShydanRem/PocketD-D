@@ -31,7 +31,7 @@
 #include "fixtures/state-v24.h"
 static void strip_charges(cJSON *root){cJSON *items=cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(root,"inventory"),"items");cJSON *item; cJSON_ArrayForEach(item,items)cJSON_DeleteItemFromObjectCaseSensitive(item,"charges");}
 static void record_crc(uint8_t *record) {
-    size_t size=8945; /* No powers: PDD27 prefix, recovery, status and CRC. */
+    size_t size=8946; /* No powers: PDD27 prefix, recovery, status and CRC. */
     uint32_t crc=pd_crc32(record,size-4);
     for(int i=0;i<4;i++)record[size-4+i]=crc>>(8*i);
 }
@@ -109,9 +109,9 @@ int main(int argc,char **argv) {
     assert(pd_select(legacy_v1,sizeof legacy_v1,b,record_size,&out,&gen)==1&&gen==42);
     b[368]=3;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
     pd_encode(&s,42,b);b[372]=2;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
-    pd_encode(&s,42,b);b[record_size-1034]=9;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
-    pd_encode(&s,42,b);b[record_size-1034]=101;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
-    pd_encode(&s,42,b);b[record_size-1033]=4;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
+    pd_encode(&s,42,b);b[record_size-1035]=9;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
+    pd_encode(&s,42,b);b[record_size-1035]=101;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
+    pd_encode(&s,42,b);b[record_size-1034]=4;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
     pd_demo(&s);pd_encode(&s,41,a);s.hp=7;pd_encode(&s,42,b);
     assert(pd_select(a,record_size,b,record_size,&out,&gen)==1&&out.hp==7&&gen==42);
     /* Every header/CRC bit and distributed payload corruption falls back to older bank. */
@@ -249,10 +249,24 @@ int main(int argc,char **argv) {
         }
         v=cJSON_Duplicate(base,true);cJSON *item=cJSON_GetArrayItem(cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(v,"inventory"),"items"),0);
         cJSON_AddNumberToObject(cJSON_GetObjectItemCaseSensitive(item,"charges"),"current",0);reject(v);
+        /* USB13 class look preserves the complete projected game state. */
+        for(unsigned lineage=0;lineage<21;lineage++)for(unsigned body=0;body<2;body++)for(unsigned outfit=1;outfit<13;outfit++){
+            v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),13);cJSON *a=cJSON_GetObjectItemCaseSensitive(v,"avatar");
+            cJSON_AddNumberToObject(a,"lineage",lineage);cJSON_AddNumberToObject(a,"body",body);cJSON_AddNumberToObject(a,"outfit",outfit);
+            char *wire=cJSON_PrintUnformatted(v);assert(pd_parse_packet(wire,strlen(wire),&out)&&out.lineage==lineage&&out.body==body&&out.outfit==outfit);cJSON_free(wire);
+            pd_state expected=out;expected.lineage=expected.body=expected.outfit=0;char *original=cJSON_PrintUnformatted(base);pd_state original_state;assert(pd_parse_packet(original,strlen(original),&original_state)&&!memcmp(&expected,&original_state,sizeof expected));cJSON_free(original);
+            cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),12);reject(v);
+        }
+        for(unsigned invalid=0;invalid<4;invalid++){
+            v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),13);cJSON *a=cJSON_GetObjectItemCaseSensitive(v,"avatar");cJSON_AddNumberToObject(a,"lineage",0);cJSON_AddNumberToObject(a,"body",0);
+            if(invalid==1)cJSON_AddNumberToObject(a,"outfit",13);
+            if(invalid==2)cJSON_AddStringToObject(a,"outfit","1");
+            if(invalid==3){cJSON_AddNumberToObject(a,"outfit",1);cJSON_AddNumberToObject(a,"outfit",2);}reject(v);
+        }
         cJSON_Delete(base);
     }
     const char *invalid[]={"{}","[]","null","{\"format\":\"pocketdd-device\",\"version\":1}","{", "{\"x\":\"\\u0000\"}","1e999"};
     for(size_t i=0;i<sizeof invalid/sizeof invalid[0];i++) assert(!pd_parse_packet(invalid[i],strlen(invalid[i]),&out));
-    puts("C core: HP/temp, counters, d20, CRC/corruption/wrap, golden v1..v24 migration, PDD25 persistence and strict USB v1..v9 passed");
+    puts("C core: HP/temp, counters, d20, CRC/corruption/wrap, golden v1..v24 migration, PDD33 persistence, strict legacy USB compatibility and 504 USB13 class combinations passed");
     return 0;
 }

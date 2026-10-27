@@ -47,8 +47,8 @@ int main(void){
     /* Strict PDD23 cost enums; old PDD17 rejects new meanings. */
     static uint8_t data[PD_RECORD_SIZE];uint32_t gen;setup(&s);s.magic.count=120;for(unsigned i=1;i<120;i++)s.magic.powers[i]=(pd_power){.name="Magia",.flags=PD_PREPARED};
     for(unsigned i=0;i<3;i++)assert(pd_reduction_profile_set(&s,i,(pd_reduction_profile){.value=3,.types=8191,.active=true,.cost_kind=i==1?PD_COST_PACT:PD_COST_SLOT,.cost_index=i*4,.cost=9,.reaction=true}));
-    size_t n=pd_encode(&s,180,data);assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDW",4)&&pd_decode(data,n,&out,&gen)&&gen==180&&out.reductions[2].cost_index==8);
-    for(unsigned i=0;i<3;i++)for(unsigned field=0;field<4;field++){pd_encode(&s,180,data);data[n-586+i*5+field]=(const unsigned[]){PD_COST_COUNT,9,10,255}[field];crc(data,n);before=out;gen=17;assert(!pd_decode(data,n,&out,&gen)&&!memcmp(&out,&before,sizeof out)&&gen==17);}
-    pd_encode(&s,180,data);size_t old_n=n-566;data[3]='H';crc(data,old_n);assert(pd_record_known(data,old_n)&&!pd_decode(data,old_n,&out,&gen));data[3]='Q';crc(data,old_n);assert(!pd_record_known(data,old_n)&&!pd_decode(data,old_n,&out,&gen));
+    size_t n=pd_encode(&s,180,data);assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDX",4)&&pd_decode(data,n,&out,&gen)&&gen==180&&out.reductions[2].cost_index==8);
+    for(unsigned i=0;i<3;i++)for(unsigned field=0;field<4;field++){pd_encode(&s,180,data);data[n-587+i*5+field]=(const unsigned[]){PD_COST_COUNT,9,10,255}[field];crc(data,n);before=out;gen=17;assert(!pd_decode(data,n,&out,&gen)&&!memcmp(&out,&before,sizeof out)&&gen==17);}
+    pd_encode(&s,180,data);size_t old_n=n-567;data[3]='H';crc(data,old_n);assert(pd_record_known(data,old_n)&&!pd_decode(data,old_n,&out,&gen));data[3]='Q';crc(data,old_n);assert(!pd_record_known(data,old_n)&&!pd_decode(data,old_n,&out,&gen));
     printf("Slot costs: %u independent slot/stage/pool/level/cost/balance/reaction/damage cases, capacity validation, no fallback, one CON candidate, rest policies and strict PDD24 passed\n",cases);
 }

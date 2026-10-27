@@ -34,7 +34,7 @@ int main(void){
     }
     /* Zero-quantity rows and the independent charge balance survive both codecs. */
     assert(pd_item_quantity_set(&s,59,0));uint32_t generation=0;size_t n=pd_encode(&s,65,record);
-    assert(n&&!memcmp(record,"PDDW",4)&&pd_decode(record,n,&decoded,&generation)&&generation==65&&!memcmp(&s,&decoded,sizeof s));
+    assert(n&&!memcmp(record,"PDDX",4)&&pd_decode(record,n,&decoded,&generation)&&generation==65&&!memcmp(&s,&decoded,sizeof s));
     pd_history history;pd_history_reset(&history,s.history_epoch);size_t length;char *raw=pd_backup_encode(&s,&history,&length);
     assert(raw&&pd_backup_decode(raw,length,&restored)&&!memcmp(&s,&restored.state,sizeof s));free(raw);
     before=s;assert(!pd_item_quantity_set(NULL,0,1)&&!pd_item_quantity_set(&s,PD_ITEMS,1)&&!memcmp(&s,&before,sizeof s));

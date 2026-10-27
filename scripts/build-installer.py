@@ -57,9 +57,16 @@ page=out/'personalizzazione.html'
 page.write_text(page.read_text().replace('</main>', '<h2>21 specie · 42 silhouette</h2><p>Ora anche Goblin, Hobgoblin, Bugbear, Kobold e Lizardfolk, con anatomie dedicate. Maschile e femminile sono indipendenti da colori e tagli. Beyond propone la famiglia visiva riconosciuta; puoi cambiarla nell’anteprima o sul dispositivo. Le specie sconosciute richiedono una scelta manuale.</p><section class="species-grid">'+''.join(cards)+'</section></main>'))
 css=out/'assets/personalizzazione.css';css.write_text(css.read_text()+'.species-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:20px}figure{margin:0;padding:12px;background:#12252e;border:1px solid #40645e;border-radius:14px}figure img{margin:0;width:100%;image-rendering:pixelated}figcaption{padding:10px;color:#eac884;text-align:center}')
 
-# Separate future class-wardrobe study from actual runtime captures.
-class_board=ROOT/'docs/design/classes/concept-board.png'
-if class_board.is_file():
- shutil.copyfile(class_board,out/'assets/classi-concept.png')
- page=out/'personalizzazione.html'
- page.write_text(page.read_text().replace('</main>', '<section id="classi" data-class-concept><h2>Prossimo passo: i preset delle classi</h2><p>Studio visivo delle dodici classi base, con abiti, armature e armi distinti. Questi preset non sono ancora attivabili nel firmware: la tavola è una proposta grafica per la prossima integrazione modulare. La tavola usa un esempio umano maschile; i preset verranno adattati alle razze e a entrambe le silhouette.</p><a href="assets/classi-concept.png">Apri la tavola a risoluzione originale</a><img src="assets/classi-concept.png" alt="Studio grafico dei dodici preset di classe: Barbaro, Bardo, Chierico, Druido, Guerriero, Monaco, Paladino, Ranger, Ladro, Stregone, Warlock e Mago"></section></main>'))
+# Actual class looks and native renderer captures; SD assets stay external to flash.
+sd=ROOT/'public/assets/PocketDD-SD.zip';assert sd.is_file()
+(out/'downloads').mkdir(exist_ok=True);shutil.copyfile(sd,out/'downloads/PocketDD-SD.zip')
+for body in range(2):shutil.copyfile(ROOT/f'docs/design/classes/catalog-{body}.png',out/f'assets/classi-catalog-{body}.png')
+class_cards=[]
+for outfit in range(1,13):
+ name=json.loads((ROOT/'src/avatar-classes.json').read_text())[outfit]['name']
+ for body,label in enumerate(['Maschile','Femminile']):
+  filename=f'class-home-00-{body}-{outfit:02d}.png';source=ROOT/'firmware/tests/out/ui-build'/filename
+  assert source.is_file(),filename;shutil.copyfile(source,out/'assets'/filename)
+  class_cards.append(f'<figure><img loading="lazy" src="assets/{filename}" width="466" height="466" alt="{name}, {label.lower()}, nella home del firmware"><figcaption>{name} · {label}</figcaption></figure>')
+page=out/'personalizzazione.html'
+page.write_text(page.read_text().replace('</main>', '<section id="classi" data-class-runtime><h2>Preset delle classi · disponibili nella v0.70</h2><p>504 look: dodici classi per tutte le 21 specie e per entrambe le silhouette. Cappucci e capelli sono disegnati insieme. Solo aspetto: nessun oggetto equipaggiato e nessun valore di gioco cambia.</p><p><a href="downloads/PocketDD-SD.zip" download>Scarica il pacchetto SD</a>. Copia la cartella pocketdd nella radice della SD FAT32. Sul dispositivo: Aspetto → Modifica → Classe, Anteprima, Conferma. Senza asset resta lo stile originale. Preset con colori e taglio propri; scelte originali conservate. Un fotogramma neutro per look; movimento e feedback della scena restano attivi.</p><p>Catture del renderer del firmware su PC, con file SD letto dal disco host: non sono fotografie né prove del lettore SD fisico.</p><div class="species-grid">'+''.join(class_cards)+'</div><h3>Tutte le combinazioni sulla griglia degli sprite</h3><p>Cataloghi normalizzati: non sono catture del dispositivo.</p><a href="assets/classi-catalog-0.png">Catalogo maschile</a> · <a href="assets/classi-catalog-1.png">Catalogo femminile</a></section></main>'))

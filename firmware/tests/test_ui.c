@@ -10,6 +10,7 @@ static void *ui_malloc(size_t size);
 static bool fail_save,fail_canvas,fail_brightness,fail_storage_commit;
 static unsigned brightness_calls,brightness_last;
 static char last_reply[PD_DIAGNOSTICS_MAX+32];
+void pd_board_assets_refresh(void){pd_looks_set_file(getenv("PD_TEST_CLASS_PACK"));}
 void pd_ui_reply(const char *text){assert(strlen(text)<sizeof last_reply);strcpy(last_reply,text);}
 void pd_board_diagnostics(pd_diagnostics *out){
     *out=(pd_diagnostics){.firmware="0.54.0-host-test",.idf="v5.5.5",.uptime_ms=123456,
@@ -1593,6 +1594,18 @@ int main(void) {
     pd_state imported_species=state;imported_species.lineage=16;imported_species.body=1;assert(stage_import(&imported_species));screenshot("species-import.ppm");click("Annulla");assert(state.lineage==20);assert(stage_import(&imported_species));click("Conferma");assert(state.lineage==16&&state.body==1);
     pd_history_reset(&history,state.history_epoch);char *species_json=pd_backup_encode(&state,&history,&external_size);assert(species_json&&pd_backup_decode(species_json,external_size,&snapshot)&&snapshot.state.lineage==16&&snapshot.state.body==1);free(species_json);
     puts("Appearance UI: staged colors/cut/scenes, cancel, preview, failed-save retry, no-change no-write, actual draft blink, cosmetic-only commit, HP undo isolation, local physical focus/back, retained key assignments, USB import scene preservation and native backup/restore passed (synthetic)");
+    /* Full SD class look path through the production editor and home renderer. */
+    pd_demo(&state);state.shortcuts[0]=14;undo_available=false;pd_board_assets_refresh();act(100);effects_before=state;effects_saves=save_calls;effects_calls=random_calls;
+    shortcut(0);click("Modifica");while(appearance_field!=6)click(">");wrapped_fits();screenshot("class-editor-original.ppm");click("Altre");click("Altre");click("Altre");click("Ladro");assert(appearance_outfit==9&&avatar_class_loaded&&state.outfit==0);wrapped_fits();screenshot("class-editor-rogue.ppm");
+    lv_tick_inc(3200);unsigned class_reads=pd_looks_reads();avatar_frame(NULL);assert(avatar_phase==0&&pd_looks_reads()==class_reads);
+    click("Anteprima");wrapped_fits();screenshot("class-confirm.ppm");fail_save=true;click("Conferma");assert(page==APPEARANCE_CONFIRM&&!memcmp(&state,&effects_before,sizeof state));fail_save=false;click("Conferma");assert(state.outfit==9&&save_calls==effects_saves+2);effects_before.outfit=9;assert(!memcmp(&state,&effects_before,sizeof state)&&random_calls==effects_calls);click("Indietro");screenshot("class-home-rogue.ppm");
+    for(unsigned lineage=0;lineage<PD_SPECIES_COUNT;lineage++)for(unsigned body=0;body<2;body++)for(unsigned outfit=1;outfit<PD_OUTFITS;outfit++){
+        state.lineage=lineage;state.body=body;state.outfit=outfit;act(100);assert(avatar_class_loaded&&avatar_image.header.w==128&&avatar_image.header.h==128);if(lineage==0||outfit==8||outfit==9){char filename[96];snprintf(filename,sizeof filename,"class-home-%02u-%u-%02u.ppm",lineage,body,outfit);screenshot(filename);}
+    }
+    pd_history_reset(&history,state.history_epoch);char *class_json=pd_backup_encode(&state,&history,&external_size);assert(class_json&&pd_backup_decode(class_json,external_size,&snapshot)&&snapshot.state.outfit==12);free(class_json);
+    effects_before=state;pd_looks_set_file(NULL);act(100);assert(!avatar_class_loaded&&!memcmp(&state,&effects_before,sizeof state));pd_avatar_variant_large(&state.avatar,state.lineage,state.body,avatar_phase,still);assert(!memcmp(still,avatar_data,sizeof still));screenshot("class-missing-sd.ppm");shortcut(0);click("Modifica");assert(appearance_field==6);wrapped_fits();screenshot("class-missing-sd-editor.ppm");click("Rileggi");assert(avatar_class_loaded);click("Annulla");click("Indietro");
+    shortcut(0);click("Modifica");click("Altre");assert(appearance_class_group==0);click("Originale");click("Anteprima");click("Conferma");effects_before.outfit=0;assert(!memcmp(&state,&effects_before,sizeof state));click("Indietro");
+    puts("Class UI: all 504 SD looks in production home, hood captures, editor staging/cancel/preview, physical-compatible focus, failed-save retry, mechanics/RNG preservation, native backup, missing-SD fallback/explicit refresh and original appearance recovery passed (host files, no physical SD)");
     unsigned covered=0;
     for(unsigned p=0;p<=APPEARANCE_CONFIRM;p++){
         covered+=styled_pages[p];

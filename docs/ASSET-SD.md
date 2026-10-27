@@ -1,89 +1,68 @@
-# SD come archivio principale degli asset
+# Asset esterni sulla SD — v0.70
 
-La microSD è la destinazione prevista per cataloghi grafici, sfondi e preset di
-classe. La capienza della partizione applicazione non deve limitare la selezione
-artistica: la flash conserva programma e risorse essenziali di ripiego. Restano
-da misurare RAM, lettura e decodifica degli asset effettivamente usati.
+Il caricatore SD ospita i [504 look delle classi](PRESET-CLASSI.md). Sfondi e
+grafica originale restano incorporati; NVS conserva PG, progressi e preferenze.
 
-## Stato reale e riferimento hardware
+## Uso
 
-Nella v0.69 gli asset sono ancora incorporati nel firmware. `pd_board_init()`
-inizializza display, touch, input e alimentazione; non monta una SD e non esiste
-ancora un caricatore di pacchetti grafici esterni. La scheda non è quindi già
-utilizzabile come destinazione degli asset semplicemente copiandovi immagini.
+Scaricare `PocketDD-SD.zip`, estrarre la cartella `pocketdd` nella radice di una
+SD FAT32 con un lettore PC. Percorso richiesto: `/pocketdd/classes.pdc`, senza
+cartelle intermedie. Inserire la scheda a dispositivo spento; scegliere il look
+in Aspetto → Modifica → Classe. `Rileggi` rimonta e invalida la cache.
+Sostituire un pacchetto compatibile non richiede riflashare il firmware.
 
-È stato riletto il BSP della scheda **ESP32-S3-Touch-AMOLED-1.75 standard**, al
-commit `e4344e70c2fa78a13e8a06566507f1ba8af6672a` del
-[repository ufficiale](https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.75/tree/e4344e70c2fa78a13e8a06566507f1ba8af6672a).
-Le fonti sono
-`firmware/brookesia/components/waveshare__esp32_s3_touch_amoled_1_75/include/bsp/esp32_s3_touch_amoled_1_75.h`
-e `esp32_s3_touch_amoled_1_75.c` nella stessa cartella del componente.
+PocketD-D non formatta e non scrive sulla SD. Copiare il pacchetto non richiede
+cancellare file personali. Salvataggi NVS e backup USB restano distinti.
+Senza asset viene mostrato l'originale, conservando preset, specie e silhouette.
 
-| Voce | BSP verificato nel sorgente |
+## Hardware e limiti
+
+Montaggio `esp_vfs_fat_sdmmc_mount`, SDMMC a un bit: CLK GPIO2, CMD GPIO1,
+D0 GPIO3; D1–D7, card detect e write protect non usati. Configurazione dal BSP
+ufficiale della ESP32-S3-Touch-AMOLED-1.75 standard, commit
+[e4344e70c2fa78a13e8a06566507f1ba8af6672a](https://github.com/waveshareteam/ESP32-S3-Touch-AMOLED-1.75/tree/e4344e70c2fa78a13e8a06566507f1ba8af6672a).
+
+Clock predefinito 20 MHz, due file massimi, formattazione all'errore disattivata.
+Mount fallito non interrompe l'avvio. Il task UI possiede caricatore e LVGL;
+nessun accesso concorrente dal task USB. Senza card detect, dopo sostituzione
+serve `Rileggi`. Lo sprite verificato in cache può restare visibile dopo una
+rimozione, fino al cambio di look o alla rilettura.
+
+**Compilato e verificato su host, non ancora collaudato con SD sull'hardware.**
+Capacità, FAT32, tempi, consumi e rimozione/reinserimento sono da misurare;
+exFAT non fa parte del percorso verificato.
+
+## Pacchetto PDCL v1
+
+Percorso fisso `/sdcard/pocketdd/classes.pdc`; nessun percorso da Beyond,
+backup o manifesto viene aperto dal firmware. Tutti i numeri sono little endian.
+
+| Offset | Campo |
 | --- | --- |
-| Interfaccia | SDMMC a 1 bit, FAT tramite `esp_vfs_fat_sdmmc_mount` |
-| CLK | GPIO2 |
-| CMD | GPIO1 |
-| D0 | GPIO3 |
-| D1–D7 | Non collegati nella configurazione del BSP |
-| Card detect / write protect | Non configurati dal BSP |
-| Formattazione all'errore | Opzione del BSP; PocketD-D dovrà mantenerla disattivata |
+| 0 | magic `PDCL` |
+| 4 | schema u16 = 1 |
+| 6, 7 | larghezza/altezza u8 = 64 |
+| 8 | specie u16 = 21 |
+| 10, 11 | corpi u8 = 2, classi u8 = 12 |
+| 12 | byte/frame u32 = 12288 |
+| 16 | frame u32 = 504 |
+| 20 | byte totali u32 = 6195200 |
+| 24 | CRC32 della tabella u32 |
+| 28 | CRC32 dei primi 28 byte u32 |
+| 32 | tabella: 504 CRC32 dei frame |
+| 2048 | 504 frame RGB565 + piano alpha A8 |
 
-Questi pin sono distinti dal QSPI del display (38/4–7/12), dall'I2C del touch
-(14/15) e dall'USB nativo (19/20) usati dal firmware. La verifica del sorgente
-non è una prova fisica di montaggio, alimentazione, compatibilità della carta o
-lettura simultanea con display e touch. Capacità supportate e FAT32/exFAT non
-sono ancora collaudati in PocketD-D.
+Indice `(specie*2+corpo)*12+classe-1`; ID in `src/avatar-classes.json`.
+Originale=0 rimane nel firmware. Header, limiti, tabella e lunghezza esatta
+sono verificati prima del frame; CRC del frame prima di modificare il buffer.
+CRC rileva errori accidentali, non autentica l'autore. Il manifesto contiene SHA256.
 
-## Distribuzione delle risorse
+Cache fissa di un frame, 12288 byte; buffer visibile massimo 49152 byte in
+PSRAM, 128×128 RGB565A8. Lettura solo al cambio di combinazione o a `Rileggi`:
+nessun file aperto, allocazione o accesso al disco per ogni fotogramma.
+Anche gli errori sono memorizzati fino a cambio/rilettura.
 
-| Supporto | Ruolo previsto |
-| --- | --- |
-| SD | Pacchetti di razze, corpi, classi, abiti, armature, armi, animazioni e sfondi |
-| Flash applicazione | Programma, interfaccia essenziale, avatar/scena di ripiego e lettore dei pacchetti |
-| PSRAM/RAM | Strati del personaggio attivo, fotogrammi imminenti e cache limitata |
-| NVS | Scheda e progressi già salvati, preferenze e riferimenti alle scelte estetiche |
-
-Non caricare tutta la SD in RAM. Preparare gli asset sul PC in un formato adatto
-al renderer, caricare prima di mostrare una scena e riusare i dati durante
-l'animazione. Evitare aperture e letture per ogni fotogramma. La compressione
-senza perdita rimane utile per tempi di lettura e cache; non deve imporre una
-riduzione della varietà dei preset per farli entrare tutti nella flash.
-
-La modularità di testa/corpo/abiti/accessori resta utile per coerenza artistica,
-animazioni e combinazioni; non è un obbligo derivato dalla sola capacità della
-flash. Eventuali sprite dedicati di qualità migliore possono stare nei pacchetti.
-
-## Flusso da implementare
-
-1. **Montaggio non distruttivo.** Portare la configurazione SDMMC del BSP nel
-   proprietario dei bus della scheda, senza formattazione automatica. Verificare
-   mount/unmount, assenza della carta ed errori di lettura sull'hardware.
-2. **Pacchetto grafico verificabile.** Definire un manifesto con versione del
-   formato, compatibilità col renderer, dimensioni e impronte dei file. I nomi
-   dei pacchetti non devono permettere accesso fuori dalla propria cartella.
-3. **Caricamento e cache.** Leggere soltanto gli asset necessari, verificare
-   dimensioni e integrità prima di renderli attivi, poi passare i dati al task
-   che possiede LVGL. Mostrare la nuova scelta quando è pronta.
-4. **Selezione persistente.** Conservare identificativo di pacchetto e preset
-   separati dai valori di gioco. Se manca il pacchetto, mostrare il ripiego senza
-   cancellare la scelta, cambiare inventario o riscrivere la scheda personale.
-5. **Preparazione pratica da PC.** Esportare una cartella di pacchetto da copiare
-   nella SD con un lettore. Il trasferimento della scheda via USB rimane
-   indipendente; aggiornare un pacchetto non deve richiedere riflashare il firmware.
-6. **Collaudo.** Misurare caricamento iniziale, cambio di avatar/scena, fluidità,
-   RAM e comportamento senza SD o con file mancanti/corrotti. Gestire anche una
-   rimozione inattesa senza interrompere l'uso della scheda.
-
-I pacchetti installati non devono sovrascrivere file personali. I backup su SD
-possono essere un flusso aggiuntivo esplicito; non sostituiscono automaticamente
-il salvataggio NVS o l'attuale backup USB. Non è prevista alcuna formattazione,
-scrittura sulla SD o migrazione dei personaggi in questa modifica documentale.
-
-## Preset delle classi
-
-Il caricatore SD precede l'integrazione dei dodici look della
-[tavola di classe](PRESET-CLASSI.md). Il primo pacchetto deve rendere distinguibili
-vestiti, armature e armi, conservando razza e silhouette. Si mantiene un look
-incorporato per l'uso senza SD. Il preset rimane cosmetico e non assegna oggetti,
-CA o capacità automaticamente.
+Build normali: pacchetto già generato. `generate-class-art.py` verifica integrità
+e sorgenti; `--export` richiede Pillow/numpy e normalizza le tavole ImageGen,
+senza ridisegnarle. Prove C con file host: assenza, corruzione, troncamento,
+cache e ripiego; non attestano il controller SD fisico.

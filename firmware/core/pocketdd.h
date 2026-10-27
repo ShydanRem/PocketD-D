@@ -4,10 +4,11 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "species_catalog.h"
+#include "class_catalog.h"
 #define PD_RESOURCES 8
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
-#define PD_RECORD_SIZE 75185
+#define PD_RECORD_SIZE 75186
 #define PD_SCENES 3
 #define PD_TURN_NAME_BYTES 21
 #define PD_COINS 5
@@ -93,7 +94,7 @@ typedef struct {
     uint8_t level, armor, abilities[6], resource_count;
     pd_resource resources[PD_RESOURCES];
     pd_avatar avatar;
-    uint8_t lineage,body; /* Visual species family and body, independent of rules. */
+    uint8_t lineage,body,outfit; /* Visual species family and body, independent of rules. */
     uint8_t scene; /* Cosmetic, device-local; preserved when importing USB9. */
     bool idle_animation;
     pd_training training;
@@ -120,6 +121,7 @@ typedef struct { uint8_t dice[2], count, natural; int total, bonus; } pd_roll;
 typedef uint32_t (*pd_random)(void *context);
 void pd_demo(pd_state *state);
 const char *pd_scene_name(unsigned scene);
+bool pd_outfit_set(pd_state *state,unsigned outfit);
 bool pd_identity_set(pd_state *state,unsigned lineage,unsigned body);
 bool pd_appearance_set(pd_state *state,const pd_avatar *avatar,unsigned scene);
 bool pd_valid(const pd_state *state);

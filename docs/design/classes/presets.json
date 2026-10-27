@@ -1,5 +1,5 @@
 {
-  "status": "visual design only; no runtime class presets yet",
+  "status": "implemented in v0.70: 504 fixed-palette full sprites on SD, neutral frame; see PRESET-CLASSI.md",
   "classes": [
     {
       "key": "barbarian",

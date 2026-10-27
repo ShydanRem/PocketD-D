@@ -139,7 +139,7 @@ int main(void){
  s.hp=21;assert(pd_storage_save(&s));assert(!memcmp(first,blobs[1][0],sizeof first));
  fail_set=1;s.hp=20;assert(!pd_storage_save(&s));fail_set=0;calls=set_calls;assert(!pd_storage_save(&s)&&calls==set_calls);reboot();assert(pd_storage_load(&s)&&s.hp==21);
  fail_commit=1;s.hp=19;assert(!pd_storage_save(&s)&&blocked);fail_commit=0;reboot();assert(pd_storage_load(&s)&&s.hp==19);
- sizes[1][1]=pd_encode(&s,100,blobs[1][1]);blobs[1][1][3]='X';uint32_t crc=pd_crc32(blobs[1][1],sizes[1][1]-4);for(int i=0;i<4;i++)blobs[1][1][sizes[1][1]-4+i]=crc>>(8*i);
+ sizes[1][1]=pd_encode(&s,100,blobs[1][1]);blobs[1][1][3]='Y';uint32_t crc=pd_crc32(blobs[1][1],sizes[1][1]-4);for(int i=0;i<4;i++)blobs[1][1][sizes[1][1]-4+i]=crc>>(8*i);
  reboot();assert(!pd_storage_load(&s)&&blocked);blobs[1][0][0]=0;blobs[1][1][0]=0;reboot();assert(!pd_storage_load(&s));
  fail_init=1;reboot();assert(!pd_storage_load(&s));fail_init=0;fail_read=1;reboot();assert(!pd_storage_load(&s));
  puts("NVS: new/legacy partitions, golden v1..v24 migration without boot writes, missing layout, alternate banks, errors, rollback and future-version preservation passed");

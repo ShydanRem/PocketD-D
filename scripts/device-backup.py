@@ -31,7 +31,7 @@ def validate(raw):
             or obj['format'] != 'pocketdd-device-backup' or type(obj['version']) is not int or obj['version'] != 1):
         raise ValueError('Usa un backup nativo del dispositivo v1')
     records = []
-    for key, magic, maximum in [('state', (b'PDDP', b'PDDQ', b'PDDR', b'PDDS', b'PDDT', b'PDDU', b'PDDV', b'PDDW'), 75185), ('history', (b'PDH1',), 2481)]:
+    for key, magic, maximum in [('state', (b'PDDP', b'PDDQ', b'PDDR', b'PDDS', b'PDDT', b'PDDU', b'PDDV', b'PDDW', b'PDDX'), 75186), ('history', (b'PDH1',), 2481)]:
         text = obj[key]
         if not isinstance(text, str) or not text or len(text) > 4*((maximum+2)//3):
             raise ValueError('Record nativo fuori limite')
@@ -41,9 +41,12 @@ def validate(raw):
             raise ValueError('Record nativo corrotto o non supportato')
         records.append(data)
     state, history = records
-    trailer = (63 if state[:4] in (b'PDDR', b'PDDS', b'PDDT', b'PDDU', b'PDDV', b'PDDW') else 0) + (3 if state[:4] in (b'PDDU', b'PDDV', b'PDDW') else 1 if state[:4] == b'PDDT' else 0)
-    if (state[:4] == b'PDDT' and state[-5] >= 3) or (state[:4] in (b'PDDU', b'PDDV', b'PDDW') and (state[-7] >= 3 or state[-6] >= (21 if state[:4] == b'PDDW' else 16 if state[:4] == b'PDDV' else 12) or state[-5] >= 2)):
-        raise ValueError('Sfondo del backup non supportato')
+    classed = state[:4] == b'PDDX'
+    identity = state[:4] in (b'PDDU', b'PDDV', b'PDDW', b'PDDX')
+    trailer = (63 if state[:4] in (b'PDDR', b'PDDS', b'PDDT', b'PDDU', b'PDDV', b'PDDW', b'PDDX') else 0) + (3 if identity else 1 if state[:4] == b'PDDT' else 0) + int(classed)
+    shift = int(classed)
+    if (classed and state[-5] > 12) or (state[:4] == b'PDDT' and state[-5] >= 3) or (identity and (state[-7-shift] >= 3 or state[-6-shift] >= (21 if state[:4] in (b'PDDW', b'PDDX') else 16 if state[:4] == b'PDDV' else 12) or state[-5-shift] >= 2)):
+        raise ValueError('Aspetto del backup non supportato')
     if (len(state) < 8879+trailer or state[5123] > 120 or len(state) != 8879+trailer+552*state[5123]
             or len(history) < 21 or history[16] > 20 or len(history) != 21+123*history[16]
             or state[len(state)-8-trailer:len(state)-4-trailer] != history[8:12]):

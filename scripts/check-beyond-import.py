@@ -19,7 +19,7 @@ const seed=addCharacter(createLibrary({...initialState(),name:'Prima scheda',hp:
 const server=createBeyondLabServer({appRoot:new URL('./dist/',import.meta.url),probe:async id=>{
   await new Promise(resolve=>setTimeout(resolve,250));
   if(id==='999')throw Object.assign(new Error('Rete sintetica non disponibile'),{code:'NETWORK_ERROR'});
-  const p=beyondCoreFixture();p.data.id=Number(id);p.data.name='Sonda <b>x</b>';p.data.race={...p.data.race,baseName:'Gnome',fullName:'Forest Gnome'};p.data.gender='Female';if(id==='333333')p.data.race={baseName:'Tabaxi',fullName:'Tabaxi'};if(id==='444444')p.data.race={baseName:'Goblin',fullName:'Goblin'};
+  const p=beyondCoreFixture();p.data.id=Number(id);p.data.name='Sonda <b>x</b>';p.data.race={...p.data.race,baseName:'Gnome',fullName:'Forest Gnome'};p.data.gender='Female';if(id==='555555')p.data.classes[0].definition={name:'Ranger'};if(id==='333333')p.data.race={baseName:'Tabaxi',fullName:'Tabaxi'};if(id==='444444')p.data.race={baseName:'Goblin',fullName:'Goblin'};
   p.data.inventory[0].definition.name='<img src=x onerror=alert(1)>';
   if(id==='222222')p.data.modifiers.feat.push({type:'set',subType:'strength-score',value:19});
   return {...convertBeyond(p,id),testFixture:true,transport:{status:200,bytes:1234,elapsedMs:250,authenticated:false}};
@@ -100,6 +100,9 @@ try:
         page.reload();page.locator('[data-action=device-export]').click();expect(page.locator('[data-device-avatar]')).to_contain_text('Lizardfolk')
         with page.expect_download() as goblin_download:page.locator('[data-device-download]').click()
         assert json.loads(Path(goblin_download.value.path()).read_text())['version']==12
+        # Known single class proposes a cosmetic preset; override and confirm retain all old heroes.
+        before_classes=raw();preview('555555');expect(page.locator('[data-outfit]')).to_have_value('8');expect(page.locator('[data-class-status]')).to_contain_text('Look proposto: Ranger');assert raw()==before_classes
+        page.locator('[data-outfit]').select_option('9');accept();expect(page.locator('.beyond-import')).to_have_count(0);class_library=json.loads(raw());assert class_library['characters'][:-1]==json.loads(before_classes)['characters'];assert class_library['characters'][-1]['state']['avatar']['outfit']==9 and class_library['characters'][-1]['state']['version']==15
         # Closing an inspected preview preserves the already saved collection.
         current=raw();preview();page.locator('[data-close]').click();assert raw()==current
         # A stale tab cannot overwrite a second tab's newer collection.

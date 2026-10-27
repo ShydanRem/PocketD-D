@@ -1,0 +1,140 @@
+[
+  {
+    "id": 0,
+    "key": "original",
+    "name": "Originale",
+    "aliases": []
+  },
+  {
+    "key": "barbarian",
+    "name": "Barbaro",
+    "outfit": "pelliccia e cuoio",
+    "gear": "ascia larga",
+    "id": 1,
+    "aliases": [
+      "barbarian",
+      "Barbaro"
+    ]
+  },
+  {
+    "key": "bard",
+    "name": "Bardo",
+    "outfit": "giacca bordeaux e piuma",
+    "gear": "liuto e stocco",
+    "id": 2,
+    "aliases": [
+      "bard",
+      "Bardo"
+    ]
+  },
+  {
+    "key": "cleric",
+    "name": "Chierico",
+    "outfit": "cotta di maglia e tabarro sacro",
+    "gear": "mazza e scudo rotondo",
+    "id": 3,
+    "aliases": [
+      "cleric",
+      "Chierico"
+    ]
+  },
+  {
+    "key": "druid",
+    "name": "Druido",
+    "outfit": "veste muschio, foglie e corteccia",
+    "gear": "bastone di legno",
+    "id": 4,
+    "aliases": [
+      "druid",
+      "Druido"
+    ]
+  },
+  {
+    "key": "fighter",
+    "name": "Guerriero",
+    "outfit": "piastre pratiche e tabarro blu",
+    "gear": "spada e scudo",
+    "id": 5,
+    "aliases": [
+      "fighter",
+      "Guerriero"
+    ]
+  },
+  {
+    "key": "monk",
+    "name": "Monaco",
+    "outfit": "fasce zafferano e cintura di stoffa",
+    "gear": "bastone e mani libere",
+    "id": 6,
+    "aliases": [
+      "monk",
+      "Monaco"
+    ]
+  },
+  {
+    "key": "paladin",
+    "name": "Paladino",
+    "outfit": "piastre argento/oro e tabarro avorio",
+    "gear": "spada lunga e scudo sacro",
+    "id": 7,
+    "aliases": [
+      "paladin",
+      "Paladino"
+    ]
+  },
+  {
+    "key": "ranger",
+    "name": "Ranger",
+    "outfit": "cappuccio verde e cuoio",
+    "gear": "arco e faretra",
+    "id": 8,
+    "aliases": [
+      "ranger",
+      "Ranger"
+    ]
+  },
+  {
+    "key": "rogue",
+    "name": "Ladro",
+    "outfit": "cappuccio e cuoio antracite",
+    "gear": "pugnali",
+    "id": 9,
+    "aliases": [
+      "rogue",
+      "Ladro"
+    ]
+  },
+  {
+    "key": "sorcerer",
+    "name": "Stregone",
+    "outfit": "cappotto cremisi e finiture oro",
+    "gear": "sfera arcana",
+    "id": 10,
+    "aliases": [
+      "sorcerer",
+      "Stregone"
+    ]
+  },
+  {
+    "key": "warlock",
+    "name": "Warlock",
+    "outfit": "cappotto prugna e dettagli occulti",
+    "gear": "tomo e bacchetta",
+    "id": 11,
+    "aliases": [
+      "warlock",
+      "Warlock"
+    ]
+  },
+  {
+    "key": "wizard",
+    "name": "Mago",
+    "outfit": "veste blu e cappello da mago",
+    "gear": "bastone e grimorio",
+    "id": 12,
+    "aliases": [
+      "wizard",
+      "Mago"
+    ]
+  }
+]

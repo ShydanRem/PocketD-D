@@ -1,56 +1,92 @@
-# Preset di classe — studio visivo e prossimo blocco
+# Preset di classe — v0.70
 
-La tavola in `design/classes/concept-board.png` propone dodici look per lo stesso
-avatar umano: **Barbaro, Bardo, Chierico, Druido, Guerriero, Monaco, Paladino,
-Ranger, Ladro, Stregone, Warlock e Mago**. Abiti, armature e oggetti cambiano
-realmente forma: pelliccia/ascia, giacca/liuto, cotta/mazza/scudo, foglie/bastone,
-piastre/spada, fasce, piastre sacre, cuoio/arco, cappuccio/pugnali, cappotto/sfera,
-tomo/bacchetta e veste/cappello/grimorio.
+Dodici look selezionabili sul dispositivo e nell’app PC: **Barbaro, Bardo,
+Chierico, Druido, Guerriero, Monaco, Paladino, Ranger, Ladro, Stregone, Warlock,
+Mago**. Abiti, armature e accessori distinti per tutte le 21 famiglie visive e
+per entrambe le silhouette: **504 sprite completi**.
 
-**È uno studio grafico: i preset non sono ancora attivabili nel software.** La
-v0.69 completa il nuovo gruppo di razze e prepara spazio e riferimenti per questo
-blocco. Il file `design/classes/presets.json` è una specifica visiva, non un
-catalogo eseguibile. L'Artificiere e le sottoclassi sono successivi alle dodici
-classi base.
+Il pacchetto è esterno, sulla [SD](ASSET-SD.md). La grafica originale rimane
+incorporata e utilizzabile senza scheda. Artificiere e sottoclassi sono successivi.
 
-## Risultato previsto
+## Installazione e scelta
 
-Ogni preset deve combinarsi con **razza e silhouette già scelte**, mantenendo
-muso, orecchie, corna, piume, guscio e coda. Il corpo umano maschile della tavola è
-soltanto il riferimento per mostrare gli abiti; non limita i corpi supportati.
-I look di guerriero e paladino devono essere distinguibili, così come quelli dei
-tre incantatori. Non basta cambiare il colore del mantello.
+1. Aggiornare a firmware 0.70 e usare l’app PC aggiornata per USB13.
+2. Scaricare `PocketDD-SD.zip` dall’installer o dall’editor PC. Estrarre la
+   cartella `pocketdd` nella radice di una SD FAT32 con un lettore PC.
+3. Inserire la scheda a dispositivo spento e avviare PocketD-D.
+4. Aprire **Aspetto → Modifica → Classe**. `Altre` scorre i gruppi;
+   **Anteprima → Conferma** salva la scelta. Annulla conserva l’aspetto precedente.
+5. `Rileggi` rimonta la SD e invalida la cache dopo un cambio di scheda/file.
+   PWR breve scorre i controlli, BOOT breve attiva quello evidenziato; BOOT lungo
+   torna indietro. Le assegnazioni personali dei tasti rimangono conservate.
 
-Il preset è **cosmetico**: non aggiunge un'arma all'inventario, non equipaggia
-un'armatura reale e non cambia CA, PF o attacchi. Un eventuale futuro collegamento
-agli oggetti reali richiederà una configurazione separata e verificata.
+Senza SD, file mancante, formato incompatibile o CRC errato, viene mostrato lo
+stile originale della specie e silhouette scelte. Il preset richiesto resta
+salvato. Aspetto/Classe segnala l’assenza degli asset. Nessuna formattazione,
+scrittura sulla SD o modifica della scheda personale per usare il ripiego.
 
-## Ordine di implementazione
+## Capelli, copricapi e personalizzazione
 
-Prima degli strati grafici, integrare il [caricatore dei pacchetti da SD](ASSET-SD.md). La SD è l’archivio principale previsto per i cataloghi: la varietà dei preset non deve dipendere dalla capienza della flash. Nel firmware resta un look di ripiego.
+Ogni look è un disegno completo, con anatomia e vestiti coerenti. Ranger e Ladro
+hanno cappucci che coprono la sommità della testa; l’eventuale frangia rimane
+nell’apertura del viso. Non viene sovrapposto lo strato capelli originale.
+Il cappello del Mago copre la corona della testa.
 
-1. **Strati e ancoraggi.** Separare anatomia/testa, corpo vestito, accessori,
-   copricapo e arma. Definire gli agganci per corpi piccoli, ordinari e robusti e
-   proteggere code, ali ripiegate e gusci. Verificare dove allargare il buffer e
-   l'area dell'avatar per arco, scudo e bastone, senza invadere PF o pulsanti.
-2. **Sprite effettivi.** Produrre gli abiti delle dodici classi sulla griglia del
-   renderer; normalizzare silhouette e mani e controllare i quattro stati.
-   Usare strati riutilizzabili per coerenza e animazione. La SD può ospitare
-   anche sprite dedicati quando migliorano la qualità; evitare duplicazioni
-   inutili senza limitare le combinazioni per la sola capienza della flash.
-3. **Scelta sul dispositivo e sul PC.** Aggiungere un campo di aspetto con
-   anteprima, conferma, annullamento, tasti fisici e persistenza. Conservare un
-   look originale e la possibilità di scegliere manualmente un altro stile.
-4. **Proposta da Beyond.** Usare solo classi esplicite riconosciute. Se il PG è
-   multiclasse o la classe è sconosciuta, far scegliere il preset senza decidere
-   arbitrariamente una classe dominante. Nessuna sovrascrittura delle schede
-   esistenti.
-5. **Verifica.** Controllare tutte le anatomie, i due corpi, i salvataggi, gli
-   errori di memoria, l'isolamento dall'inventario e la memoria del dispositivo.
-   La tavola di stile non sostituisce questi controlli.
+I preset hanno **colori e taglio propri**. Le quattro scelte originali di pelle,
+capelli, mantello e taglio restano memorizzate; tornano modificabili scegliendo
+**Originale**. I relativi controlli sono disabilitati sul PC e saltati sul
+dispositivo durante l’uso di un preset. Specie e silhouette restano selezionabili.
+La combinazione di ogni colore con ogni vestito e il guardaroba per singolo pezzo
+richiederanno asset e maschere specifici.
 
-La memorizzazione senza blocchi 2×2 duplicati conserva un firmware di base più
-piccolo e tutti i pixel approvati. Con la SD, il vincolo da verificare per i
-preset è la memoria degli asset attivi e il tempo di caricamento/rendering,
-non la necessità di incorporare tutto il catalogo nella flash. La cache attuale
-non è ancora un lettore SD; la fluidità va misurata sul dispositivo.
+È presente **un fotogramma neutro per look**. Restano il movimento e i feedback
+visivi della scena per cure e danni; i nuovi look non hanno ancora le quattro
+espressioni dell’originale. Tavole sorgente e cataloghi normalizzati
+`design/classes/catalog-0.png` e `catalog-1.png` sono distinti dalle catture
+del renderer nativo, che mostrano ciò che il firmware effettivamente disegna.
+
+## Beyond e valori di gioco
+
+Una singola classe esplicita riconosciuta propone il look nell’anteprima Beyond.
+Classe sconosciuta, personalizzata o multiclasse richiedono una scelta manuale:
+nessuna classe dominante viene dedotta dai livelli. La proposta è modificabile
+prima della conferma; viene creata una nuova scheda conservando quelle esistenti.
+
+Il preset è **solo cosmetico**: non assegna equipaggiamento, non equipaggia armi,
+non ricalcola CA o PF e non modifica attacchi, caratteristiche, magie o capacità.
+Un arco disegnato non sostituisce l’arma realmente selezionata nella scheda.
+Non è stata eseguita una nuova lettura reale di Beyond per questo aggiornamento.
+
+## Persistenza e verifiche
+
+- Nativo **PDD33/PDDX**: un byte finale `outfit` 0–12, dopo scena/specie/corpo;
+  8946 + 552 × numero capacità, massimo 75186 byte. Lettura dei formati precedenti
+  conservata; quelli senza classe usano Originale.
+- Backup PC **v15** e USB **13** quando il look è diverso da Originale. Per
+  Originale rimangono le precedenti versioni minime. Il firmware vecchio viene
+  rifiutato prima di trasmettere una copia che perderebbe il preset.
+- Backup nativo USB v1 conserva l’intero record e lo storico; lettore PC e
+  strumento Python riconoscono PDDX. Diagnostica aggiornata a USB13/PDD33.
+- Verifiche su host: persistenza e parser delle 504 combinazioni, integrità,
+  cache, fallback, pixel C/JS a tre scale e renderer LVGL effettivo; anteprima,
+  conferma, errore di salvataggio e ritorno all’originale. Dati sintetici e file
+  SD sul disco host, distinti da letture reali e prove fisiche.
+
+**Da verificare sull’hardware:** montaggio e tempi della SD, compatibilità FAT32,
+rimozione/reinserimento, consumo, fluidità e leggibilità sul pannello.
+Il precedente problema USB con riavvii rimane aperto e distinto dal blocco grafico.
+
+## Esito dei controlli della v0.70
+
+27 ottobre 2026: 209 test JavaScript, suite nativa completa e 118/118 viste;
+504 look a tre scale (1512 confronti C/JS), 13608 confronti degli avatar
+originali e 71 casi di backup PC/C. AddressSanitizer e UndefinedBehaviorSanitizer
+su caricatore, persistenza e UI; nessun errore rilevato. Le ultime correzioni
+grafiche di Hobgoblin/Kenku sono state rigenerate e ricontrollate nel caricatore
+e nella UI nativa. Prove browser con raccolta isolata: editor, annulla/salva,
+recupero palette originale, importazione Beyond sintetica con proposta/override
+della classe, trasferimento USB simulato e conservazione delle altre schede.
+
+Firmware ESP32-S3 compilato: 2607584 byte, 1586720 liberi nella partizione
+applicazione da 4 MiB (38%). Pacchetto SD: 6195200 byte prima della compressione.
+Non sono misure di fluidità, memoria libera o consumo sull’hardware reale.

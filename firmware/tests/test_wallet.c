@@ -25,13 +25,13 @@ int main(void){
     for(unsigned i=0;i<PD_COINS;i++)wallet.coins[i]=PD_COIN_MAX;
     assert(pd_wallet_copper(&wallet)==UINT64_C(1160999998839)&&!pd_wallet_copper(NULL));
     assert(pd_wallet_set(&s,&wallet));size_t n=pd_encode(&s,42,data);uint32_t generation=0;
-    assert(!memcmp(data,"PDDW",4)&&pd_decode(data,n,&out,&generation)&&generation==42&&out.wallet.available&&!memcmp(out.wallet.coins,wallet.coins,sizeof wallet.coins));
+    assert(!memcmp(data,"PDDX",4)&&pd_decode(data,n,&out,&generation)&&generation==42&&out.wallet.available&&!memcmp(out.wallet.coins,wallet.coins,sizeof wallet.coins));
     for(unsigned coin=0;coin<5;coin++){
-        pd_encode(&s,42,data);uint32_t bad=PD_COIN_MAX+1;for(unsigned b=0;b<4;b++)data[n-94+coin*4+b]=bad>>(b*8);crc(data,n);
+        pd_encode(&s,42,data);uint32_t bad=PD_COIN_MAX+1;for(unsigned b=0;b<4;b++)data[n-95+coin*4+b]=bad>>(b*8);crc(data,n);
         before=out;generation=99;assert(!pd_decode(data,n,&out,&generation)&&generation==99&&!memcmp(&out,&before,sizeof out));
     }
-    pd_encode(&s,42,data);data[n-95]=2;crc(data,n);assert(!pd_decode(data,n,&out,&generation));
-    data[n-95]=0;crc(data,n);assert(!pd_decode(data,n,&out,&generation));
+    pd_encode(&s,42,data);data[n-96]=2;crc(data,n);assert(!pd_decode(data,n,&out,&generation));
+    data[n-96]=0;crc(data,n);assert(!pd_decode(data,n,&out,&generation));
     assert(pd_decode(golden_v23,sizeof golden_v23,&out,&generation)&&generation==231&&out.roll_conditions==15&&!out.wallet.available);
     for(unsigned i=0;i<5;i++)assert(!out.wallet.coins[i]);
     /* Known zero survives as known, while every previous schema starts unknown. */

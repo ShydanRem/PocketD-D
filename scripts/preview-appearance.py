@@ -15,3 +15,5 @@ gallery.save(BASE/'appearance-preview.png')
 print('Appearance gallery: six real LVGL host frames plus error/undo/restore captures; synthetic data, no hardware capture')
 
 for path in BASE.glob('species-*.ppm'):Image.open(path).save(path.with_suffix('.png'))
+
+for path in BASE.glob('class-*.ppm'):Image.open(path).save(path.with_suffix('.png'))

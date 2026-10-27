@@ -103,10 +103,11 @@ static void home(void) {
     lv_obj_set_style_bg_main_opa(shade,200,0);lv_obj_set_style_bg_grad_opa(shade,0,0);
     status();
     block(surface,197,324,72,13,0x06161c,180,LV_RADIUS_CIRCLE);
-    lv_obj_t *appearance=control("",177,200,112,132,COMPANION_APPEARANCE,INK);
+    unsigned avatar_width=current.avatar&&current.avatar->header.w>112?148:112;
+    lv_obj_t *appearance=control("",233-avatar_width/2,200,avatar_width,132,COMPANION_APPEARANCE,INK);
     lv_obj_set_style_bg_opa(appearance,LV_OPA_TRANSP,0);lv_obj_set_style_border_width(appearance,0,0);
     const lv_image_dsc_t *image=current.avatar?current.avatar:&companion_hero;
-    hero_x=(112-(int)image->header.w)/2;hero_y=128-(int)image->header.h;
+    hero_x=((int)avatar_width-(int)image->header.w)/2;hero_y=128-(int)image->header.h;
     hero=sprite(appearance,image,hero_x,hero_y);
     const lv_image_dsc_t *images[]={&companion_dock_dice,NULL,&companion_dock_pack};
     const char *names[]={"Dadi","Menu","Zaino"};
