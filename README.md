@@ -2,9 +2,9 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.68:** [Tabaxi, Kenku, Aarakocra e Tortle](docs/AVATAR-SPECIE-ANIMALI.md), per 16 famiglie visive e 32 silhouette maschili/femminili. Pelliccia, piumaggio e squame personalizzabili; proposta da Beyond e correzione manuale. Compressione senza perdita e conservazione dei pixel precedenti. Prove fisiche e diagnosi USB ancora aperte.
+**Stato v0.69:** [selezione a 21 razze e 42 silhouette](docs/AVATAR-SELEZIONE-ESTESA.md), con Goblin, Hobgoblin, Bugbear, Kobold e Lizardfolk. Proposta da Beyond, modifica sul dispositivo e conservazione della grafica precedente; sfondi memorizzati senza duplicazione dei blocchi di pixel. Pronto lo [studio dei preset di classe](docs/PRESET-CLASSI.md), ancora da integrare. Prove fisiche e diagnosi USB ancora aperte.
 
-Il firmware comprende borsello, storico, scheda, inventario, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Scheda PDD31 con lettura dei formati precedenti, registri NVS PDH2 con lettura di PDH1, copia scheda USB9/USB10/USB11 e backup PC v11/v12/v13. Il backup nativo è un archivio distinto dal backup della raccolta PC. Regole speciali, altri effetti e prodotto fisico restano aperti.
+Il firmware comprende borsello, storico, scheda, inventario, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Scheda PDD32 con lettura dei formati precedenti, registri NVS PDH2 con lettura di PDH1, copia scheda USB9/USB10/USB11/USB12 e backup PC v11/v12/v13/v14. Il backup nativo è un archivio distinto dal backup della raccolta PC. Regole speciali, altri effetti e prodotto fisico restano aperti.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 

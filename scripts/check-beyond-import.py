@@ -19,7 +19,7 @@ const seed=addCharacter(createLibrary({...initialState(),name:'Prima scheda',hp:
 const server=createBeyondLabServer({appRoot:new URL('./dist/',import.meta.url),probe:async id=>{
   await new Promise(resolve=>setTimeout(resolve,250));
   if(id==='999')throw Object.assign(new Error('Rete sintetica non disponibile'),{code:'NETWORK_ERROR'});
-  const p=beyondCoreFixture();p.data.id=Number(id);p.data.name='Sonda <b>x</b>';p.data.race={...p.data.race,baseName:'Gnome',fullName:'Forest Gnome'};p.data.gender='Female';if(id==='333333')p.data.race={baseName:'Tabaxi',fullName:'Tabaxi'};
+  const p=beyondCoreFixture();p.data.id=Number(id);p.data.name='Sonda <b>x</b>';p.data.race={...p.data.race,baseName:'Gnome',fullName:'Forest Gnome'};p.data.gender='Female';if(id==='333333')p.data.race={baseName:'Tabaxi',fullName:'Tabaxi'};if(id==='444444')p.data.race={baseName:'Goblin',fullName:'Goblin'};
   p.data.inventory[0].definition.name='<img src=x onerror=alert(1)>';
   if(id==='222222')p.data.modifiers.feat.push({type:'set',subType:'strength-score',value:19});
   return {...convertBeyond(p,id),testFixture:true,transport:{status:200,bytes:1234,elapsedMs:250,authenticated:false}};
@@ -95,6 +95,11 @@ try:
         animal_packet=json.loads(Path(animal_download.value.path()).read_text());assert animal_packet['version']==11 and animal_packet['avatar']['lineage']==15;expect(page.locator('[data-device-close]')).to_have_count(0)
         page.locator('[data-action=edit]').click();editor=page.locator('.hero-editor-dialog');expect(editor.locator('[name=hair]').first).to_be_disabled();expect(editor).to_contain_text('Squame')
         editor.locator('[name=lineage]').select_option('13');expect(editor).to_contain_text('Piumaggio');editor.locator('[name=lineage]').select_option('12');expect(editor).to_contain_text('Pelliccia');page.screenshot(path=str(OUTPUT/'tabaxi-female-editor.png'));editor.get_by_role('button',name='Annulla',exact=True).click()
+        before_goblins=raw();preview('444444');expect(page.locator('[data-lineage]')).to_have_value('16');assert raw()==before_goblins
+        page.locator('[data-lineage]').select_option('20');accept();expect(page.locator('.beyond-import')).to_have_count(0);goblins=json.loads(raw());assert goblins['characters'][:4]==animals['characters'];lizard=goblins['characters'][4]['state'];assert lizard['avatar']['lineage']==20 and lizard['version']==14
+        page.reload();page.locator('[data-action=device-export]').click();expect(page.locator('[data-device-avatar]')).to_contain_text('Lizardfolk')
+        with page.expect_download() as goblin_download:page.locator('[data-device-download]').click()
+        assert json.loads(Path(goblin_download.value.path()).read_text())['version']==12
         # Closing an inspected preview preserves the already saved collection.
         current=raw();preview();page.locator('[data-close]').click();assert raw()==current
         # A stale tab cannot overwrite a second tab's newer collection.

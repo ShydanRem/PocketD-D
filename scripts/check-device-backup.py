@@ -154,7 +154,7 @@ class BackupTests(unittest.TestCase):
     def test_catalog_generations_preserve_old_species_and_reject_new_ids_in_old_tag(self):
         packet = json.loads(RAW)
         original = bytearray(base64.b64decode(packet['state']))
-        for tag, lineage, valid in [('U', 11, True), ('U', 12, False), ('V', 12, True), ('V', 15, True), ('V', 16, False), ('W', 0, False)]:
+        for tag, lineage, valid in [('U', 11, True), ('U', 12, False), ('V', 12, True), ('V', 15, True), ('V', 16, False), ('W', 20, True), ('W', 21, False), ('X', 0, False)]:
             state = original[:-4] + bytes(66) + bytes(4)
             state[3] = ord(tag); state[-7] = 2; state[-6] = lineage; state[-5] = 1
             state[-4:] = zlib.crc32(state[:-4]).to_bytes(4, 'little')

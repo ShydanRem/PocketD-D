@@ -1,0 +1,84 @@
+{
+  "status": "visual design only; no runtime class presets yet",
+  "classes": [
+    {
+      "key": "barbarian",
+      "name": "Barbaro",
+      "outfit": "pelliccia e cuoio",
+      "gear": "ascia larga"
+    },
+    {
+      "key": "bard",
+      "name": "Bardo",
+      "outfit": "giacca bordeaux e piuma",
+      "gear": "liuto e stocco"
+    },
+    {
+      "key": "cleric",
+      "name": "Chierico",
+      "outfit": "cotta di maglia e tabarro sacro",
+      "gear": "mazza e scudo rotondo"
+    },
+    {
+      "key": "druid",
+      "name": "Druido",
+      "outfit": "veste muschio, foglie e corteccia",
+      "gear": "bastone di legno"
+    },
+    {
+      "key": "fighter",
+      "name": "Guerriero",
+      "outfit": "piastre pratiche e tabarro blu",
+      "gear": "spada e scudo"
+    },
+    {
+      "key": "monk",
+      "name": "Monaco",
+      "outfit": "fasce zafferano e cintura di stoffa",
+      "gear": "bastone e mani libere"
+    },
+    {
+      "key": "paladin",
+      "name": "Paladino",
+      "outfit": "piastre argento/oro e tabarro avorio",
+      "gear": "spada lunga e scudo sacro"
+    },
+    {
+      "key": "ranger",
+      "name": "Ranger",
+      "outfit": "cappuccio verde e cuoio",
+      "gear": "arco e faretra"
+    },
+    {
+      "key": "rogue",
+      "name": "Ladro",
+      "outfit": "cappuccio e cuoio antracite",
+      "gear": "pugnali"
+    },
+    {
+      "key": "sorcerer",
+      "name": "Stregone",
+      "outfit": "cappotto cremisi e finiture oro",
+      "gear": "sfera arcana"
+    },
+    {
+      "key": "warlock",
+      "name": "Warlock",
+      "outfit": "cappotto prugna e dettagli occulti",
+      "gear": "tomo e bacchetta"
+    },
+    {
+      "key": "wizard",
+      "name": "Mago",
+      "outfit": "veste blu e cappello da mago",
+      "gear": "bastone e grimorio"
+    }
+  ],
+  "constraints": [
+    "Retain species anatomy and both body variants.",
+    "Use modular body/clothing/weapon layers and anchors; no all-combination full sprites.",
+    "Presets are cosmetic and editable; do not add inventory or change AC/HP/attacks.",
+    "Only explicit unambiguous class proposals; multiclass and unknown classes require manual choice.",
+    "Artificer and subclasses follow the twelve base classes."
+  ]
+}

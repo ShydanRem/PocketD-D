@@ -66,6 +66,11 @@ def sample(species):
 def material(species,rgb,x,y,box):
  r,g,b=rgb;h,s,v=colorsys.rgb_to_hsv(r/255,g/255,b/255);_,top,width,height=box;relative=(y-top)/max(1,height)
  identity=species['key'];head=relative<.56
+ if identity=='goblin' and .17<h<.38 and s>.18 and v>.20:return 0
+ if identity=='hobgoblin' and r>g*2 and g>b*1.08 and v>.25 and (head or x<16 or x>35):return 0
+ if identity=='bugbear' and .035<h<.15 and s>.24 and v>.20 and (head or x<16 or x>35):return 0
+ if identity=='kobold' and h<.10 and s>.4 and v>.23 and (head or x<16 or x>35):return 0
+ if identity=='lizardfolk' and .17<h<.40 and s>.18 and v>.2:return 0
  if identity=='tabaxi' and .07<h<.19 and s>.24 and v>.22 and (head or x<16 or x>35):return 0
  if identity=='kenku' and .52<h<.85 and .10<s<.65 and .10<v<.8:return 0
  if identity=='aarakocra' and head and s<.38 and v>.30:return 0
@@ -75,7 +80,7 @@ def material(species,rgb,x,y,box):
  if identity=='tiefling' and .62<h<.88 and s>.13 and v>.18:return 0
  if identity=='dragonborn' and .015<h<.15 and s>.35 and v>.20:return 0
  if identity=='goliath' and (s<.27 or .52<h<.74) and .22<v<.87 and (head or x<16 or x>34):return 0
- if species['id']>=12:return -1
+ if species['id']>=12 and species.get('hair') is False:return -1
  if identity=='aasimar':
   if head and s<.25 and v>.60:return 1
   if .02<h<.13 and .18<s<.8 and v>.22 and (head or x<17 or x>35):return 0

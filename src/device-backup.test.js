@@ -106,5 +106,12 @@ test('PDD31 catalog rejects new IDs under the old PDD30 tag and retains valid ol
  function encoded(tag,lineage){const b=new Uint8Array(old.length+66);b.set(old.subarray(0,-4));b[3]=tag.charCodeAt(0);b[b.length-7]=2;b[b.length-6]=lineage;b[b.length-5]=1;new DataView(b.buffer).setUint32(b.length-4,crc32(b.subarray(0,-4)),true);return JSON.stringify({...p,state:btoa(String.fromCharCode(...b))});}
  assert.equal(inspectDeviceBackup(encoded('U',11)).lineage,11);assert.throws(()=>inspectDeviceBackup(encoded('U',12)));
  for(let lineage=12;lineage<16;lineage++){const v=inspectDeviceBackup(encoded('V',lineage));assert.equal(v.lineage,lineage);assert.equal(v.body,1);assert.equal(v.scene,2);assert.deepEqual(v.wallet,inspectDeviceBackup(raw).wallet);}
- assert.throws(()=>inspectDeviceBackup(encoded('V',16)));assert.throws(()=>inspectDeviceBackup(encoded('W',0)));
+ assert.throws(()=>inspectDeviceBackup(encoded('V',16)));assert.throws(()=>inspectDeviceBackup(encoded('X',0)));
+});
+
+test('PDD32 preserves the extended goblinoid/reptile identities and rejects them under PDD31',()=>{
+ const p=JSON.parse(raw),old=Uint8Array.from(atob(p.state),c=>c.charCodeAt(0));
+ function encoded(tag,lineage){const b=new Uint8Array(old.length+66);b.set(old.subarray(0,-4));b[3]=tag.charCodeAt(0);b[b.length-7]=1;b[b.length-6]=lineage;b[b.length-5]=1;new DataView(b.buffer).setUint32(b.length-4,crc32(b.subarray(0,-4)),true);return JSON.stringify({...p,state:btoa(String.fromCharCode(...b))});}
+ for(let lineage=16;lineage<21;lineage++){const v=inspectDeviceBackup(encoded('W',lineage));assert.equal(v.lineage,lineage);assert.equal(v.body,1);assert.throws(()=>inspectDeviceBackup(encoded('V',lineage)));}
+ assert.throws(()=>inspectDeviceBackup(encoded('W',21)));
 });

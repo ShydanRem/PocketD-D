@@ -133,7 +133,7 @@ function validInteger(value, min, max) {
 }
 export function parseBackup(raw) {
   const s = JSON.parse(raw);
-  if (!s || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13].includes(s.version)) throw new Error('Versione backup non supportata');
+  if (!s || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].includes(s.version)) throw new Error('Versione backup non supportata');
   if(s.version<10&&s.extended!==undefined)throw new Error('I dati estesi richiedono il formato v10');
   const base = initialState();
   if (s.version >= 3) {
@@ -141,7 +141,7 @@ export function parseBackup(raw) {
     if (!s.abilities || !abilityKeys.every(key => validInteger(s.abilities[key], 1, 30))) throw new Error('Caratteristiche non valide');
     if (!s.avatar || !['skin','hair','cloak','style'].every(key => validInteger(s.avatar[key], 0, 2))) throw new Error('Avatar non valido');
     const identity=avatarIdentity(s.avatar);
-    if((s.version<12&&(identity.lineage||identity.body))||(s.version>=12&&(s.avatar.lineage===undefined||s.avatar.body===undefined))||(s.version===12&&identity.lineage>=12))throw new Error('La silhouette richiede il formato v12');
+    if((s.version<12&&(identity.lineage||identity.body))||(s.version>=12&&(s.avatar.lineage===undefined||s.avatar.body===undefined))||(s.version===12&&identity.lineage>=12)||(s.version===13&&identity.lineage>=16))throw new Error('La silhouette richiede il formato v12');
     Object.assign(base, {name:s.name.trim(), title:s.title.trim(), level:s.level, maxHp:s.maxHp, armorClass:s.armorClass,
       abilities:Object.fromEntries(abilityKeys.map(key=>[key,s.abilities[key]])),
       avatar:{...Object.fromEntries(['skin','hair','cloak','style'].map(key=>[key,s.avatar[key]])),...(s.version>=12?identity:{})}});
@@ -177,7 +177,7 @@ export function parseBackup(raw) {
 }
 export function serialize(state) {
   const identity=avatarIdentity(state.avatar),variant=identity.lineage!==0||identity.body!==0;
-  return JSON.stringify({...state,...(variant?{avatar:{...state.avatar,...identity}}:{}),version:identity.lineage>=12?13:variant?12:11},null,2);
+  return JSON.stringify({...state,...(variant?{avatar:{...state.avatar,...identity}}:{}),version:identity.lineage>=16?14:identity.lineage>=12?13:variant?12:11},null,2);
 }
 export function restore(raw) {
   try { return parseBackup(raw); } catch { return initialState(); }

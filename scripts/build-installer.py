@@ -54,5 +54,12 @@ for entry in species:
   shutil.copyfile(source,out/'assets'/filename)
   cards.append(f'<figure><img loading="lazy" src="assets/{filename}" width="466" height="466" alt="{entry["name"]}, silhouette {label.lower()}, nella home del firmware"><figcaption>{entry["name"]} · {label}</figcaption></figure>')
 page=out/'personalizzazione.html'
-page.write_text(page.read_text().replace('</main>', '<h2>16 specie · 32 silhouette</h2><p>Ora anche Tabaxi, Kenku, Aarakocra e Tortle, con anatomie dedicate. Maschile e femminile sono indipendenti da colori e tagli. Beyond propone la famiglia visiva riconosciuta; puoi cambiarla nell’anteprima o sul dispositivo. Le specie sconosciute richiedono una scelta manuale.</p><section class="species-grid">'+''.join(cards)+'</section></main>'))
+page.write_text(page.read_text().replace('</main>', '<h2>21 specie · 42 silhouette</h2><p>Ora anche Goblin, Hobgoblin, Bugbear, Kobold e Lizardfolk, con anatomie dedicate. Maschile e femminile sono indipendenti da colori e tagli. Beyond propone la famiglia visiva riconosciuta; puoi cambiarla nell’anteprima o sul dispositivo. Le specie sconosciute richiedono una scelta manuale.</p><section class="species-grid">'+''.join(cards)+'</section></main>'))
 css=out/'assets/personalizzazione.css';css.write_text(css.read_text()+'.species-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:20px}figure{margin:0;padding:12px;background:#12252e;border:1px solid #40645e;border-radius:14px}figure img{margin:0;width:100%;image-rendering:pixelated}figcaption{padding:10px;color:#eac884;text-align:center}')
+
+# Separate future class-wardrobe study from actual runtime captures.
+class_board=ROOT/'docs/design/classes/concept-board.png'
+if class_board.is_file():
+ shutil.copyfile(class_board,out/'assets/classi-concept.png')
+ page=out/'personalizzazione.html'
+ page.write_text(page.read_text().replace('</main>', '<section id="classi" data-class-concept><h2>Prossimo passo: i preset delle classi</h2><p>Studio visivo delle dodici classi base, con abiti, armature e armi distinti. Questi preset non sono ancora attivabili nel firmware: la tavola è una proposta grafica per la prossima integrazione modulare. La tavola usa un esempio umano maschile; i preset verranno adattati alle razze e a entrambe le silhouette.</p><a href="assets/classi-concept.png">Apri la tavola a risoluzione originale</a><img src="assets/classi-concept.png" alt="Studio grafico dei dodici preset di classe: Barbaro, Bardo, Chierico, Druido, Guerriero, Monaco, Paladino, Ranger, Ladro, Stregone, Warlock e Mago"></section></main>'))

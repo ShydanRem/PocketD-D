@@ -1,0 +1,12 @@
+{
+  "provider": "OpenAI ImageGen",
+  "source": "concept-board.png",
+  "sha256": "7d123b647267b4c3a16205dd76bde0c56c0460ccc991877b6700060c9ee47a3f",
+  "reference": "firmware/ui/companion/source/hero.png",
+  "status": "visual design only; no runtime class presets yet",
+  "limitations": [
+    "Human masculine styling examples only.",
+    "Not game-resolution layers or an implemented class selector.",
+    "Must be adapted to all species/body shapes and checked at native resolution."
+  ]
+}

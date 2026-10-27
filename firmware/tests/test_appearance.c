@@ -10,7 +10,10 @@ int main(void){
     for(unsigned lineage=0;lineage<PD_SPECIES_COUNT;lineage++)for(unsigned body=0;body<2;body++)for(unsigned scene=0;scene<PD_SCENES;scene++){
         s=expected=base;pd_avatar avatar={lineage%3,body,lineage%3,(lineage+body)%3};assert(pd_appearance_set(&s,&avatar,scene));assert(pd_identity_set(&s,lineage,body));expected.avatar=avatar;expected.scene=scene;expected.lineage=lineage;expected.body=body;
         assert(!memcmp(&s,&expected,sizeof s));size_t n=pd_encode(&s,67,record);
-        assert(n==8945&&!memcmp(record,"PDDV",4)&&pd_decode(record,n,&out,&generation)&&generation==67&&!memcmp(&s,&out,sizeof s));
+        assert(n==8945&&!memcmp(record,"PDDW",4)&&pd_decode(record,n,&out,&generation)&&generation==67&&!memcmp(&s,&out,sizeof s));
+        memcpy(legacy,record,n);memcpy(legacy,"PDDV",4);crc(legacy,n);
+        if(lineage<16)assert(pd_decode(legacy,n,&out,&generation)&&!memcmp(&out,&expected,sizeof out));
+        else assert(!pd_decode(legacy,n,&out,&generation));
         /* PDD30 has identical bytes but only the first twelve visual IDs. */
         memcpy(legacy,record,n);memcpy(legacy,"PDDU",4);crc(legacy,n);
         if(lineage<12)assert(pd_decode(legacy,n,&out,&generation)&&!memcmp(&out,&expected,sizeof out));
@@ -28,5 +31,5 @@ int main(void){
     s=base;s.shortcuts[0]=14;s.scene=2;size_t n=pd_encode(&s,1,record);assert(pd_decode(record,n,&out,&generation)&&out.shortcuts[0]==14&&out.scene==2);
     memcpy(legacy,record,n-7);memcpy(legacy,"PDDS",4);crc(legacy,n-3);assert(!pd_decode(legacy,n-3,&out,&generation));
     assert(!strcmp(pd_scene_name(0),"Accampamento")&&strcmp(pd_scene_name(1),pd_scene_name(2)));
-    puts("Appearance: 16 species x 2 bodies x 3 scenes, cosmetic-only changes, PDD31 persistence, PDD30/PDD29/PDD28 migrations, invalid fields and old destination preservation passed");
+    puts("Appearance: 21 species x 2 bodies x 3 scenes, cosmetic-only changes, PDD32 persistence, PDD30/PDD29/PDD28 migrations, invalid fields and old destination preservation passed");
 }

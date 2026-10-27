@@ -56,13 +56,13 @@ export function projectDevice(input){
   const wallet={available:s.extended?.currenciesAvailable??false,...Object.fromEntries(['cp','sp','ep','gp','pp'].map(k=>[k,s.extended?.currenciesAvailable?integer(s.extended.currencies[k],0,999999999,k):0]))};
   warnings.push(wallet.available?'Monete: cinque saldi verificati, separati e modificabili con conferma sul dispositivo. Nessun cambio o acquisto automatico.':'Monete: saldo non verificato, nessuna ricchezza inventata. Verificalo in Stato e risorse sul PC oppure configura il borsello sul dispositivo.');
   const identity=avatarIdentity(s.avatar),variant=identity.lineage||identity.body;
-  const packet={format:'pocketdd-device',version:identity.lineage>=12?11:variant?10:9,name:ascii(s.name,48),level:integer(s.level,1,20,'Livello'),hp:integer(s.hp,0,999,'PF'),
+  const packet={format:'pocketdd-device',version:identity.lineage>=16?12:identity.lineage>=12?11:variant?10:9,name:ascii(s.name,48),level:integer(s.level,1,20,'Livello'),hp:integer(s.hp,0,999,'PF'),
     maxHp:integer(s.maxHp,1,999,'PF massimi'),tempHp:integer(s.extended?.tempHp??0,0,999,'PF temporanei'),armorClass:integer(s.armorClass,1,40,'CA'),
     avatar:Object.fromEntries(['skin','hair','cloak','style'].map(k=>[k,integer(s.avatar[k],0,2,k)])),
     training,inventory,magic,recovery,status,wallet,
     abilities:Object.fromEntries(abilityKeys.map(k=>[k,integer(s.abilities[k],1,30,k)])),
     resources:counters.slice(0,DEVICE_MAX_RESOURCES).map(r=>({name:ascii(r.name,32),current:integer(r.current,0,999,r.name),maximum:integer(r.maximum,1,999,r.name)}))};
-  if(variant){Object.assign(packet.avatar,identity);warnings.push(identity.lineage>=12?'Questa specie richiede USB11 / firmware 0.68 o successivo. Aspetto cosmetico: nessun bonus o equipaggiamento dedotto.':'Specie e silhouette maschile/femminile richiedono USB10 / firmware 0.67 o successivo. Aspetto cosmetico: nessun bonus o equipaggiamento dedotto.');}
+  if(variant){Object.assign(packet.avatar,identity);warnings.push(identity.lineage>=16?'Questa specie richiede USB12 / firmware 0.69 o successivo. Aspetto cosmetico: nessun bonus o equipaggiamento dedotto.':identity.lineage>=12?'Questa specie richiede USB11 / firmware 0.68 o successivo. Aspetto cosmetico: nessun bonus o equipaggiamento dedotto.':'Specie e silhouette maschile/femminile richiedono USB10 / firmware 0.67 o successivo. Aspetto cosmetico: nessun bonus o equipaggiamento dedotto.');}
   if(serializeDevice(packet).length>262144)throw new Error('Copia oltre 262144 byte: nessun inventario troncato.');
   return {packet,warnings};
 }

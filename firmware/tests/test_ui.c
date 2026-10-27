@@ -1587,11 +1587,11 @@ int main(void) {
         state.lineage=lineage;state.body=body;state.avatar=(pd_avatar){0};act(100);char filename[80];snprintf(filename,sizeof filename,"species-home-%02u-%u.ppm",lineage,body);screenshot(filename);
         shortcut(0);click("Modifica");click(">");assert(appearance_field==(pd_species_hair(lineage)?1u:2u));click("Annulla");click("Indietro");
     }
-    /* Last species page contains only Tortle; no invalid IDs can be selected. */
-    effects_before=state;shortcut(0);click("Modifica");while(appearance_field!=4)click(">");assert(appearance_group==5);screenshot("species-last-group.ppm");
-    act(4312);assert(appearance_lineage==15);click("Tortle");click("Altre");assert(appearance_group==0);click("Altre");click("Altre");click("Altre");click("Altre");assert(appearance_group==4);click("Tabaxi");screenshot("species-tabaxi-preview.ppm");click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));click("Indietro");
-    pd_state imported_species=state;imported_species.lineage=8;imported_species.body=1;assert(stage_import(&imported_species));screenshot("species-import.ppm");click("Annulla");assert(state.lineage==15);assert(stage_import(&imported_species));click("Conferma");assert(state.lineage==8&&state.body==1);
-    pd_history_reset(&history,state.history_epoch);char *species_json=pd_backup_encode(&state,&history,&external_size);assert(species_json&&pd_backup_decode(species_json,external_size,&snapshot)&&snapshot.state.lineage==8&&snapshot.state.body==1);free(species_json);
+    /* All seven species groups expose only valid IDs, including the new Goblin row. */
+    effects_before=state;shortcut(0);click("Modifica");while(appearance_field!=4)click(">");assert(appearance_group==6);screenshot("species-last-group.ppm");
+    click("Lizardfolk");click("Altre");assert(appearance_group==0);for(unsigned group=0;group<5;group++)click("Altre");assert(appearance_group==5);click("Goblin");screenshot("species-goblin-preview.ppm");click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));click("Indietro");
+    pd_state imported_species=state;imported_species.lineage=16;imported_species.body=1;assert(stage_import(&imported_species));screenshot("species-import.ppm");click("Annulla");assert(state.lineage==20);assert(stage_import(&imported_species));click("Conferma");assert(state.lineage==16&&state.body==1);
+    pd_history_reset(&history,state.history_epoch);char *species_json=pd_backup_encode(&state,&history,&external_size);assert(species_json&&pd_backup_decode(species_json,external_size,&snapshot)&&snapshot.state.lineage==16&&snapshot.state.body==1);free(species_json);
     puts("Appearance UI: staged colors/cut/scenes, cancel, preview, failed-save retry, no-change no-write, actual draft blink, cosmetic-only commit, HP undo isolation, local physical focus/back, retained key assignments, USB import scene preservation and native backup/restore passed (synthetic)");
     unsigned covered=0;
     for(unsigned p=0;p<=APPEARANCE_CONFIRM;p++){

@@ -1,5 +1,9 @@
 # Tabaxi, Kenku, Aarakocra e Tortle — v0.68
 
+> Aggiornamento v0.69: [21 famiglie e 42 silhouette](AVATAR-SELEZIONE-ESTESA.md),
+> PDD32/PDDW; USB12 e backup PC v14 per gli ID nuovi.
+> [Preset di classe](PRESET-CLASSI.md): studio visivo, integrazione successiva.
+
 Il catalogo passa da 12 a **16 famiglie visive**, con **32 silhouette** maschili e
 femminili. Le quattro nuove famiglie hanno anatomie dedicate, tre forme della
 testa e le quattro pose riposo/battito/cura/danno. Sono 96 nuovi frame, per un

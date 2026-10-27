@@ -1,5 +1,9 @@
 # Scheda e backup via USB dal browser — supporto PC
 
+> Aggiornamento v0.69: [21 famiglie e 42 silhouette](AVATAR-SELEZIONE-ESTESA.md),
+> PDD32/PDDW; USB12 e backup PC v14 per gli ID nuovi.
+> [Preset di classe](PRESET-CLASSI.md): studio visivo, integrazione successiva.
+
 > Aggiornamento v0.68: [quattro nuove famiglie e compressione senza perdita](AVATAR-SPECIE-ANIMALI.md).
 > Catalogo a 16 specie/32 silhouette, PDD31/PDDV; USB11 e backup PC v13
 > per i nuovi ID. Formati precedenti conservati; collaudo fisico ancora aperto.

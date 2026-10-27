@@ -6,14 +6,14 @@ set(CONFIG_LV_USE_THORVG_INTERNAL OFF CACHE BOOL "" FORCE)
 set(LV_BUILD_CONF_PATH "${CMAKE_CURRENT_LIST_DIR}/lv_conf.h" CACHE PATH "" FORCE)
 add_subdirectory(../.deps/lvgl lvgl)
 add_executable(ui ../core/catalog.c ../core/power.c ../core/input_check.c ../core/diagnostics.c ../core/backup.c ../core/history.c ../core/recharge.c ../core/damage.c ../core/screen.c ../core/status.c ../core/rest.c test_ui.c ../core/buttons.c ../core/pocketdd.c ../core/magic.c ../core/checks.c ../core/combat.c ../core/dice_animation.c ../core/dice_pool.c ../core/avatar.c)
-target_sources(ui PRIVATE ../ui/scenes/scenes.c ../ui/scenes/scene_assets.c ../ui/theme/theme.c ../ui/theme/theme_assets.c ../ui/companion/companion.c ../ui/companion/companion_assets.c)
+target_sources(ui PRIVATE ../ui/room_cache.c ../ui/scenes/scenes.c ../ui/scenes/scene_assets.c ../ui/theme/theme.c ../ui/theme/theme_assets.c ../ui/companion/companion.c ../ui/companion/companion_assets.c)
 target_include_directories(ui PRIVATE ../core ../ui/companion ../ui/theme)
 target_link_libraries(ui lvgl m)
 
 # Standalone view harness, using the same production renderer and committed assets.
 option(PD_BUILD_COMPANION_PROTOTYPE "Build the companion view harness" OFF)
 if(PD_BUILD_COMPANION_PROTOTYPE)
-    add_executable(companion ../ui/companion/companion.c ../ui/companion/companion_assets.c
+    add_executable(companion ../ui/room_cache.c ../ui/companion/companion.c ../ui/companion/companion_assets.c
         ../prototypes/companion/test_companion.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
     target_include_directories(companion PRIVATE ../core ../ui/companion)
     target_compile_options(companion PRIVATE -Wall -Wextra -Werror)
@@ -160,3 +160,8 @@ target_include_directories(catalog PRIVATE ../core)
 target_compile_options(catalog PRIVATE -Wall -Wextra -Werror)
 
 target_link_libraries(appearance m)
+
+add_executable(room-cache test_room_cache.c ../ui/room_cache.c)
+target_include_directories(room-cache PRIVATE ../ui)
+target_compile_options(room-cache PRIVATE -Wall -Wextra -Werror)
+target_link_libraries(room-cache lvgl m)

@@ -2,23 +2,31 @@
   "images": [
     {
       "name": "theme_room_pack",
-      "bytes": 434312,
-      "sha256": "b8272670d487b537ce60553594208249ac1239835322a09f68ae256422a5a6ac"
+      "bytes": 108578,
+      "sha256": "9477986f45b3418ca927d0e722db9534d3d51e50141031c10051eadb60655252",
+      "storage": "RGB565-2x2",
+      "decoded_sha256": "b8272670d487b537ce60553594208249ac1239835322a09f68ae256422a5a6ac"
     },
     {
       "name": "theme_room_magic",
-      "bytes": 434312,
-      "sha256": "6f04b5b1b36012f4929aeeee20e5ea76b5227c65c31d45742c17c99ee44ad1f3"
+      "bytes": 108578,
+      "sha256": "2f1f7e3279691f0844e569fd4444b589b68142ae04310d03c8023a6f076f59e0",
+      "storage": "RGB565-2x2",
+      "decoded_sha256": "6f04b5b1b36012f4929aeeee20e5ea76b5227c65c31d45742c17c99ee44ad1f3"
     },
     {
       "name": "theme_room_rest",
-      "bytes": 434312,
-      "sha256": "1cada205ecd846d23cf2d993124149e8ceef06613f7e4e185174c43587454e3a"
+      "bytes": 108578,
+      "sha256": "398e9be1e72cd4115ef1c813be9e9a66e28004a0bbb64c5c9e4b0a083583f074",
+      "storage": "RGB565-2x2",
+      "decoded_sha256": "1cada205ecd846d23cf2d993124149e8ceef06613f7e4e185174c43587454e3a"
     },
     {
       "name": "theme_room_study",
-      "bytes": 434312,
-      "sha256": "6d5a964ab9a4bf598efcedcbe0432eaa3265fc769c3551cbfe1600223164a74e"
+      "bytes": 108578,
+      "sha256": "35e440847e79293009662c9371cada02124d62d039472095292b3ff68e6dc463",
+      "storage": "RGB565-2x2",
+      "decoded_sha256": "6d5a964ab9a4bf598efcedcbe0432eaa3265fc769c3551cbfe1600223164a74e"
     },
     {
       "name": "theme_heart",
@@ -136,7 +144,7 @@
       "sha256": "e5ff604fdb8a23b88da6126f2c8de940d95daf09b0b8769b75434a9c09573f4e"
     }
   ],
-  "image_bytes": 1871456,
+  "image_bytes": 568520,
   "sources": {
     "rooms": "e48c9dda4367450baec01128896a62e4119e1123a5b78b8e183ad110155e3342",
     "icons": "738fed94711de47afae0ee343c12be3da25dd9285e182556a59d083301ccdfcb",

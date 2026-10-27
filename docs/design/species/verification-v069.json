@@ -1,0 +1,53 @@
+{
+  "version": "0.69.0",
+  "date": "2026-10-27",
+  "base_commit": "3c00199b96adc91e3e244b68e30dd4fd5df047ea",
+  "evidence": "Synthetic characters, production C renderer on host and ESP32-S3 compilation. No new live Beyond read or physical board test.",
+  "javascript_tests": 205,
+  "native_suite": "passed",
+  "lvgl_views": [
+    118,
+    118
+  ],
+  "c_js_species_buffer_comparisons": 13608,
+  "c_js_original_buffer_comparisons": 324,
+  "retained_v068_frames": 372,
+  "unchanged_prior_home_captures": 32,
+  "identical_before_after_background_captures": 160,
+  "native_backup_cross_language_cases": 57,
+  "asan_ubsan": [
+    "UI",
+    "species renderer",
+    "appearance codec",
+    "two-slot RGB565 room cache"
+  ],
+  "prototype": "native companion passed with decoded background",
+  "browser": [
+    "synthetic Goblin proposal and Lizardfolk override",
+    "v14/USB12 persistence and old sheets preserved",
+    "prior animal/gnome proposal and PC editor checks",
+    "simulated Web Serial",
+    "installer with 42 native home captures and separate future class study",
+    "extracted PC package"
+  ],
+  "assets": {
+    "species_frames": 492,
+    "species_bytes_before_huffman": 696828,
+    "species_bytes_after_huffman": 583525,
+    "background_flash_saved": 1628670,
+    "background_cache_psram_bytes": 868624
+  },
+  "firmware": {
+    "bytes": 2526256,
+    "sha256": "4082608347fe98b80072423bbc42dbbf893581d22b1bf6b5c4c8d7ee3a7eec5b",
+    "app_partition_bytes": 4194304,
+    "free_bytes": 1668048
+  },
+  "class_presets": "visual proposal only; not selectable in firmware",
+  "pending": [
+    "actual USB import/restart issue",
+    "physical device performance, touch and buttons",
+    "new live Beyond appearance reading",
+    "modular class outfits/armor/weapons across all species and bodies"
+  ]
+}

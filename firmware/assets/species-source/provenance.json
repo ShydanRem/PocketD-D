@@ -82,6 +82,31 @@
       "key": "tortle",
       "file": "tortle.png",
       "sha256": "c0996ada5b3758a6fbe81c4720f898be2ce7c5c7c874fc98aebf63bbf2cb13e4"
+    },
+    {
+      "key": "goblin",
+      "file": "goblin.png",
+      "sha256": "580278364d67ce9732c43896cb6a60fb2c5bd7101079242169461c8b4563d058"
+    },
+    {
+      "key": "hobgoblin",
+      "file": "hobgoblin.png",
+      "sha256": "272df08ab974f35940efc8c1f12b9f4e3d53b8d042b6d8d36063cb5ffef70ae0"
+    },
+    {
+      "key": "bugbear",
+      "file": "bugbear.png",
+      "sha256": "411a0dc1a710172b448df174e5a7971e79751a221e5a642782d1830a456f12d5"
+    },
+    {
+      "key": "kobold",
+      "file": "kobold.png",
+      "sha256": "2cf7b8fe8607acbb9a4bcdc547a911d264a09ac1e9fce213299895e11dfdf4ae"
+    },
+    {
+      "key": "lizardfolk",
+      "file": "lizardfolk.png",
+      "sha256": "d9865114abb12bf87a48046d747900aae750b78ef40f1a0c54eaa40ca47a7f1e"
     }
   ],
   "layout": "8 columns x 3 rows: masculine idle/blink/heal/hurt; feminine idle/blink/heal/hurt. Rows short/long/shaved; dragonborn crest/horns/smooth.",
@@ -103,6 +128,19 @@
       "reference": "gnome.png",
       "design": "Feline muzzle/rosettes/tail; raven beak and feathers; eagle head/folded wings/talons; turtle skin and visible segmented shell. Masculine/feminine bodies use the same covered practical clothing. Species-appropriate three head styles replace human hair.",
       "revision": "Tabaxi female faces in smooth-style row corrected with ImageGen to retain feline anatomy."
+    },
+    {
+      "version": "0.69.0",
+      "species": [
+        "Goblin",
+        "Hobgoblin",
+        "Bugbear",
+        "Kobold",
+        "Lizardfolk"
+      ],
+      "reference": "gnome.png",
+      "design": "Distinct short goblin/terracotta hobgoblin/furry bugbear/small horned kobold/long-snouted crested lizardfolk. Two bodies, three head styles and four expressions each.",
+      "revision": "Female shaved styles corrected; female bugbear nose/fur preserved; bugbear spacing cleaned for full-body extraction."
     }
   ]
 }

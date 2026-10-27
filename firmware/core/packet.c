@@ -201,7 +201,7 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
     const char *const abilities[]={"FOR","DES","COS","INT","SAG","CAR"};
     const char *const resource_keys[]={"name","current","maximum"};
     const char *const avatar_keys[]={"skin","hair","cloak","style","lineage","body"};
-    int version=number(root,"version",1,11);
+    int version=number(root,"version",1,12);
     cJSON *fmt=cJSON_GetObjectItemCaseSensitive(root,"format");
     if (version<0 || end!=json+size || !keys(root,fields,version==1?10:version==2?11:version==3?12:version==4?13:version==5?14:version==6?15:version<9?16:17) || !cJSON_IsString(fmt) ||
         strcmp(fmt->valuestring,"pocketdd-device") ||
@@ -217,7 +217,7 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
             cloak=number(avatar,"cloak",0,2),style=number(avatar,"style",0,2);
         if(skin<0||hair<0||cloak<0||style<0)goto done;
         candidate.avatar=(pd_avatar){skin,hair,cloak,style};
-        if(version>=10){int lineage=number(avatar,"lineage",0,version>=11?PD_SPECIES_COUNT-1:11),body=number(avatar,"body",0,1);if(lineage<0||body<0)goto done;candidate.lineage=lineage;candidate.body=body;}
+        if(version>=10){int lineage=number(avatar,"lineage",0,version>=12?PD_SPECIES_COUNT-1:version>=11?15:11),body=number(avatar,"body",0,1);if(lineage<0||body<0)goto done;candidate.lineage=lineage;candidate.body=body;}
     }
     if(version>=3&&!training(cJSON_GetObjectItemCaseSensitive(root,"training"),&candidate.training))goto done;
     if(version>=4&&!inventory(cJSON_GetObjectItemCaseSensitive(root,"inventory"),&candidate,version>=8))goto done;

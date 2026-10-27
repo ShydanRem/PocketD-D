@@ -413,7 +413,7 @@ static uint32_t get32(const uint8_t *p) { return (uint32_t)p[0]|((uint32_t)p[1]<
 size_t pd_encoded_size(const pd_state *s){return 8945u+552u*s->magic.count;}
 size_t pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
     memset(out, 0, pd_encoded_size(s));
-    memcpy(out, "PDDV", 4); put32(out+4,gen);
+    memcpy(out, "PDDW", 4); put32(out+4,gen);
     uint8_t *p=out+8;
     memcpy(p,s->name,PD_NAME_BYTES); p+=PD_NAME_BYTES;
     put16(&p,s->hp); put16(&p,s->max_hp); put16(&p,s->temp_hp);
@@ -486,7 +486,7 @@ size_t pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
     *p++=s->scene;*p++=s->lineage;*p++=s->body;
     size_t size=pd_encoded_size(s);put32(out+size-4,pd_crc32(out,size-4));return size;
 }
-static bool record_payments(const uint8_t *data){return !memcmp(data,"PDDS",4)||!memcmp(data,"PDDT",4)||!memcmp(data,"PDDU",4)||!memcmp(data,"PDDV",4);}
+static bool record_payments(const uint8_t *data){return !memcmp(data,"PDDS",4)||!memcmp(data,"PDDT",4)||!memcmp(data,"PDDU",4)||!memcmp(data,"PDDV",4)||!memcmp(data,"PDDW",4);}
 bool pd_record_known(const uint8_t *data,size_t size) {
     if(!data)return false;
     if(size==384&&(!memcmp(data,"PDD1",4)||!memcmp(data,"PDD2",4)))return true;
@@ -511,6 +511,7 @@ bool pd_record_known(const uint8_t *data,size_t size) {
     if(size>=8853&&size<=75093&&!memcmp(data,"PDDM",4)&&data[5123]<=PD_POWERS)return size==8853u+552u*data[5123];
     if(size>=8854&&size<=75094&&!memcmp(data,"PDDN",4)&&data[5123]<=PD_POWERS)return size==8854u+552u*data[5123];
     if(size>=8875&&size<=75115&&!memcmp(data,"PDDO",4)&&data[5123]<=PD_POWERS)return size==8875u+552u*data[5123];
+    if(size>=8945&&size<=PD_RECORD_SIZE&&!memcmp(data,"PDDW",4)&&data[5123]<=PD_POWERS)return size==8945u+552u*data[5123];
     if(size>=8945&&size<=PD_RECORD_SIZE&&!memcmp(data,"PDDV",4)&&data[5123]<=PD_POWERS)return size==8945u+552u*data[5123];
     if(size>=8945&&size<=PD_RECORD_SIZE&&!memcmp(data,"PDDU",4)&&data[5123]<=PD_POWERS)return size==8945u+552u*data[5123];
     if(size>=8943&&size<=PD_RECORD_SIZE&&!memcmp(data,"PDDT",4)&&data[5123]<=PD_POWERS)return size==8943u+552u*data[5123];
@@ -563,7 +564,7 @@ static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint
         pd_magic *m=&candidate.magic;if(*p>1)goto invalid;m->available=*p++;m->count=*p++;m->concentration=*p++;
         for(int i=0;i<9;i++){m->slots[i].current=*p++;m->slots[i].maximum=*p++;m->pact[i].current=*p++;m->pact[i].maximum=*p++;}
         memcpy(candidate.shortcuts,p,3);p+=3;
-        if(memcmp(data,"PDDT",4)&&memcmp(data,"PDDU",4)&&memcmp(data,"PDDV",4)&&(candidate.shortcuts[0]>13||candidate.shortcuts[1]>13||candidate.shortcuts[2]>13))goto invalid;
+        if(memcmp(data,"PDDT",4)&&memcmp(data,"PDDU",4)&&memcmp(data,"PDDV",4)&&memcmp(data,"PDDW",4)&&(candidate.shortcuts[0]>13||candidate.shortcuts[1]>13||candidate.shortcuts[2]>13))goto invalid;
         if((memcmp(data,"PDDP",4)&&(memcmp(data,"PDDQ",4)&&(memcmp(data,"PDDR",4)&&!record_payments(data))))&&(candidate.shortcuts[0]>12||candidate.shortcuts[1]>12||candidate.shortcuts[2]>12))goto invalid;
         for(int i=0;i<m->count;i++) {
             pd_power *v=&m->powers[i];memcpy(v->name,p,41);p+=41;memcpy(v->description,p,PD_POWER_TEXT_BYTES);p+=PD_POWER_TEXT_BYTES;
@@ -648,9 +649,9 @@ static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint
     }
     if((!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data))))){candidate.history_epoch=get32(p);p+=4;}
     if((!memcmp(data,"PDDR",4)||record_payments(data))){memcpy(candidate.turn_names,p,sizeof candidate.turn_names);p+=sizeof candidate.turn_names;}
-    if(!memcmp(data,"PDDT",4)||!memcmp(data,"PDDU",4)||!memcmp(data,"PDDV",4))candidate.scene=*p++;
-    if(!memcmp(data,"PDDU",4)||!memcmp(data,"PDDV",4)){candidate.lineage=*p++;candidate.body=*p++;}
-    if(!memcmp(data,"PDDU",4)&&candidate.lineage>=12)goto invalid;
+    if(!memcmp(data,"PDDT",4)||!memcmp(data,"PDDU",4)||!memcmp(data,"PDDV",4)||!memcmp(data,"PDDW",4))candidate.scene=*p++;
+    if(!memcmp(data,"PDDU",4)||!memcmp(data,"PDDV",4)||!memcmp(data,"PDDW",4)){candidate.lineage=*p++;candidate.body=*p++;}
+    if((!memcmp(data,"PDDU",4)&&candidate.lineage>=12)||(!memcmp(data,"PDDV",4)&&candidate.lineage>=16))goto invalid;
     if (!pd_valid(&candidate)) goto invalid;
     *gen=get32(data+4);return true;
 invalid:

@@ -386,5 +386,129 @@
       "Tortle"
     ],
     "skinAnchor": 140
+  },
+  {
+    "id": 16,
+    "key": "goblin",
+    "name": "Goblin",
+    "height": 43,
+    "skin": [
+      "#91a75d",
+      "#758d54",
+      "#536d4f"
+    ],
+    "skinAnchor": 145,
+    "skinNames": [
+      "Muschio",
+      "Oliva",
+      "Foresta"
+    ],
+    "aliases": [
+      "Goblin"
+    ]
+  },
+  {
+    "id": 17,
+    "key": "hobgoblin",
+    "name": "Hobgoblin",
+    "height": 58,
+    "skin": [
+      "#c96845",
+      "#aa5142",
+      "#965b4c"
+    ],
+    "skinAnchor": 125,
+    "skinNames": [
+      "Rame",
+      "Mattone",
+      "Terracotta"
+    ],
+    "aliases": [
+      "Hobgoblin"
+    ]
+  },
+  {
+    "id": 18,
+    "key": "bugbear",
+    "name": "Bugbear",
+    "height": 60,
+    "hair": false,
+    "skin": [
+      "#a5764b",
+      "#876348",
+      "#60564d"
+    ],
+    "skinAnchor": 116,
+    "skinNames": [
+      "Miele",
+      "Bruno",
+      "Cenere"
+    ],
+    "styles": [
+      "Corto",
+      "Irsuto",
+      "Raso"
+    ],
+    "materialName": "Pelliccia",
+    "aliases": [
+      "Bugbear"
+    ]
+  },
+  {
+    "id": 19,
+    "key": "kobold",
+    "name": "Kobold",
+    "height": 44,
+    "hair": false,
+    "skin": [
+      "#c86745",
+      "#9f5143",
+      "#8f765d"
+    ],
+    "skinAnchor": 140,
+    "skinNames": [
+      "Rame",
+      "Rubino",
+      "Terra"
+    ],
+    "styles": [
+      "Cresta",
+      "Corna",
+      "Liscio"
+    ],
+    "materialName": "Squame",
+    "aliases": [
+      "Kobold",
+      "Coboldo"
+    ]
+  },
+  {
+    "id": 20,
+    "key": "lizardfolk",
+    "name": "Lizardfolk",
+    "height": 60,
+    "hair": false,
+    "skin": [
+      "#7d9854",
+      "#698f77",
+      "#7c8554"
+    ],
+    "skinAnchor": 125,
+    "skinNames": [
+      "Foresta",
+      "Salvia",
+      "Oliva"
+    ],
+    "styles": [
+      "Cresta",
+      "Collare",
+      "Liscio"
+    ],
+    "materialName": "Squame",
+    "aliases": [
+      "Lizardfolk",
+      "Lucertoloide",
+      "Popolo lucertola"
+    ]
   }
 ]

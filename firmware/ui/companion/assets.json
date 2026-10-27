@@ -2,11 +2,13 @@
   "images": [
     {
       "name": "companion_camp",
-      "width": 466,
-      "height": 466,
+      "width": 233,
+      "height": 233,
       "format": "RGB565",
-      "bytes": 434312,
-      "sha256": "45da9a1bc33058d6ca0ed27e418ede421b0bb1a74cfdb6adbc7f0d8a396b1b53"
+      "bytes": 108578,
+      "sha256": "b4c4eecf941fcb1229819fe0b68c1c1298088c4c186d4fdfb5495794a647485f",
+      "storage": "RGB565-2x2",
+      "decoded_sha256": "45da9a1bc33058d6ca0ed27e418ede421b0bb1a74cfdb6adbc7f0d8a396b1b53"
     },
     {
       "name": "companion_hero",
@@ -81,7 +83,7 @@
       "sha256": "94c7c5a608b909da1ab356a2cb4ad9876fe170043b6516fb4ca45e9e064e4b54"
     }
   ],
-  "image_bytes": 561800,
+  "image_bytes": 236066,
   "sources": {
     "camp.png": "67a9dd1d60e3c305e3b0e01cd211f8b8a2679047e2b4678906bf0494c54b565b",
     "hero.png": "ad53ba654a4ff02c65dff909be9fc402495d7a5379360706f815751e36ffafbe",

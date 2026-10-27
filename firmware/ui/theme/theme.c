@@ -1,4 +1,5 @@
 #include "theme.h"
+#include "../room_cache.h"
 #include "visual.h"
 
 static const pd_theme_spec themes[]={
@@ -32,7 +33,7 @@ static lv_obj_t *rect(lv_obj_t *root,int x,int y,int w,int h,uint32_t color,lv_o
 }
 void pd_theme_begin(lv_obj_t *root,pd_theme_kind kind,bool dice_tray){
     current=pd_theme_get(kind);if(!current)return;
-    lv_obj_t *bg=lv_image_create(root);lv_image_set_src(bg,current->room);
+    lv_obj_t *bg=lv_image_create(root);lv_image_set_src(bg,pd_room_image(current->room));
     lv_obj_remove_flag(bg,LV_OBJ_FLAG_CLICKABLE|LV_OBJ_FLAG_SCROLLABLE);
     rect(root,0,0,466,466,0x061923,80,0);
     panel=rect(root,74,96,318,kind==PD_THEME_HISTORY?261:249,0x081c27,230,10);

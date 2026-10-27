@@ -17,6 +17,10 @@ import tempfile
 ROOT = Path(__file__).resolve().parent
 
 
+import sys
+sys.path.insert(0,str(ROOT.parents[2]/'scripts'))
+from rgb565_blocks import fold_2x,expand_2x
+
 def encode(out):
     magick = shutil.which('magick')
     if not magick:
@@ -55,6 +59,8 @@ def encode(out):
         if alpha:
             pixels += rgba[3::4]
         assert len(pixels) == w*h*(3 if alpha else 2)
+        decoded=bytes(pixels);folded=not alpha and w==466 and h==466
+        if folded:pixels=fold_2x(pixels,w,h);w//=2;h//=2
         bodies.append(f'_Alignas(4) static const uint8_t {name}_data[] = {{')
         for i in range(0, len(pixels), 24):
             bodies.append('  '+','.join(f'0x{p:02x}' for p in pixels[i:i+24])+',')
@@ -65,7 +71,7 @@ def encode(out):
                       f'.data_size=sizeof {name}_data,.data={name}_data}};')
         declarations.append(f'extern const lv_image_dsc_t {name};')
         records.append(dict(name=name, width=w, height=h, format=cf, bytes=len(pixels),
-                            sha256=hashlib.sha256(pixels).hexdigest()))
+                            sha256=hashlib.sha256(pixels).hexdigest(),**(dict(storage='RGB565-2x2',decoded_sha256=hashlib.sha256(decoded).hexdigest()) if folded else {})))
 
     asset('companion_camp', 'camp.png', 466, 466)
     asset('companion_hero', 'hero.png', 104, 128, True)
@@ -95,6 +101,7 @@ def verify():
     for record in manifest['images']:
         data = bytes(int(value, 16) for value in re.findall(r'0x([0-9a-f]{2})', arrays[record['name']]))
         assert len(data) == record['bytes'] and hashlib.sha256(data).hexdigest() == record['sha256'], record['name']
+        if record.get('storage')=='RGB565-2x2':assert hashlib.sha256(expand_2x(data,233,233)).hexdigest()==record['decoded_sha256']
     assert sum(record['bytes'] for record in manifest['images']) == manifest['image_bytes']
     print('Committed companion assets: source and encoded hashes verified')
 

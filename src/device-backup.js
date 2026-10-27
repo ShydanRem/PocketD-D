@@ -21,9 +21,9 @@ function record(text,magic,max){
 }
 function text(bytes,start,capacity,empty=false){let end=start;while(end<start+capacity&&bytes[end]){if(bytes[end]<32||bytes[end]>126)fail();end++}if(end===start+capacity||(!empty&&end===start))fail();return String.fromCharCode(...bytes.subarray(start,end))}
 export function inspectDeviceBackup(raw){
-  const packet=envelope(raw),s=record(packet.state,['PDDP','PDDQ','PDDR','PDDS','PDDT','PDDU','PDDV'],75185),h=record(packet.history,'PDH1',2481),b=s.bytes,v=s.view;
-  const expanded=b[3]===86,identity=b[3]===85||expanded,scenery=b[3]===84||identity,named=b[3]===82||b[3]===83||scenery,trailer=(named?63:0)+(identity?3:scenery?1:0);
-  const scene=scenery?b[b.length-(identity?7:5)]:0,lineage=identity?b[b.length-6]:0,body=identity?b[b.length-5]:0;if(scene>2||lineage>=(expanded?avatarSpecies.length:12)||body>1)fail();
+  const packet=envelope(raw),s=record(packet.state,['PDDP','PDDQ','PDDR','PDDS','PDDT','PDDU','PDDV','PDDW'],75185),h=record(packet.history,'PDH1',2481),b=s.bytes,v=s.view;
+  const newest=b[3]===87,expanded=b[3]===86||newest,identity=b[3]===85||expanded,scenery=b[3]===84||identity,named=b[3]===82||b[3]===83||scenery,trailer=(named?63:0)+(identity?3:scenery?1:0);
+  const scene=scenery?b[b.length-(identity?7:5)]:0,lineage=identity?b[b.length-6]:0,body=identity?b[b.length-5]:0;if(scene>2||lineage>=(newest?avatarSpecies.length:expanded?16:12)||body>1)fail();
   if(b.length<8879+trailer||b[5123]>120||b.length!==8879+trailer+552*b[5123])fail();
   // PDD26 packs the local turn subject into the existing timer-selector bytes.
   const turnSubjects=[0,0,0],packed=b[3]===81||named;

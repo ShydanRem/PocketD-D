@@ -1,4 +1,5 @@
 #include "companion.h"
+#include "../room_cache.h"
 #include "companion_assets.h"
 #include <stdio.h>
 #include <string.h>
@@ -201,7 +202,7 @@ void companion_show(lv_obj_t *root,const companion_view *view,companion_handler 
      * as in the production renderer, so repeated refreshes repaint every pixel. */
     lv_obj_set_style_bg_color(root,lv_color_hex(INK),0);lv_obj_set_style_radius(root,0,0);
     lv_obj_set_style_clip_corner(root,false,0);lv_obj_remove_flag(root,LV_OBJ_FLAG_SCROLLABLE);
-    sprite(root,current.background?current.background:&companion_camp,0,0);
+    sprite(root,pd_room_image(current.background?current.background:&companion_camp),0,0);
     if(current.page==COMPANION_HOME)home();else if(current.page==COMPANION_MENU)menu();else vitals();
     started=lv_tick_get();focused=target_count; /* touch use has no artificial focused target */
     if((hero&&current.motion)||feedback_label)timer=lv_timer_create(tick,80,NULL);
