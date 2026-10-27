@@ -1,3 +1,4 @@
+import {avatarSpecies} from '../src/avatar-species.js';
 import {readFileSync} from 'node:fs';
 import assert from 'node:assert/strict';
 import {deviceAvatarPixels} from '../src/device-avatar.js';
@@ -14,9 +15,9 @@ assert.equal(n,native.length);
 console.log(`Avatar: ${n} exact C/JS I8 buffer comparisons passed`);
 
 const speciesNative=readFileSync('firmware/tests/out/species-hashes.txt','utf8').trim().split('\n').map(Number);let count=0;
-for(let lineage=0;lineage<12;lineage++)for(let body=0;body<2;body++)for(let skin=0;skin<3;skin++)for(let hair=0;hair<3;hair++)for(let cloak=0;cloak<3;cloak++)for(let style=0;style<3;style++)for(let pose=0;pose<4;pose++){
+for(let lineage=0;lineage<avatarSpecies.length;lineage++)for(let body=0;body<2;body++)for(let skin=0;skin<3;skin++)for(let hair=0;hair<3;hair++)for(let cloak=0;cloak<3;cloak++)for(let style=0;style<3;style++)for(let pose=0;pose<4;pose++){
  const {colors,pixels}=deviceAvatarPixels({lineage,body,skin,hair,cloak,style},pose),bytes=new Uint8Array(1024+pixels.length);
  colors.forEach((color,i)=>bytes.set([color&255,color>>8&255,color>>16,i?255:0],i*4));bytes.set(pixels,1024);
  assert.equal(crc32(bytes),speciesNative[count++],`${lineage}/${body}/${skin}/${hair}/${cloak}/${style}/${pose}`);
 }
-assert.equal(count,speciesNative.length);console.log(`Species: ${count} exact C/JS comparisons, all 12 families, 2 bodies, 81 palettes/cuts and 4 poses passed`);
+assert.equal(count,speciesNative.length);console.log(`Species: ${count} exact C/JS comparisons, all ${avatarSpecies.length} families, 2 bodies, 81 palettes/cuts and 4 poses passed`);

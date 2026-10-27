@@ -133,15 +133,16 @@ int main(int argc,char **argv) {
         assert(out.avatar.skin==2&&out.avatar.hair==1&&out.avatar.cloak==2&&out.avatar.style==1);
         assert(!pd_parse_packet(json,n-1,&out));
         cJSON *base=cJSON_ParseWithLength(json,n),*v;assert(base);
-        for(unsigned lineage=0;lineage<12;lineage++)for(unsigned body=0;body<2;body++){
-            v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),10);
+        for(unsigned lineage=0;lineage<PD_SPECIES_COUNT;lineage++)for(unsigned body=0;body<2;body++){
+            v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),lineage>=12?11:10);
             cJSON *a=cJSON_GetObjectItemCaseSensitive(v,"avatar");cJSON_AddNumberToObject(a,"lineage",lineage);cJSON_AddNumberToObject(a,"body",body);
             char *encoded=cJSON_PrintUnformatted(v);assert(pd_parse_packet(encoded,strlen(encoded),&out)&&out.lineage==lineage&&out.body==body);cJSON_free(encoded);
-            cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(a,"lineage"),12);reject(v);
+            if(lineage>=12){cJSON *old=cJSON_Duplicate(v,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(old,"version"),10);reject(old);}
+            cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(a,"lineage"),PD_SPECIES_COUNT);reject(v);
         }
         v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),10);reject(v);
         const char *numeric_keys[]={"version","level","hp","maxHp","tempHp","armorClass"};
-        double bad[]={11,21,33,0,-1,41};
+        double bad[]={12,21,33,0,-1,41};
         for (int i=0;i<6;i++) {
             v=cJSON_Duplicate(base,true);cJSON_ReplaceItemInObjectCaseSensitive(v,numeric_keys[i],cJSON_CreateNumber(bad[i]));reject(v);
         }

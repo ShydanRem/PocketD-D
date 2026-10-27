@@ -64,7 +64,7 @@ int main(int argc,char **argv){
     /* Three profile modes pack into the old stage byte. No size/partition change. */
     setup();s.magic.count=120;for(unsigned i=1;i<120;i++)s.magic.powers[i]=(pd_power){.name="Synthetic spell",.flags=PD_PREPARED};
     for(unsigned i=0;i<3;i++){p.stage=i?1:0;p.payment=i==1?PD_PAYMENT_ALL:PD_PAYMENT_CHOOSE;assert(pd_reduction_profile_set(&s,i,p));}
-    assert(pd_turn_name_set(&s,1,"Ally A"));size_t n=pd_encode(&s,60,record);uint32_t generation=0;assert(n==PD_RECORD_SIZE&&!memcmp(record,"PDDU",4)&&pd_decode(record,n,&next,&generation)&&generation==60&&!memcmp(&s,&next,sizeof s));
+    assert(pd_turn_name_set(&s,1,"Ally A"));size_t n=pd_encode(&s,60,record);uint32_t generation=0;assert(n==PD_RECORD_SIZE&&!memcmp(record,"PDDV",4)&&pd_decode(record,n,&next,&generation)&&generation==60&&!memcmp(&s,&next,sizeof s));
     pd_history h;pd_history_reset(&h,s.history_epoch);size_t size;char *json=pd_backup_encode(&s,&h,&size);assert(json&&pd_backup_decode(json,size,&restored)&&!memcmp(&s,&restored.state,sizeof s));if(argc==2){FILE *f=fopen(argv[1],"wb");assert(f&&fwrite(json,1,size,f)==size&&!fclose(f));}free(json);
     for(unsigned profile=0;profile<3;profile++){pd_encode(&s,60,record);record[8333+552*120+profile*10]=4;crc(n);before=next;generation=59;assert(!pd_decode(record,n,&next,&generation)&&generation==59&&!memcmp(&next,&before,sizeof next));}
     pd_encode(&s,60,record);record[3]='R';n-=3;crc(n);assert(!pd_decode(record,n,&next,&generation));

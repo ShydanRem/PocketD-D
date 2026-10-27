@@ -7,13 +7,13 @@ int main(int argc,char **argv) {
     if(argc==2&&!strcmp(argv[1],"--species-hashes")){
         struct {uint8_t before[8],image[PD_AVATAR_LARGE_BYTES],after[8];} target;
         memset(&target,0xa5,sizeof target);uint8_t native[PD_AVATAR_IMAGE_BYTES];
-        for(unsigned lineage=0;lineage<12;lineage++)for(unsigned body=0;body<2;body++)for(unsigned skin=0;skin<3;skin++)for(unsigned hair=0;hair<3;hair++)for(unsigned cloak=0;cloak<3;cloak++)for(unsigned style=0;style<3;style++)for(unsigned pose=0;pose<4;pose++){
+        for(unsigned lineage=0;lineage<PD_SPECIES_COUNT;lineage++)for(unsigned body=0;body<2;body++)for(unsigned skin=0;skin<3;skin++)for(unsigned hair=0;hair<3;hair++)for(unsigned cloak=0;cloak<3;cloak++)for(unsigned style=0;style<3;style++)for(unsigned pose=0;pose<4;pose++){
             pd_avatar a={skin,hair,cloak,style};assert(pd_avatar_variant_image(&a,lineage,body,pose,native));assert(pd_avatar_variant_large(&a,lineage,body,pose,target.image));
             for(unsigned i=0;i<8;i++)assert(target.before[i]==0xa5&&target.after[i]==0xa5);
             for(unsigned y=0;y<120;y++)for(unsigned x=0;x<96;x++)assert(target.image[1024+y*96+x]==native[1024+(y/2)*48+x/2]);
             printf("%u\n",pd_crc32(native,sizeof native));
         }
-        pd_avatar a={0};assert(!pd_avatar_variant_image(&a,12,0,0,native));assert(!pd_avatar_variant_image(&a,0,2,0,native));return 0;
+        pd_avatar a={0};assert(!pd_avatar_variant_image(&a,PD_SPECIES_COUNT,0,0,native));assert(!pd_avatar_variant_image(&a,0,2,0,native));return 0;
     }
     bool hashes_only=argc==2&&!strcmp(argv[1],"--hashes");
     struct { uint8_t before[8],image[PD_AVATAR_IMAGE_BYTES],after[8]; } buffer;

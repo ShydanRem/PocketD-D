@@ -37,6 +37,7 @@ bool pd_avatar_hero(const pd_avatar *a,unsigned pose,uint8_t out[PD_AVATAR_HERO_
 }
 
 #include "../assets/species_atlas.h"
+const char *pd_species_surface(unsigned lineage){return lineage<PD_SPECIES_COUNT?pd_species_surface_names[lineage]:"Non valido";}
 const char *pd_species_name(unsigned lineage){return lineage<PD_SPECIES_COUNT?pd_species_names[lineage]:"Specie non valida";}
 const char *pd_body_name(unsigned body){return body==0?"Maschile":body==1?"Femminile":"Non valido";}
 bool pd_species_hair(unsigned lineage){return lineage<PD_SPECIES_COUNT&&pd_species_has_hair[lineage];}
@@ -45,15 +46,31 @@ const char *pd_species_choice(unsigned lineage,unsigned field,unsigned value){
     if(lineage>=PD_SPECIES_COUNT||value>2||field>3)return "Non valido";
     return field==0?pd_species_skin_names[lineage][value]:field==1?pd_species_hair_names[lineage][value]:field==2?cloaks[value]:pd_species_style_names[lineage][value];
 }
-static bool species_decode(const pd_species_frame *frame,uint8_t *pixels){
-    const uint8_t *p=pd_species_data+frame->offset,*end=p+frame->size;size_t at=0;
-    while(p<end){
-        unsigned token=*p++,count=token<128?token+1:token-127;
-        if(at+count>PD_AVATAR_WIDTH*PD_AVATAR_HEIGHT||(size_t)(end-p)<(token<128?count:1))return false;
-        for(unsigned i=0;i<count;i++){uint8_t value=token<128?*p++:*p;if(frame->delta)pixels[at++]^=value;else pixels[at++]=value;}
-        if(token>=128)p++;
+typedef struct {const uint8_t *data;size_t bits,limit;unsigned remaining;} species_reader;
+static bool species_read(species_reader *r,uint8_t *out){
+    if(!r->remaining)return false;
+    int node=0;
+    while(node>=0){
+        if(r->bits>=r->limit||node>=(int)(sizeof pd_species_huffman/sizeof *pd_species_huffman))return false;
+        unsigned bit=(r->data[r->bits/8]>>(7-r->bits%8))&1;r->bits++;
+        node=pd_species_huffman[node][bit];
     }
-    return at==PD_AVATAR_WIDTH*PD_AVATAR_HEIGHT;
+    *out=(uint8_t)(-node-1);r->remaining--;return true;
+}
+static bool species_decode(const pd_species_frame *frame,uint8_t *pixels){
+    if(frame->offset>sizeof pd_species_data||frame->packed_size>sizeof pd_species_data-frame->offset)return false;
+    species_reader r={pd_species_data+frame->offset,0,(size_t)frame->packed_size*8,frame->size};size_t at=0;
+    while(r.remaining){
+        uint8_t token,value=0;if(!species_read(&r,&token))return false;
+        unsigned count=token<128?token+1:token-127;
+        if(at+count>PD_AVATAR_WIDTH*PD_AVATAR_HEIGHT)return false;
+        if(token>=128&&!species_read(&r,&value))return false;
+        for(unsigned i=0;i<count;i++){
+            if(token<128&&!species_read(&r,&value))return false;
+            if(frame->delta)pixels[at++]^=value;else pixels[at++]=value;
+        }
+    }
+    return at==PD_AVATAR_WIDTH*PD_AVATAR_HEIGHT&&(r.bits+7)/8==frame->packed_size;
 }
 bool pd_avatar_variant_image(const pd_avatar *a,unsigned lineage,unsigned body,unsigned pose,uint8_t out[PD_AVATAR_IMAGE_BYTES]){
     if(lineage>=PD_SPECIES_COUNT||body>1)return false;

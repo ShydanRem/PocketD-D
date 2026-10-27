@@ -11,6 +11,7 @@ bool pd_avatar_image(const pd_avatar *avatar,unsigned pose,uint8_t out[PD_AVATAR
 /* Pre-expanded sizes for LVGL: 2x home; nearest 3/2 appearance; no image transform. */
 bool pd_avatar_large(const pd_avatar *avatar,unsigned pose,uint8_t out[PD_AVATAR_LARGE_BYTES]);
 bool pd_avatar_hero(const pd_avatar *avatar,unsigned pose,uint8_t out[PD_AVATAR_HERO_BYTES]);
+const char *pd_species_surface(unsigned lineage);
 const char *pd_species_name(unsigned lineage);
 const char *pd_body_name(unsigned body);
 bool pd_species_hair(unsigned lineage);

@@ -62,13 +62,47 @@
       "key": "aasimar",
       "file": "aasimar.png",
       "sha256": "8d354777ac41552a63d52dbbc49849c1cc23c933a00ba731ca49fe0713ebb6d6"
+    },
+    {
+      "key": "tabaxi",
+      "file": "tabaxi.png",
+      "sha256": "95bea696e9326301b1d9e65f1d091b9ad47015abdc8737550ef10663ccbe4e36"
+    },
+    {
+      "key": "kenku",
+      "file": "kenku.png",
+      "sha256": "8a7694bf7d316f68fea4bc33bf7129b8eda9d1014c108296e3567a7cfbabe7dd"
+    },
+    {
+      "key": "aarakocra",
+      "file": "aarakocra.png",
+      "sha256": "b044d1ad30dcfeb16e0c9d2ee22a39dfcffd8028e49fced3d5971166959d56cc"
+    },
+    {
+      "key": "tortle",
+      "file": "tortle.png",
+      "sha256": "c0996ada5b3758a6fbe81c4720f898be2ce7c5c7c874fc98aebf63bbf2cb13e4"
     }
   ],
   "layout": "8 columns x 3 rows: masculine idle/blink/heal/hurt; feminine idle/blink/heal/hurt. Rows short/long/shaved; dragonborn crest/horns/smooth.",
-  "process": "Original transparent PNGs retained unchanged. generate-species-art.py detects cell bounds, samples nearest at 48x60, indexes materials and encodes PackBits with optional XOR. Legacy masculine human uses existing approved atlas.",
+  "process": "Original transparent PNGs retained unchanged. generate-species-art.py samples new sheets to 48x60, preserves existing masks and all their used colors, then encodes shared Huffman/PackBits streams with optional XOR. No image is redrawn by normalization code.",
   "limitations": [
     "Generated expressions and body differences vary in subtlety between species; the runtime adds independent HP feedback.",
     "Visual families only: aliases share anatomy, not all subspecies have unique art.",
     "No outfit/equipment/class interpretation, no personal image download, no gender inferred from name."
+  ],
+  "extensions": [
+    {
+      "version": "0.68.0",
+      "species": [
+        "Tabaxi",
+        "Kenku",
+        "Aarakocra",
+        "Tortle"
+      ],
+      "reference": "gnome.png",
+      "design": "Feline muzzle/rosettes/tail; raven beak and feathers; eagle head/folded wings/talons; turtle skin and visible segmented shell. Masculine/feminine bodies use the same covered practical clothing. Species-appropriate three head styles replace human hair.",
+      "revision": "Tabaxi female faces in smooth-style row corrected with ImageGen to retain feline anatomy."
+    }
   ]
 }

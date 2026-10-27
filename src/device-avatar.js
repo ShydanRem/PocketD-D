@@ -8,9 +8,10 @@ export function deviceAvatarPixels(avatar,pose=0){
   const {lineage,body}=avatarIdentity(avatar);
   if(lineage||body){
     const decode=frame=>{
-      const bytes=Uint8Array.from(frame.bytes.match(/../g),v=>Number.parseInt(v,16)),pixels=new Uint8Array(48*60);let at=0;
-      for(let p=0;p<bytes.length;){const token=bytes[p++],count=token<128?token+1:token-127;if(at+count>pixels.length)throw new Error('Sprite non valido');if(token<128){pixels.set(bytes.subarray(p,p+count),at);p+=count;}else pixels.fill(bytes[p++],at,at+count);at+=count;}
-      if(at!==pixels.length)throw new Error('Sprite incompleto');return pixels;
+      const bytes=Uint8Array.from(frame.bytes.match(/../g),v=>Number.parseInt(v,16)),pixels=new Uint8Array(48*60);let at=0,bit=0,remaining=frame.size;
+      const read=()=>{if(!remaining--)throw new Error('Sprite incompleto');let node=0;while(node>=0){if(bit>=bytes.length*8||!speciesMasks.tree[node])throw new Error('Sprite non valido');node=speciesMasks.tree[node][(bytes[bit>>3]>>(7-(bit++&7)))&1];}return -node-1;};
+      while(remaining){const token=read(),count=token<128?token+1:token-127;if(at+count>pixels.length)throw new Error('Sprite non valido');if(token<128){for(let i=0;i<count;i++)pixels[at++]=read();}else{const value=read();pixels.fill(value,at,at+count);at+=count;}}
+      if(at!==pixels.length||Math.ceil(bit/8)!==bytes.length)throw new Error('Sprite incompleto');return pixels;
     };
     const poses=speciesMasks.profiles[lineage][body][avatar.style],frame=poses[pose],pixels=decode(frame);
     if(frame.xor){const base=decode(poses[0]);for(let i=0;i<pixels.length;i++)pixels[i]^=base[i];}

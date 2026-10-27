@@ -151,6 +151,18 @@ class BackupTests(unittest.TestCase):
             backup.restore(port, b'{}', lambda _: None)
         self.assertEqual(port.sent, b'')
 
+    def test_catalog_generations_preserve_old_species_and_reject_new_ids_in_old_tag(self):
+        packet = json.loads(RAW)
+        original = bytearray(base64.b64decode(packet['state']))
+        for tag, lineage, valid in [('U', 11, True), ('U', 12, False), ('V', 12, True), ('V', 15, True), ('V', 16, False), ('W', 0, False)]:
+            state = original[:-4] + bytes(66) + bytes(4)
+            state[3] = ord(tag); state[-7] = 2; state[-6] = lineage; state[-5] = 1
+            state[-4:] = zlib.crc32(state[:-4]).to_bytes(4, 'little')
+            packet['state'] = base64.b64encode(state).decode()
+            if valid: backup.validate(json.dumps(packet).encode())
+            else:
+                with self.assertRaises(ValueError): backup.validate(json.dumps(packet).encode())
+
 
 if __name__ == '__main__':
     unittest.main()

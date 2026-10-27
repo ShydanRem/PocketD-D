@@ -1,5 +1,9 @@
 # Backup dal dispositivo al PC — v0.53
 
+> Aggiornamento v0.68: [quattro nuove famiglie e compressione senza perdita](AVATAR-SPECIE-ANIMALI.md).
+> Catalogo a 16 specie/32 silhouette, PDD31/PDDV; USB11 e backup PC v13
+> per i nuovi ID. Formati precedenti conservati; collaudo fisico ancora aperto.
+
 > Aggiornamento v0.67: [specie, silhouette e proposta da Beyond](AVATAR-SPECIE.md).
 > Scrittura nativa PDD30/PDDU; USB10 e backup PC v12 per i nuovi avatar,
 > con lettura dei formati precedenti. Le prove reali pregresse non attestano

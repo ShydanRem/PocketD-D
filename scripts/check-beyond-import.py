@@ -19,7 +19,7 @@ const seed=addCharacter(createLibrary({...initialState(),name:'Prima scheda',hp:
 const server=createBeyondLabServer({appRoot:new URL('./dist/',import.meta.url),probe:async id=>{
   await new Promise(resolve=>setTimeout(resolve,250));
   if(id==='999')throw Object.assign(new Error('Rete sintetica non disponibile'),{code:'NETWORK_ERROR'});
-  const p=beyondCoreFixture();p.data.id=Number(id);p.data.name='Sonda <b>x</b>';p.data.race={...p.data.race,baseName:'Gnome',fullName:'Forest Gnome'};p.data.gender='Female';
+  const p=beyondCoreFixture();p.data.id=Number(id);p.data.name='Sonda <b>x</b>';p.data.race={...p.data.race,baseName:'Gnome',fullName:'Forest Gnome'};p.data.gender='Female';if(id==='333333')p.data.race={baseName:'Tabaxi',fullName:'Tabaxi'};
   p.data.inventory[0].definition.name='<img src=x onerror=alert(1)>';
   if(id==='222222')p.data.modifiers.feat.push({type:'set',subType:'strength-score',value:19});
   return {...convertBeyond(p,id),testFixture:true,transport:{status:200,bytes:1234,elapsedMs:250,authenticated:false}};
@@ -86,6 +86,15 @@ try:
         with page.expect_download() as download:page.locator('[data-action=export-library]').click()
         exported=json.loads(Path(download.value.path()).read_text());assert exported==imported
         page.locator('[data-library-close]').click()
+        # New species proposal/manual override: read-only until confirm; v13 and USB11 survive reload.
+        before_animals=raw();preview('333333');expect(page.locator('[data-lineage]')).to_have_value('12');expect(page.locator('[data-body]')).to_have_value('1');assert raw()==before_animals
+        page.locator('[data-lineage]').select_option('15');accept();expect(page.locator('.beyond-import')).to_have_count(0);animals=json.loads(raw());assert animals['characters'][:3]==imported['characters'];animal=animals['characters'][3]['state'];assert animal['avatar']['lineage']==15 and animal['avatar']['body']==1 and animal['version']==13
+        page.reload();assert json.loads(raw())['characters'][3]['state']==animal
+        page.locator('[data-action=device-export]').click();expect(page.locator('[data-device-avatar]')).to_contain_text('Tortle');expect(page.locator('.device-export-avatar svg')).to_have_count(1)
+        with page.expect_download() as animal_download:page.locator('[data-device-download]').click()
+        animal_packet=json.loads(Path(animal_download.value.path()).read_text());assert animal_packet['version']==11 and animal_packet['avatar']['lineage']==15;expect(page.locator('[data-device-close]')).to_have_count(0)
+        page.locator('[data-action=edit]').click();editor=page.locator('.hero-editor-dialog');expect(editor.locator('[name=hair]').first).to_be_disabled();expect(editor).to_contain_text('Squame')
+        editor.locator('[name=lineage]').select_option('13');expect(editor).to_contain_text('Piumaggio');editor.locator('[name=lineage]').select_option('12');expect(editor).to_contain_text('Pelliccia');page.screenshot(path=str(OUTPUT/'tabaxi-female-editor.png'));editor.get_by_role('button',name='Annulla',exact=True).click()
         # Closing an inspected preview preserves the already saved collection.
         current=raw();preview();page.locator('[data-close]').click();assert raw()==current
         # A stale tab cannot overwrite a second tab's newer collection.

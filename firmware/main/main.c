@@ -978,10 +978,10 @@ static void act(intptr_t action) {
     }
     else if(action>=4310&&action<=4312&&page==AVATAR_EDIT){
         if(appearance_field<4){uint8_t *fields[]={&appearance_draft.skin,&appearance_draft.hair,&appearance_draft.cloak,&appearance_draft.style};*fields[appearance_field]=action-4310;}
-        else if(appearance_field==4)appearance_lineage=appearance_group*3+action-4310;
+        else if(appearance_field==4){unsigned lineage=appearance_group*3+action-4310;if(lineage>=PD_SPECIES_COUNT)return;appearance_lineage=lineage;}
         else if(action<4312)appearance_body=action-4310;
     }
-    else if(action==4330&&page==AVATAR_EDIT&&appearance_field==4)appearance_group=(appearance_group+1)%4;
+    else if(action==4330&&page==AVATAR_EDIT&&appearance_field==4)appearance_group=(appearance_group+1)%((PD_SPECIES_COUNT+2)/3);
     else if((action==4320||action==4321)&&page==SCENE_EDIT)appearance_scene=(appearance_scene+(action==4320?PD_SCENES-1:1))%PD_SCENES;
     else if (action==51) {
         next.idle_animation=!state.idle_animation;
@@ -2860,11 +2860,11 @@ static void render_appearance_editor(void){
     char caption[80];
     avatar_show(&appearance_draft,185,page==SCENE_EDIT?208:175,root,4,true);
     if(page==AVATAR_EDIT){
-        snprintf(caption,sizeof caption,"%s %u/6",fields[appearance_field],appearance_field+1);label(caption,83,111,204,true);
+        snprintf(caption,sizeof caption,"%s %u/6",appearance_field==0?pd_species_surface(appearance_lineage):appearance_field==3&&!pd_species_hair(appearance_lineage)?"Testa":fields[appearance_field],appearance_field+1);label(caption,83,111,204,true);
         appearance_button(appearance_field==4?"Altre":"Scena",299,99,84,44,appearance_field==4?4330:4304,true);
         appearance_button("<",83,214,48,48,4301,true);appearance_button(">",335,214,48,48,4303,true);
         const unsigned chosen[]={appearance_draft.skin,appearance_draft.hair,appearance_draft.cloak,appearance_draft.style,appearance_lineage,appearance_body};
-        for(unsigned i=0;i<(appearance_field==5?2u:3u);i++){
+        for(unsigned i=0;i<(appearance_field==5?2u:appearance_field==4?(PD_SPECIES_COUNT-appearance_group*3<3?PD_SPECIES_COUNT-appearance_group*3:3):3u);i++){
             unsigned value=appearance_field==4?appearance_group*3+i:i;
             const char *name=appearance_field==4?pd_species_name(value):appearance_field==5?pd_body_name(value):pd_species_choice(appearance_lineage,appearance_field,value);
             lv_obj_t *b=appearance_button(name,83+i*104,299,92,44,4310+i,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_14,0);
@@ -3235,7 +3235,7 @@ static void usb_task(void *unused) {
             if(c=='\n') {
                 if(!overflow && used) {
                     line[used]=0;
-                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 10\n");
+                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 11\n");
                     else if(!strcmp(line,"PDD BACKUP HELLO"))reply("PDD BACKUP_READY 1\n");
                     else if(!strcmp(line,"PDD DIAGNOSTICS GET 1")){uint8_t request=1;if(xQueueSend(diagnostic_requests,&request,0)!=pdPASS)reply("PDD ERROR busy\n");}
                     else if(!strcmp(line,"PDD BACKUP GET 1")){pd_backup *request=NULL;if(xQueueSend(backup_packets,&request,0)!=pdPASS)reply("PDD ERROR busy\n");}

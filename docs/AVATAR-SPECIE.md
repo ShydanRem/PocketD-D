@@ -1,5 +1,9 @@
 # Avatar per specie e silhouette — v0.67
 
+> Aggiornamento v0.68: [quattro nuove famiglie e compressione senza perdita](AVATAR-SPECIE-ANIMALI.md).
+> Catalogo a 16 specie/32 silhouette, PDD31/PDDV; USB11 e backup PC v13
+> per i nuovi ID. Formati precedenti conservati; collaudo fisico ancora aperto.
+
 Lo gnomo della tavola è stato ridisegnato con naso piccolo e proporzioni più
 armoniose. Le altre famiglie approvate sono state usate come riferimento per
 sprite trasparenti effettivi, integrati nel PC e nel firmware.

@@ -1,3 +1,4 @@
+import {avatarSpecies} from './avatar-species.js';
 export const DEVICE_BACKUP_MAX=110000;
 const fail=()=>{throw new Error('Backup dispositivo non valido o non supportato')};
 export function crc32(bytes){let c=0xffffffff;for(const b of bytes){c^=b;for(let i=0;i<8;i++)c=(c>>>1)^((c&1)?0xedb88320:0)}return (c^0xffffffff)>>>0}
@@ -20,9 +21,9 @@ function record(text,magic,max){
 }
 function text(bytes,start,capacity,empty=false){let end=start;while(end<start+capacity&&bytes[end]){if(bytes[end]<32||bytes[end]>126)fail();end++}if(end===start+capacity||(!empty&&end===start))fail();return String.fromCharCode(...bytes.subarray(start,end))}
 export function inspectDeviceBackup(raw){
-  const packet=envelope(raw),s=record(packet.state,['PDDP','PDDQ','PDDR','PDDS','PDDT','PDDU'],75185),h=record(packet.history,'PDH1',2481),b=s.bytes,v=s.view;
-  const identity=b[3]===85,scenery=b[3]===84||identity,named=b[3]===82||b[3]===83||scenery,trailer=(named?63:0)+(identity?3:scenery?1:0);
-  const scene=scenery?b[b.length-(identity?7:5)]:0,lineage=identity?b[b.length-6]:0,body=identity?b[b.length-5]:0;if(scene>2||lineage>11||body>1)fail();
+  const packet=envelope(raw),s=record(packet.state,['PDDP','PDDQ','PDDR','PDDS','PDDT','PDDU','PDDV'],75185),h=record(packet.history,'PDH1',2481),b=s.bytes,v=s.view;
+  const expanded=b[3]===86,identity=b[3]===85||expanded,scenery=b[3]===84||identity,named=b[3]===82||b[3]===83||scenery,trailer=(named?63:0)+(identity?3:scenery?1:0);
+  const scene=scenery?b[b.length-(identity?7:5)]:0,lineage=identity?b[b.length-6]:0,body=identity?b[b.length-5]:0;if(scene>2||lineage>=(expanded?avatarSpecies.length:12)||body>1)fail();
   if(b.length<8879+trailer||b[5123]>120||b.length!==8879+trailer+552*b[5123])fail();
   // PDD26 packs the local turn subject into the existing timer-selector bytes.
   const turnSubjects=[0,0,0],packed=b[3]===81||named;

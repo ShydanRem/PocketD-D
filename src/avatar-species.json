@@ -278,5 +278,113 @@
       "Oro",
       "Notte"
     ]
+  },
+  {
+    "id": 12,
+    "key": "tabaxi",
+    "name": "Tabaxi",
+    "height": 58,
+    "hair": false,
+    "skin": [
+      "#d4a157",
+      "#aeb7bc",
+      "#726d77"
+    ],
+    "skinNames": [
+      "Oro",
+      "Argento",
+      "Cenere"
+    ],
+    "styles": [
+      "Corto",
+      "Gorgiera",
+      "Liscio"
+    ],
+    "materialName": "Pelliccia",
+    "aliases": [
+      "Tabaxi"
+    ],
+    "skinAnchor": 165
+  },
+  {
+    "id": 13,
+    "key": "kenku",
+    "name": "Kenku",
+    "height": 54,
+    "hair": false,
+    "skin": [
+      "#41455e",
+      "#5a6474",
+      "#625361"
+    ],
+    "skinNames": [
+      "Corvino",
+      "Ardesia",
+      "Prugna"
+    ],
+    "styles": [
+      "Ciuffo",
+      "Cresta",
+      "Liscio"
+    ],
+    "materialName": "Piumaggio",
+    "aliases": [
+      "Kenku"
+    ],
+    "skinAnchor": 65
+  },
+  {
+    "id": 14,
+    "key": "aarakocra",
+    "name": "Aarakocra",
+    "height": 60,
+    "hair": false,
+    "skin": [
+      "#e3d4b9",
+      "#bccbd5",
+      "#c1b597"
+    ],
+    "skinNames": [
+      "Avorio",
+      "Ghiaccio",
+      "Sabbia"
+    ],
+    "styles": [
+      "Ciuffo",
+      "Ventaglio",
+      "Liscio"
+    ],
+    "materialName": "Piumaggio",
+    "aliases": [
+      "Aarakocra"
+    ],
+    "skinAnchor": 210
+  },
+  {
+    "id": 15,
+    "key": "tortle",
+    "name": "Tortle",
+    "height": 55,
+    "hair": false,
+    "skin": [
+      "#8a9d59",
+      "#87978a",
+      "#a49e62"
+    ],
+    "skinNames": [
+      "Oliva",
+      "Salvia",
+      "Sabbia"
+    ],
+    "styles": [
+      "Liscio",
+      "Scuti",
+      "Placche"
+    ],
+    "materialName": "Squame",
+    "aliases": [
+      "Tortle"
+    ],
+    "skinAnchor": 140
   }
 ]

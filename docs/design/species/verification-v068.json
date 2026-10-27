@@ -1,0 +1,49 @@
+{
+  "version": "0.68.0",
+  "date": "2026-10-27",
+  "base_commit": "cee8125c638a0c0e302ed0c2f8f497f47d7092de",
+  "evidence": "Synthetic character fixtures, production C renderer executed on host and actual ESP32-S3 compilation. No live Beyond read or physical board test in this change.",
+  "javascript_tests": 203,
+  "native_suite": "passed",
+  "lvgl_views": [
+    118,
+    118
+  ],
+  "c_js_species_buffer_comparisons": 10368,
+  "c_js_legacy_buffer_comparisons": 324,
+  "retained_v067_frames": 276,
+  "native_backup_cross_language_cases": 47,
+  "asan_ubsan": [
+    "UI",
+    "Huffman/PackBits species renderer",
+    "appearance codec"
+  ],
+  "browser": [
+    "synthetic Tabaxi proposal, Tortle manual override and confirmation",
+    "other sheets unchanged",
+    "v13 backup/reload and USB11 export",
+    "hairless material labels and cancel",
+    "old import, conflict, capacity and corruption guards",
+    "simulated USB",
+    "installer with 32 native home captures",
+    "extracted PC package"
+  ],
+  "assets": {
+    "frames": 372,
+    "bytes_without_huffman": 539420,
+    "bytes_with_huffman": 454108,
+    "saved": 85312
+  },
+  "firmware": {
+    "bytes": 4020352,
+    "sha256": "5e2dab853830340b931ec9817608c01d1642cccc0a0f838452062e8bec7fb4e0",
+    "app_partition_bytes": 4194304,
+    "free_bytes": 173952
+  },
+  "pending": [
+    "physical sprite performance, buttons and touch",
+    "actual USB import/restart issue",
+    "new live Beyond appearance proposal",
+    "additional species and per-subspecies designs"
+  ]
+}
