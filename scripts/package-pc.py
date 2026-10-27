@@ -26,6 +26,7 @@ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as z:
 8. Prepara per dispositivo (USB) -> Invia al dispositivo via USB -> conferma sul display.
 
 L'app e gia compilata: non servono npm install o una compilazione del firmware.
+Punteggi fissati e massimi delle caratteristiche riconciliati; bonus personalizzato dopo il limite.
 Cariche, consumabili e cure esplicite vengono riconciliati; recuperi ambigui restano manuali.
 Un profilo difese richiede firmware 0.71 / USB14: aggiorna PocketD-D conservando i dati.
 La conversione Beyond resta parziale; personaggi privati non sono supportati.

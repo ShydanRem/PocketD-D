@@ -1,5 +1,10 @@
 # Beyond: inventario operativo e difese — v0.71
 
+> Aggiornamento v0.72: [punteggi fissati, massimi e bonus delle caratteristiche](BEYOND-CARATTERISTICHE.md).
+> Supportate concessioni esplicite riconciliate; valori derivati verificati anche nel parser C.
+> Nessun nuovo formato. Restano restrizioni, origini e override non supportati; le prove datate sotto mantengono il proprio contesto.
+
+
 27 ottobre 2026. Importazione dal PC con il connettore PocketD-D esistente,
 senza Foundry, autenticazione privata o scritture verso Beyond. Il dispositivo
 rimane il prodotto principale; il PC prepara e configura la scheda.

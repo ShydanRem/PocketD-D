@@ -21,7 +21,7 @@ const server=createBeyondLabServer({appRoot:new URL('./dist/',import.meta.url),p
   if(id==='999')throw Object.assign(new Error('Rete sintetica non disponibile'),{code:'NETWORK_ERROR'});
   const p=beyondCoreFixture();p.data.id=Number(id);p.data.name='Sonda <b>x</b>';p.data.race={...p.data.race,baseName:'Gnome',fullName:'Forest Gnome'};p.data.gender='Female';if(id==='555555')p.data.classes[0].definition={name:'Ranger'};if(id==='333333')p.data.race={baseName:'Tabaxi',fullName:'Tabaxi'};if(id==='444444')p.data.race={baseName:'Goblin',fullName:'Goblin'};
   p.data.inventory[0].definition.name='<img src=x onerror=alert(1)>';
-  if(id==='222222')p.data.modifiers.feat.push({type:'set',subType:'strength-score',value:19});
+  if(id==='222222')p.data.modifiers.feat.push({type:'set',subType:'strength-score',value:19,restriction:'while raging'});
   return {...convertBeyond(p,id),testFixture:true,transport:{status:200,bytes:1234,elapsedMs:250,authenticated:false}};
 }});
 server.listen(0,'127.0.0.1',()=>console.log(JSON.stringify({url:'http://127.0.0.1:'+server.address().port,seed:serializeLibrary(seed)})));

@@ -2,6 +2,8 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
+**Stato v0.72:** [caratteristiche Beyond: punteggi fissati e massimi aumentati](docs/BEYOND-CARATTERISTICHE.md). Riconciliazione delle concessioni esplicite, bonus personalizzati dopo il limite e override finale; COS/DES finali alimentano PF e CA. 230 test JS, 432 stati nel parser/codec C e 12.960 confronti sui tiri. Prova reale invariata per il PG 144777811; nuovi massimi/oggetti fissapunteggio con prove sintetiche. Conversione parziale e USB fisico ancora aperto.
+
 **Stato v0.71:** [inventario Beyond operativo e difese ai danni](docs/BEYOND-INVENTARIO-DIFESE.md): cariche separate dalle quantità, consumabili, pozioni con cura esplicita e concessioni incondizionate riconciliate. Anteprima, configurazione dei tipi sconosciuti e trasferimento USB14; backup PC v16 solo con profilo difese. Nuova lettura reale del PG 144777811: caratteristiche, PF 32/73, CA 17, 41 voci e quattro pozioni 2d4+2 verificati anche nel parser C host. Cariche e resistenze provate con dati sintetici. Conversione ancora parziale; collaudo USB fisico aperto.
 
 **Stato v0.70:** [dodici preset di classe su SD](docs/PRESET-CLASSI.md), per tutte le 21 specie e le due silhouette (504 look). Cappucci corretti, scelta sul dispositivo/PC, proposta Beyond per classe singola riconosciuta, anteprima e conferma. Senza SD rimane lo stile originale. Colori e tagli dei preset sono fissi; espressioni aggiuntive, Artificiere e sottoclassi sono successivi. Collaudo SD fisico e diagnosi USB dei riavvii ancora aperti.

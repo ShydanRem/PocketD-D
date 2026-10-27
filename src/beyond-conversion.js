@@ -1,11 +1,11 @@
+import {reconcileAbilities,abilityFloorRestriction} from './beyond-abilities.js';
 import {normalizeBeyondSource,selectedAbilityBonus} from './beyond-normalize.js';
 import {addBeyondAppearance} from './beyond-avatar.js';
 import {extendBeyond} from './beyond-details.js';
-import {previewBeyond} from './beyond.js';
+import {previewBeyond,beyondHitPointInputs} from './beyond.js';
 import {initialState, parseBackup, serialize} from './model.js';
 
 const keys = ['FOR','DES','COS','INT','SAG','CAR'];
-const names = ['strength','dexterity','constitution','intelligence','wisdom','charisma'];
 const integer = (n,min,max) => Number.isSafeInteger(n) && n>=min && n<=max;
 const mod = n => Math.floor((n-10)/2);
 const coreModifier = m => /score|hit-point|armor-class|armored|unarmored/i.test(m.subType ?? '');
@@ -64,7 +64,8 @@ function convertCoreNormalized(payload, expectedId, normalization) {
       }
       let classLevel = report.character.level;
       if (group === 'class') {
-        const owner = c.classes.find(cl => Array.isArray(cl.classFeatures) && cl.classFeatures.some(f => f?.definition?.id===m.componentId));
+        const owners = c.classes.filter(cl => Array.isArray(cl.classFeatures) && cl.classFeatures.some(f => f?.definition?.id===m.componentId));
+        const owner=owners.length===1?owners[0]:null;
         const feature = owner?.classFeatures.find(f => f?.definition?.id===m.componentId)?.definition;
         if (!owner || !integer(feature.requiredLevel,1,20)) { block(`Origine di classe non risolta: ${m.subType}.`); continue; }
         if (feature.requiredLevel>owner.level) continue;
@@ -77,13 +78,15 @@ function convertCoreNormalized(payload, expectedId, normalization) {
       }
       if (group==='item') {
         const owners = inventorySource.filter(item => Array.isArray(item?.definition?.grantedModifiers) && item.definition.grantedModifiers.some(grant => String(grant?.id)===String(m.id)));
-        if (!owners.length) { block(`Origine oggetto non risolta: ${m.subType}.`); continue; }
-        if (!owners.some(item => item.equipped===true && (!item.definition.canAttune || item.isAttuned===true))) continue;
+        if (owners.length!==1) { block(`Origine oggetto non univoca: ${m.subType}.`); continue; }
+        const item=owners[0];
+        if(item.quantity===0||item.equipped===false||item.definition.canAttune===true&&item.isAttuned===false)continue;
+        if(!integer(item.quantity,1,999)||item.equipped!==true||item.definition.canAttune&&item.isAttuned!==true){block(`Equipaggiamento o sintonia non risolti: ${m.subType}.`);continue;}
       }
       const chosen=m.isGranted===false&&selectedAbilityBonus(c,group,m);
       if(chosen)evidence.push(`Aumento ${m.subType}: scelta esplicita e opzione concordante, +${m.value}.`);
       if (!['race','class','background','feat','item','condition'].includes(group) ||
-          (m.isGranted===false&&!chosen) || (typeof m.restriction==='string' ? m.restriction.trim() : m.restriction!=null)) {
+          (m.isGranted===false&&!chosen) || (!abilityFloorRestriction(m)&&(typeof m.restriction==='string' ? m.restriction.trim() : m.restriction!=null))) {
         block(`Effetto sui valori principali non risolto: ${m.type} ${m.subType}.`); continue;
       }
       active.push({...m, group, classLevel});
@@ -96,14 +99,7 @@ function convertCoreNormalized(payload, expectedId, normalization) {
     used.add(m);
     return sum + m.value;
   },0);
-  for (let i=0;i<keys.length;i++) {
-    const a = report.abilities[keys[i]], modifierBonus = sums(`${names[i]}-score`);
-    a.modifierBonus = modifierBonus;
-    if (a.override===null && a.base+a.bonus>20) block(`Punteggio base/bonus ${keys[i]} oltre il massimo ordinario: serve riconciliazione.`);
-    a.preview = a.override ?? Math.min(20,a.base+a.bonus+modifierBonus);
-    if (!integer(a.preview,1,30)) block(`Caratteristica ${keys[i]} fuori dai limiti locali.`);
-    evidence.push(`${keys[i]}: base ${a.base} + bonus ${a.bonus} + modificatori ${modifierBonus}${a.override!==null?` → override ${a.override}`:' (massimo ordinario 20)'} = ${a.preview}.`);
-  }
+  reconcileAbilities(report.abilities,active,{block,evidence,used,inventory:inventorySource});
   let perLevel = 0;
   for (const m of active) {
     if (m.type==='bonus' && m.subType==='hit-points-per-level' && integer(m.value,-1000,1000) && m.statId==null) {
@@ -111,6 +107,7 @@ function convertCoreNormalized(payload, expectedId, normalization) {
     }
   }
   const flatHp = sums('hit-points');
+  report.hp=beyondHitPointInputs(c);
   if (!report.hp) block('PF mancanti o incoerenti.');
   else {
     const hp = report.hp;

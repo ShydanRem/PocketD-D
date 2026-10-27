@@ -1,5 +1,10 @@
 # D&D Beyond: fattibilità per PocketD-D
 
+> Aggiornamento v0.72: [punteggi fissati, massimi e bonus delle caratteristiche](BEYOND-CARATTERISTICHE.md).
+> Supportate concessioni esplicite riconciliate; valori derivati verificati anche nel parser C.
+> Nessun nuovo formato. Restano restrizioni, origini e override non supportati; le prove datate sotto mantengono il proprio contesto.
+
+
 > Aggiornamento v0.71, 27 ottobre 2026: [inventario operativo e difese Beyond](BEYOND-INVENTARIO-DIFESE.md).
 > Cariche, consumabili e cure esplicite; profilo difese opzionale con USB14 / backup PC v16.
 > Stato nativo PDD33 invariato. Prova reale e dati sintetici distinti; conversione ancora parziale.

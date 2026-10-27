@@ -37,7 +37,7 @@ test('Conversione: override caratteristica e massimo ordinario; cap modificati n
 });
 test('Conversione: effetti condizionali e formule sconosciute bloccano i valori principali',()=>{
   for(const m of [{type:'bonus',subType:'armor-class',value:2,restriction:'while raging'},
-    {type:'set',subType:'strength-score',value:19},
+    {type:'multiply',subType:'strength-score',value:19},
     {type:'bonus',subType:'hit-points',statId:3,value:null},
     {type:'bonus',subType:'constitution-score',value:2,isGranted:false}]){
     const p=beyondCoreFixture();p.data.modifiers.feat.push(m);blocked(p);

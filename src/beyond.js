@@ -16,6 +16,12 @@ export function beyondCharacterId(input){
 }
 export function beyondEndpoint(input){return `https://character-service.dndbeyond.com/character/v5/character/${beyondCharacterId(input)}?includeCustomItems=true`}
 
+// Raw validated HP inputs are separate from a preliminary arithmetic preview.
+export function beyondHitPointInputs(c){
+  if(!integer(c.baseHitPoints,0,9999)||['bonusHitPoints','overrideHitPoints','removedHitPoints','temporaryHitPoints'].some(k=>c[k]!=null&&!integer(c[k],0,9999)))return null;
+  return {base:c.baseHitPoints,override:c.overrideHitPoints||null,bonus:c.bonusHitPoints??0,removed:c.removedHitPoints??0,temporary:c.temporaryHitPoints??0};
+}
+
 export function previewBeyond(payload,expectedId){
   const c=payload?.data;
   if(payload?.success!==true||!c||typeof c!=='object'||Array.isArray(c))fail('INVALID_DATA','Risposta priva di una scheda Beyond valida');
@@ -41,11 +47,11 @@ export function previewBeyond(payload,expectedId){
     'CA, competenze, attacchi, magie, slot e condizioni non vengono convertiti da questa prova.'
   ];
   let hp=null;
-  const hpFields=['baseHitPoints','bonusHitPoints','overrideHitPoints','removedHitPoints','temporaryHitPoints'];
-  if(integer(c.baseHitPoints,0,9999)&&hpFields.slice(1).every(key=>c[key]==null||integer(c[key],0,9999))){
+  const hpInputs=beyondHitPointInputs(c);
+  if(hpInputs){
     const constitution=Math.floor((abilities.COS.preview-10)/2)*level;
-    const max=(c.overrideHitPoints||c.baseHitPoints+constitution)+(c.bonusHitPoints??0);
-    if(max>0)hp={base:c.baseHitPoints,constitutionContribution:constitution,override:c.overrideHitPoints||null,bonus:c.bonusHitPoints??0,removed:c.removedHitPoints??0,previewMax:max,previewCurrent:Math.max(0,max-(c.removedHitPoints??0)),temporary:c.temporaryHitPoints??0};
+    const max=(hpInputs.override??hpInputs.base+constitution)+hpInputs.bonus;
+    if(max>0)hp={...hpInputs,constitutionContribution:constitution,previewMax:max,previewCurrent:Math.max(0,max-hpInputs.removed)};
   }
   if(!hp)warnings.push('PF incompleti o incoerenti: nessun valore stimato.');
   if(c.name.trim().length>24)warnings.push('Il nome supera il limite attuale di 24 caratteri di PocketD-D.');
