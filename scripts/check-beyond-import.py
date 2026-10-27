@@ -19,7 +19,7 @@ const seed=addCharacter(createLibrary({...initialState(),name:'Prima scheda',hp:
 const server=createBeyondLabServer({appRoot:new URL('./dist/',import.meta.url),probe:async id=>{
   await new Promise(resolve=>setTimeout(resolve,250));
   if(id==='999')throw Object.assign(new Error('Rete sintetica non disponibile'),{code:'NETWORK_ERROR'});
-  const p=beyondCoreFixture();p.data.id=Number(id);p.data.name='Sonda <b>x</b>';
+  const p=beyondCoreFixture();p.data.id=Number(id);p.data.name='Sonda <b>x</b>';p.data.race={...p.data.race,baseName:'Gnome',fullName:'Forest Gnome'};p.data.gender='Female';
   p.data.inventory[0].definition.name='<img src=x onerror=alert(1)>';
   if(id==='222222')p.data.modifiers.feat.push({type:'set',subType:'strength-score',value:19});
   return {...convertBeyond(p,id),testFixture:true,transport:{status:200,bytes:1234,elapsedMs:250,authenticated:false}};
@@ -54,6 +54,8 @@ try:
         read();expect(page.locator('[data-preview]')).to_be_visible()
         expect(page.locator('[data-checks]')).to_contain_text('DATI SINTETICI');expect(page.locator('[data-name]')).to_have_text('Sonda <b>x</b> · livello 3')
         assert page.locator('.beyond-import img,.beyond-import h3 b').count()==0
+        expect(page.locator('[data-appearance-status]')).to_contain_text('Famiglia visiva riconosciuta: Forest Gnome');expect(page.locator('[data-lineage]')).to_have_value('4');expect(page.locator('[data-body]')).to_have_value('1');assert page.locator('[data-appearance-sprite] svg').count()==1;
+        page.locator('[data-lineage]').select_option('8');page.locator('[data-body]').select_option('0');assert raw()==seed
         expect(page.locator('[data-values]')).to_contain_text('25/29');expect(page.locator('[data-create]')).to_be_disabled();assert raw()==seed
         for width in [1440,390,320]:
             page.set_viewport_size({'width':width,'height':1050 if width==1440 else 844})
@@ -69,6 +71,15 @@ try:
         assert new['abilities']['COS']==17 and new['maxHp']==29 and new['hp']==25 and new['armorClass']==14
         assert len(new['inventory'])==2 and new['equippedWeaponId'] is None and new['powers']==[]
         assert new['importInfo']['limitations'] and new['resolve']==0
+        assert new['avatar']['lineage']==8 and new['avatar']['body']==0 and new['version']==12
+        # Manual PC configuration: cancel is read-only, save retains the other sheets and v12 identity.
+        before_editor=raw();page.locator('[data-action=edit]').click();editor=page.locator('.hero-editor-dialog');expect(editor.locator('[name=lineage]')).to_have_value('8')
+        editor.locator('[name=lineage]').select_option('4');editor.locator('[name=body]').select_option('1');assert editor.locator('.sprite').count()==1
+        editor.get_by_role('button',name='Annulla',exact=True).click();assert raw()==before_editor
+        page.locator('[data-action=edit]').click();editor.locator('[name=lineage]').select_option('4');editor.locator('[name=body]').select_option('1');editor.locator('[data-avatar-preset="1"]').click();expect(editor.locator('[name=lineage]')).to_have_value('4');expect(editor.locator('[name=body]')).to_have_value('1')
+        page.screenshot(path=str(OUTPUT/'gnome-female-editor.png'))
+        editor.get_by_role('button',name='SALVA PERSONAGGIO',exact=True).click();expect(editor).to_have_count(0);after_editor=json.loads(raw());assert after_editor['characters'][:2]==original['characters'];current=after_editor['characters'][2]['state'];assert current['avatar']['lineage']==4 and current['avatar']['body']==1 and current['version']==12
+        assert current['abilities']==new['abilities'] and current['hp']==new['hp'] and current['inventory']==new['inventory'];imported=after_editor
         page.reload();expect(page.locator('.import-notice')).to_be_visible()
         page.locator('[data-action=beyond-info]').click();expect(page.locator('.beyond-import')).to_contain_text('CA e PF');page.locator('.beyond-import button').click()
         page.locator('[data-action=manage-characters]').click()

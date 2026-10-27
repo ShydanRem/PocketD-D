@@ -31,7 +31,7 @@
 #include "fixtures/state-v24.h"
 static void strip_charges(cJSON *root){cJSON *items=cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(root,"inventory"),"items");cJSON *item; cJSON_ArrayForEach(item,items)cJSON_DeleteItemFromObjectCaseSensitive(item,"charges");}
 static void record_crc(uint8_t *record) {
-    size_t size=8943; /* No powers: PDD27 prefix, recovery, status and CRC. */
+    size_t size=8945; /* No powers: PDD27 prefix, recovery, status and CRC. */
     uint32_t crc=pd_crc32(record,size-4);
     for(int i=0;i<4;i++)record[size-4+i]=crc>>(8*i);
 }
@@ -109,9 +109,9 @@ int main(int argc,char **argv) {
     assert(pd_select(legacy_v1,sizeof legacy_v1,b,record_size,&out,&gen)==1&&gen==42);
     b[368]=3;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
     pd_encode(&s,42,b);b[372]=2;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
-    pd_encode(&s,42,b);b[record_size-1032]=9;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
-    pd_encode(&s,42,b);b[record_size-1032]=101;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
-    pd_encode(&s,42,b);b[record_size-1031]=4;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
+    pd_encode(&s,42,b);b[record_size-1034]=9;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
+    pd_encode(&s,42,b);b[record_size-1034]=101;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
+    pd_encode(&s,42,b);b[record_size-1033]=4;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
     pd_demo(&s);pd_encode(&s,41,a);s.hp=7;pd_encode(&s,42,b);
     assert(pd_select(a,record_size,b,record_size,&out,&gen)==1&&out.hp==7&&gen==42);
     /* Every header/CRC bit and distributed payload corruption falls back to older bank. */
@@ -133,8 +133,15 @@ int main(int argc,char **argv) {
         assert(out.avatar.skin==2&&out.avatar.hair==1&&out.avatar.cloak==2&&out.avatar.style==1);
         assert(!pd_parse_packet(json,n-1,&out));
         cJSON *base=cJSON_ParseWithLength(json,n),*v;assert(base);
+        for(unsigned lineage=0;lineage<12;lineage++)for(unsigned body=0;body<2;body++){
+            v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),10);
+            cJSON *a=cJSON_GetObjectItemCaseSensitive(v,"avatar");cJSON_AddNumberToObject(a,"lineage",lineage);cJSON_AddNumberToObject(a,"body",body);
+            char *encoded=cJSON_PrintUnformatted(v);assert(pd_parse_packet(encoded,strlen(encoded),&out)&&out.lineage==lineage&&out.body==body);cJSON_free(encoded);
+            cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(a,"lineage"),12);reject(v);
+        }
+        v=cJSON_Duplicate(base,true);cJSON_SetNumberValue(cJSON_GetObjectItemCaseSensitive(v,"version"),10);reject(v);
         const char *numeric_keys[]={"version","level","hp","maxHp","tempHp","armorClass"};
-        double bad[]={10,21,33,0,-1,41};
+        double bad[]={11,21,33,0,-1,41};
         for (int i=0;i<6;i++) {
             v=cJSON_Duplicate(base,true);cJSON_ReplaceItemInObjectCaseSensitive(v,numeric_keys[i],cJSON_CreateNumber(bad[i]));reject(v);
         }

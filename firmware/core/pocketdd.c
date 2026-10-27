@@ -31,6 +31,10 @@ void pd_demo(pd_state *s) {
         {.name="Torcia",.quantity=3,.kind=PD_CONSUMABLE}},.magic={.available=true},.shortcuts={1,3,5},.brightness=50};
     *s=demo;
 }
+bool pd_identity_set(pd_state *s,unsigned lineage,unsigned body){
+    if(!s||!pd_valid(s)||lineage>=12||body>1)return false;
+    s->lineage=lineage;s->body=body;return true;
+}
 const char *pd_scene_name(unsigned scene){
     static const char *const names[]={"Accampamento","Rovine lunari","Porto all'alba"};
     return scene<PD_SCENES?names[scene]:"Scena non valida";
@@ -279,7 +283,7 @@ bool pd_valid(const pd_state *s) {
     if (s->roll_conditions>PD_ROLL_CONDITIONS || !text(s->name, sizeof s->name) || s->level < 1 || s->level > 20 ||
         s->armor < 1 || s->armor > 40 || !s->max_hp || s->max_hp > 999 ||
         !effects_valid(s) || s->hp > pd_max_hp(s) || s->temp_hp > 999 || s->resource_count > PD_RESOURCES ||
-        s->scene>=PD_SCENES || s->avatar.skin>2 || s->avatar.hair>2 || s->avatar.cloak>2 || s->avatar.style>2) return false;
+        s->lineage>=12 || s->body>1 || s->scene>=PD_SCENES || s->avatar.skin>2 || s->avatar.hair>2 || s->avatar.cloak>2 || s->avatar.style>2) return false;
     for (int i=0;i<6;i++) if (s->abilities[i] < 1 || s->abilities[i] > 30) return false;
     const pd_training *t=&s->training;
     if(t->saves>63||t->half_skills>0x3ffff||t->blocked>0x3fffffff)return false;
@@ -406,10 +410,10 @@ static void put16(uint8_t **p, unsigned n) { *(*p)++=n; *(*p)++=n>>8; }
 static unsigned get16(const uint8_t **p) { unsigned n=(*p)[0]|((*p)[1]<<8); *p+=2; return n; }
 static void put32(uint8_t *p, uint32_t n) { for (int i=0;i<4;i++) p[i]=n>>(8*i); }
 static uint32_t get32(const uint8_t *p) { return (uint32_t)p[0]|((uint32_t)p[1]<<8)|((uint32_t)p[2]<<16)|((uint32_t)p[3]<<24); }
-size_t pd_encoded_size(const pd_state *s){return 8943u+552u*s->magic.count;}
+size_t pd_encoded_size(const pd_state *s){return 8945u+552u*s->magic.count;}
 size_t pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
     memset(out, 0, pd_encoded_size(s));
-    memcpy(out, "PDDT", 4); put32(out+4,gen);
+    memcpy(out, "PDDU", 4); put32(out+4,gen);
     uint8_t *p=out+8;
     memcpy(p,s->name,PD_NAME_BYTES); p+=PD_NAME_BYTES;
     put16(&p,s->hp); put16(&p,s->max_hp); put16(&p,s->temp_hp);
@@ -479,10 +483,10 @@ size_t pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
     for(unsigned i=0;i<PD_COINS;i++){put32(p,s->wallet.coins[i]);p+=4;}
     put32(p,s->history_epoch);p+=4;
     memcpy(p,s->turn_names,sizeof s->turn_names);p+=sizeof s->turn_names;
-    *p++=s->scene;
+    *p++=s->scene;*p++=s->lineage;*p++=s->body;
     size_t size=pd_encoded_size(s);put32(out+size-4,pd_crc32(out,size-4));return size;
 }
-static bool record_payments(const uint8_t *data){return !memcmp(data,"PDDS",4)||!memcmp(data,"PDDT",4);}
+static bool record_payments(const uint8_t *data){return !memcmp(data,"PDDS",4)||!memcmp(data,"PDDT",4)||!memcmp(data,"PDDU",4);}
 bool pd_record_known(const uint8_t *data,size_t size) {
     if(!data)return false;
     if(size==384&&(!memcmp(data,"PDD1",4)||!memcmp(data,"PDD2",4)))return true;
@@ -507,6 +511,7 @@ bool pd_record_known(const uint8_t *data,size_t size) {
     if(size>=8853&&size<=75093&&!memcmp(data,"PDDM",4)&&data[5123]<=PD_POWERS)return size==8853u+552u*data[5123];
     if(size>=8854&&size<=75094&&!memcmp(data,"PDDN",4)&&data[5123]<=PD_POWERS)return size==8854u+552u*data[5123];
     if(size>=8875&&size<=75115&&!memcmp(data,"PDDO",4)&&data[5123]<=PD_POWERS)return size==8875u+552u*data[5123];
+    if(size>=8945&&size<=PD_RECORD_SIZE&&!memcmp(data,"PDDU",4)&&data[5123]<=PD_POWERS)return size==8945u+552u*data[5123];
     if(size>=8943&&size<=PD_RECORD_SIZE&&!memcmp(data,"PDDT",4)&&data[5123]<=PD_POWERS)return size==8943u+552u*data[5123];
     if(size>=8942&&size<=PD_RECORD_SIZE&&(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4))&&data[5123]<=PD_POWERS)return size==8942u+552u*data[5123];
     return size>=8879&&size<=PD_RECORD_SIZE&&(!memcmp(data,"PDDP",4)||!memcmp(data,"PDDQ",4))&&data[5123]<=PD_POWERS&&size==8879u+552u*data[5123];
@@ -557,7 +562,7 @@ static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint
         pd_magic *m=&candidate.magic;if(*p>1)goto invalid;m->available=*p++;m->count=*p++;m->concentration=*p++;
         for(int i=0;i<9;i++){m->slots[i].current=*p++;m->slots[i].maximum=*p++;m->pact[i].current=*p++;m->pact[i].maximum=*p++;}
         memcpy(candidate.shortcuts,p,3);p+=3;
-        if(memcmp(data,"PDDT",4)&&(candidate.shortcuts[0]>13||candidate.shortcuts[1]>13||candidate.shortcuts[2]>13))goto invalid;
+        if(memcmp(data,"PDDT",4)&&memcmp(data,"PDDU",4)&&(candidate.shortcuts[0]>13||candidate.shortcuts[1]>13||candidate.shortcuts[2]>13))goto invalid;
         if((memcmp(data,"PDDP",4)&&(memcmp(data,"PDDQ",4)&&(memcmp(data,"PDDR",4)&&!record_payments(data))))&&(candidate.shortcuts[0]>12||candidate.shortcuts[1]>12||candidate.shortcuts[2]>12))goto invalid;
         for(int i=0;i<m->count;i++) {
             pd_power *v=&m->powers[i];memcpy(v->name,p,41);p+=41;memcpy(v->description,p,PD_POWER_TEXT_BYTES);p+=PD_POWER_TEXT_BYTES;
@@ -642,7 +647,8 @@ static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint
     }
     if((!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data))))){candidate.history_epoch=get32(p);p+=4;}
     if((!memcmp(data,"PDDR",4)||record_payments(data))){memcpy(candidate.turn_names,p,sizeof candidate.turn_names);p+=sizeof candidate.turn_names;}
-    if(!memcmp(data,"PDDT",4))candidate.scene=*p++;
+    if(!memcmp(data,"PDDT",4)||!memcmp(data,"PDDU",4))candidate.scene=*p++;
+    if(!memcmp(data,"PDDU",4)){candidate.lineage=*p++;candidate.body=*p++;}
     if (!pd_valid(&candidate)) goto invalid;
     *gen=get32(data+4);return true;
 invalid:

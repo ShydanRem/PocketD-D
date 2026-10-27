@@ -182,7 +182,8 @@ static lv_obj_t *scene_halos[2];
 static uint32_t avatar_started;
 static unsigned avatar_phase;
 static pd_avatar avatar_drawn,appearance_draft;
-static unsigned appearance_scene,appearance_field;
+static unsigned appearance_scene,appearance_field,appearance_group;
+static uint8_t appearance_lineage,appearance_body,avatar_lineage,avatar_body;
 static page_t appearance_return;
 static lv_obj_t *appearance_targets[8];
 static unsigned appearance_target_count,appearance_focus;
@@ -624,12 +625,14 @@ static unsigned avatar_current_pose(void) {
 }
 static void avatar_set_pose(const pd_avatar *appearance,unsigned pose) {
     lv_image_cache_drop(&avatar_image);
-    if(avatar_scale==4)pd_avatar_large(appearance,pose,avatar_data);else if(avatar_scale==3)pd_avatar_hero(appearance,pose,avatar_data);else pd_avatar_image(appearance,pose,avatar_data);
+    if(avatar_scale==4)pd_avatar_variant_large(appearance,avatar_lineage,avatar_body,pose,avatar_data);else if(avatar_scale==3)pd_avatar_variant_hero(appearance,avatar_lineage,avatar_body,pose,avatar_data);else pd_avatar_variant_image(appearance,avatar_lineage,avatar_body,pose,avatar_data);
     avatar_phase=pose;
     if(avatar_sprite)lv_obj_invalidate(avatar_sprite);
 }
 static void avatar_prepare(const pd_avatar *appearance,unsigned scale) {
     avatar_drawn=*appearance;avatar_scale=scale;
+    avatar_lineage=appearance==&appearance_draft?appearance_lineage:appearance==&pending.avatar?pending.lineage:state.lineage;
+    avatar_body=appearance==&appearance_draft?appearance_body:appearance==&pending.avatar?pending.body:state.body;
     avatar_image.header.w=24*scale;avatar_image.header.h=30*scale;
     avatar_image.header.stride=avatar_image.header.w;
     avatar_image.data_size=scale==4?PD_AVATAR_LARGE_BYTES:scale==3?PD_AVATAR_HERO_BYTES:PD_AVATAR_IMAGE_BYTES;
@@ -694,7 +697,7 @@ static void act(intptr_t action) {
     if(action>=2900&&action<2913){input_check_action(action);return;}
     if(input_check_open())return;
     if(power_paused||power_off_attempted)return;
-    if(appearance_editing()&&(action<4301||action>4321))return;
+    if(appearance_editing()&&(action<4301||action>4330))return;
     if(page==APPEARANCE_CONFIRM&&action!=4307&&action!=4308)return;
     if(page==POWER_OFF&&action!=3703&&action!=3704)return;
     if(page==ITEM_QUANTITY_CONFIRM&&action!=4101&&action!=4102)return;
@@ -961,21 +964,24 @@ static void act(intptr_t action) {
     }
     else if (action==31) { import_pending=false;reply("PDD CANCELLED\n"); }
     else if (action==50)page=APPEARANCE;
-    else if(action==4300&&page==APPEARANCE){appearance_draft=state.avatar;appearance_scene=state.scene;appearance_field=0;appearance_keyboard=false;appearance_focus=0;page=AVATAR_EDIT;}
-    else if((action==4301||action==4303)&&page==AVATAR_EDIT)appearance_field=(appearance_field+(action==4301?3:1))%4;
+    else if(action==4300&&page==APPEARANCE){appearance_draft=state.avatar;appearance_scene=state.scene;appearance_lineage=state.lineage;appearance_body=state.body;appearance_group=state.lineage/3;appearance_field=0;appearance_keyboard=false;appearance_focus=0;page=AVATAR_EDIT;}
+    else if((action==4301||action==4303)&&page==AVATAR_EDIT){do{appearance_field=(appearance_field+(action==4301?5:1))%6;}while(appearance_field==1&&!pd_species_hair(appearance_lineage));}
     else if(action==4302&&(page==AVATAR_EDIT||page==SCENE_EDIT))page=APPEARANCE;
     else if(action==4304&&page==AVATAR_EDIT){appearance_focus=0;page=SCENE_EDIT;}
     else if(action==4305&&page==SCENE_EDIT){appearance_focus=0;page=AVATAR_EDIT;}
     else if(action==4306&&(page==AVATAR_EDIT||page==SCENE_EDIT)){appearance_return=page;appearance_focus=0;page=APPEARANCE_CONFIRM;}
     else if(action==4308&&page==APPEARANCE_CONFIRM){appearance_focus=0;page=appearance_return;}
     else if(action==4307&&page==APPEARANCE_CONFIRM){
-        if(!pd_appearance_set(&next,&appearance_draft,appearance_scene))return;
-        if(!memcmp(&state.avatar,&next.avatar,sizeof state.avatar)&&state.scene==next.scene)page=APPEARANCE;
-        else if(pd_storage_save(&next)){state=next;previous.avatar=next.avatar;previous.scene=next.scene;page=APPEARANCE;}
+        if(!pd_appearance_set(&next,&appearance_draft,appearance_scene)||!pd_identity_set(&next,appearance_lineage,appearance_body))return;
+        if(!memcmp(&state.avatar,&next.avatar,sizeof state.avatar)&&state.scene==next.scene&&state.lineage==next.lineage&&state.body==next.body)page=APPEARANCE;
+        else if(pd_storage_save(&next)){state=next;previous.avatar=next.avatar;previous.scene=next.scene;previous.lineage=next.lineage;previous.body=next.body;page=APPEARANCE;}
     }
     else if(action>=4310&&action<=4312&&page==AVATAR_EDIT){
-        uint8_t *fields[]={&appearance_draft.skin,&appearance_draft.hair,&appearance_draft.cloak,&appearance_draft.style};*fields[appearance_field]=action-4310;
+        if(appearance_field<4){uint8_t *fields[]={&appearance_draft.skin,&appearance_draft.hair,&appearance_draft.cloak,&appearance_draft.style};*fields[appearance_field]=action-4310;}
+        else if(appearance_field==4)appearance_lineage=appearance_group*3+action-4310;
+        else if(action<4312)appearance_body=action-4310;
     }
+    else if(action==4330&&page==AVATAR_EDIT&&appearance_field==4)appearance_group=(appearance_group+1)%4;
     else if((action==4320||action==4321)&&page==SCENE_EDIT)appearance_scene=(appearance_scene+(action==4320?PD_SCENES-1:1))%PD_SCENES;
     else if (action==51) {
         next.idle_animation=!state.idle_animation;
@@ -2849,18 +2855,20 @@ static void render_appearance_editor(void){
     lv_obj_t *top=decoration(0,0,466,165,PD_INK,0);lv_obj_set_style_bg_opa(top,210,0);
     lv_obj_t *bottom=decoration(0,294,466,172,PD_INK,0);lv_obj_set_style_bg_opa(bottom,205,0);
     small_label(ui_storage_status(),91,73,284,ui_status_color(ui_storage_status()));
-    static const char *const fields[]={"Carnagione","Capelli","Mantello","Taglio"};
-    static const char *const values[][3]={{"Chiara","Media","Scura"},{"Castani","Biondi","Scuri"},{"Bosco","Vino","Notte"},{"Corti","Lunghi","Rasati"}};
+    static const char *const fields[]={"Carnagione","Capelli","Mantello","Taglio","Specie","Silhouette"};
+
     char caption[80];
     avatar_show(&appearance_draft,185,page==SCENE_EDIT?208:175,root,4,true);
     if(page==AVATAR_EDIT){
-        snprintf(caption,sizeof caption,"%s %u/4",fields[appearance_field],appearance_field+1);label(caption,83,111,204,true);
-        appearance_button("Scena",299,99,84,44,4304,true);
+        snprintf(caption,sizeof caption,"%s %u/6",fields[appearance_field],appearance_field+1);label(caption,83,111,204,true);
+        appearance_button(appearance_field==4?"Altre":"Scena",299,99,84,44,appearance_field==4?4330:4304,true);
         appearance_button("<",83,214,48,48,4301,true);appearance_button(">",335,214,48,48,4303,true);
-        const unsigned chosen[]={appearance_draft.skin,appearance_draft.hair,appearance_draft.cloak,appearance_draft.style};
-        for(unsigned i=0;i<3;i++){
-            lv_obj_t *b=appearance_button(values[appearance_field][i],83+i*104,299,92,44,4310+i,true);
-            if(i==chosen[appearance_field]){lv_obj_set_style_border_color(b,lv_color_hex(PD_MINT),0);lv_obj_set_style_border_width(b,3,0);lv_obj_set_style_bg_color(b,lv_color_hex(0x244d48),0);}
+        const unsigned chosen[]={appearance_draft.skin,appearance_draft.hair,appearance_draft.cloak,appearance_draft.style,appearance_lineage,appearance_body};
+        for(unsigned i=0;i<(appearance_field==5?2u:3u);i++){
+            unsigned value=appearance_field==4?appearance_group*3+i:i;
+            const char *name=appearance_field==4?pd_species_name(value):appearance_field==5?pd_body_name(value):pd_species_choice(appearance_lineage,appearance_field,value);
+            lv_obj_t *b=appearance_button(name,83+i*104,299,92,44,4310+i,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_14,0);
+            if(value==chosen[appearance_field]){lv_obj_set_style_border_color(b,lv_color_hex(PD_MINT),0);lv_obj_set_style_border_width(b,3,0);lv_obj_set_style_bg_color(b,lv_color_hex(0x244d48),0);}
         }
         appearance_button("Annulla",83,359,144,48,4302,true);appearance_button("Anteprima",239,359,144,48,4306,true);
     }else if(page==SCENE_EDIT){
@@ -2870,8 +2878,8 @@ static void render_appearance_editor(void){
         appearance_button("Annulla",83,359,144,48,4302,true);appearance_button("Anteprima",239,359,144,48,4306,true);
     }else{
         label("Salvare l'aspetto?",83,111,300,true);small_label(pd_scene_name(appearance_scene),83,151,300,PD_GOLD);
-        snprintf(caption,sizeof caption,"%s / %s",values[0][appearance_draft.skin],values[1][appearance_draft.hair]);small_label(caption,83,302,300,PD_GOLD);
-        snprintf(caption,sizeof caption,"%s / %s",values[2][appearance_draft.cloak],values[3][appearance_draft.style]);small_label(caption,83,328,300,PD_TEXT);
+        snprintf(caption,sizeof caption,"%s / %s",pd_species_name(appearance_lineage),pd_body_name(appearance_body));small_label(caption,83,302,300,PD_GOLD);
+        snprintf(caption,sizeof caption,"%s / %s",pd_species_choice(appearance_lineage,2,appearance_draft.cloak),pd_species_choice(appearance_lineage,3,appearance_draft.style));small_label(caption,83,328,300,PD_TEXT);
         appearance_button("Indietro",83,359,144,48,4308,true);appearance_button("Conferma",239,359,144,48,4307,true);
     }
     small_label("PWR > / BOOT ok",133,416,200,PD_TEXT);appearance_mark_focus();
@@ -2983,8 +2991,7 @@ static void render_content(void) {
         art(state.scene?pd_scene_preview(state.scene):&theme_camp_stage,83,143,root);
         if(!state.scene)scene_atmosphere(root,83,167);
         avatar_show(&state.avatar,185,143,root,4,true);
-        snprintf(text,sizeof text,"Mantello %s / %s",(const char *const[]){"bosco","vino","notte"}[state.avatar.cloak],
-                 (const char *const[]){"corti","lunghi","rasati"}[state.avatar.style]);
+        snprintf(text,sizeof text,"%s / %s",pd_species_name(state.lineage),pd_body_name(state.body));
         small_label(text,83,268,300,PD_GOLD);
         button(state.idle_animation?"Animazione: si":"Animazione: no",83,299,300,48,51,true);
         button("Indietro",83,359,92,48,52,true);lv_obj_t *settings=button("Schermo",187,359,92,48,1600,true);lv_obj_set_style_text_font(settings,&lv_font_montserrat_16,0);button("Tasti",291,359,92,48,850,true);return;
@@ -3228,7 +3235,7 @@ static void usb_task(void *unused) {
             if(c=='\n') {
                 if(!overflow && used) {
                     line[used]=0;
-                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 9\n");
+                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 10\n");
                     else if(!strcmp(line,"PDD BACKUP HELLO"))reply("PDD BACKUP_READY 1\n");
                     else if(!strcmp(line,"PDD DIAGNOSTICS GET 1")){uint8_t request=1;if(xQueueSend(diagnostic_requests,&request,0)!=pdPASS)reply("PDD ERROR busy\n");}
                     else if(!strcmp(line,"PDD BACKUP GET 1")){pd_backup *request=NULL;if(xQueueSend(backup_packets,&request,0)!=pdPASS)reply("PDD ERROR busy\n");}

@@ -1,3 +1,5 @@
+import {deviceAvatarSvg} from './device-avatar.js';
+import {avatarIdentity,avatarSpecies,avatarBodies} from './avatar-species.js';
 import palette from './avatar-palette.json' with {type:'json'};
 // Original SVG pixel art. Firmware uses the same palette and appearance indices.
 export const {skinColors,hairColors,cloakColors}=palette;
@@ -7,10 +9,14 @@ export const avatarPresets=[
   {name:'Sentinella',avatar:{skin:2,hair:2,cloak:2,style:2}}
 ];
 export function avatarDescription(avatar) {
+  const {lineage,body}=avatarIdentity(avatar);
+  if(lineage||body)return `${avatarSpecies[lineage].name} · ${avatarBodies[body]} · mantello ${['bosco','vino','notte'][avatar.cloak]}`;
   return `Mantello ${['bosco','vino','notte'][avatar.cloak]}, capelli ${['castani','biondi','scuri'][avatar.hair]} ${['corti','lunghi','rasati'][avatar.style]}, carnagione ${['chiara','media','scura'][avatar.skin]}`;
 }
 
 export function avatarSvg(avatar,{armed=true}={}) {
+  const {lineage,body}=avatarIdentity(avatar);
+  if(lineage||body)return deviceAvatarSvg(avatar).replace('class="device-avatar-sprite"','class="sprite device-avatar-sprite"');
   const cloak=cloakColors[avatar.cloak],skin=skinColors[avatar.skin],hair=hairColors[avatar.hair];
   const hairShape=[
     'M10 7h3V5h9v2h2v7h-3v-4h-4v2h-5v4h-2z',

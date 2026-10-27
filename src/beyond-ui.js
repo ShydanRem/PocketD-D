@@ -1,3 +1,5 @@
+import {avatarSpecies,avatarBodies,avatarIdentity} from './avatar-species.js';
+import {deviceAvatarSvg} from './device-avatar.js';
 export function openBeyondImport({commit}) {
   const dialog=document.createElement('dialog');
   dialog.className='editor-dialog beyond-import';
@@ -8,7 +10,7 @@ export function openBeyondImport({commit}) {
     <form data-read><label>Link o ID del personaggio<input name="character" required maxlength="500" autocomplete="off" placeholder="https://www.dndbeyond.com/characters/…"></label><button type="submit">Leggi e verifica</button></form>
     <p data-status role="status" aria-live="polite"></p>
     <section data-preview hidden><h3 data-name></h3><p data-checks></p><dl data-values></dl>
-      <h4>Verifica dei calcoli</h4><ul data-evidence></ul>
+      <section data-appearance><h4>Avatar sul dispositivo</h4><div data-appearance-sprite></div><p data-appearance-status></p><label>Specie · famiglia visiva<select data-lineage></select></label><label>Silhouette<select data-body></select></label><p>Solo aspetto: non cambia caratteristiche, capacità o regole. Puoi modificarlo anche sul dispositivo.</p></section><h4>Verifica dei calcoli</h4><ul data-evidence></ul>
       <h4>Campi compilati</h4><ul data-coverage></ul><ul data-training></ul><ul data-attacks></ul><ul data-powers></ul>
       <label data-weapon-label hidden>Arma attiva<select data-weapon></select></label>
       <h4>Inventario sorgente</h4><ul data-items></ul>
@@ -20,6 +22,11 @@ export function openBeyondImport({commit}) {
   const $=s=>dialog.querySelector(s);
   let report=null, request=null, generation=0, creating=false;
   const list=(selector,values)=>{const root=$(selector);root.replaceChildren(...values.map(value=>{const li=document.createElement('li');li.textContent=value;return li}));};
+  const paintAppearance=()=>{if(report?.draft)$('[data-appearance-sprite]').innerHTML=deviceAvatarSvg(report.draft.avatar);};
+  for(const [selector,names] of [['[data-lineage]',avatarSpecies.map(s=>s.name)],['[data-body]',avatarBodies]]){
+    for(const [i,name] of names.entries()){const option=document.createElement('option');option.value=String(i);option.textContent=name;$(selector).append(option);}
+    $(selector).onchange=()=>{if(!report?.draft)return;Object.assign(report.draft.avatar,{lineage:Number($('[data-lineage]').value),body:Number($('[data-body]').value)});paintAppearance();};
+  }
   const clear=()=>{generation++;request?.abort();report=null;$('[data-preview]').hidden=true;$('[data-accept]').checked=false;$('[data-create]').disabled=true;$('[data-read] button').disabled=false;};
   const close=()=>dialog.close();
   $('[data-close]').onclick=close;
@@ -42,6 +49,9 @@ export function openBeyondImport({commit}) {
       for(const [label,value] of [...Object.entries(report.abilities).map(([k,v])=>[k,v.preview]),['PF',report.hp?`${report.hp.previewCurrent}/${report.hp.previewMax}`:'non risolti'],['CA',report.armorClass??'non risolta']]){
         const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=String(value);values.append(dt,dd);
       }
+      $('[data-appearance]').hidden=!report.draft;
+      if(report.draft){const identity=avatarIdentity(report.draft.avatar);$('[data-lineage]').value=String(identity.lineage);$('[data-body]').value=String(identity.body);const a=report.appearance;
+        $('[data-appearance-status]').textContent=(a?.status==='matched'?`Famiglia visiva riconosciuta: ${a.source}.`:a?.status==='ambiguous'?`Specie ambigua (${a.source}): scegli la famiglia visiva.`:`Specie non riconosciuta (${a?.source||'non indicata'}): scegli la famiglia visiva; Umano è provvisorio.`)+(a?.bodySource==='explicit'?' Silhouette proposta dal genere esplicito della sorgente, modificabile.':' Genere non riconosciuto o non indicato: silhouette maschile provvisoria, scegli liberamente.');paintAppearance();}
       list('[data-evidence]',report.conversion?.evidence??[]);
       list('[data-coverage]',(report.conversion?.coverage??[]).map(c=>`${c.section}: ${c.count} · ${c.status==='converted'?'compilati':c.status==='data-only'?'dati conservati, effetti manuali':'da verificare'}`));
       list('[data-training]',[...(report.details?.skills??[]).filter(s=>s.rank||s.blocked).map(s=>`${s.name}: ${s.bonus>=0?'+':''}${s.bonus}${s.blocked?' · tiro da verificare':''}`),...(report.details?.saves??[]).filter(s=>s.proficient||s.blocked).map(s=>`${s.label}: ${s.bonus>=0?'+':''}${s.bonus}${s.blocked?' · tiro da verificare':''}`)]);

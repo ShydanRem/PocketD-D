@@ -30,7 +30,10 @@ try:
   page.unroute('**/firmware/app.bin');page.locator('#retry').click();expect(page.locator('#status')).to_contain_text('Firmware pronto');expect(page.locator('#install')).to_be_enabled()
   # An unsupported browser never offers an actionable install button.
   unsupported=browser.new_context();unsupported.add_init_script('delete Navigator.prototype.serial');other=unsupported.new_page();other.goto(url);expect(other.locator('#status')).to_contain_text('Chrome o Edge');other.locator('#board').check();expect(other.locator('#install')).to_be_disabled()
-  preview=context.new_page();preview.goto(url+'personalizzazione.html');expect(preview.locator('h1')).to_have_text('Il tuo eroe, il tuo ambiente');assert preview.locator('img').evaluate('(e)=>e.complete&&e.naturalWidth===1470');assert preview.evaluate('document.documentElement.scrollWidth<=innerWidth');assert preview.locator('body').evaluate('(e)=>getComputedStyle(e).backgroundColor')=='rgb(7, 21, 30)'
+  preview=context.new_page();preview.goto(url+'personalizzazione.html');expect(preview.locator('h1')).to_have_text('Il tuo eroe, il tuo ambiente');assert preview.locator('img').first.evaluate('(e)=>e.complete&&e.naturalWidth===1470');assert preview.evaluate('document.documentElement.scrollWidth<=innerWidth');assert preview.locator('body').evaluate('(e)=>getComputedStyle(e).backgroundColor')=='rgb(7, 21, 30)'
+  expect(preview.locator('.species-grid figure')).to_have_count(24)
+  for width in [1100,390,320]:
+   preview.set_viewport_size({'width':width,'height':844});assert preview.evaluate('document.documentElement.scrollWidth<=innerWidth')
   # The real production library is bundled. This deliberately does not test USB flashing.
   browser.close()
  print('Installer browser: exact PC ZIP download, local assets/no CDN, SHA256-ready state, model gate, chooser cancel/retry, corrupt download/retry, unsupported browser and mobile layout passed; USB/hardware not tested')

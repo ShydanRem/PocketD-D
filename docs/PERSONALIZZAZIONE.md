@@ -1,5 +1,10 @@
 # Personalizzazione sul dispositivo — v0.66
 
+> Aggiornamento v0.67: [specie, silhouette e proposta da Beyond](AVATAR-SPECIE.md).
+> Scrittura nativa PDD30/PDDU; USB10 e backup PC v12 per i nuovi avatar,
+> con lettura dei formati precedenti. Le prove reali pregresse non attestano
+> questa nuova selezione visiva; collaudo hardware ancora aperto.
+
 Il dispositivo permette ora di scegliere **carnagione, colore dei capelli,
 taglio, mantello e sfondo**, senza usare il PC. Restano le 81 combinazioni
 dell'avatar illustrato già supportate, con quattro pose. I tre ambienti sono

@@ -1,0 +1,74 @@
+{
+  "date": "2026-10-27",
+  "provider": "OpenAI ImageGen",
+  "reference": "docs/design/species/concept-board.png",
+  "sources": [
+    {
+      "key": "human",
+      "file": "human.png",
+      "sha256": "fd1571d8aafd432dfee9ebdaf988e08cd57e402ca3c373e1126b152386d27263"
+    },
+    {
+      "key": "elf",
+      "file": "elf.png",
+      "sha256": "44f6d386b19aaa8cf69fca294f89f0a5129656e8df2b9b3de30ab3e2baf93644"
+    },
+    {
+      "key": "dwarf",
+      "file": "dwarf.png",
+      "sha256": "8825619d1aa9b5550cdd77a1585ef5ddf589ef03c27f85a8621c571ecd5784da"
+    },
+    {
+      "key": "halfling",
+      "file": "halfling.png",
+      "sha256": "994f2bd8c650abd05c1fdebad4af785c6581ee404521010c425de825185e3b46"
+    },
+    {
+      "key": "gnome",
+      "file": "gnome.png",
+      "sha256": "7da80a4ef61dc393205ad2d9786ba9b73303f8f34a8600eb8f0ecb35ab9d44df"
+    },
+    {
+      "key": "half-elf",
+      "file": "half-elf.png",
+      "sha256": "0e6aa33034c5ca5c3b19af02d2c26dcae351425d58906d4f2e2175d2c37c5d86"
+    },
+    {
+      "key": "orc",
+      "file": "orc.png",
+      "sha256": "80c6ec819a860e1e12025ebdc527aa79ada0261a4ffc24658a347cd4ee5d065c"
+    },
+    {
+      "key": "half-orc",
+      "file": "half-orc.png",
+      "sha256": "d3c3d7cc8a09abdb89446706814148d42887b325933c2e8052a66bfa5338fbe5"
+    },
+    {
+      "key": "tiefling",
+      "file": "tiefling.png",
+      "sha256": "3230a303565514bd556546cb851a39d1f414d3b4ba181d3b92a3177cd20e97ed"
+    },
+    {
+      "key": "dragonborn",
+      "file": "dragonborn.png",
+      "sha256": "431dd07a94fca4a1349564902dca038b990fbb7d46db75348bf011cb14444e55"
+    },
+    {
+      "key": "goliath",
+      "file": "goliath.png",
+      "sha256": "dfdc18c9ee567a4633866a8c3d4dd99da25d8ceed7adcec4ee400b90162268b1"
+    },
+    {
+      "key": "aasimar",
+      "file": "aasimar.png",
+      "sha256": "8d354777ac41552a63d52dbbc49849c1cc23c933a00ba731ca49fe0713ebb6d6"
+    }
+  ],
+  "layout": "8 columns x 3 rows: masculine idle/blink/heal/hurt; feminine idle/blink/heal/hurt. Rows short/long/shaved; dragonborn crest/horns/smooth.",
+  "process": "Original transparent PNGs retained unchanged. generate-species-art.py detects cell bounds, samples nearest at 48x60, indexes materials and encodes PackBits with optional XOR. Legacy masculine human uses existing approved atlas.",
+  "limitations": [
+    "Generated expressions and body differences vary in subtlety between species; the runtime adds independent HP feedback.",
+    "Visual families only: aliases share anatomy, not all subspecies have unique art.",
+    "No outfit/equipment/class interpretation, no personal image download, no gender inferred from name."
+  ]
+}

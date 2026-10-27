@@ -1,9 +1,9 @@
 {
   "date": "2026-10-27",
   "provider": "OpenAI ImageGen",
-  "status": "visual proposal; not a production sprite sheet or approved final asset",
+  "status": "visual reference; gnome corrected, production sprites integrated separately in firmware/assets/species-source",
   "source": "concept-board.png",
-  "source_sha256": "88d80697889c0fab80da2e5cb6db174164b1e4c2909ab58487e6d01d57132ed8",
+  "source_sha256": "a679fa9eb7f60fa41c6d7249d026290482528b0713bbba1583719f853cebb00b",
   "reference": "firmware/ui/companion/source/hero.png",
   "reference_sha256": "ad53ba654a4ff02c65dff909be9fc402495d7a5379360706f815751e36ffafbe",
   "species": [
@@ -24,7 +24,9 @@
   "limitations": [
     "Presentation board, not game-resolution transparent sprites.",
     "Drawn example appearances are cosmetic and are not inferred from character data.",
-    "Needs normalized transparent production sprites, reaction poses and reduced-size readability review before integration.",
-    "Beyond automatic matching and manual override are not implemented by this artwork-only change."
-  ]
+    "Actual 48x60 sprites, masculine/feminine choices, converter and verification are documented in docs/AVATAR-SPECIE.md."
+  ],
+  "previous_source": "concept-board-v1.png",
+  "previous_sha256": "88d80697889c0fab80da2e5cb6db174164b1e4c2909ab58487e6d01d57132ed8",
+  "revision": "Gnome redesigned with a small harmonious nose and expressive face; other approved designs retained as reference."
 }

@@ -31,7 +31,7 @@ int main(void){
     }
     /* Last-row maximum-sized record and native snapshot retain the flag. */
     assert(pd_magic_prepare(&s,119,false));size_t n=pd_encode(&s,64,record);uint32_t generation=0;
-    assert(n==PD_RECORD_SIZE&&!memcmp(record,"PDDT",4)&&pd_decode(record,n,&decoded,&generation)&&generation==64&&!memcmp(&s,&decoded,sizeof s));
+    assert(n==PD_RECORD_SIZE&&!memcmp(record,"PDDU",4)&&pd_decode(record,n,&decoded,&generation)&&generation==64&&!memcmp(&s,&decoded,sizeof s));
     pd_history h;pd_history_reset(&h,s.history_epoch);size_t json_size;char *json=pd_backup_encode(&s,&h,&json_size);
     assert(json&&pd_backup_decode(json,json_size,&restored)&&!memcmp(&s,&restored.state,sizeof s));free(json);
     before=s;assert(!pd_magic_prepare(NULL,0,true)&&!pd_magic_prepare(&s,PD_POWERS,true)&&!memcmp(&s,&before,sizeof s));

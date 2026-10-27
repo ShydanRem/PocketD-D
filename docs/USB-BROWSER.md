@@ -1,5 +1,10 @@
 # Scheda e backup via USB dal browser — supporto PC
 
+> Aggiornamento v0.67: [specie, silhouette e proposta da Beyond](AVATAR-SPECIE.md).
+> Scrittura nativa PDD30/PDDU; USB10 e backup PC v12 per i nuovi avatar,
+> con lettura dei formati precedenti. Le prove reali pregresse non attestano
+> questa nuova selezione visiva; collaudo hardware ancora aperto.
+
 **Aggiornamento v0.66 del 27 ottobre 2026:** [avatar e sfondi sul dispositivo](PERSONALIZZAZIONE.md),
 backup PDD29 e nuova assegnazione Aspetto accettati dal PC. Il trasferimento
 della scheda resta USB9; la scena locale viene conservata. Questo incremento

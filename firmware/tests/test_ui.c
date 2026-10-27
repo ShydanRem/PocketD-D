@@ -1578,6 +1578,17 @@ int main(void) {
     snapshot.state=state;snapshot.history=history;snapshot.state.history_epoch=snapshot.history.epoch;state=snapshot.state;char *appearance_json=pd_backup_encode(&state,&history,&external_size);assert(appearance_json&&pd_backup_decode(appearance_json,external_size,&snapshot)&&snapshot.state.scene==2&&snapshot.state.avatar.style==2);free(appearance_json);
     assert(stage_import(&effects_before));assert(pending.scene==2);click("Annulla");assert(state.scene==2);state.scene=0;assert(stage_backup(&snapshot));click("Ripristina");assert(page==HERO&&state.scene==2&&state.shortcuts[0]==14);screenshot("appearance-restored.ppm");
     state.scene=1;act(100);screenshot("appearance-home-ruins.ppm");state.scene=0;act(100);screenshot("appearance-home-camp.ppm");
+    /* Species/body remain a draft until save, preserve mechanics/undo, render all families. */
+    act(1);effects_before=state;effects_saves=save_calls;shortcut(0);click("Modifica");
+    click(">");click(">");click(">");click(">");assert(appearance_field==4);click("Altre");click("Gnomo");click(">");click("Femminile");wrapped_fits();screenshot("species-gnome-female-preview.ppm");
+    assert(state.lineage==0&&state.body==0&&save_calls==effects_saves);click("Anteprima");screenshot("species-confirm.ppm");fail_save=true;click("Conferma");assert(page==APPEARANCE_CONFIRM&&state.lineage==0);fail_save=false;click("Conferma");assert(state.lineage==4&&state.body==1);
+    effects_before.lineage=4;effects_before.body=1;assert(!memcmp(&effects_before,&state,sizeof state));click("Indietro");screenshot("species-gnome-female-home.ppm");click("Annulla");assert(state.hp==24&&state.lineage==4&&state.body==1);
+    for(unsigned lineage=0;lineage<12;lineage++)for(unsigned body=0;body<2;body++){
+        state.lineage=lineage;state.body=body;state.avatar=(pd_avatar){0};act(100);char filename[80];snprintf(filename,sizeof filename,"species-home-%02u-%u.ppm",lineage,body);screenshot(filename);
+        shortcut(0);click("Modifica");click(">");assert(appearance_field==(lineage==9?2u:1u));click("Annulla");click("Indietro");
+    }
+    pd_state imported_species=state;imported_species.lineage=8;imported_species.body=1;assert(stage_import(&imported_species));screenshot("species-import.ppm");click("Annulla");assert(state.lineage==11);assert(stage_import(&imported_species));click("Conferma");assert(state.lineage==8&&state.body==1);
+    pd_history_reset(&history,state.history_epoch);char *species_json=pd_backup_encode(&state,&history,&external_size);assert(species_json&&pd_backup_decode(species_json,external_size,&snapshot)&&snapshot.state.lineage==8&&snapshot.state.body==1);free(species_json);
     puts("Appearance UI: staged colors/cut/scenes, cancel, preview, failed-save retry, no-change no-write, actual draft blink, cosmetic-only commit, HP undo isolation, local physical focus/back, retained key assignments, USB import scene preservation and native backup/restore passed (synthetic)");
     unsigned covered=0;
     for(unsigned p=0;p<=APPEARANCE_CONFIRM;p++){

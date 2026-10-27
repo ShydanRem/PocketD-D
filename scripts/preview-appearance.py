@@ -13,3 +13,5 @@ for name in ['editor-skin','scene-ruins','save-error','undo-keeps-look','restore
  p=BASE/f'appearance-{name}.ppm';assert p.exists(),p;Image.open(p).save(p.with_suffix('.png'))
 gallery.save(BASE/'appearance-preview.png')
 print('Appearance gallery: six real LVGL host frames plus error/undo/restore captures; synthetic data, no hardware capture')
+
+for path in BASE.glob('species-*.ppm'):Image.open(path).save(path.with_suffix('.png'))

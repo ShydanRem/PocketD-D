@@ -1,4 +1,5 @@
 import {normalizeBeyondSource,selectedAbilityBonus} from './beyond-normalize.js';
+import {addBeyondAppearance} from './beyond-avatar.js';
 import {extendBeyond} from './beyond-details.js';
 import {previewBeyond} from './beyond.js';
 import {initialState, parseBackup, serialize} from './model.js';
@@ -179,4 +180,4 @@ function convertCoreNormalized(payload, expectedId, normalization) {
 }
 
 export function convertBeyondCore(payload,expectedId){const n=normalizeBeyondSource(payload);return convertCoreNormalized(n.payload,expectedId,n);}
-export function convertBeyond(payload,expectedId){const n=normalizeBeyondSource(payload);return extendBeyond(convertCoreNormalized(n.payload,expectedId,n),n.payload.data);}
+export function convertBeyond(payload,expectedId){const n=normalizeBeyondSource(payload);return addBeyondAppearance(extendBeyond(convertCoreNormalized(n.payload,expectedId,n),n.payload.data),n.payload.data);}

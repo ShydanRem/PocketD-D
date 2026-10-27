@@ -2,6 +2,7 @@ import {validateExtended,adjustHeroHp} from './extended.js';
 import {startingInventory,validateInventory,equippedWeapon,adjustQuantity,DIE_SIDES} from './inventory.js';
 import {emptyEncounter,validateEncounter} from './encounter.js';
 import {emptyMagic,validateMagic} from './powers.js';
+import {avatarIdentity} from './avatar-species.js';
 export const abilityKeys = ['FOR', 'DES', 'COS', 'INT', 'SAG', 'CAR'];
 export const skills = [
   {id:'acrobatics',name:'Acrobazia',ability:'DES'}, {id:'animalHandling',name:'Addestrare animali',ability:'SAG'},
@@ -132,16 +133,18 @@ function validInteger(value, min, max) {
 }
 export function parseBackup(raw) {
   const s = JSON.parse(raw);
-  if (!s || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].includes(s.version)) throw new Error('Versione backup non supportata');
+  if (!s || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].includes(s.version)) throw new Error('Versione backup non supportata');
   if(s.version<10&&s.extended!==undefined)throw new Error('I dati estesi richiedono il formato v10');
   const base = initialState();
   if (s.version >= 3) {
     if (typeof s.name !== 'string' || !s.name.trim() || s.name.length > 24 || typeof s.title !== 'string' || s.title.length > 40 || !validInteger(s.level, 1, 20) || !validInteger(s.maxHp, 1, 999) || !validInteger(s.armorClass, 1, 30)) throw new Error('Profilo non valido');
     if (!s.abilities || !abilityKeys.every(key => validInteger(s.abilities[key], 1, 30))) throw new Error('Caratteristiche non valide');
     if (!s.avatar || !['skin','hair','cloak','style'].every(key => validInteger(s.avatar[key], 0, 2))) throw new Error('Avatar non valido');
+    const identity=avatarIdentity(s.avatar);
+    if((s.version<12&&(identity.lineage||identity.body))||(s.version===12&&(s.avatar.lineage===undefined||s.avatar.body===undefined)))throw new Error('La silhouette richiede il formato v12');
     Object.assign(base, {name:s.name.trim(), title:s.title.trim(), level:s.level, maxHp:s.maxHp, armorClass:s.armorClass,
       abilities:Object.fromEntries(abilityKeys.map(key=>[key,s.abilities[key]])),
-      avatar:Object.fromEntries(['skin','hair','cloak','style'].map(key=>[key,s.avatar[key]]))});
+      avatar:{...Object.fromEntries(['skin','hair','cloak','style'].map(key=>[key,s.avatar[key]])),...(s.version===12?identity:{})}});
   }
   if (s.version >= 4) {
     if(!s.skillRanks || !skills.every(skill=>validInteger(s.skillRanks[skill.id],0,2)) || !s.saveProficiencies || !abilityKeys.every(key=>typeof s.saveProficiencies[key]==='boolean'))throw new Error('Competenze non valide');
@@ -164,7 +167,7 @@ export function parseBackup(raw) {
     if(typeof s.swordEquipped!=='boolean'||!validInteger(s.potions,0,99)||!validInteger(s.torches,0,99))throw new Error('Inventario precedente non valido');
     Object.assign(base,startingInventory({...s,weaponReach:s.version===8?s.weaponReach:1}));
   }
-  if(s.version===10||(s.version===11&&s.extended!==undefined))base.extended=validateExtended(s.extended);
+  if(s.version===10||(s.version>=11&&s.extended!==undefined))base.extended=validateExtended(s.extended);
   if(s.importInfo!==undefined){
     const info=s.importInfo;
     if(!info || info.provider!=='dndbeyond' || typeof info.characterId!=='string' || !/^[1-9]\d{0,14}$/.test(info.characterId) || !['core-v1',...(s.version>=10?['extended-v1']:[])].includes(info.scope) || !Array.isArray(info.limitations) || info.limitations.length>30 || info.limitations.some(text=>typeof text!=='string'||text.length>500))throw new Error('Provenienza importazione non valida');
@@ -172,7 +175,10 @@ export function parseBackup(raw) {
   }
   return {...base,...core,resolve:s.resolve};
 }
-export function serialize(state) { return JSON.stringify({...state, version: 11}, null, 2); }
+export function serialize(state) {
+  const identity=avatarIdentity(state.avatar),variant=identity.lineage!==0||identity.body!==0;
+  return JSON.stringify({...state,...(variant?{avatar:{...state.avatar,...identity}}:{}),version:variant?12:11},null,2);
+}
 export function restore(raw) {
   try { return parseBackup(raw); } catch { return initialState(); }
 }

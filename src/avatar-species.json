@@ -1,0 +1,282 @@
+[
+  {
+    "id": 0,
+    "key": "human",
+    "name": "Umano",
+    "height": 58,
+    "skin": [
+      "#e6ae7e",
+      "#b77d52",
+      "#744a35"
+    ],
+    "aliases": [
+      "Human",
+      "Variant Human",
+      "Umano",
+      "Umano variante"
+    ]
+  },
+  {
+    "id": 1,
+    "key": "elf",
+    "name": "Elfo",
+    "height": 58,
+    "skin": [
+      "#e3bc96",
+      "#b98f69",
+      "#725585"
+    ],
+    "aliases": [
+      "Elf",
+      "High Elf",
+      "Wood Elf",
+      "Drow",
+      "Eladrin",
+      "Shadar-kai",
+      "Astral Elf",
+      "Sea Elf",
+      "Elfo",
+      "Elfo alto",
+      "Elfo dei boschi",
+      "Elfo del mare"
+    ],
+    "hairColors": [
+      "#e9e1c9",
+      "#bf9c56",
+      "#343239"
+    ],
+    "hairNames": [
+      "Argento",
+      "Oro",
+      "Notte"
+    ]
+  },
+  {
+    "id": 2,
+    "key": "dwarf",
+    "name": "Nano",
+    "height": 48,
+    "skin": [
+      "#dfaa7a",
+      "#b57b53",
+      "#784e39"
+    ],
+    "aliases": [
+      "Dwarf",
+      "Hill Dwarf",
+      "Mountain Dwarf",
+      "Duergar",
+      "Nano",
+      "Nano delle colline",
+      "Nano delle montagne"
+    ]
+  },
+  {
+    "id": 3,
+    "key": "halfling",
+    "name": "Halfling",
+    "height": 42,
+    "skin": [
+      "#e6b58a",
+      "#bb8359",
+      "#7c523c"
+    ],
+    "aliases": [
+      "Halfling",
+      "Lightfoot Halfling",
+      "Stout Halfling",
+      "Ghostwise Halfling",
+      "Halfling piedelesto",
+      "Halfling tozzo"
+    ]
+  },
+  {
+    "id": 4,
+    "key": "gnome",
+    "name": "Gnomo",
+    "height": 42,
+    "skin": [
+      "#e7b990",
+      "#b87f5b",
+      "#7b513e"
+    ],
+    "aliases": [
+      "Gnome",
+      "Forest Gnome",
+      "Rock Gnome",
+      "Deep Gnome",
+      "Svirfneblin",
+      "Gnomo",
+      "Gnomo delle foreste",
+      "Gnomo delle rocce",
+      "Gnomo delle profondità"
+    ],
+    "hairColors": [
+      "#e9e0cb",
+      "#a65b36",
+      "#343239"
+    ],
+    "hairNames": [
+      "Avorio",
+      "Rame",
+      "Notte"
+    ]
+  },
+  {
+    "id": 5,
+    "key": "half-elf",
+    "name": "Mezzelfo",
+    "height": 58,
+    "skin": [
+      "#e2ac7e",
+      "#b17a52",
+      "#764e38"
+    ],
+    "aliases": [
+      "Half-Elf",
+      "Half Elf",
+      "Mezzelfo",
+      "Mezzo elfo"
+    ]
+  },
+  {
+    "id": 6,
+    "key": "orc",
+    "name": "Orco",
+    "height": 60,
+    "skin": [
+      "#879b56",
+      "#64764c",
+      "#4d5d46"
+    ],
+    "aliases": [
+      "Orc",
+      "Orco"
+    ],
+    "skinNames": [
+      "Muschio",
+      "Oliva",
+      "Scuro"
+    ]
+  },
+  {
+    "id": 7,
+    "key": "half-orc",
+    "name": "Mezzorco",
+    "height": 58,
+    "skin": [
+      "#a1a477",
+      "#7d835b",
+      "#606751"
+    ],
+    "aliases": [
+      "Half-Orc",
+      "Half Orc",
+      "Mezzorco",
+      "Mezzo orco"
+    ],
+    "skinNames": [
+      "Oliva",
+      "Muschio",
+      "Scuro"
+    ]
+  },
+  {
+    "id": 8,
+    "key": "tiefling",
+    "name": "Tiefling",
+    "height": 58,
+    "skin": [
+      "#b991c6",
+      "#b96565",
+      "#777c9b"
+    ],
+    "aliases": [
+      "Tiefling",
+      "Infernal Tiefling",
+      "Abyssal Tiefling",
+      "Chthonic Tiefling",
+      "Feral Tiefling"
+    ],
+    "skinNames": [
+      "Lilla",
+      "Rosso",
+      "Cenere"
+    ]
+  },
+  {
+    "id": 9,
+    "key": "dragonborn",
+    "name": "Dragonide",
+    "height": 60,
+    "hair": false,
+    "styles": [
+      "Cresta",
+      "Corna",
+      "Liscio"
+    ],
+    "skin": [
+      "#c48c46",
+      "#b95f4e",
+      "#628fad"
+    ],
+    "aliases": [
+      "Dragonborn",
+      "Chromatic Dragonborn",
+      "Metallic Dragonborn",
+      "Gem Dragonborn",
+      "Dragonide"
+    ],
+    "skinNames": [
+      "Bronzo",
+      "Rame",
+      "Blu"
+    ]
+  },
+  {
+    "id": 10,
+    "key": "goliath",
+    "name": "Goliath",
+    "height": 60,
+    "skin": [
+      "#a3abb9",
+      "#858f9e",
+      "#657389"
+    ],
+    "aliases": [
+      "Goliath"
+    ],
+    "skinNames": [
+      "Grigio",
+      "Ardesia",
+      "Blu"
+    ]
+  },
+  {
+    "id": 11,
+    "key": "aasimar",
+    "name": "Aasimar",
+    "height": 59,
+    "skin": [
+      "#d3a075",
+      "#a67551",
+      "#774b35"
+    ],
+    "aliases": [
+      "Aasimar",
+      "Protector Aasimar",
+      "Scourge Aasimar",
+      "Fallen Aasimar"
+    ],
+    "hairColors": [
+      "#f0e5cf",
+      "#c2a45c",
+      "#554d61"
+    ],
+    "hairNames": [
+      "Bianco",
+      "Oro",
+      "Notte"
+    ]
+  }
+]

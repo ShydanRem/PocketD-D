@@ -94,7 +94,7 @@ def acquire(port):
         line = _line(port, deadline, 256)
         if not line or line in ('PDD ERROR packet', 'PDD ERROR size'):
             continue  # An interrupted prior line is discarded by the leading newline.
-        if not re.fullmatch(r'PDD READY [1-9]', line):
+        if not re.fullmatch(r'PDD READY (?:[1-9]|10)', line):
             raise RuntimeError('Protocollo USB non supportato: nessun dato della scheda inviato')
         break
     _write(port, b'PDD DIAGNOSTICS GET 1\n')

@@ -5,11 +5,15 @@ import assert from 'node:assert/strict';
 import {inspectDeviceBackup,crc32} from '../src/device-backup.js';
 const raw=readFileSync('firmware/tests/out/backup-fixture.json','utf8'),p=inspectDeviceBackup(raw);
 assert.equal(p.scene,1);assert.equal(p.name,'Elian');assert.equal(p.hp,17);assert.equal(p.maxHp,42);assert.equal(p.tempHp,7);assert.equal(p.armor,18);assert.equal(p.effects,2);assert.equal(p.powers,60);assert.equal(p.rolls.length,20);assert.equal(p.rolls[0].number,20);assert.equal(p.rolls[19].total,1);assert.equal(p.wallet.pp,999999999);assert.deepEqual(p.keys,[14,3,5]);assert.equal(p.brightness,80);assert.deepEqual(p.packet,JSON.parse(raw));assert.equal(p.nativeValidation,false);
-console.log('Native C -> PC: all three PDD29 scenes and key binding 14, exact records retained, HP/CA with local effects, wallet, settings, 60 powers and all 20 rolls preview passed; full semantic validation remains on device');
+console.log('Native C -> PC: all three PDD30 scenes and key binding 14, exact records retained, HP/CA with local effects, wallet, settings, 60 powers and all 20 rolls preview passed; full semantic validation remains on device');
 const inputs=[raw],expected=[true];
 function mutate(key,fn){const copy=JSON.parse(raw),bytes=Uint8Array.from(atob(copy[key]),c=>c.charCodeAt(0));fn(bytes,new DataView(bytes.buffer));new DataView(bytes.buffer).setUint32(bytes.length-4,crc32(bytes.subarray(0,-4)),true);copy[key]=btoa(String.fromCharCode(...bytes));return JSON.stringify(copy)}
-for(let scene=0;scene<3;scene++){const q=mutate('state',b=>b[b.length-5]=scene);assert.equal(inspectDeviceBackup(q).scene,scene);inputs.push(q);expected.push(true);}
-const invalidScene=mutate('state',b=>b[b.length-5]=3);assert.throws(()=>inspectDeviceBackup(invalidScene));inputs.push(invalidScene);expected.push(false);
+for(let scene=0;scene<3;scene++){const q=mutate('state',b=>b[b.length-7]=scene);assert.equal(inspectDeviceBackup(q).scene,scene);inputs.push(q);expected.push(true);}
+for(let lineage=0;lineage<12;lineage++)for(let body=0;body<2;body++){
+ const q=mutate('state',b=>{b[b.length-6]=lineage;b[b.length-5]=body;});const preview=inspectDeviceBackup(q);assert.equal(preview.lineage,lineage);assert.equal(preview.body,body);inputs.push(q);expected.push(true);
+}
+for(const [offset,value] of [[6,12],[5,2]]){const q=mutate('state',b=>b[b.length-offset]=value);assert.throws(()=>inspectDeviceBackup(q));inputs.push(q);expected.push(false);}
+const invalidScene=mutate('state',b=>b[b.length-7]=3);assert.throws(()=>inspectDeviceBackup(invalidScene));inputs.push(invalidScene);expected.push(false);
 // Integrity can pass while a native field omitted from PC preview is invalid.
 const invalidNative=mutate('state',b=>b[434]=2);assert.equal(inspectDeviceBackup(invalidNative).nativeValidation,false);
 inputs.push(invalidNative);expected.push(false);

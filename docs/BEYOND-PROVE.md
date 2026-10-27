@@ -1,5 +1,10 @@
 # Beyond: importazione estesa PC v0.14 — 19 ottobre 2026
 
+> Aggiornamento v0.67: [specie, silhouette e proposta da Beyond](AVATAR-SPECIE.md).
+> Scrittura nativa PDD30/PDDU; USB10 e backup PC v12 per i nuovi avatar,
+> con lettura dei formati precedenti. Le prove reali pregresse non attestano
+> questa nuova selezione visiva; collaudo hardware ancora aperto.
+
 **Aggiornamento PC 26 ottobre 2026:** nuova lettura reale del personaggio
 144777811 e correzione della riconciliazione di scelte, nomi/note, oggetti custom,
 contatori morte vuoti e tabella slot. Vedere il [resoconto attuale](BEYOND-RICONCILIAZIONE.md),

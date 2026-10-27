@@ -43,3 +43,16 @@ if gallery.is_file():
  shutil.copyfile(gallery,out/'assets/personalizzazione.png')
  (out/'assets/personalizzazione.css').write_text('body{margin:0;background:#07151e;color:#ffefd2;font:17px system-ui}main{max-width:1500px;margin:auto;padding:24px}a{color:#8ce6c2}img{display:block;width:100%;height:auto;margin-top:24px}p{max-width:800px;line-height:1.6}')
  (out/'personalizzazione.html').write_text(f'''<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>PocketD-D {version} · Personalizzazione</title><link rel="stylesheet" href="assets/personalizzazione.css"><main><a href="/">← PocketD-D</a><h1>Il tuo eroe, il tuo ambiente</h1><p>Pelle, capelli, taglio e mantello configurabili sul dispositivo. Accampamento, rovine lunari e porto all’alba, con anteprima e conferma.</p><p>Queste sono catture del software del firmware {version} eseguito su PC con un personaggio di prova. La verifica sul dispositivo resta da fare.</p><a href="assets/personalizzazione.png">Apri l’immagine alla risoluzione originale</a><img src="assets/personalizzazione.png" width="1470" height="980" alt="Tre ambienti della home PocketD-D e le schermate per personalizzare e confermare l’aspetto del personaggio"></main></html>''')
+
+# Native resolution screenshots from the production renderer, never concept replacements.
+species=json.loads((ROOT/'src/avatar-species.json').read_text())
+cards=[]
+for entry in species:
+ for body,label in enumerate(['Maschile','Femminile']):
+  filename=f'species-home-{entry["id"]:02d}-{body}.png';source=ROOT/'firmware/tests/out/ui-build'/filename
+  if not source.is_file():raise SystemExit(f'Missing species production capture: {filename}')
+  shutil.copyfile(source,out/'assets'/filename)
+  cards.append(f'<figure><img loading="lazy" src="assets/{filename}" width="466" height="466" alt="{entry["name"]}, silhouette {label.lower()}, nella home del firmware"><figcaption>{entry["name"]} · {label}</figcaption></figure>')
+page=out/'personalizzazione.html'
+page.write_text(page.read_text().replace('</main>', '<h2>12 specie · 24 silhouette</h2><p>Lo gnomo è stato rifatto. Maschile e femminile sono indipendenti da colori e tagli. Beyond propone la famiglia visiva riconosciuta; puoi cambiarla nell’anteprima o sul dispositivo. Le specie sconosciute richiedono una scelta manuale.</p><section class="species-grid">'+''.join(cards)+'</section></main>'))
+css=out/'assets/personalizzazione.css';css.write_text(css.read_text()+'.species-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:20px}figure{margin:0;padding:12px;background:#12252e;border:1px solid #40645e;border-radius:14px}figure img{margin:0;width:100%;image-rendering:pixelated}figcaption{padding:10px;color:#eac884;text-align:center}')

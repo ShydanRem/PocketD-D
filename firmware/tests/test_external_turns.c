@@ -57,7 +57,7 @@ int main(int argc,char **argv){
     for(unsigned i=0;i<8;i++)s.effects[i]=(pd_effect){.value=1,.timed=true,.rounds=99,.tick=PD_TICK_START,.owner=i%4};
     for(unsigned slot=0;slot<3;slot++)for(unsigned type=0;type<13;type++)assert(pd_defence_grant_set(&s,type,slot,(pd_defence_temporary){.flags=1,.timed=true,.rounds=99,.tick=PD_TICK_END,.owner=(slot*13+type)%4}));
     for(unsigned i=0;i<3;i++)assert(pd_reduction_profile_set(&s,i,(pd_reduction_profile){.value=1,.types=1,.timed=true,.rounds=99,.tick=PD_TICK_START,.owner=i+1}));
-    unsigned timer_at=8375+552*s.magic.count;uint32_t generation=0;size_t n=pd_encode(&s,98,record);assert(n&&!memcmp(record,"PDDT",4)&&pd_decode(record,n,&out,&generation)&&generation==98&&!memcmp(&s,&out,sizeof s));
+    unsigned timer_at=8375+552*s.magic.count;uint32_t generation=0;size_t n=pd_encode(&s,98,record);assert(n&&!memcmp(record,"PDDU",4)&&pd_decode(record,n,&out,&generation)&&generation==98&&!memcmp(&s,&out,sizeof s));
     pd_history history;pd_history_reset(&history,s.history_epoch);size_t json_size;char *json=pd_backup_encode(&s,&history,&json_size);assert(json&&pd_backup_decode(json,json_size,&restored)&&!memcmp(&restored.state,&s,sizeof s));if(argc==2){FILE *f=fopen(argv[1],"wb");assert(f&&fwrite(json,1,json_size,f)==json_size&&!fclose(f));}free(json);
     for(unsigned i=0;i<50;i++){
         n=pd_encode(&s,98,record);record[timer_at+i]=0x21;crc(n);before=out;generation=97;
@@ -65,7 +65,7 @@ int main(int argc,char **argv){
     }
     n=pd_encode(&s,98,record);record[timer_at]=8|PD_TICK_MINUTES;crc(n);assert(!pd_decode(record,n,&out,&generation));
     /* Old P tag rejects packed owners instead of silently dropping them. */
-    n=pd_encode(&s,98,record);record[3]='P';n-=64;crc(n);assert(!pd_decode(record,n,&out,&generation));
+    n=pd_encode(&s,98,record);record[3]='P';n-=66;crc(n);assert(!pd_decode(record,n,&out,&generation));
     for(unsigned i=0;i<50;i++){record[timer_at+i]&=7;}crc(n);assert(pd_decode(record,n,&out,&generation));
     assert(!out.effects[1].owner&&!out.reductions[2].owner&&!out.defences.additional[12][1].owner);
     setup();n=pd_encode(&s,98,record);record[8375+552*s.magic.count]=9;crc(n);assert(!pd_decode(record,n,&out,&generation)); /* Unused numeric position. */

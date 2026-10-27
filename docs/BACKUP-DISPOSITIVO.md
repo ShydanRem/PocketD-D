@@ -1,5 +1,10 @@
 # Backup dal dispositivo al PC — v0.53
 
+> Aggiornamento v0.67: [specie, silhouette e proposta da Beyond](AVATAR-SPECIE.md).
+> Scrittura nativa PDD30/PDDU; USB10 e backup PC v12 per i nuovi avatar,
+> con lettura dei formati precedenti. Le prove reali pregresse non attestano
+> questa nuova selezione visiva; collaudo hardware ancora aperto.
+
 > Aggiornamento v0.66: [avatar e sfondi locali](PERSONALIZZAZIONE.md).
 > Il backup nativo v1 accetta ora anche PDD29/PDDT, con scena e assegnazione
 > Aspetto ai tasti. Record massimo 75.183 byte; compatibilità con i record

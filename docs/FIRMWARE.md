@@ -1,5 +1,10 @@
 # Firmware PocketD-D 0.66 — avatar e sfondi locali
 
+> Aggiornamento v0.67: [specie, silhouette e proposta da Beyond](AVATAR-SPECIE.md).
+> Scrittura nativa PDD30/PDDU; USB10 e backup PC v12 per i nuovi avatar,
+> con lettura dei formati precedenti. Le prove reali pregresse non attestano
+> questa nuova selezione visiva; collaudo hardware ancora aperto.
+
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.

@@ -1,0 +1,40 @@
+{
+  "version": "0.67.0",
+  "date": "2026-10-27",
+  "base_commit": "9d38f1dce1f6a642f7cde22f303dc3baad0b628b",
+  "evidence": "Synthetic fixtures and production C renderer executed on host; actual ESP32-S3 compilation. No new live Beyond read or physical board test.",
+  "javascript_tests": 200,
+  "native_suite": "passed",
+  "lvgl_views": [
+    118,
+    118
+  ],
+  "c_js_species_buffer_comparisons": 7776,
+  "c_js_legacy_buffer_comparisons": 324,
+  "native_backup_cross_language_cases": 39,
+  "asan_ubsan": [
+    "UI",
+    "species renderer",
+    "appearance codec"
+  ],
+  "browser": [
+    "synthetic Beyond proposal and manual override",
+    "new character confirmation and existing sheets retained",
+    "PC editor cancel/save and palette presets retain identity",
+    "native backup and simulated Web Serial",
+    "installer responsive 24-species gallery and ZIP download",
+    "extracted PC package"
+  ],
+  "firmware": {
+    "bytes": 3956352,
+    "sha256": "c4334352074a80b709cbe9ebfeeb1dfdf24b97efc2c4b40f26268732985040dd",
+    "app_partition_bytes": 4194304,
+    "free_bytes": 237952
+  },
+  "pending": [
+    "physical touch/buttons and sprite performance",
+    "actual USB character import/restart issue",
+    "new live Beyond species/gender proposal",
+    "additional species and per-subspecies artwork"
+  ]
+}

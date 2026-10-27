@@ -1,3 +1,4 @@
+import {avatarIdentity} from './avatar-species.js';
 import {abilityKeys,skills,parseBackup,serialize} from './model.js';
 export const DEVICE_MAX_RESOURCES=8;
 const ascii=(value,max)=>String(value).normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^\x20-\x7e]/g,'?').trim().slice(0,max)||'Eroe';
@@ -7,7 +8,7 @@ export function projectDevice(input){
   const warnings=[
     'Firmware iniziale: una sola scheda attiva. La conferma sul display sostituisce la copia sul dispositivo; la raccolta PC resta conservata.',
     'Trasferisce nome, livello, aspetto dell’avatar, PF, PF temporanei, CA, caratteristiche, abilità, salvezze, inventario (60 voci), attacchi, magie/capacità, dadi vita, condizioni e contatori morte e fino a 8 contatori manuali. Non trasferisce la risposta originale di Beyond.',
-    'Avatar originale: carnagione, colore/taglio dei capelli e mantello scelti sul PC. Non rappresenta equipaggiamento o immagini di Beyond. Animazione disattivabile dal dispositivo in Aspetto.',
+    'Avatar originale: famiglia visiva, silhouette maschile/femminile, carnagione, capelli e mantello modificabili sul PC o sul dispositivo. Non rappresenta equipaggiamento o immagini di Beyond. Animazione disattivabile dal dispositivo in Aspetto.',
     'Non disponibili sul dispositivo: gestione completa degli effetti delle condizioni, mappa e party. Lo storico locale degli ultimi 20 tiri richiede firmware v0.52 ed è incluso nel backup nativo dalla v0.53.',
     'Prove con competenze, maestrie, bonus extra e mezza competenza riconosciuti dal PC. Le prove da verificare restano bloccate; per eccezioni del DM è disponibile il dado libero.',
     'Avvelenato e vantaggio FOR da Ira sono fotografati al trasferimento. Ira riconosciuta attivabile dalla capacità; altre condizioni e durate restano manuali. Effetti PC disattivabili per il singolo tiro; altri effetti restano da gestire con il DM.',
@@ -54,12 +55,14 @@ export function projectDevice(input){
   warnings.push('Morte: contatori trasferiti esattamente; d20 base senza bonus, vantaggi o talenti, con conferma e correzioni DM. Tre fallimenti a zero PF bloccano cure ordinarie e riposo lungo fino a correzione esplicita. Nessuna morte istantanea o gestione automatica dei danni a zero PF.');
   const wallet={available:s.extended?.currenciesAvailable??false,...Object.fromEntries(['cp','sp','ep','gp','pp'].map(k=>[k,s.extended?.currenciesAvailable?integer(s.extended.currencies[k],0,999999999,k):0]))};
   warnings.push(wallet.available?'Monete: cinque saldi verificati, separati e modificabili con conferma sul dispositivo. Nessun cambio o acquisto automatico.':'Monete: saldo non verificato, nessuna ricchezza inventata. Verificalo in Stato e risorse sul PC oppure configura il borsello sul dispositivo.');
-  const packet={format:'pocketdd-device',version:9,name:ascii(s.name,48),level:integer(s.level,1,20,'Livello'),hp:integer(s.hp,0,999,'PF'),
+  const identity=avatarIdentity(s.avatar),variant=identity.lineage||identity.body;
+  const packet={format:'pocketdd-device',version:variant?10:9,name:ascii(s.name,48),level:integer(s.level,1,20,'Livello'),hp:integer(s.hp,0,999,'PF'),
     maxHp:integer(s.maxHp,1,999,'PF massimi'),tempHp:integer(s.extended?.tempHp??0,0,999,'PF temporanei'),armorClass:integer(s.armorClass,1,40,'CA'),
     avatar:Object.fromEntries(['skin','hair','cloak','style'].map(k=>[k,integer(s.avatar[k],0,2,k)])),
     training,inventory,magic,recovery,status,wallet,
     abilities:Object.fromEntries(abilityKeys.map(k=>[k,integer(s.abilities[k],1,30,k)])),
     resources:counters.slice(0,DEVICE_MAX_RESOURCES).map(r=>({name:ascii(r.name,32),current:integer(r.current,0,999,r.name),maximum:integer(r.maximum,1,999,r.name)}))};
+  if(variant){Object.assign(packet.avatar,identity);warnings.push('Specie e silhouette maschile/femminile richiedono USB10 / firmware 0.67 o successivo. Aspetto cosmetico: nessun bonus o equipaggiamento dedotto.');}
   if(serializeDevice(packet).length>262144)throw new Error('Copia oltre 262144 byte: nessun inventario troncato.');
   return {packet,warnings};
 }
