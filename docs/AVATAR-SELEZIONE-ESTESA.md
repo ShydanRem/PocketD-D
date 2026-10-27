@@ -1,5 +1,8 @@
 # Goblin, Hobgoblin, Bugbear, Kobold e Lizardfolk — v0.69
 
+> Cataloghi futuri: [asset e preset sulla SD](ASSET-SD.md), con risorse essenziali
+> in flash e cache limitata in RAM. La v0.69 usa ancora asset incorporati.
+
 La selezione raggiunge **21 famiglie visive e 42 silhouette**. Il nuovo gruppo
 aggiunge Goblin piccolo con grandi orecchie, Hobgoblin color terracotta con tratti
 più robusti, Bugbear peloso, Kobold piccolo con corna e coda, e Lizardfolk con

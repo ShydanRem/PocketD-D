@@ -76,9 +76,15 @@
   ],
   "constraints": [
     "Retain species anatomy and both body variants.",
-    "Use modular body/clothing/weapon layers and anchors; no all-combination full sprites.",
+    "Use modular body/clothing/weapon layers and anchors for visual consistency; dedicated sprites may live on SD when useful.",
     "Presets are cosmetic and editable; do not add inventory or change AC/HP/attacks.",
     "Only explicit unambiguous class proposals; multiclass and unknown classes require manual choice.",
     "Artificer and subclasses follow the twelve base classes."
-  ]
+  ],
+  "asset_storage": {
+    "target": "SD asset packs",
+    "firmware": "core UI and built-in fallback",
+    "runtime_memory": "bounded cache of active assets",
+    "status": "SD mount and loader not implemented in v0.69"
+  }
 }

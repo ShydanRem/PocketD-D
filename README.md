@@ -8,6 +8,7 @@ Il firmware comprende borsello, storico, scheda, inventario, magie/slot/usi, rip
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
+- [SD: archivio previsto per cataloghi e preset, caricatore da integrare](docs/ASSET-SD.md)
 - [Avatar e sfondi: editor sul dispositivo v0.66](docs/PERSONALIZZAZIONE.md)
 - [Quantità degli oggetti: modifica sul dispositivo v0.65](docs/QUANTITA-OGGETTI.md)
 - [Invia scheda e gestisci backup dal browser via USB](docs/USB-BROWSER.md)

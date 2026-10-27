@@ -1,5 +1,9 @@
 # Architettura proposta e verifiche
 
+> Direzione aggiornata: [SD come archivio principale degli asset](ASSET-SD.md).
+> Il catalogo di razze, classi, abiti e sfondi non è vincolato alla partizione
+> applicazione; il firmware v0.69 non monta ancora la carta.
+
 ## Stato implementazione al 21 ottobre 2026
 
 Il dispositivo è il runtime principale; il PC prepara schede e backup.
