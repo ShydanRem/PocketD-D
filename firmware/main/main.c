@@ -8,6 +8,7 @@
 #include "visual.h"
 #include "avatar.h"
 #include "companion.h"
+#include "../ui/scenes/scenes.h"
 #include "theme.h"
 #include "checks.h"
 #include "combat.h"
@@ -40,13 +41,14 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM, POWER_HOME, POWER_OFF, ITEM_SEARCH, POWER_SEARCH, MAGIC_MANAGE, MAGIC_PREPARATION, ITEM_QUANTITY_CONFIRM } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM, POWER_HOME, POWER_OFF, ITEM_SEARCH, POWER_SEARCH, MAGIC_MANAGE, MAGIC_PREPARATION, ITEM_QUANTITY_CONFIRM, AVATAR_EDIT, SCENE_EDIT, APPEARANCE_CONFIRM } page_t;
 static const pd_theme_kind page_themes[]={
     [HERO]=PD_THEME_NONE,
     [SHEET]=PD_THEME_SHEET,
     [DICE]=PD_THEME_DICE,
     [RESOURCES]=PD_THEME_USES,
     [APPEARANCE]=PD_THEME_APPEARANCE,
+    [AVATAR_EDIT]=PD_THEME_APPEARANCE,[SCENE_EDIT]=PD_THEME_APPEARANCE,[APPEARANCE_CONFIRM]=PD_THEME_APPEARANCE,
     [CHECK_DETAIL]=PD_THEME_SHEET,
     [INVENTORY]=PD_THEME_PACK,
     [ITEM_DETAIL]=PD_THEME_PACK,
@@ -179,6 +181,13 @@ static lv_obj_t *scene_lights[5];
 static lv_obj_t *scene_halos[2];
 static uint32_t avatar_started;
 static unsigned avatar_phase;
+static pd_avatar avatar_drawn,appearance_draft;
+static unsigned appearance_scene,appearance_field;
+static page_t appearance_return;
+static lv_obj_t *appearance_targets[8];
+static unsigned appearance_target_count,appearance_focus;
+static bool appearance_keyboard;
+static bool appearance_editing(void);
 static unsigned avatar_scale;
 _Alignas(4) static uint8_t avatar_data[PD_AVATAR_LARGE_BYTES];
 static lv_image_dsc_t avatar_image={
@@ -230,7 +239,7 @@ static bool input_check_open(void){return page>=INPUT_CHECK_HOME&&page<=INPUT_CH
 static const char *input_check_notice="PWR lungo: alimentazione";
 static unsigned magic_filter=2,magic_page,power_index,cast_level,text_page,slot_index;
 static bool cast_pact,slot_pact,stop_rage,preparation_target;
-static const char *const shortcut_names[]={"Spento","Eroe","Scheda","Dadi","Zaino","Magie","Lancia","Riposi","Stato","Schermo","Effetti","Round","Danni","Storico"};
+static const char *const shortcut_names[]={"Spento","Eroe","Scheda","Dadi","Zaino","Magie","Lancia","Riposi","Stato","Schermo","Effetti","Round","Danni","Storico","Aspetto"};
 static void shortcut(unsigned gesture);
 static bool can_use_power(void);
 static pd_rest_plan rest_plan;
@@ -245,7 +254,8 @@ static bool number_fresh;
 static bool item_rolled;
 static pd_pool item_result;
 static unsigned item_gained;
-static bool confirmation_open(void){return page==ITEM_QUANTITY_CONFIRM||page==MAGIC_PREPARATION||page==ITEM_SEARCH||page==POWER_SEARCH||power_paused||power_off_attempted||page==POWER_OFF||page==NUMBER_ENTRY||page==VITAL_CONFIRM||page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
+static bool appearance_editing(void){return page==AVATAR_EDIT||page==SCENE_EDIT||page==APPEARANCE_CONFIRM;}
+static bool confirmation_open(void){return appearance_editing()||page==ITEM_QUANTITY_CONFIRM||page==MAGIC_PREPARATION||page==ITEM_SEARCH||page==POWER_SEARCH||power_paused||power_off_attempted||page==POWER_OFF||page==NUMBER_ENTRY||page==VITAL_CONFIRM||page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
 static pd_damage_plan damage_plan; /* First component + explicit concentration choice. */
 static pd_damage_component damage_extra[PD_DAMAGE_COMPONENTS-1],damage_part_draft;
 static pd_damage_context damage_context,damage_extra_context[PD_DAMAGE_COMPONENTS-1],damage_part_context,source_context_draft;
@@ -619,7 +629,7 @@ static void avatar_set_pose(const pd_avatar *appearance,unsigned pose) {
     if(avatar_sprite)lv_obj_invalidate(avatar_sprite);
 }
 static void avatar_prepare(const pd_avatar *appearance,unsigned scale) {
-    avatar_scale=scale;
+    avatar_drawn=*appearance;avatar_scale=scale;
     avatar_image.header.w=24*scale;avatar_image.header.h=30*scale;
     avatar_image.header.stride=avatar_image.header.w;
     avatar_image.data_size=scale==4?PD_AVATAR_LARGE_BYTES:scale==3?PD_AVATAR_HERO_BYTES:PD_AVATAR_IMAGE_BYTES;
@@ -684,6 +694,8 @@ static void act(intptr_t action) {
     if(action>=2900&&action<2913){input_check_action(action);return;}
     if(input_check_open())return;
     if(power_paused||power_off_attempted)return;
+    if(appearance_editing()&&(action<4301||action>4321))return;
+    if(page==APPEARANCE_CONFIRM&&action!=4307&&action!=4308)return;
     if(page==POWER_OFF&&action!=3703&&action!=3704)return;
     if(page==ITEM_QUANTITY_CONFIRM&&action!=4101&&action!=4102)return;
     if(page==MAGIC_PREPARATION&&action!=4002&&action!=4003)return;
@@ -949,6 +961,22 @@ static void act(intptr_t action) {
     }
     else if (action==31) { import_pending=false;reply("PDD CANCELLED\n"); }
     else if (action==50)page=APPEARANCE;
+    else if(action==4300&&page==APPEARANCE){appearance_draft=state.avatar;appearance_scene=state.scene;appearance_field=0;appearance_keyboard=false;appearance_focus=0;page=AVATAR_EDIT;}
+    else if((action==4301||action==4303)&&page==AVATAR_EDIT)appearance_field=(appearance_field+(action==4301?3:1))%4;
+    else if(action==4302&&(page==AVATAR_EDIT||page==SCENE_EDIT))page=APPEARANCE;
+    else if(action==4304&&page==AVATAR_EDIT){appearance_focus=0;page=SCENE_EDIT;}
+    else if(action==4305&&page==SCENE_EDIT){appearance_focus=0;page=AVATAR_EDIT;}
+    else if(action==4306&&(page==AVATAR_EDIT||page==SCENE_EDIT)){appearance_return=page;appearance_focus=0;page=APPEARANCE_CONFIRM;}
+    else if(action==4308&&page==APPEARANCE_CONFIRM){appearance_focus=0;page=appearance_return;}
+    else if(action==4307&&page==APPEARANCE_CONFIRM){
+        if(!pd_appearance_set(&next,&appearance_draft,appearance_scene))return;
+        if(!memcmp(&state.avatar,&next.avatar,sizeof state.avatar)&&state.scene==next.scene)page=APPEARANCE;
+        else if(pd_storage_save(&next)){state=next;previous.avatar=next.avatar;previous.scene=next.scene;page=APPEARANCE;}
+    }
+    else if(action>=4310&&action<=4312&&page==AVATAR_EDIT){
+        uint8_t *fields[]={&appearance_draft.skin,&appearance_draft.hair,&appearance_draft.cloak,&appearance_draft.style};*fields[appearance_field]=action-4310;
+    }
+    else if((action==4320||action==4321)&&page==SCENE_EDIT)appearance_scene=(appearance_scene+(action==4320?PD_SCENES-1:1))%PD_SCENES;
     else if (action==51) {
         next.idle_animation=!state.idle_animation;
         if(pd_storage_save(&next)) {
@@ -999,7 +1027,7 @@ static void act(intptr_t action) {
         if(pd_storage_save(&next)){previous=state;undo_available=true;state=next;invalidate_strike();page=MAGIC_STATUS;}
     }
     else if(action>=860&&action<=862) {
-        unsigned i=action-860;next.shortcuts[i]=(state.shortcuts[i]+1)%14;
+        unsigned i=action-860;next.shortcuts[i]=(state.shortcuts[i]+1)%15;
         if(pd_storage_save(&next)){state=next;memcpy(previous.shortcuts,next.shortcuts,3);}
     }
     else if(action==1600)page=DEVICE_SETTINGS;
@@ -1941,7 +1969,7 @@ static void render_magic_other(void) {
     } else if(page==KEY_SETTINGS) {
         label("Tasti configurabili",83,111,300,true);
         const char *gestures[]={"PWR breve","BOOT breve","BOOT lungo"};
-        const lv_image_dsc_t *icons[]={&theme_gear,&theme_hero,&theme_sheet,&theme_dice,&theme_pack,&theme_magic,&theme_dice,&theme_rest,&theme_heart,&theme_sun,&theme_notes,&theme_time,&theme_shield,&theme_notes};
+        const lv_image_dsc_t *icons[]={&theme_gear,&theme_hero,&theme_sheet,&theme_dice,&theme_pack,&theme_magic,&theme_dice,&theme_rest,&theme_heart,&theme_sun,&theme_notes,&theme_time,&theme_shield,&theme_notes,&theme_hero};
         for(unsigned i=0;i<3;i++) {
             snprintf(text,sizeof text,"%s: %s",gestures[i],shortcut_names[state.shortcuts[i]]);
             lv_obj_t *b=button(text,83,157+i*54,300,48,860+i,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
@@ -2802,6 +2830,52 @@ static void companion_event(companion_action selected,void *unused) {
     }
     act(action);
 }
+static void appearance_mark_focus(void){
+    if(appearance_focus>=appearance_target_count)appearance_focus=0;
+    for(unsigned i=0;i<appearance_target_count;i++){
+        lv_obj_set_style_outline_width(appearance_targets[i],appearance_keyboard&&i==appearance_focus?2:0,0);
+        lv_obj_set_style_outline_pad(appearance_targets[i],2,0);
+        lv_obj_set_style_outline_color(appearance_targets[i],lv_color_hex(PD_GOLD),0);
+    }
+}
+static lv_obj_t *appearance_button(const char *name,int x,int y,int w,int h,int action,bool enabled){
+    lv_obj_t *b=button(name,x,y,w,h,action,enabled);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
+    if(appearance_target_count<8)appearance_targets[appearance_target_count++]=b;
+    return b;
+}
+static void render_appearance_editor(void){
+    lv_obj_t *root=lv_screen_active();appearance_target_count=0;
+    art(pd_scene_image(appearance_scene),0,0,root);
+    lv_obj_t *top=decoration(0,0,466,165,PD_INK,0);lv_obj_set_style_bg_opa(top,210,0);
+    lv_obj_t *bottom=decoration(0,294,466,172,PD_INK,0);lv_obj_set_style_bg_opa(bottom,205,0);
+    small_label(ui_storage_status(),91,73,284,ui_status_color(ui_storage_status()));
+    static const char *const fields[]={"Carnagione","Capelli","Mantello","Taglio"};
+    static const char *const values[][3]={{"Chiara","Media","Scura"},{"Castani","Biondi","Scuri"},{"Bosco","Vino","Notte"},{"Corti","Lunghi","Rasati"}};
+    char caption[80];
+    avatar_show(&appearance_draft,185,page==SCENE_EDIT?208:175,root,4,true);
+    if(page==AVATAR_EDIT){
+        snprintf(caption,sizeof caption,"%s %u/4",fields[appearance_field],appearance_field+1);label(caption,83,111,204,true);
+        appearance_button("Scena",299,99,84,44,4304,true);
+        appearance_button("<",83,214,48,48,4301,true);appearance_button(">",335,214,48,48,4303,true);
+        const unsigned chosen[]={appearance_draft.skin,appearance_draft.hair,appearance_draft.cloak,appearance_draft.style};
+        for(unsigned i=0;i<3;i++){
+            lv_obj_t *b=appearance_button(values[appearance_field][i],83+i*104,299,92,44,4310+i,true);
+            if(i==chosen[appearance_field]){lv_obj_set_style_border_color(b,lv_color_hex(PD_MINT),0);lv_obj_set_style_border_width(b,3,0);lv_obj_set_style_bg_color(b,lv_color_hex(0x244d48),0);}
+        }
+        appearance_button("Annulla",83,359,144,48,4302,true);appearance_button("Anteprima",239,359,144,48,4306,true);
+    }else if(page==SCENE_EDIT){
+        label("Sfondo",83,111,204,true);appearance_button("Avatar",299,99,84,44,4305,true);
+        small_label(pd_scene_name(appearance_scene),83,151,300,PD_GOLD);
+        appearance_button("<",83,263,48,48,4320,true);appearance_button(">",335,263,48,48,4321,true);
+        appearance_button("Annulla",83,359,144,48,4302,true);appearance_button("Anteprima",239,359,144,48,4306,true);
+    }else{
+        label("Salvare l'aspetto?",83,111,300,true);small_label(pd_scene_name(appearance_scene),83,151,300,PD_GOLD);
+        snprintf(caption,sizeof caption,"%s / %s",values[0][appearance_draft.skin],values[1][appearance_draft.hair]);small_label(caption,83,302,300,PD_GOLD);
+        snprintf(caption,sizeof caption,"%s / %s",values[2][appearance_draft.cloak],values[3][appearance_draft.style]);small_label(caption,83,328,300,PD_TEXT);
+        appearance_button("Indietro",83,359,144,48,4308,true);appearance_button("Conferma",239,359,144,48,4307,true);
+    }
+    small_label("PWR > / BOOT ok",133,416,200,PD_TEXT);appearance_mark_focus();
+}
 static void render_companion(void){
     const char *status=ui_storage_status();
     bool error=strstr(status,"Errore")!=NULL;
@@ -2819,7 +2893,7 @@ static void render_companion(void){
         .can_heal=state.hp<pd_max_hp(&state)&&(state.hp||!state.status.available||state.status.failures<3),
         .applied_hp=feedback.active?feedback.hp_delta:0,.applied_temporary=feedback.active?feedback.temp_delta:0,
         .power_text=badge,.power_percent=power_info.percent,.power_percent_valid=fresh&&power_info.battery&&power_info.percent_valid,.power_warning=pd_power_warning(&power_info,lv_tick_get()),.power_charging=fresh&&power_info.charging,
-        .feedback_age=age,.notice=strcmp(status,"Salvato offline")?status:NULL,.avatar=&avatar_image
+        .background=pd_scene_image(state.scene),.feedback_age=age,.notice=strcmp(status,"Salvato offline")?status:NULL,.avatar=&avatar_image
     };
     companion_show(lv_screen_active(),&view,companion_event,NULL);
     avatar_sprite=companion_avatar_object();
@@ -2846,6 +2920,7 @@ static void render_content(void) {
         pd_weapon_info weapon;if(!pd_weapon_stats(&state,state.equipped,&weapon))page=INVENTORY;
     }
     if(!import_pending&&(page==HERO||page==HOME_MENU||page==HOME_VITALS)){render_companion();return;}
+    if(!import_pending&&appearance_editing()){render_appearance_editor();return;}
     frame();
     if (import_pending) {
         label("COPIA DA USB",83,112,300,true);
@@ -2904,9 +2979,9 @@ static void render_content(void) {
     if(page==DICE && dice_setup) { render_dice_setup();return; }
     if(page==CHECK_DETAIL) { render_check_detail();return; }
     if(page==APPEARANCE) {
-        label("Aspetto",83,111,300,true);
-        art(&theme_camp_stage,83,143,root);
-        scene_atmosphere(root,83,167);
+        label("Aspetto",83,111,204,true);lv_obj_t *edit=button("Modifica",299,99,84,44,4300,true);lv_obj_set_style_text_font(edit,&lv_font_montserrat_16,0);
+        art(state.scene?pd_scene_preview(state.scene):&theme_camp_stage,83,143,root);
+        if(!state.scene)scene_atmosphere(root,83,167);
         avatar_show(&state.avatar,185,143,root,4,true);
         snprintf(text,sizeof text,"Mantello %s / %s",(const char *const[]){"bosco","vino","notte"}[state.avatar.cloak],
                  (const char *const[]){"corti","lunghi","rasati"}[state.avatar.style]);
@@ -3012,7 +3087,7 @@ static void render_content(void) {
     }
 }
 #ifdef PD_UI_TEST
-static bool styled_pages[ITEM_QUANTITY_CONFIRM+1];
+static bool styled_pages[APPEARANCE_CONFIRM+1];
 static void capture_styled_page(unsigned view);
 #endif
 static void render(void){
@@ -3050,7 +3125,7 @@ static void avatar_frame(lv_timer_t *timer) {
     for(unsigned i=0;i<5;i++)if(scene_lights[i])lv_obj_set_style_opa(scene_lights[i],i<2?((step+i)%3?LV_OPA_COVER:LV_OPA_50):((step+i*3)%8<2?LV_OPA_COVER:LV_OPA_20),0);
     unsigned pose=avatar_current_pose();
     if(pose==avatar_phase)return;
-    avatar_set_pose(&state.avatar,pose);
+    avatar_set_pose(&avatar_drawn,pose);
 }
 static void shortcut(unsigned gesture) {
     if(gesture>=3||import_pending||confirmation_open())return;
@@ -3058,20 +3133,26 @@ static void shortcut(unsigned gesture) {
     if(dice_animation.active){if(binding==6&&page==DICE)act(16);return;}
     if(binding==6){act(page==DICE?13:14);return;}
     if(binding==1)act(100);else if(binding==2)act(101);else if(binding==3)act(14);
-    else if(binding==4)act(80);else if(binding==5)act(800);else if(binding==7)act(900);else if(binding==8)act(1500);else if(binding==9)act(1600);else if(binding==10)act(1700);else if(binding==11)act(1740);else if(binding==12)act(1800);else if(binding==13)act(2600);
+    else if(binding==4)act(80);else if(binding==5)act(800);else if(binding==7)act(900);else if(binding==8)act(1500);else if(binding==9)act(1600);else if(binding==10)act(1700);else if(binding==11)act(1740);else if(binding==12)act(1800);else if(binding==13)act(2600);else if(binding==14)act(50);
 }
 static void screen_service(int pwr,int boot){
     input_check_service();
     bool allowed=pd_screen_keys(&display_screen,pwr,boot,lv_tick_get());
-    bool enabled=allowed&&!import_pending&&!confirmation_open();
+    bool enabled=allowed&&!import_pending&&(!confirmation_open()||appearance_editing());
     unsigned gestures=pd_buttons_sample(&physical_keys,pwr,boot,lv_tick_get(),enabled);
-    for(unsigned i=0;i<3;i++)if(gestures&(1u<<i))shortcut(i);
+    for(unsigned i=0;i<3;i++)if(gestures&(1u<<i)){
+        if(appearance_editing()){
+            if(i==0){if(!appearance_keyboard){appearance_keyboard=true;appearance_focus=0;}else appearance_focus=(appearance_focus+1)%appearance_target_count;appearance_mark_focus();}
+            else if(i==1){if(!appearance_keyboard){appearance_keyboard=true;appearance_focus=0;appearance_mark_focus();}else if(appearance_focus<appearance_target_count){lv_obj_t *target=appearance_targets[appearance_focus];if(!lv_obj_has_state(target,LV_STATE_DISABLED))lv_obj_send_event(target,LV_EVENT_CLICKED,NULL);}}
+            else act(page==APPEARANCE_CONFIRM?4308:4302);
+        }else shortcut(i);
+    }
     if(page==INPUT_CHECK_KEYS&&pd_input_check_keys(&input_check,pwr,boot,lv_tick_get(),allowed))input_check_refresh();
     bool failed=display_screen.failed;
     pd_screen_step(&display_screen,state.brightness,state.dim_timeout,import_pending||confirmation_open()||dice_animation.active,lv_tick_get(),pd_board_brightness,NULL);
     companion_pause(display_screen.dimmed);
     if(display_screen.dimmed)pd_theme_pause();
-    if(display_screen.dimmed&&avatar_sprite&&avatar_phase)avatar_set_pose(&state.avatar,0);
+    if(display_screen.dimmed&&avatar_sprite&&avatar_phase)avatar_set_pose(&avatar_drawn,0);
     if(display_screen.dimmed){feedback.active=false;if(feedback_timer){lv_timer_delete(feedback_timer);feedback_timer=NULL;}if(feedback_panel){lv_obj_delete(feedback_panel);feedback_panel=NULL;}memset(feedback_motes,0,sizeof feedback_motes);}
     if(failed!=display_screen.failed&&page==DEVICE_SETTINGS)render();
 }
@@ -3130,7 +3211,7 @@ static bool stage_import(const pd_state *candidate) {
     if(history_pending||!pd_history_store_next_epoch(state.history_epoch,&epoch)){reply("PDD ERROR history\n");return false;}
     if(dice_animation.active) { pd_dice_finish(&dice_animation);has_roll=true; }
     pd_screen_activity(&display_screen,lv_tick_get());
-    pending=*candidate;pending.history_epoch=epoch;pending.brightness=state.brightness;pending.dim_timeout=state.dim_timeout;pending.idle_animation=state.idle_animation;memcpy(pending.shortcuts,state.shortcuts,3);import_pending=true;
+    pending=*candidate;pending.history_epoch=epoch;pending.brightness=state.brightness;pending.dim_timeout=state.dim_timeout;pending.idle_animation=state.idle_animation;pending.scene=state.scene;memcpy(pending.shortcuts,state.shortcuts,3);import_pending=true;
 #ifndef PD_UI_TEST
     import_started=xTaskGetTickCount();
 #endif

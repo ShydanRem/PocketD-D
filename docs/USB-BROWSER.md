@@ -1,5 +1,11 @@
 # Scheda e backup via USB dal browser — supporto PC
 
+**Aggiornamento v0.66 del 27 ottobre 2026:** [avatar e sfondi sul dispositivo](PERSONALIZZAZIONE.md),
+backup PDD29 e nuova assegnazione Aspetto accettati dal PC. Il trasferimento
+della scheda resta USB9; la scena locale viene conservata. Questo incremento
+non risolve né certifica il collegamento fisico segnalato: la prova è rimandata
+al rientro dell'utente. Le correzioni USB datate sotto mantengono il proprio contesto.
+
 **Correzione PC del 26 ottobre 2026:** gestiti avvio/riavvio della porta e
 messaggi ROM/ESP-IDF riconosciuti. Il firmware distribuito rimane 0.65.0;
 non occorre reinstallarlo per aggiornare questo collegamento.

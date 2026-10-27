@@ -1,5 +1,10 @@
 # Backup dal dispositivo al PC — v0.53
 
+> Aggiornamento v0.66: [avatar e sfondi locali](PERSONALIZZAZIONE.md).
+> Il backup nativo v1 accetta ora anche PDD29/PDDT, con scena e assegnazione
+> Aspetto ai tasti. Record massimo 75.183 byte; compatibilità con i record
+> precedenti conservata. Usare l'app PC aggiornata per leggere i nuovi backup.
+
 > Aggiornamento supporto PC v0.64: [ricezione e ripristino dal browser via USB](USB-BROWSER.md),
 > con anteprima, controllo d'integrità e conferma sul dispositivo. Gli script
 > Python descritti sotto restano disponibili come alternativa.

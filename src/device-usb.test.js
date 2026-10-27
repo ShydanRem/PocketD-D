@@ -9,7 +9,7 @@ import {createUsbDiagnostics,formatUsbDiagnostics} from './device-usb-diagnostic
 const raw=readFileSync(new URL('../firmware/tests/fixtures/device-backup-v1.synthetic.json',import.meta.url),'utf8');
 const packet=()=>projectDevice(initialState()).packet,encode=x=>new TextEncoder().encode(x);
 function fake({version=9,fragment=23,backup=raw,header='',error='',cancel=false,noAck=false,eof=false,unexpected='',openError=false,confirm=null,writeError=false,startup='',missHello=0,lateReady=false,partialReady=false}={}){
- const log=[],sent=[],writes=[],signals=[];let controller,frame='',chooser=0,closed=0,cancelled=0,aborted=0,opened=false,hellos=0;
+ const log=[],sent=[],writes=[],signals=[];let controller,frame='',chooser=0,closed=0,cancelled=0,aborted=0,opened=false,hellos=0,lateLeft=missHello,partialLeft=partialReady;
  const push=text=>{const bytes=typeof text==='string'?encode(text):text;for(let i=0;i<bytes.length;i+=fragment)controller.enqueue(bytes.subarray(i,i+fragment));};
  const ack=text=>{if(error)push('PDD ERROR '+error+'\n');else if(cancel)push('PDD CANCELLED user\n');else if(!noAck)push(unexpected||text);if(eof)controller.close();};
  const port={
@@ -18,8 +18,8 @@ function fake({version=9,fragment=23,backup=raw,header='',error='',cancel=false,
    if(line==='PDD HELLO'||line==='PDD BACKUP HELLO'){
     if(++hellos<=missHello){if(partialReady)push('PDD RE');continue;}
     const ready=line==='PDD HELLO'?`PDD READY ${version}`:`PDD BACKUP_READY ${version===9?1:version}`;
-    if(partialReady)push(`ADY ${version}\n`);
-    push(ready+'\r\n');if(lateReady)for(let n=0;n<missHello;n++)push(ready+'\n');
+    if(partialLeft){push(`ADY ${version}\n`);partialLeft=false;}
+    push(ready+'\r\n');if(lateReady){for(let n=0;n<lateLeft;n++)push(ready+'\n');lateLeft=0;}
    }
    else if(line==='PDD BACKUP GET 1'){
     push('PDD WAIT_BACKUP\n');confirm?.();

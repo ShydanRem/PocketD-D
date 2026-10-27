@@ -59,6 +59,12 @@ try:
   # A corrupt incoming backup cannot replace a previously verified copy.
   page.evaluate('window.usbProbe.action="corrupt"');dialog.locator('[data-native-receive]').click();expect(dialog.locator('[data-usb-status]')).to_contain_text('corrotto');expect(dialog.locator('[data-native-restore]')).to_be_enabled()
   dialog.locator('[data-native-file]').set_input_files({'name':'bad.json','mimeType':'application/json','buffer':b'{}'});expect(dialog.locator('[data-native-restore]')).to_be_disabled();expect(dialog.locator('[data-native-download]')).to_be_disabled()
+  # Fresh C PDD29 encoder output exercises the new field and shortcut in the actual UI.
+  fresh=ROOT/'firmware/tests/out/backup-fixture.json';dialog.locator('[data-native-file]').set_input_files(fresh)
+  expect(dialog.locator('[data-native-preview]')).to_contain_text('Sfondo: Rovine lunari')
+  expect(dialog.locator('[data-native-preview]')).to_contain_text('Tasti: Aspetto')
+  with page.expect_download() as event:dialog.locator('[data-native-download]').click()
+  assert Path(event.value.path()).read_bytes()==fresh.read_bytes()
   assert page.evaluate('localStorage.getItem("pocketdd-library-v1")')==before;assert not errors,errors
   other=browser.new_context();other.add_init_script('delete Navigator.prototype.serial');fallback=other.new_page();fallback.goto(url);fallback.locator('[data-action="device-export"]').click();expect(fallback.locator('[data-device-send]')).to_be_disabled();expect(fallback.locator('[data-device-download]')).to_be_enabled();expect(fallback.locator('[data-usb-status]')).to_contain_text('Chrome o Edge')
   browser.close()

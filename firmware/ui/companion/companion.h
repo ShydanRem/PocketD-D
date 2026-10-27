@@ -26,6 +26,7 @@ typedef struct {
     unsigned power_warning,power_percent;
     bool power_percent_valid;
     bool power_charging;
+    const lv_image_dsc_t *background; /* NULL: original camp */
     const lv_image_dsc_t *avatar; /* caller owns live descriptor; NULL: demonstration sprite */
 } companion_view;
 typedef void (*companion_handler)(companion_action action, void *context);

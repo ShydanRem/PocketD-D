@@ -9,7 +9,7 @@ int main(int argc,char **argv){
     while(fgets(line,sizeof line,file)){
         size_t size=strlen(line);if(size&&line[size-1]=='\n')size--;
         bool valid=pd_backup_decode(line,size,&snapshot);
-        if(valid)printf("{\"valid\":true,\"hp\":%u,\"maxHp\":%u,\"armor\":%u,\"powers\":%u,\"rolls\":%u}\n",snapshot.state.hp,pd_max_hp(&snapshot.state),pd_armor(&snapshot.state),snapshot.state.magic.count,snapshot.history.count);
+        if(valid)printf("{\"valid\":true,\"hp\":%u,\"maxHp\":%u,\"armor\":%u,\"powers\":%u,\"rolls\":%u,\"scene\":%u}\n",snapshot.state.hp,pd_max_hp(&snapshot.state),pd_armor(&snapshot.state),snapshot.state.magic.count,snapshot.history.count,snapshot.state.scene);
         else puts("{\"valid\":false}");
     }
     fclose(file);return 0;

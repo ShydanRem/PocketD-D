@@ -2,12 +2,13 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.65:** [quantità degli oggetti modificabili sul dispositivo](docs/QUANTITA-OGGETTI.md), con tastiera, anteprima, conferma e Annulla. Cariche, PF ed effetti conservati; un'arma scelta a quantità zero viene riposta. Ricerca, preparazione magie e tasti configurabili disponibili; 115/115 viste LVGL host. Formati e backup invariati. Prove fisiche ancora da eseguire.
+**Stato v0.66:** [avatar e sfondi personalizzabili sul dispositivo](docs/PERSONALIZZAZIONE.md): pelle, capelli, taglio, mantello e tre ambienti indipendenti, con anteprima e conferma. 243 combinazioni, tasti configurabili e backup aggiornati; 118/118 viste LVGL host. Nuovo record PDD29; USB9 e partizioni invariati. Prove fisiche e diagnosi USB ancora aperte.
 
-Il firmware comprende borsello, storico, scheda, inventario, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Scheda PDD28 con lettura dei formati precedenti, nuovi registri NVS PDH2 con lettura di PDH1, copia scheda USB9 e backup PC v11. Il backup nativo è un archivio distinto dal backup della raccolta PC. Regole speciali, altri effetti e prodotto fisico restano aperti.
+Il firmware comprende borsello, storico, scheda, inventario, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Scheda PDD29 con lettura dei formati precedenti, registri NVS PDH2 con lettura di PDH1, copia scheda USB9 e backup PC v11. Il backup nativo è un archivio distinto dal backup della raccolta PC. Regole speciali, altri effetti e prodotto fisico restano aperti.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
 
+- [Avatar e sfondi: editor sul dispositivo v0.66](docs/PERSONALIZZAZIONE.md)
 - [Quantità degli oggetti: modifica sul dispositivo v0.65](docs/QUANTITA-OGGETTI.md)
 - [Invia scheda e gestisci backup dal browser via USB](docs/USB-BROWSER.md)
 - [Installa via USB dal browser: pagina, pacchetto e aggiornamenti](docs/INSTALLAZIONE-USB.md)

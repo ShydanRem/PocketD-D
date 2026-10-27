@@ -6,7 +6,8 @@
 #define PD_RESOURCES 8
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
-#define PD_RECORD_SIZE 75182
+#define PD_RECORD_SIZE 75183
+#define PD_SCENES 3
 #define PD_TURN_NAME_BYTES 21
 #define PD_COINS 5
 #define PD_COIN_MAX UINT32_C(999999999)
@@ -91,6 +92,7 @@ typedef struct {
     uint8_t level, armor, abilities[6], resource_count;
     pd_resource resources[PD_RESOURCES];
     pd_avatar avatar;
+    uint8_t scene; /* Cosmetic, device-local; preserved when importing USB9. */
     bool idle_animation;
     pd_training training;
     bool inventory_available;
@@ -115,6 +117,8 @@ typedef struct {
 typedef struct { uint8_t dice[2], count, natural; int total, bonus; } pd_roll;
 typedef uint32_t (*pd_random)(void *context);
 void pd_demo(pd_state *state);
+const char *pd_scene_name(unsigned scene);
+bool pd_appearance_set(pd_state *state,const pd_avatar *avatar,unsigned scene);
 bool pd_valid(const pd_state *state);
 bool pd_wallet_set(pd_state *state,const pd_wallet *wallet);
 bool pd_wallet_change(pd_state *state,unsigned coin,int32_t delta);

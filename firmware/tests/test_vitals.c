@@ -35,6 +35,6 @@ int main(void){
     assert(pd_vitals_apply(&s,PD_VITAL_TEMP_GRANT,12)&&!s.hp&&s.temp_hp==12&&s.status.failures==2);
     assert(pd_vitals_apply(&s,PD_VITAL_HEAL,7)&&s.hp==7&&s.temp_hp==12&&!s.status.failures);
     size_t n=pd_encode(&s,61,record);uint32_t generation=0;
-    assert(!memcmp(record,"PDDS",4)&&pd_decode(record,n,&decoded,&generation)&&generation==61&&!memcmp(&s,&decoded,sizeof s));
+    assert(!memcmp(record,"PDDT",4)&&pd_decode(record,n,&decoded,&generation)&&generation==61&&!memcmp(&s,&decoded,sizeof s));
     printf("Vitals: %u independent HP/cap/temp/amount/operation/registry cases, no temp stacking/healing, dead-heal rejection, exact unchanged state and PDD28 persistence passed\n",cases);
 }

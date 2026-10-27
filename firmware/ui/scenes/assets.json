@@ -1,0 +1,19 @@
+{
+  "source_sha256": "2f21acc70a66b07d7d80a37051b1e49870341470559131a51a01f6f496ee3b83",
+  "grid": [
+    233,
+    233
+  ],
+  "images": [
+    {
+      "scene": 1,
+      "bytes": 55313,
+      "sha256": "05f0775af9efafb5eebd91b60341ee8c09590e17e8b27486fa6b3dbb2a26040f"
+    },
+    {
+      "scene": 2,
+      "bytes": 55313,
+      "sha256": "dfe189e57a2184128ada00d30c14ca71c7dce8ef88a4d05b50faf25b4417f0c0"
+    }
+  ]
+}

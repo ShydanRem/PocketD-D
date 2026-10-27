@@ -1,8 +1,10 @@
-# Firmware PocketD-D 0.65 — quantità degli oggetti locali
+# Firmware PocketD-D 0.66 — avatar e sfondi locali
 
 Il prodotto principale è il dispositivo. La parte PC serve per importare,
 configurare, trasferire e conservare backup. La simulazione browser rimane un
 banco di prova; non stabilisce la priorità delle funzioni del prodotto.
+
+[Novità v0.66: editor dell'avatar, tre sfondi, pulsanti e backup PDD29](PERSONALIZZAZIONE.md).
 
 [Novità v0.65: quantità degli oggetti con tastiera e conferma](QUANTITA-OGGETTI.md).
 

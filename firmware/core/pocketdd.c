@@ -31,6 +31,14 @@ void pd_demo(pd_state *s) {
         {.name="Torcia",.quantity=3,.kind=PD_CONSUMABLE}},.magic={.available=true},.shortcuts={1,3,5},.brightness=50};
     *s=demo;
 }
+const char *pd_scene_name(unsigned scene){
+    static const char *const names[]={"Accampamento","Rovine lunari","Porto all'alba"};
+    return scene<PD_SCENES?names[scene]:"Scena non valida";
+}
+bool pd_appearance_set(pd_state *s,const pd_avatar *avatar,unsigned scene){
+    if(!s||!avatar||!pd_valid(s)||avatar->skin>2||avatar->hair>2||avatar->cloak>2||avatar->style>2||scene>=PD_SCENES)return false;
+    s->avatar=*avatar;s->scene=scene;return true;
+}
 int pd_effect_bonus(const pd_state *s,unsigned target) {
     int total=0;
     for(unsigned i=0;i<s->effect_count&&i<PD_EFFECTS;i++)if(s->effects[i].active&&s->effects[i].target==target)total+=s->effects[i].value;
@@ -271,7 +279,7 @@ bool pd_valid(const pd_state *s) {
     if (s->roll_conditions>PD_ROLL_CONDITIONS || !text(s->name, sizeof s->name) || s->level < 1 || s->level > 20 ||
         s->armor < 1 || s->armor > 40 || !s->max_hp || s->max_hp > 999 ||
         !effects_valid(s) || s->hp > pd_max_hp(s) || s->temp_hp > 999 || s->resource_count > PD_RESOURCES ||
-        s->avatar.skin>2 || s->avatar.hair>2 || s->avatar.cloak>2 || s->avatar.style>2) return false;
+        s->scene>=PD_SCENES || s->avatar.skin>2 || s->avatar.hair>2 || s->avatar.cloak>2 || s->avatar.style>2) return false;
     for (int i=0;i<6;i++) if (s->abilities[i] < 1 || s->abilities[i] > 30) return false;
     const pd_training *t=&s->training;
     if(t->saves>63||t->half_skills>0x3ffff||t->blocked>0x3fffffff)return false;
@@ -312,7 +320,7 @@ bool pd_valid(const pd_state *s) {
         for(unsigned slot=0;slot<PD_DEFENCE_SLOTS;slot++)if(!temporary_valid(s,pd_defence_grant(s,i,slot)))return false;
     }
     for(unsigned i=0;i<PD_REDUCTION_PROFILES;i++)if(!reduction_valid(s,&s->reductions[i]))return false;
-    return s->brightness>=10&&s->brightness<=100&&s->dim_timeout<=3&&pd_magic_valid(s)&&s->shortcuts[0]<=13&&s->shortcuts[1]<=13&&s->shortcuts[2]<=13;
+    return s->brightness>=10&&s->brightness<=100&&s->dim_timeout<=3&&pd_magic_valid(s)&&s->shortcuts[0]<=14&&s->shortcuts[1]<=14&&s->shortcuts[2]<=14;
 }
 int pd_modifier(int score) { return score / 2 - 5; }
 void pd_hp(pd_state *s, int delta) {
@@ -398,10 +406,10 @@ static void put16(uint8_t **p, unsigned n) { *(*p)++=n; *(*p)++=n>>8; }
 static unsigned get16(const uint8_t **p) { unsigned n=(*p)[0]|((*p)[1]<<8); *p+=2; return n; }
 static void put32(uint8_t *p, uint32_t n) { for (int i=0;i<4;i++) p[i]=n>>(8*i); }
 static uint32_t get32(const uint8_t *p) { return (uint32_t)p[0]|((uint32_t)p[1]<<8)|((uint32_t)p[2]<<16)|((uint32_t)p[3]<<24); }
-size_t pd_encoded_size(const pd_state *s){return 8942u+552u*s->magic.count;}
+size_t pd_encoded_size(const pd_state *s){return 8943u+552u*s->magic.count;}
 size_t pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
     memset(out, 0, pd_encoded_size(s));
-    memcpy(out, "PDDS", 4); put32(out+4,gen);
+    memcpy(out, "PDDT", 4); put32(out+4,gen);
     uint8_t *p=out+8;
     memcpy(p,s->name,PD_NAME_BYTES); p+=PD_NAME_BYTES;
     put16(&p,s->hp); put16(&p,s->max_hp); put16(&p,s->temp_hp);
@@ -471,8 +479,10 @@ size_t pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
     for(unsigned i=0;i<PD_COINS;i++){put32(p,s->wallet.coins[i]);p+=4;}
     put32(p,s->history_epoch);p+=4;
     memcpy(p,s->turn_names,sizeof s->turn_names);p+=sizeof s->turn_names;
+    *p++=s->scene;
     size_t size=pd_encoded_size(s);put32(out+size-4,pd_crc32(out,size-4));return size;
 }
+static bool record_payments(const uint8_t *data){return !memcmp(data,"PDDS",4)||!memcmp(data,"PDDT",4);}
 bool pd_record_known(const uint8_t *data,size_t size) {
     if(!data)return false;
     if(size==384&&(!memcmp(data,"PDD1",4)||!memcmp(data,"PDD2",4)))return true;
@@ -497,6 +507,7 @@ bool pd_record_known(const uint8_t *data,size_t size) {
     if(size>=8853&&size<=75093&&!memcmp(data,"PDDM",4)&&data[5123]<=PD_POWERS)return size==8853u+552u*data[5123];
     if(size>=8854&&size<=75094&&!memcmp(data,"PDDN",4)&&data[5123]<=PD_POWERS)return size==8854u+552u*data[5123];
     if(size>=8875&&size<=75115&&!memcmp(data,"PDDO",4)&&data[5123]<=PD_POWERS)return size==8875u+552u*data[5123];
+    if(size>=8943&&size<=PD_RECORD_SIZE&&!memcmp(data,"PDDT",4)&&data[5123]<=PD_POWERS)return size==8943u+552u*data[5123];
     if(size>=8942&&size<=PD_RECORD_SIZE&&(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4))&&data[5123]<=PD_POWERS)return size==8942u+552u*data[5123];
     return size>=8879&&size<=PD_RECORD_SIZE&&(!memcmp(data,"PDDP",4)||!memcmp(data,"PDDQ",4))&&data[5123]<=PD_POWERS&&size==8879u+552u*data[5123];
 }
@@ -531,7 +542,7 @@ static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint
         for(int i=0;i<6;i++) { if(*p>60)goto invalid;t->save_bonus[i]=(int)*p++-30; }
         for(int i=0;i<6;i++) { if(*p>60)goto invalid;t->check_bonus[i]=(int)*p++-30; }
     }
-    if(!memcmp(data,"PDD4",4)||!memcmp(data,"PDD5",4)||!memcmp(data,"PDD6",4)||!memcmp(data,"PDD7",4)||!memcmp(data,"PDD8",4)||!memcmp(data,"PDD9",4)||!memcmp(data,"PDDA",4)||!memcmp(data,"PDDB",4)||!memcmp(data,"PDDC",4)||!memcmp(data,"PDDD",4)||!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4))))) {
+    if(!memcmp(data,"PDD4",4)||!memcmp(data,"PDD5",4)||!memcmp(data,"PDD6",4)||!memcmp(data,"PDD7",4)||!memcmp(data,"PDD8",4)||!memcmp(data,"PDD9",4)||!memcmp(data,"PDDA",4)||!memcmp(data,"PDDB",4)||!memcmp(data,"PDDC",4)||!memcmp(data,"PDDD",4)||!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data))))) {
         if(p[0]>1||p[5]>1||p[6]>1||p[7]>1)goto invalid;
         candidate.inventory_available=*p++;candidate.item_count=*p++;candidate.equipped=*p++;
         candidate.combat.rage_bonus=*p++;candidate.combat.critical_dice=*p++;candidate.combat.raging=*p++;candidate.combat.power_attack=*p++;candidate.combat.thrown=*p++;
@@ -542,11 +553,12 @@ static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint
             v->attack_modifier=(int)*p++-10;v->damage_modifier=(int)*p++-10;v->healing_modifier=*p++;
         }
     }
-    if(!memcmp(data,"PDD5",4)||!memcmp(data,"PDD6",4)||!memcmp(data,"PDD7",4)||!memcmp(data,"PDD8",4)||!memcmp(data,"PDD9",4)||!memcmp(data,"PDDA",4)||!memcmp(data,"PDDB",4)||!memcmp(data,"PDDC",4)||!memcmp(data,"PDDD",4)||!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4))))) {
+    if(!memcmp(data,"PDD5",4)||!memcmp(data,"PDD6",4)||!memcmp(data,"PDD7",4)||!memcmp(data,"PDD8",4)||!memcmp(data,"PDD9",4)||!memcmp(data,"PDDA",4)||!memcmp(data,"PDDB",4)||!memcmp(data,"PDDC",4)||!memcmp(data,"PDDD",4)||!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data))))) {
         pd_magic *m=&candidate.magic;if(*p>1)goto invalid;m->available=*p++;m->count=*p++;m->concentration=*p++;
         for(int i=0;i<9;i++){m->slots[i].current=*p++;m->slots[i].maximum=*p++;m->pact[i].current=*p++;m->pact[i].maximum=*p++;}
         memcpy(candidate.shortcuts,p,3);p+=3;
-        if((memcmp(data,"PDDP",4)&&(memcmp(data,"PDDQ",4)&&(memcmp(data,"PDDR",4)&&memcmp(data,"PDDS",4))))&&(candidate.shortcuts[0]>12||candidate.shortcuts[1]>12||candidate.shortcuts[2]>12))goto invalid;
+        if(memcmp(data,"PDDT",4)&&(candidate.shortcuts[0]>13||candidate.shortcuts[1]>13||candidate.shortcuts[2]>13))goto invalid;
+        if((memcmp(data,"PDDP",4)&&(memcmp(data,"PDDQ",4)&&(memcmp(data,"PDDR",4)&&!record_payments(data))))&&(candidate.shortcuts[0]>12||candidate.shortcuts[1]>12||candidate.shortcuts[2]>12))goto invalid;
         for(int i=0;i<m->count;i++) {
             pd_power *v=&m->powers[i];memcpy(v->name,p,41);p+=41;memcpy(v->description,p,PD_POWER_TEXT_BYTES);p+=PD_POWER_TEXT_BYTES;
             v->kind=*p++;v->level=*p++;v->flags=*p++;v->ability=*p++;v->maximum=*p++;v->remaining=*p++;v->recovery=*p++;v->effect=*p++;
@@ -554,20 +566,20 @@ static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint
             v->attack_modifier=(int)*p++-15;v->save_modifier=(int)*p++-15;
         }
     }
-    if(!memcmp(data,"PDD6",4)||!memcmp(data,"PDD7",4)||!memcmp(data,"PDD8",4)||!memcmp(data,"PDD9",4)||!memcmp(data,"PDDA",4)||!memcmp(data,"PDDB",4)||!memcmp(data,"PDDC",4)||!memcmp(data,"PDDD",4)||!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4))))) {
+    if(!memcmp(data,"PDD6",4)||!memcmp(data,"PDD7",4)||!memcmp(data,"PDD8",4)||!memcmp(data,"PDD9",4)||!memcmp(data,"PDDA",4)||!memcmp(data,"PDDB",4)||!memcmp(data,"PDDC",4)||!memcmp(data,"PDDD",4)||!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data))))) {
         if(*p>1)goto invalid;
         candidate.recovery.available=*p++;candidate.recovery.count=*p++;
         for(unsigned i=0;i<PD_HIT_POOLS;i++) {
             pd_hit_die *v=&candidate.recovery.pools[i];memcpy(v->name,p,41);p+=41;v->die=*p++;v->maximum=*p++;v->used=*p++;
         }
     }
-    if(!memcmp(data,"PDD7",4)||!memcmp(data,"PDD8",4)||!memcmp(data,"PDD9",4)||!memcmp(data,"PDDA",4)||!memcmp(data,"PDDB",4)||!memcmp(data,"PDDC",4)||!memcmp(data,"PDDD",4)||!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4))))) {
+    if(!memcmp(data,"PDD7",4)||!memcmp(data,"PDD8",4)||!memcmp(data,"PDD9",4)||!memcmp(data,"PDDA",4)||!memcmp(data,"PDDB",4)||!memcmp(data,"PDDC",4)||!memcmp(data,"PDDD",4)||!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data))))) {
         if(p[0]>1||p[4]>1)goto invalid;
         candidate.status.available=*p++;candidate.status.count=*p++;candidate.status.successes=*p++;candidate.status.failures=*p++;candidate.status.stabilized=*p++;
         for(unsigned i=0;i<PD_CONDITIONS;i++){memcpy(candidate.status.conditions[i].name,p,61);p+=61;candidate.status.conditions[i].level=*p++;}
     }
-    if(!memcmp(data,"PDD8",4)||!memcmp(data,"PDD9",4)||!memcmp(data,"PDDA",4)||!memcmp(data,"PDDB",4)||!memcmp(data,"PDDC",4)||!memcmp(data,"PDDD",4)||!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4))))){candidate.brightness=*p++;candidate.dim_timeout=*p++;}
-    if(!memcmp(data,"PDD9",4)||!memcmp(data,"PDDA",4)||!memcmp(data,"PDDB",4)||!memcmp(data,"PDDC",4)||!memcmp(data,"PDDD",4)||!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4))))) {
+    if(!memcmp(data,"PDD8",4)||!memcmp(data,"PDD9",4)||!memcmp(data,"PDDA",4)||!memcmp(data,"PDDB",4)||!memcmp(data,"PDDC",4)||!memcmp(data,"PDDD",4)||!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data))))){candidate.brightness=*p++;candidate.dim_timeout=*p++;}
+    if(!memcmp(data,"PDD9",4)||!memcmp(data,"PDDA",4)||!memcmp(data,"PDDB",4)||!memcmp(data,"PDDC",4)||!memcmp(data,"PDDD",4)||!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data))))) {
         candidate.effect_count=*p++;
         for(unsigned i=0;i<PD_EFFECTS;i++) {
             pd_effect *e=&candidate.effects[i];e->target=*p++;unsigned value=get16(&p);
@@ -576,60 +588,61 @@ static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint
             int bound=e->target==PD_EFFECT_ARMOR?20:999;if(e->value< -bound||e->value>bound)goto invalid;
         }
     }
-    if(!memcmp(data,"PDDA",4)||!memcmp(data,"PDDB",4)||!memcmp(data,"PDDC",4)||!memcmp(data,"PDDD",4)||!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4))))) {
+    if(!memcmp(data,"PDDA",4)||!memcmp(data,"PDDB",4)||!memcmp(data,"PDDC",4)||!memcmp(data,"PDDD",4)||!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data))))) {
         for(unsigned i=0;i<PD_EFFECTS;i++) {
             pd_effect *e=&candidate.effects[i];if(p[0]>1||p[1]>99)goto invalid;
             e->timed=*p++;e->rounds=*p++;
         }
     }
-    if(!memcmp(data,"PDDB",4)||!memcmp(data,"PDDC",4)||!memcmp(data,"PDDD",4)||!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4))))){candidate.defences.configured=get16(&p);candidate.defences.resistance=get16(&p);candidate.defences.vulnerability=get16(&p);candidate.defences.immunity=get16(&p);}
-    if(!memcmp(data,"PDDC",4)||!memcmp(data,"PDDD",4)||!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4)))))for(unsigned i=0;i<PD_EFFECTS;i++){candidate.effects[i].concentration=*p++;if(candidate.effects[i].concentration&&(i>=candidate.effect_count||candidate.effects[i].concentration!=candidate.magic.concentration))goto invalid;}
-    if(!memcmp(data,"PDDD",4)||!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4)))))for(unsigned i=0;i<PD_DAMAGE_TYPES;i++){
+    if(!memcmp(data,"PDDB",4)||!memcmp(data,"PDDC",4)||!memcmp(data,"PDDD",4)||!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data))))){candidate.defences.configured=get16(&p);candidate.defences.resistance=get16(&p);candidate.defences.vulnerability=get16(&p);candidate.defences.immunity=get16(&p);}
+    if(!memcmp(data,"PDDC",4)||!memcmp(data,"PDDD",4)||!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data)))))for(unsigned i=0;i<PD_EFFECTS;i++){candidate.effects[i].concentration=*p++;if(candidate.effects[i].concentration&&(i>=candidate.effect_count||candidate.effects[i].concentration!=candidate.magic.concentration))goto invalid;}
+    if(!memcmp(data,"PDDD",4)||!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data)))))for(unsigned i=0;i<PD_DAMAGE_TYPES;i++){
         pd_defence_temporary *d=&candidate.defences.temporary[i];
         if(p[1]>1||p[2]>1)goto invalid;
         d->flags=*p++;d->active=*p++;d->timed=*p++;d->rounds=*p++;d->concentration=*p++;
     }
-    if(!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4))))){
+    if(!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data))))){
         for(unsigned i=0;i<PD_DAMAGE_TYPES;i++)for(unsigned j=0;j<3;j++)candidate.defences.conditions[i][j]=*p++;
         for(unsigned i=0;i<PD_DAMAGE_TYPES;i++)for(unsigned j=0;j<3;j++)candidate.defences.temporary[i].conditions[j]=*p++;
     }
-    if(!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4)))))for(unsigned slot=1;slot<PD_DEFENCE_SLOTS;slot++)for(unsigned i=0;i<PD_DAMAGE_TYPES;i++){
+    if(!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data)))))for(unsigned slot=1;slot<PD_DEFENCE_SLOTS;slot++)for(unsigned i=0;i<PD_DAMAGE_TYPES;i++){
         pd_defence_temporary *d=grant(&candidate,i,slot);if(p[1]>1||p[2]>1)goto invalid;
         d->flags=*p++;d->active=*p++;d->timed=*p++;d->rounds=*p++;d->concentration=*p++;for(unsigned j=0;j<3;j++)d->conditions[j]=*p++;
     }
-    if(!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4)))))for(unsigned i=0;i<PD_REDUCTION_PROFILES;i++){
-        pd_reduction_profile *r=&candidate.reductions[i];r->value=get16(&p);r->types=get16(&p);r->stage=*p++;if(!memcmp(data,"PDDS",4)){r->payment=r->stage>>1;r->stage&=1;}r->rule=*p++;if(p[0]>1||p[1]>1)goto invalid;r->active=*p++;r->timed=*p++;r->rounds=*p++;r->concentration=*p++;
+    if(!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data)))))for(unsigned i=0;i<PD_REDUCTION_PROFILES;i++){
+        pd_reduction_profile *r=&candidate.reductions[i];r->value=get16(&p);r->types=get16(&p);r->stage=*p++;if(record_payments(data)){r->payment=r->stage>>1;r->stage&=1;}r->rule=*p++;if(p[0]>1||p[1]>1)goto invalid;r->active=*p++;r->timed=*p++;r->rounds=*p++;r->concentration=*p++;
     }
-    if(!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4))))){
-        for(unsigned i=0;i<PD_REDUCTION_PROFILES;i++){pd_reduction_profile *r=&candidate.reductions[i];r->cost_kind=*p++;if((!memcmp(data,"PDDH",4)&&r->cost_kind>PD_COST_POWER)||(memcmp(data,"PDDL",4)&&memcmp(data,"PDDM",4)&&(memcmp(data,"PDDN",4)&&memcmp(data,"PDDO",4)&&(memcmp(data,"PDDP",4)&&(memcmp(data,"PDDQ",4)&&(memcmp(data,"PDDR",4)&&memcmp(data,"PDDS",4)))))&&r->cost_kind>PD_COST_PACT))goto invalid;r->cost_index=*p++;r->cost=get16(&p);if(*p>1)goto invalid;r->reaction=*p++;}
+    if(!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data))))){
+        for(unsigned i=0;i<PD_REDUCTION_PROFILES;i++){pd_reduction_profile *r=&candidate.reductions[i];r->cost_kind=*p++;if((!memcmp(data,"PDDH",4)&&r->cost_kind>PD_COST_POWER)||(memcmp(data,"PDDL",4)&&memcmp(data,"PDDM",4)&&(memcmp(data,"PDDN",4)&&memcmp(data,"PDDO",4)&&(memcmp(data,"PDDP",4)&&(memcmp(data,"PDDQ",4)&&(memcmp(data,"PDDR",4)&&!record_payments(data)))))&&r->cost_kind>PD_COST_PACT))goto invalid;r->cost_index=*p++;r->cost=get16(&p);if(*p>1)goto invalid;r->reaction=*p++;}
         if(*p>1)goto invalid;
         candidate.reaction_spent=*p++;
     }
-    if(!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4))))){
-        for(unsigned i=0;i<PD_EFFECTS;i++){candidate.effects[i].tick=*p++;if((!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4)))){candidate.effects[i].owner=candidate.effects[i].tick>>3;candidate.effects[i].tick&=7;}if(i>=candidate.effect_count&&(candidate.effects[i].tick||candidate.effects[i].owner))goto invalid;}
-        for(unsigned slot=0;slot<PD_DEFENCE_SLOTS;slot++)for(unsigned i=0;i<PD_DAMAGE_TYPES;i++){pd_defence_temporary *d=grant(&candidate,i,slot);d->tick=*p++;if((!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4)))){d->owner=d->tick>>3;d->tick&=7;}}
-        for(unsigned i=0;i<PD_REDUCTION_PROFILES;i++){pd_reduction_profile *r=&candidate.reductions[i];r->tick=*p++;if((!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4)))){r->owner=r->tick>>3;r->tick&=7;}}
+    if(!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data))))){
+        for(unsigned i=0;i<PD_EFFECTS;i++){candidate.effects[i].tick=*p++;if((!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data)))){candidate.effects[i].owner=candidate.effects[i].tick>>3;candidate.effects[i].tick&=7;}if(i>=candidate.effect_count&&(candidate.effects[i].tick||candidate.effects[i].owner))goto invalid;}
+        for(unsigned slot=0;slot<PD_DEFENCE_SLOTS;slot++)for(unsigned i=0;i<PD_DAMAGE_TYPES;i++){pd_defence_temporary *d=grant(&candidate,i,slot);d->tick=*p++;if((!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data)))){d->owner=d->tick>>3;d->tick&=7;}}
+        for(unsigned i=0;i<PD_REDUCTION_PROFILES;i++){pd_reduction_profile *r=&candidate.reductions[i];r->tick=*p++;if((!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data)))){r->owner=r->tick>>3;r->tick&=7;}}
     }
     if(!memcmp(data,"PDDJ",4)){
         for(unsigned i=0;i<PD_EFFECTS;i++)if(candidate.effects[i].tick>=PD_TICK_MINUTES)goto invalid;
         for(unsigned slot=0;slot<PD_DEFENCE_SLOTS;slot++)for(unsigned i=0;i<PD_DAMAGE_TYPES;i++)if(grant(&candidate,i,slot)->tick>=PD_TICK_MINUTES)goto invalid;
         for(unsigned i=0;i<PD_REDUCTION_PROFILES;i++)if(candidate.reductions[i].tick>=PD_TICK_MINUTES)goto invalid;
     }
-    if(!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4))))){
+    if(!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data))))){
         for(unsigned i=0;i<PD_EFFECTS;i++)candidate.effects[i].minutes=get16(&p);
         for(unsigned slot=0;slot<PD_DEFENCE_SLOTS;slot++)for(unsigned i=0;i<PD_DAMAGE_TYPES;i++)grant(&candidate,i,slot)->minutes=get16(&p);
         for(unsigned i=0;i<PD_REDUCTION_PROFILES;i++)candidate.reductions[i].minutes=get16(&p);
     }
-    if(!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4)))))for(unsigned i=0;i<PD_ITEMS;i++){pd_charges *c=&candidate.items[i].charges;c->current=get16(&p);c->maximum=get16(&p);c->recovery=*p++;}
-    if(!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4)))))for(unsigned i=0;i<PD_REDUCTION_PROFILES;i++)for(unsigned row=1;row<PD_PROFILE_COSTS;row++){pd_cost c;c.kind=*p++;c.index=*p++;c.amount=get16(&p);pd_profile_cost_set(&candidate.reductions[i],row,c);}
-    if(!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4)))))candidate.roll_conditions=*p++;
-    if((!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4)))))){
+    if(!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data)))))for(unsigned i=0;i<PD_ITEMS;i++){pd_charges *c=&candidate.items[i].charges;c->current=get16(&p);c->maximum=get16(&p);c->recovery=*p++;}
+    if(!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data)))))for(unsigned i=0;i<PD_REDUCTION_PROFILES;i++)for(unsigned row=1;row<PD_PROFILE_COSTS;row++){pd_cost c;c.kind=*p++;c.index=*p++;c.amount=get16(&p);pd_profile_cost_set(&candidate.reductions[i],row,c);}
+    if(!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data)))))candidate.roll_conditions=*p++;
+    if((!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data)))))){
         if(*p>1)goto invalid;
         candidate.wallet.available=*p++;
         for(unsigned i=0;i<PD_COINS;i++){candidate.wallet.coins[i]=get32(p);p+=4;}
     }
-    if((!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4))))){candidate.history_epoch=get32(p);p+=4;}
-    if((!memcmp(data,"PDDR",4)||!memcmp(data,"PDDS",4))){memcpy(candidate.turn_names,p,sizeof candidate.turn_names);p+=sizeof candidate.turn_names;}
+    if((!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data))))){candidate.history_epoch=get32(p);p+=4;}
+    if((!memcmp(data,"PDDR",4)||record_payments(data))){memcpy(candidate.turn_names,p,sizeof candidate.turn_names);p+=sizeof candidate.turn_names;}
+    if(!memcmp(data,"PDDT",4))candidate.scene=*p++;
     if (!pd_valid(&candidate)) goto invalid;
     *gen=get32(data+4);return true;
 invalid:

@@ -74,6 +74,11 @@ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as out:
         image=preview/name
         if not image.is_file():raise SystemExit(f'Missing avatar preview: {name}')
         out.write(image,folder+'firmware-host-preview/'+name)
+    # Appearance preview and states use the actual renderer, never the source-art concept.
+    for name in ['preview','home-camp','home-ruins','home-port','editor-hair','scene-port','confirm','editor-skin','scene-ruins','save-error','undo-keeps-look','restored']:
+        image=preview/f'appearance-{name}.png'
+        if not image.is_file():raise SystemExit(f'Missing appearance preview: {image.name}')
+        out.write(image,folder+'firmware-host-preview/'+image.name)
     # Complete device UI review catalog; all entries are native host captures.
     ui_manifest=json.loads((preview/'ui-views.json').read_text())
     ui_files=['ui-views.json','ui-catalog.html','ui-overview.png','ui-all-views.png','ui-transition.gif']

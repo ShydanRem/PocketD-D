@@ -56,7 +56,14 @@ Non fanno parte di questo traguardo: importazione Beyond, editor completo, incan
 
 L'integrazione Beyond procede come verifica separata. Un suo eventuale blocco non impedisce le altre fasi. L'ordine delle fasi 0 e 1 può sovrapporsi se l'hardware non è immediatamente disponibile.
 
-## Punto attuale — v0.65
+## Punto attuale — v0.66
+
+La [v0.66](PERSONALIZZAZIONE.md) completa l'editor dell'avatar sul dispositivo
+e aggiunge tre sfondi indipendenti, bozza, conferma e navigazione locale con
+i pulsanti. Nuova assegnazione Aspetto, salvataggi/backup PDD29, lettura dei
+vecchi record, 243 combinazioni e 118/118 viste host. Il PC resta di supporto;
+abiti/accessori e silhouette ulteriori rimangono successivi. La prova USB
+segnalata dall'utente è in pausa fino al rientro a casa, non è marcata risolta.
 
 La [home del compagno](HOME-COMPAGNO.md) è integrata: menu a icone, PF,
 salvataggi e accesso alle funzioni esistenti, con tasti configurati conservati.

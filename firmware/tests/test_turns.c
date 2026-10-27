@@ -33,9 +33,9 @@ int main(void){
  setup(&s);before=s;for(unsigned tick=1;tick<4;tick++){assert(!pd_effect_set(&s,0,(pd_effect){.tick=tick})&&!pd_defence_grant_set(&s,0,0,(pd_defence_temporary){.tick=tick})&&!pd_reduction_profile_set(&s,0,(pd_reduction_profile){.tick=tick})&&!memcmp(&s,&before,sizeof s));}
  /* Every appended selector rejects invalid values with a valid CRC. */
  setup(&s);s.effect_count=8;for(unsigned i=0;i<8;i++)s.effects[i]=(pd_effect){.timed=true,.rounds=2,.tick=i%3};for(unsigned type=0;type<13;type++)for(unsigned slot=0;slot<3;slot++)assert(pd_defence_grant_set(&s,type,slot,(pd_defence_temporary){.timed=true,.rounds=2,.tick=(type+slot)%3}));for(unsigned i=0;i<3;i++)assert(pd_reduction_profile_set(&s,i,(pd_reduction_profile){.timed=true,.rounds=2,.tick=i}));
- s.magic.count=120;for(unsigned i=1;i<120;i++)s.magic.powers[i]=(pd_power){.name="Magia",.flags=PD_PREPARED};static uint8_t data[PD_RECORD_SIZE];size_t n=pd_encode(&s,190,data);uint32_t gen;assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDS",4)&&pd_decode(data,n,&out,&gen)&&out.effects[7].tick==1&&out.reductions[2].tick==2);
- for(unsigned i=0;i<50;i++){pd_encode(&s,190,data);data[n-567+i]=3;crc(data,n);before=out;gen=7;assert(!pd_decode(data,n,&out,&gen)&&gen==7&&!memcmp(&out,&before,sizeof out));}
+ s.magic.count=120;for(unsigned i=1;i<120;i++)s.magic.powers[i]=(pd_power){.name="Magia",.flags=PD_PREPARED};static uint8_t data[PD_RECORD_SIZE];size_t n=pd_encode(&s,190,data);uint32_t gen;assert(n==PD_RECORD_SIZE&&!memcmp(data,"PDDT",4)&&pd_decode(data,n,&out,&gen)&&out.effects[7].tick==1&&out.reductions[2].tick==2);
+ for(unsigned i=0;i<50;i++){pd_encode(&s,190,data);data[n-568+i]=3;crc(data,n);before=out;gen=7;assert(!pd_decode(data,n,&out,&gen)&&gen==7&&!memcmp(&out,&before,sizeof out));}
  /* Valid selectors without timers and hidden unused numeric selectors also reject. */
- setup(&s);n=pd_encode(&s,1,data);for(unsigned i=0;i<50;i++){pd_encode(&s,1,data);data[n-567+i]=1;crc(data,n);assert(!pd_decode(data,n,&out,&gen));}
+ setup(&s);n=pd_encode(&s,1,data);for(unsigned i=0;i<50;i++){pd_encode(&s,1,data);data[n-568+i]=1;crc(data,n);assert(!pd_decode(data,n,&out,&gen));}
  printf("Turns: %u independent timer/family/index/phase/count/pause/reaction/binding cases, 50 simultaneous expiries, atomic rejection, HP caps and strict PDD24 selectors passed\n",cases);
 }

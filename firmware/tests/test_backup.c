@@ -13,13 +13,13 @@ int main(int argc,char **argv){
         pd_demo(&state);state.history_epoch=e?UINT32_MAX:0;state.hp=17;state.temp_hp=7;
         state.wallet=(pd_wallet){.available=true,.coins={1,2,3,4,PD_COIN_MAX}};
         state.effects[0]=(pd_effect){.target=PD_EFFECT_ARMOR,.value=2,.active=true};state.effects[1]=(pd_effect){.target=PD_EFFECT_MAX_HP,.value=10,.active=true};state.effect_count=2;
-        state.shortcuts[0]=13;state.brightness=80;state.magic.count=counts[c];for(unsigned i=0;i<state.magic.count;i++)state.magic.powers[i]=(pd_power){.name="Potere",.flags=PD_PREPARED};
+        state.scene=(c+1)%PD_SCENES;state.shortcuts[0]=14;state.brightness=80;state.magic.count=counts[c];for(unsigned i=0;i<state.magic.count;i++)state.magic.powers[i]=(pd_power){.name="Potere",.flags=PD_PREPARED};
         pd_history_reset(&history,state.history_epoch);
         for(unsigned i=0;i<h;i++){pd_history_entry entry={.kind=PD_H_FREE,.count=1,.sides=20,.dice={1+i%20},.total=1+i%20,.label="Tiro sintetico"};assert(pd_history_append(&history,&entry));}
         size_t size=0;char *json=pd_backup_encode(&state,&history,&size);assert(json&&size<PD_BACKUP_MAX&&pd_backup_decode(json,size,&restored));
         size_t n=pd_encode(&state,0,a);assert(pd_encode(&restored.state,0,b)==n&&!memcmp(a,b,n));
         n=pd_history_encode(&history,0,ha);assert(pd_history_encode(&restored.history,0,hb)==n&&!memcmp(ha,hb,n));
-        assert(pd_max_hp(&restored.state)==42&&pd_armor(&restored.state)==18&&restored.state.wallet.coins[4]==PD_COIN_MAX&&restored.state.shortcuts[0]==13);
+        assert(pd_max_hp(&restored.state)==42&&pd_armor(&restored.state)==18&&restored.state.wallet.coins[4]==PD_COIN_MAX&&restored.state.shortcuts[0]==14&&restored.state.scene==state.scene);
         before=restored;
         for(unsigned i=0;i<64;i++){size_t cut=i<32?i:size-(i-31);assert(!pd_backup_decode(json,cut,&restored)&&!memcmp(&before,&restored,sizeof before));}
         char *text=strstr(json,"\"state\":\"")+9;char original=*text;*text='!';assert(!pd_backup_decode(json,size,&restored));*text=original;

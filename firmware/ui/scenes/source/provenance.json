@@ -1,0 +1,9 @@
+{
+  "tool": "OpenAI ImageGen",
+  "date": "2026-10-27",
+  "source_sha256": "2f21acc70a66b07d7d80a37051b1e49870341470559131a51a01f6f496ee3b83",
+  "reference": "firmware/ui/companion/source/camp.png",
+  "reference_sha256": "67a9dd1d60e3c305e3b0e01cd211f8b8a2679047e2b4678906bf0494c54b565b",
+  "prompt_summary": "Two original square HD-2D pixel environments: moonlit observatory ruins and a warm harbor at dawn. No character or UI; open central floor. Same direction as accepted camp.",
+  "export": "Two 887x887 panels; nearest 233x233; 128-color indexed BGRA palette; exact 2x expansion on device. Original generated PNG retained unchanged."
+}

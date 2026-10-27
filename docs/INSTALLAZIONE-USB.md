@@ -1,4 +1,9 @@
-# Installazione USB da browser — firmware v0.64
+# Installazione USB da browser — firmware v0.66
+
+La v0.66 aggiunge la [personalizzazione di avatar e sfondi](PERSONALIZZAZIONE.md).
+Usa le stesse partizioni. Il firmware legge i salvataggi precedenti; dopo un
+nuovo salvataggio PDD29 serve il software aggiornato per leggere il backup.
+Il problema di trasferimento USB del PG rimane una verifica separata e aperta.
 
 L'installer permette di mettere il firmware già compilato sulla scheda dal PC,
 con una pagina, scelta della porta USB e avanzamento. Non richiede Arduino,

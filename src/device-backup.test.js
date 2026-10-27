@@ -8,6 +8,13 @@ function edit(key,change){const packet=JSON.parse(raw),bytes=Uint8Array.from(ato
 test('actual C snapshot: native effects, money, preferences and all twenty rolls preview exactly',()=>{
  const p=inspectDeviceBackup(raw);assert.equal(p.name,'Elian');assert.equal(p.hp,17);assert.equal(p.maxHp,42);assert.equal(p.baseHp,32);assert.equal(p.armor,18);assert.equal(p.baseArmor,16);assert.equal(p.tempHp,7);assert.equal(p.effects,2);assert.equal(p.rolls.length,20);assert.equal(p.rolls[0].number,20);assert.deepEqual(p.rolls[0].dice,[20]);assert.equal(p.rolls[19].total,1);assert.equal(p.wallet.pp,999999999);assert.deepEqual(p.keys,[13,3,5]);assert.equal(p.brightness,80);assert.equal(p.nativeValidation,false);
 });
+test('PDD29 adds an independent local scene while retaining old native records and key meanings',()=>{
+ const p=JSON.parse(raw),old=Uint8Array.from(atob(p.state),c=>c.charCodeAt(0));
+ assert.equal(String.fromCharCode(...old.subarray(0,4)),'PDDP');
+ function modern(scene,key=14){const b=new Uint8Array(old.length+64);b.set(old.subarray(0,-4));b[3]=84;b[5161]=key;b[b.length-5]=scene;new DataView(b.buffer).setUint32(b.length-4,crc32(b.subarray(0,-4)),true);return JSON.stringify({...p,state:btoa(String.fromCharCode(...b))});}
+ for(let scene=0;scene<3;scene++){const view=inspectDeviceBackup(modern(scene));assert.equal(view.scene,scene);assert.equal(view.keys[0],14);assert.equal(view.name,inspectDeviceBackup(raw).name);assert.deepEqual(view.wallet,inspectDeviceBackup(raw).wallet);assert.deepEqual(view.payments,[0,0,0]);}
+ assert.equal(inspectDeviceBackup(raw).scene,0);assert.throws(()=>inspectDeviceBackup(modern(3)));assert.throws(()=>inspectDeviceBackup(modern(0,15)));
+});
 test('preview preserves the complete original records and never turns into a PC character',()=>{
  const p=inspectDeviceBackup(raw);assert.deepEqual(p.packet,JSON.parse(raw));assert.equal(p.packet.format,'pocketdd-device-backup');assert.equal(p.packet.version,1);assert(!('inventory' in p.packet));assert.throws(()=>parseBackup(raw));p.packet.state='';assert.equal(inspectDeviceBackup(raw).name,'Elian');
 });
