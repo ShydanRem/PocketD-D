@@ -1,5 +1,10 @@
 # Beyond: contatori manuali delle azioni — v0.76
 
+> V0.77: [creazione del cannone con slot](BEYOND-CANNONE.md) per la variante
+> riconosciuta di Tasha’s. I saldi manuali di questo documento restano separati.
+> PDD35/PDDZ; le prove e i formati sotto descrivono la v0.76.
+
+
 Le azioni con contatore `limitedUse.resetType: 4` vengono conservate come
 **saldi manuali separati dalle capacità**. Non vengono più presentate come un
 numero di attivazioni da consumare automaticamente premendo Usa.

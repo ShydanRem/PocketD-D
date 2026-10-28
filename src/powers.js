@@ -10,6 +10,7 @@ function resource(input){
 export function validatePower(power,extended=false){
   if(!power||typeof power.id!=='string'||!/^[a-zA-Z0-9_-]{1,64}$/.test(power.id)||!['spell','feature'].includes(power.type)||typeof power.name!=='string'||!power.name.trim()||power.name.length>40||typeof power.description!=='string'||power.description.length>(extended?6000:600))throw new Error('Nome o descrizione non validi');
   const base={id:power.id,type:power.type,name:power.name.trim(),description:power.description};
+  if(power.effect==='eldritch-cannon'&&(!extended||power.type!=='feature'||power.passive===true||power.maxUses!==1||power.recovery!=='long'))throw new Error('Creazione cannone: capacità attiva, un utilizzo e recupero lungo richiesti');
   if(power.type==='spell'){
     if(!integer(power.level,0,9)||typeof power.concentration!=='boolean')throw new Error('Incantesimo non valido');
     Object.assign(base,{level:power.level,concentration:power.concentration});
@@ -23,7 +24,7 @@ export function validatePower(power,extended=false){
   }else{
     Object.assign(base,resource(power));
     if(extended&&power.effect!==undefined){
-      if(!['rage','relentless-endurance'].includes(power.effect))throw new Error('Effetto non valido');
+      if(!['rage','relentless-endurance','eldritch-cannon'].includes(power.effect))throw new Error('Effetto non valido');
       base.effect=power.effect;
     }
   }
@@ -44,10 +45,13 @@ export function spellStats(state,power){
   return {ability,attack:base+(power.attackModifier??0),dc:8+base+(power.saveModifier??0)};
 }
 export function availableSlots(state,power){
-  if(power.level===0||power.usesSpellSlot===false)return [];
+  const cannon=power.effect==='eldritch-cannon';
+  if(cannon&&power.remaining>0)return [];
+  if(!cannon&&(power.level===0||power.usesSpellSlot===false))return [];
+  const minimum=cannon?1:power.level;
   const entries=[];
-  state.slots.forEach((s,i)=>{if(i+1>=power.level&&s.current>0)entries.push({value:String(i+1),label:`${i+1}° · ${s.current} ordinari`})});
-  state.extended?.pactSlots.forEach((s,i)=>{if(i+1>=power.level&&s.current>0)entries.push({value:`pact:${i+1}`,label:`${i+1}° · ${s.current} patto`})});
+  state.slots.forEach((s,i)=>{if(i+1>=minimum&&s.current>0)entries.push({value:String(i+1),label:`${i+1}° · ${s.current} ordinari`})});
+  state.extended?.pactSlots.forEach((s,i)=>{if(i+1>=minimum&&s.current>0)entries.push({value:`pact:${i+1}`,label:`${i+1}° · ${s.current} patto`})});
   return entries;
 }
 export function upsertPower(state,input){
@@ -60,6 +64,17 @@ export function usePower(state,id,slotLevel=0){
   const power=state.powers.find(p=>p.id===id);if(!power)throw new Error('Voce non trovata');
   if(power.type==='feature'){
     if(power.passive)throw new Error('Capacità informativa: effetto da risolvere al tavolo');
+    if(power.effect==='eldritch-cannon'){
+      validatePower(power,true);
+      if(state.hp===0)throw new Error('Creazione cannone non disponibile a zero PF');
+      if(power.remaining===0){
+        if(!availableSlots(state,power).some(s=>s.value===String(slotLevel)))throw new Error('Scegli uno slot disponibile per creare il cannone');
+        const pact=String(slotLevel).startsWith('pact:'),level=Number(pact?slotLevel.slice(5):slotLevel),slots=pact?state.extended.pactSlots:state.slots;
+        const updated=slots.map((s,i)=>i===level-1?{...s,current:s.current-1}:s);
+        return pact?{...state,extended:{...state.extended,pactSlots:updated}}:{...state,slots:updated};
+      }
+      if(slotLevel!==0)throw new Error('Usa prima la creazione gratuita disponibile');
+    }
     if(power.remaining<1)throw new Error('Utilizzi esauriti');
     if(power.effect==='relentless-endurance'&&state.hp===0&&state.extended?.deathSaves.failures===3)throw new Error('Tre fallimenti: correzione DM necessaria');
     if(power.effect==='relentless-endurance'&&state.hp!==0)throw new Error('Usa questa capacità soltanto a zero PF, dopo verifica col DM');

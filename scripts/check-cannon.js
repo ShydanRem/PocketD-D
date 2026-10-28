@@ -1,0 +1,12 @@
+// Invented sources with pinned source identities -> PC model -> wire -> native parser/use/codec.
+import assert from 'node:assert/strict';import {writeFileSync} from 'node:fs';import {spawnSync} from 'node:child_process';
+import {beyondCannonFixture} from '../src/beyond-fixtures.js';import {convertBeyond} from '../src/beyond-conversion.js';import {usePower} from '../src/powers.js';import {projectDevice} from '../src/device-export.js';
+const packets=[],states=[];
+for(const free of [0,1])for(const hp of [0,1])for(const balance of [0,1,9])for(let level=1;level<=9;level++){
+ const s=convertBeyond(beyondCannonFixture(free),'123456').draft;s.hp=hp;s.slots.forEach(v=>v.current=0);s.extended.pactSlots.forEach(v=>v.current=0);s.slots[level-1]={current:balance,max:9};s.extended.pactSlots[level-1]={current:balance,max:9};packets.push(projectDevice(s).packet);states.push(s);
+}
+const valid=packets.length;
+for(const mutate of [p=>p.version=15,p=>p.version=17,p=>p.magic.powers.find(v=>v.effect===3).maximum=2,p=>p.magic.powers.find(v=>v.effect===3).recovery=1,p=>p.magic.powers.find(v=>v.effect===3).kind=0,p=>p.magic.powers.find(v=>v.effect===3).flags|=4,p=>p.magic.powers.find(v=>v.effect===3).effect=4]){const p=structuredClone(packets[0]);mutate(p);packets.push(p);}
+const path='firmware/tests/out/cannon.synthetic.jsonl';writeFileSync(path,packets.map(JSON.stringify).join('\n')+'\n');const run=spawnSync('firmware/tests/out/beyond-equipment-probe',[path],{encoding:'utf8',maxBuffer:8*1024*1024});assert.equal(run.status,0,run.stderr);const rows=run.stdout.trim().split('\n').map(JSON.parse);assert.equal(rows.length,packets.length);
+rows.slice(0,valid).forEach((r,i)=>{assert.ok(r.valid);const s=states[i],c=s.powers.find(v=>v.effect==='eldritch-cannon');const expected=Array.from({length:19},(_,choice)=>{const level=choice<=9?choice:choice-9,pact=choice>9;let next;try{next=usePower(s,c.id,choice?pact?`pact:${level}`:level:0);}catch{}return [Boolean(next),(next??s).powers.find(v=>v.id===c.id).remaining,choice?(pact?(next??s).extended.pactSlots:(next??s).slots)[level-1].current:0];});assert.deepEqual(r.cannonUses,expected);assert.deepEqual(r.resources,packets[i].resources.map(v=>[v.current,v.maximum]));});assert.ok(rows.slice(valid).every(v=>!v.valid));
+console.log(`Cannon: ${valid} synthetic sources, ${valid*19} PC/C payment comparisons, exact generic counters/native codec and ${rows.length-valid} atomic malformed/old/future packet rejections passed.`);

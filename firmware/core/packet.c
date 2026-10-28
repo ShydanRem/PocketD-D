@@ -116,7 +116,7 @@ static bool inventory(cJSON *o,pd_state *s,bool charges) {
     }
     return true;
 }
-static bool magic(cJSON *o,pd_magic *m) {
+static bool magic(cJSON *o,pd_magic *m,int version) {
     const char *const fields[]={"powers","slots","pact","concentration"};
     const char *const power_keys[]={"name","description","kind","level","flags","ability","maximum","remaining","recovery","effect","attackModifier","saveModifier"};
     const char *const slot_keys[]={"current","maximum"};
@@ -139,7 +139,7 @@ static bool magic(cJSON *o,pd_magic *m) {
         cJSON *description=cJSON_GetObjectItemCaseSensitive(o,"description");
         if(!cJSON_IsString(description)||strlen(description->valuestring)>=sizeof v->description)return false;
         strcpy(v->description,description->valuestring);
-        const int maxima[]={1,9,63,5,99,99,2,2,30,30};int values[10];
+        const int maxima[]={1,9,63,5,99,99,2,version>=16?3:2,30,30};int values[10];
         for(int j=0;j<10;j++) {
             cJSON *n=cJSON_GetObjectItemCaseSensitive(o,power_keys[j+2]);int lo=j>=8?-15:0;
             if(!cJSON_IsNumber(n)||!isfinite(n->valuedouble)||n->valuedouble<lo||n->valuedouble>maxima[j]||floor(n->valuedouble)!=n->valuedouble)return false;
@@ -202,7 +202,7 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
     const char *const abilities[]={"FOR","DES","COS","INT","SAG","CAR"};
     const char *const resource_keys[]={"name","current","maximum"};
     const char *const avatar_keys[]={"skin","hair","cloak","style","lineage","body","outfit"};
-    int version=number(root,"version",1,15);
+    int version=number(root,"version",1,16);
     cJSON *fmt=cJSON_GetObjectItemCaseSensitive(root,"format");
     if (version<0 || end!=json+size || !keys(root,fields,version==1?10:version==2?11:version==3?12:version==4?13:version==5?14:version==6?15:version<9?16:version<14?17:18) || !cJSON_IsString(fmt) ||
         strcmp(fmt->valuestring,"pocketdd-device") ||
@@ -223,7 +223,7 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
     }
     if(version>=3&&!training(cJSON_GetObjectItemCaseSensitive(root,"training"),&candidate.training,version>=15))goto done;
     if(version>=4&&!inventory(cJSON_GetObjectItemCaseSensitive(root,"inventory"),&candidate,version>=8))goto done;
-    if(version>=5&&!magic(cJSON_GetObjectItemCaseSensitive(root,"magic"),&candidate.magic))goto done;
+    if(version>=5&&!magic(cJSON_GetObjectItemCaseSensitive(root,"magic"),&candidate.magic,version))goto done;
     if(version>=6&&!recovery(cJSON_GetObjectItemCaseSensitive(root,"recovery"),&candidate.recovery))goto done;
     if(version>=7&&!status(cJSON_GetObjectItemCaseSensitive(root,"status"),&candidate.status))goto done;
     if(version>=9){

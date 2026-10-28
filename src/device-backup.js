@@ -21,7 +21,7 @@ function record(text,magic,max){
 }
 function text(bytes,start,capacity,empty=false){let end=start;while(end<start+capacity&&bytes[end]){if(bytes[end]<32||bytes[end]>126)fail();end++}if(end===start+capacity||(!empty&&end===start))fail();return String.fromCharCode(...bytes.subarray(start,end))}
 export function inspectDeviceBackup(raw){
-  const packet=envelope(raw),s=record(packet.state,['PDDP','PDDQ','PDDR','PDDS','PDDT','PDDU','PDDV','PDDW','PDDX','PDDY'],75204),h=record(packet.history,'PDH1',2481),mapped=s.bytes[3]===89;
+  const packet=envelope(raw),s=record(packet.state,['PDDP','PDDQ','PDDR','PDDS','PDDT','PDDU','PDDV','PDDW','PDDX','PDDY','PDDZ'],75204),h=record(packet.history,'PDH1',2481),mapped=s.bytes[3]===89||s.bytes[3]===90;
   const custom=mapped?s.bytes.subarray(s.bytes.length-22,s.bytes.length-4):new Uint8Array(18);
   if(custom.length!==18||custom.some(v=>v>6))fail();
   // CRC was checked on the complete record. Normalize offsets for preview only;

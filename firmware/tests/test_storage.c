@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <string.h>
 #include <stdio.h>
+#include "magic.h"
 #include "../main/storage.c"
 #include "fixtures/state-v1.h"
 #include "fixtures/state-v2.h"
@@ -140,7 +141,8 @@ int main(void){
  fail_set=1;s.hp=20;assert(!pd_storage_save(&s));fail_set=0;calls=set_calls;assert(!pd_storage_save(&s)&&calls==set_calls);reboot();assert(pd_storage_load(&s)&&s.hp==21);
  fail_commit=1;s.hp=19;assert(!pd_storage_save(&s)&&blocked);fail_commit=0;reboot();assert(pd_storage_load(&s)&&s.hp==19);
  s.training.skill_abilities[7]=1;s.training.skill_abilities[11]=4;assert(pd_storage_save(&s));reboot();assert(pd_storage_load(&s)&&s.training.skill_abilities[7]==1&&s.training.skill_abilities[11]==4);
- sizes[1][1]=pd_encode(&s,100,blobs[1][1]);blobs[1][1][3]='Z';uint32_t crc=pd_crc32(blobs[1][1],sizes[1][1]-4);for(int i=0;i<4;i++)blobs[1][1][sizes[1][1]-4+i]=crc>>(8*i);
+ pd_demo(&s);s.magic.available=true;s.magic.count=1;s.magic.powers[0]=(pd_power){.name="Cannon persisted",.kind=1,.flags=PD_PREPARED,.maximum=1,.recovery=2,.effect=3};s.magic.slots[0]=(pd_slot){2,2};assert(pd_storage_save(&s));reboot();assert(pd_storage_load(&s)&&s.magic.powers[0].effect==3&&!s.magic.powers[0].remaining&&s.magic.slots[0].current==2);assert(pd_magic_use(&s,0,1,false)&&pd_storage_save(&s));reboot();assert(pd_storage_load(&s)&&s.magic.slots[0].current==1&&!s.magic.powers[0].remaining);
+ sizes[1][1]=pd_encode(&s,100,blobs[1][1]);blobs[1][1][3]='[';uint32_t crc=pd_crc32(blobs[1][1],sizes[1][1]-4);for(int i=0;i<4;i++)blobs[1][1][sizes[1][1]-4+i]=crc>>(8*i);
  reboot();assert(!pd_storage_load(&s)&&blocked);blobs[1][0][0]=0;blobs[1][1][0]=0;reboot();assert(!pd_storage_load(&s));
  fail_init=1;reboot();assert(!pd_storage_load(&s));fail_init=0;fail_read=1;reboot();assert(!pd_storage_load(&s));
  puts("NVS: new/legacy partitions, golden v1..v24 migration without boot writes, missing layout, alternate banks, errors, rollback and future-version preservation passed");

@@ -37,14 +37,14 @@ class USBTests(unittest.TestCase):
             with self.assertRaises(RuntimeError):
                 upload.upload(port, b'{"version":2}\n', lambda _: None)
     def test_old_or_unknown_firmware_receives_no_v9_payload(self):
-        for ready in [b'PDD READY 1\n',b'PDD READY 2\n',b'PDD READY 3\n',b'PDD READY 4\n',b'PDD READY 5\n',b'PDD READY 6\n',b'PDD READY 7\n',b'PDD READY 8\n',b'PDD READY 16\n']:
+        for ready in [b'PDD READY 1\n',b'PDD READY 2\n',b'PDD READY 3\n',b'PDD READY 4\n',b'PDD READY 5\n',b'PDD READY 6\n',b'PDD READY 7\n',b'PDD READY 8\n',b'PDD READY 17\n']:
             port=Port([ready])
             with self.assertRaises(RuntimeError):upload.upload(port,b'{"version":9}\n',lambda _:None)
             self.assertEqual(port.sent,[b'\nPDD HELLO\n'])
     def test_backup_wrong_schema_and_duplicate_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / 'input.json'
-            for raw in ['{"version":10}', '{"format":"pocketdd-device","version":1,"version":1}', '[]', '{"format":"pocketdd-device","version":16}', '{"format":"pocketdd-device","version":true}']:
+            for raw in ['{"version":10}', '{"format":"pocketdd-device","version":1,"version":1}', '[]', '{"format":"pocketdd-device","version":17}', '{"format":"pocketdd-device","version":true}']:
                 path.write_text(raw)
                 with self.assertRaises(ValueError):
                     upload.payload(path)

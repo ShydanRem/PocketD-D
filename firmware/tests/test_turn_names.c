@@ -49,7 +49,7 @@ int main(int argc,char **argv){
         }
         pd_encode(&s,56,record);record[n-89+6]=0;record[n-89+7]='x';crc(n);assert(!pd_decode(record,n,&out,&generation));
         pd_encode(&s,56,record);record[n-89]=' ';crc(n);assert(!pd_decode(record,n,&out,&generation));
-        pd_encode(&s,56,record);record[3]='Z';crc(n);assert(!pd_record_known(record,n));
+        pd_encode(&s,56,record);record[3]='[';crc(n);assert(!pd_record_known(record,n));
         if(powers==120)break;
     }
     pd_history h;pd_history_reset(&h,s.history_epoch);size_t size;char *json=pd_backup_encode(&s,&h,&size);

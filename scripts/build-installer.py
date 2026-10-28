@@ -104,3 +104,11 @@ for name in ('manual-counter-first.png','manual-counter-note.png'):
  shutil.copyfile(source,out/'assets'/name)
 page=out/'index.html'
 page.write_text(page.read_text().replace('</main>', '<section class="after"><h2>Contatori e capacità distinti · v0.76</h2><p>I saldi manuali Beyond arrivano nei contatori del dispositivo, separati dagli utilizzi delle capacità. Correzioni esplicite, nessun consumo o recupero automatico. Testi negli estratti attuali.</p><p>Catture del firmware su PC con dati sintetici. Nuova lettura reale verificata separatamente nel report; trasferimento USB fisico ancora da collaudare.</p><div class="import-captures"><img src="assets/manual-counter-first.png" width="466" height="466" alt="Saldo manuale separato dalle capacità"><img src="assets/manual-counter-note.png" width="466" height="466" alt="Capacità informativa senza utilizzi inventati"></div></section></main>'))
+
+# Real native renderer captures with synthetic data; source verification is documented separately.
+for name in ('cannon-free.png','cannon-paid-confirm.png'):
+ source=ROOT/'firmware/tests/out/ui-build'/name
+ if not source.is_file():raise SystemExit(f'Missing cannon capture: {name}')
+ shutil.copyfile(source,out/'assets'/name)
+page=out/'index.html'
+page.write_text(page.read_text().replace('</main>', '<section class="after"><h2>Creazione del cannone · v0.77</h2><p>Per l’Artillerist riconosciuto di Tasha’s: una creazione gratuita per riposo lungo, poi uno slot ordinario o del patto scelto e confermato. Contatori manuali e concentrazione conservati. Aggiorna app e firmware a 0.77; una nuova importazione aggiunge il nuovo comportamento conservando le schede precedenti.</p><p>Catture del renderer del firmware su PC con dati sintetici. La nuova lettura reale e i limiti sono distinti nel report; USB fisico ancora da verificare.</p><div class="import-captures"><img src="assets/cannon-free.png" width="466" height="466" alt="Creazione gratuita del cannone"><img src="assets/cannon-paid-confirm.png" width="466" height="466" alt="Conferma della creazione pagata con uno slot del patto"></div></section></main>'))

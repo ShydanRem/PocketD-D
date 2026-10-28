@@ -1,5 +1,6 @@
 import {applyBeyondTraining} from './beyond-training.js';
 import {BeyondError} from './beyond.js';
+import {beyondCannon} from './beyond-cannon.js';
 import {skills,abilityKeys,modifier,proficiency,parseBackup,serialize,describeRoll,weaponStats} from './model.js';
 import {emptyExtended} from './extended.js';
 import {validatePower,spellStats} from './powers.js';
@@ -202,6 +203,7 @@ export function extendBeyond(report,c,customTraining=[]){
       }
     }
     const power={id:`ddb-action-${group}-${powers.length+1}`,type:'feature',name:a.name,description,...(resource??{maxUses:0,remaining:0,recovery:'manual',passive:true})};
+    if(resource&&beyondCannon(a,f)){power.effect='eldritch-cannon';evidence.push('Create Eldritch Cannon: utilizzo gratuito per riposo lungo; dopo esaurimento nuova creazione con uno slot ordinario o patto scelto esplicitamente. Contatori manuali invariati.');}
     if(resource&&group==='class'&&a.componentId===51&&f?.owner?.definition?.id===9&&integer(f.scale?.fixedValue,1,10)){
       const heavy=array(c.inventory).some(i=>i.equipped&&i.definition?.armorTypeId===3);
       if(!heavy){ext.combat.rageBonus=f.scale.fixedValue;power.effect='rage';}

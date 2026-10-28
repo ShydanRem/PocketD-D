@@ -1855,9 +1855,9 @@ static int visible_power(unsigned row) {
 static void choose_cost(void) {
     const pd_power *p=&state.magic.powers[power_index];
     bool advance=(cast_level&0x80)!=0;cast_level&=0x7f;
-    if(p->kind||!p->level||!(p->flags&PD_USES_SLOT)){cast_level=0;cast_pact=false;return;}
+    if((p->kind&&(p->effect!=3||p->remaining))||(!p->kind&&(!p->level||!(p->flags&PD_USES_SLOT)))){cast_level=0;cast_pact=false;return;}
     unsigned costs[18],count=0;
-    for(unsigned k=0;k<2;k++)for(unsigned i=p->level;i<=9;i++)if((k?state.magic.pact:state.magic.slots)[i-1].current)costs[count++]=i+(k?16:0);
+    for(unsigned k=0;k<2;k++)for(unsigned i=p->effect==3?1:p->level;i<=9;i++)if((k?state.magic.pact:state.magic.slots)[i-1].current)costs[count++]=i+(k?16:0);
     if(!count){cast_level=0;return;}
     unsigned selected=cast_level+(cast_pact?16:0),at=0;bool found=false;
     for(unsigned i=0;i<count;i++)if(costs[i]==selected){at=i;found=true;break;}
@@ -1868,6 +1868,7 @@ static bool can_use_power(void) {scratch=state;return pd_magic_use(&scratch,powe
 static void cost_text(char *text,size_t cap) {
     const pd_power *p=&state.magic.powers[power_index];
     if(p->kind&&(p->flags&PD_PASSIVE))snprintf(text,cap,"Informativa: nessun consumo");
+    else if(p->effect==3)snprintf(text,cap,p->remaining?"Creazione gratuita 1/1":cast_level?"Slot %u %s >":"Nessuno slot disponibile",cast_level,cast_pact?"patto":"ordinario");
     else if(p->kind||(p->flags&PD_LIMITED))snprintf(text,cap,"Utilizzi %u/%u%s",p->remaining,p->maximum,p->kind?"":" + costo magia");
     else if(p->level&&(p->flags&PD_USES_SLOT))snprintf(text,cap,cast_level?"Slot %u %s >":"Nessuno slot disponibile",cast_level,cast_pact?"patto":"ordinario");
     else snprintf(text,cap,"Nessuno slot richiesto");
@@ -1903,14 +1904,14 @@ static void render_magic_detail(void) {
     else snprintf(text,sizeof text,"%s | recupero %s",p->effect==1?"Effetto: Ira":p->effect==2?"Effetto a zero PF":"Effetto da gestire con il DM",(const char *const[]){"manuale","breve","lungo"}[p->recovery]);
     small_label(text,83,198,300,PD_GOLD);
     cost_text(text,sizeof text);
-    if(!p->kind&&p->level&&(p->flags&PD_USES_SLOT)) {
+    if((p->effect==3&&!p->remaining)||(!p->kind&&p->level&&(p->flags&PD_USES_SLOT))) {
         snprintf(text,sizeof text,cast_level?"Slot %u %s >":"Nessuno slot disponibile",cast_level,cast_pact?"patto":"ordinario");
         button(text,83,224,300,44,834,cast_level>0);
     } else label(text,83,235,300,false);
     if(p->flags&PD_LIMITED){snprintf(text,sizeof text,"Usi innati %u/%u",p->remaining,p->maximum);small_label(text,83,274,300,PD_MUTED);}
     else small_label(p->flags&PD_EXCERPT?"Testo in estratto; completo sul PC":"Effetti e risultati: verifica con il DM",83,274,300,PD_MUTED);
     button("Testo",83,301,144,44,830,true);
-    const char *use_label=p->kind?((p->flags&PD_PASSIVE)?"Informativa":!p->remaining?"Esaurita":p->effect==1&&state.combat.raging?"Gia attiva":p->effect==2&&state.hp?"A zero PF":p->effect==2&&state.status.available&&state.status.failures==3?"Verifica DM":"Usa"):
+    const char *use_label=p->kind?((p->flags&PD_PASSIVE)?"Informativa":!p->remaining&&p->effect!=3?"Esaurita":p->effect==3?"Crea":p->effect==1&&state.combat.raging?"Gia attiva":p->effect==2&&state.hp?"A zero PF":p->effect==2&&state.status.available&&state.status.failures==3?"Verifica DM":"Usa"):
         state.combat.raging?"Ira attiva":!(p->flags&PD_PREPARED)?"Non preparata":(p->flags&PD_LIMITED)&&!p->remaining?"Esaurita":"Lancia";
     lv_obj_t *use=button(use_label,239,301,144,44,831,can_use_power());lv_obj_set_style_text_font(use,&lv_font_montserrat_16,0);
     button("Elenco",83,359,144,48,835,true);
@@ -1966,8 +1967,8 @@ static void render_magic_other(void) {
     if(page==MAGIC_CONFIRM) {
         const pd_power *p=&state.magic.powers[power_index];choose_cost();
         label("Conferma utilizzo",83,111,300,true);label(p->name,83,159,300,false);cost_text(text,sizeof text);small_label(text,83,204,300,PD_GOLD);
-        if(!p->kind&&p->level&&(p->flags&PD_USES_SLOT)){snprintf(text,sizeof text,"Slot %u %s",cast_level,cast_pact?"patto":"ordinario");small_label(text,83,231,300,PD_TEXT);}
-        small_label(p->flags&PD_CONCENTRATES&&state.magic.concentration?"Sostituisce la concentrazione attuale":p->effect==1?"Attiva Ira e termina concentrazione":"Effetti da risolvere con il DM",83,275,300,PD_MUTED);
+        if((p->effect==3&&!p->remaining)||(!p->kind&&p->level&&(p->flags&PD_USES_SLOT))){snprintf(text,sizeof text,"Slot %u %s",cast_level,cast_pact?"patto":"ordinario");small_label(text,83,231,300,PD_TEXT);}
+        small_label(p->flags&PD_CONCENTRATES&&state.magic.concentration?"Sostituisce la concentrazione attuale":p->effect==1?"Attiva Ira e termina concentrazione":p->effect==3?"Verifica strumenti e cannone attivo":"Effetti da risolvere con il DM",83,275,300,PD_MUTED);
         if(((p->flags&PD_CONCENTRATES)||p->effect==1)&&state.magic.concentration){
             scratch=state;pd_concentration_end(&scratch);
             snprintf(text,sizeof text,"Termina %u effetti | PF %u -> %u",pd_concentration_effects(&state),state.hp,scratch.hp);small_label(text,83,306,300,PD_GOLD);
@@ -3277,7 +3278,7 @@ static void usb_task(void *unused) {
             if(c=='\n') {
                 if(!overflow && used) {
                     line[used]=0;
-                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 15\n");
+                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 16\n");
                     else if(!strcmp(line,"PDD BACKUP HELLO"))reply("PDD BACKUP_READY 1\n");
                     else if(!strcmp(line,"PDD DIAGNOSTICS GET 1")){uint8_t request=1;if(xQueueSend(diagnostic_requests,&request,0)!=pdPASS)reply("PDD ERROR busy\n");}
                     else if(!strcmp(line,"PDD BACKUP GET 1")){pd_backup *request=NULL;if(xQueueSend(backup_packets,&request,0)!=pdPASS)reply("PDD ERROR busy\n");}

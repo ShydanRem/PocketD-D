@@ -43,9 +43,9 @@ export function projectDevice(input){
     if(excerpt)warnings.push(`Descrizione in estratto (500 caratteri): ${p.name}. Testo completo conservato sul PC.`);
     const uses=p.type==='feature'?p:p.limited;
     return {name:ascii(p.name,40),description:description.slice(0,500),kind:p.type==='feature'?1:0,level:p.level??0,
-      flags:(p.concentration?1:0)|(p.prepared!==false?2:0)|(p.usesSpellSlot!==false?4:0)|(p.limited?8:0)|(p.passive?16:0)|(excerpt?32:0),
+      flags:(p.concentration?1:0)|(p.prepared!==false?2:0)|(p.effect!=='eldritch-cannon'&&p.usesSpellSlot!==false?4:0)|(p.limited?8:0)|(p.passive?16:0)|(excerpt?32:0),
       ability:abilityKeys.indexOf(p.castingAbility??s.spellcastingAbility),maximum:uses?.maxUses??0,remaining:uses?.remaining??0,
-      recovery:['manual','short','long'].indexOf(uses?.recovery??'manual'),effect:p.effect==='rage'?1:p.effect==='relentless-endurance'?2:0,
+      recovery:['manual','short','long'].indexOf(uses?.recovery??'manual'),effect:p.effect==='rage'?1:p.effect==='relentless-endurance'?2:p.effect==='eldritch-cannon'?3:0,
       attackModifier:p.attackModifier??0,saveModifier:p.saveModifier??0};
   }),slots:s.slots.map(v=>({current:v.current,maximum:v.max})),pact:(s.extended?.pactSlots??Array.from({length:9},()=>({current:0,max:0}))).map(v=>({current:v.current,maximum:v.max})),
     concentration:s.concentration?s.powers.findIndex(p=>p.id===s.concentration)+1:0};
@@ -59,14 +59,15 @@ export function projectDevice(input){
   warnings.push('Morte: contatori trasferiti esattamente; d20 base senza bonus, vantaggi o talenti, con conferma e correzioni DM. Tre fallimenti a zero PF bloccano cure ordinarie e riposo lungo fino a correzione esplicita. Nessuna morte istantanea o gestione automatica dei danni a zero PF.');
   const wallet={available:s.extended?.currenciesAvailable??false,...Object.fromEntries(['cp','sp','ep','gp','pp'].map(k=>[k,s.extended?.currenciesAvailable?integer(s.extended.currencies[k],0,999999999,k):0]))};
   warnings.push(wallet.available?'Monete: cinque saldi verificati, separati e modificabili con conferma sul dispositivo. Nessun cambio o acquisto automatico.':'Monete: saldo non verificato, nessuna ricchezza inventata. Verificalo in Stato e risorse sul PC oppure configura il borsello sul dispositivo.');
-  const identity=avatarIdentity(s.avatar),outfit=avatarOutfit(s.avatar),defences=s.extended?.defences,mapped=s.extended?.skillAbilities!==undefined,variant=mapped||defences!==undefined||outfit||identity.lineage||identity.body;
-  const packet={format:'pocketdd-device',version:mapped?15:defences!==undefined?14:outfit?13:identity.lineage>=16?12:identity.lineage>=12?11:variant?10:9,name:ascii(s.name,48),level:integer(s.level,1,20,'Livello'),hp:integer(s.hp,0,999,'PF'),
+  const identity=avatarIdentity(s.avatar),outfit=avatarOutfit(s.avatar),defences=s.extended?.defences,mapped=s.extended?.skillAbilities!==undefined,cannon=s.powers.some(p=>p.effect==='eldritch-cannon'),variant=cannon||mapped||defences!==undefined||outfit||identity.lineage||identity.body;
+  const packet={format:'pocketdd-device',version:cannon?16:mapped?15:defences!==undefined?14:outfit?13:identity.lineage>=16?12:identity.lineage>=12?11:variant?10:9,name:ascii(s.name,48),level:integer(s.level,1,20,'Livello'),hp:integer(s.hp,0,999,'PF'),
     maxHp:integer(s.maxHp,1,999,'PF massimi'),tempHp:integer(s.extended?.tempHp??0,0,999,'PF temporanei'),armorClass:integer(s.armorClass,1,40,'CA'),
     avatar:Object.fromEntries(['skin','hair','cloak','style'].map(k=>[k,integer(s.avatar[k],0,2,k)])),
     training,inventory,magic,recovery,status,wallet,
     abilities:Object.fromEntries(abilityKeys.map(k=>[k,integer(s.abilities[k],1,30,k)])),
     resources:counters.map(r=>({name:ascii(r.name,32),current:integer(r.current,0,999,r.name),maximum:integer(r.maximum,1,999,r.name)}))};
-  if(mapped){training.skillAbilities=Object.fromEntries(skills.map(v=>[v.id,s.extended.skillAbilities[v.id]?abilityKeys.indexOf(s.extended.skillAbilities[v.id])+1:0]));Object.assign(packet.avatar,identity,{outfit});packet.defences={configured:0,resistance:0,vulnerability:0,immunity:0};warnings.push('Caratteristiche delle abilità personalizzate: richiede firmware 0.74 / USB15; competenze, bonus ed effetti usano la caratteristica effettiva.');}
+  if(mapped||cannon){training.skillAbilities=Object.fromEntries(skills.map(v=>[v.id,s.extended.skillAbilities?.[v.id]?abilityKeys.indexOf(s.extended.skillAbilities?.[v.id])+1:0]));Object.assign(packet.avatar,identity,{outfit});packet.defences={configured:0,resistance:0,vulnerability:0,immunity:0};if(mapped)warnings.push('Caratteristiche delle abilità personalizzate: richiede firmware 0.74 / USB15; competenze, bonus ed effetti usano la caratteristica effettiva.');}
+  if(cannon)warnings.push('Creazione cannone: firmware 0.77 / USB16; prima un utilizzo gratuito per riposo lungo, poi uno slot scelto. Non crea o aggiorna automaticamente un cannone, i suoi PF o la durata.');
   if(defences!==undefined){packet.defences=validateDefences(defences);Object.assign(packet.avatar,identity,{outfit});warnings.push('Profilo difese: richiede USB14 / firmware 0.71. Solo i tipi verificati si applicano nel calcolo Danni; gli altri richiedono configurazione. Effetti temporanei e condizioni non vengono dedotti.');}
   if(outfit){packet.avatar.outfit=outfit;warnings.push('Look classe: richiede firmware 0.70 / USB13 e pocketdd/classes.pdc sulla SD. Senza asset viene mostrato lo stile originale, mantenendo la scelta. Colori e taglio del preset sono fissi; nessun valore di gioco cambia.');}
   if(variant){Object.assign(packet.avatar,identity);warnings.push(identity.lineage>=16?'Questa specie richiede USB12 / firmware 0.69 o successivo. Aspetto cosmetico: nessun bonus o equipaggiamento dedotto.':identity.lineage>=12?'Questa specie richiede USB11 / firmware 0.68 o successivo. Aspetto cosmetico: nessun bonus o equipaggiamento dedotto.':'Specie e silhouette maschile/femminile richiedono USB10 / firmware 0.67 o successivo. Aspetto cosmetico: nessun bonus o equipaggiamento dedotto.');}

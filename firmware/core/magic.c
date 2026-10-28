@@ -11,7 +11,8 @@ bool pd_magic_valid(const pd_state *s) {
     for(int i=0;i<9;i++)if(m->slots[i].maximum>9||m->slots[i].current>m->slots[i].maximum||m->pact[i].maximum>9||m->pact[i].current>m->pact[i].maximum)return false;
     for(int i=0;i<m->count;i++) {
         const pd_power *v=&m->powers[i];
-        if(!printable(v->name,sizeof v->name,false)||!printable(v->description,sizeof v->description,true)||v->kind>1||v->level>9||v->flags>63||v->ability>5||v->maximum>99||v->remaining>v->maximum||v->recovery>2||v->effect>2||v->attack_modifier< -15||v->attack_modifier>30||v->save_modifier< -15||v->save_modifier>30)return false;
+        if(!printable(v->name,sizeof v->name,false)||!printable(v->description,sizeof v->description,true)||v->kind>1||v->level>9||v->flags>63||v->ability>5||v->maximum>99||v->remaining>v->maximum||v->recovery>2||v->effect>3||v->attack_modifier< -15||v->attack_modifier>30||v->save_modifier< -15||v->save_modifier>30)return false;
+        if(v->effect==3&&(v->kind!=1||v->maximum!=1||v->recovery!=2||v->level||(v->flags&(PD_PASSIVE|PD_CONCENTRATES|PD_USES_SLOT|PD_LIMITED))))return false;
         if(v->kind==0&&(v->effect||(v->flags&PD_PASSIVE)))return false;
         if(v->kind==1&&((v->flags&PD_PASSIVE)?(v->maximum||v->remaining||v->effect):!v->maximum))return false;
         if(v->kind==0&&(v->flags&PD_LIMITED)&&!v->maximum)return false;
@@ -28,6 +29,16 @@ bool pd_magic_use(pd_state *s,unsigned index,unsigned slot,bool pact) {
     if(!s||!pd_valid(s)||!s->magic.available||index>=s->magic.count)return false;
     pd_power *v=&s->magic.powers[index];
     if(v->kind==1) {
+        if(v->effect==3){
+            if(!s->hp)return false;
+            if(!v->remaining){
+                if(slot<1||slot>9)return false;
+                pd_slot *cost=&(pact?s->magic.pact:s->magic.slots)[slot-1];
+                if(!cost->current)return false;
+                cost->current--;return true;
+            }
+            if(slot||pact)return false;
+        }
         if((v->flags&PD_PASSIVE)||!v->remaining)return false;
         if(v->effect==1&&(!s->combat.rage_bonus||!s->hp||s->combat.raging))return false;
         if(v->effect==2&&(s->hp||(s->status.available&&s->status.failures==3)))return false;

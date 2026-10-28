@@ -25,3 +25,5 @@ for path in BASE.glob('skill-ability-*.ppm'):Image.open(path).save(path.with_suf
 for path in BASE.glob('defence-setup-*.ppm'):Image.open(path).save(path.with_suffix('.png'))
 
 for path in BASE.glob('manual-counter-*.ppm'):Image.open(path).save(path.with_suffix('.png'))
+
+for path in BASE.glob('cannon-*.ppm'):Image.open(path).save(path.with_suffix('.png'))

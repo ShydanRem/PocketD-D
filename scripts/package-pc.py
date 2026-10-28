@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 p=argparse.ArgumentParser();p.add_argument('output',type=Path,nargs='?',default=ROOT/'dist/install/downloads/PocketDD-PC.zip');args=p.parse_args()
 if not (ROOT/'dist/index.html').is_file():raise SystemExit('Run npm run build first')
-files=[ROOT/'package.json',ROOT/'Avvia-PocketDD.cmd',ROOT/'docs/STATO-SOFTWARE.md',ROOT/'docs/BEYOND-PERSONALIZZAZIONI-TIRI.md',ROOT/'docs/ABILITA-CARATTERISTICHE.md',ROOT/'docs/DIFESE-VERIFICA-RAPIDA.md',ROOT/'docs/BEYOND-CONTATORI-MANUALI.md']
+files=[ROOT/'package.json',ROOT/'Avvia-PocketDD.cmd',ROOT/'docs/STATO-SOFTWARE.md',ROOT/'docs/BEYOND-PERSONALIZZAZIONI-TIRI.md',ROOT/'docs/ABILITA-CARATTERISTICHE.md',ROOT/'docs/DIFESE-VERIFICA-RAPIDA.md',ROOT/'docs/BEYOND-CONTATORI-MANUALI.md',ROOT/'docs/BEYOND-CANNONE.md']
 for directory in ('src','scripts'):
  files += [f for f in (ROOT/directory).glob('*') if f.is_file() and f.suffix in ('.js','.json') and not f.name.endswith('.test.js')]
 files += [ROOT/'dist/index.html']+[f for f in (ROOT/'dist/assets').rglob('*') if f.is_file()]
@@ -28,6 +28,8 @@ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as z:
 L'app e gia compilata: non servono npm install o una compilazione del firmware.
 Caratteristica personalizzata delle abilita: da Beyond tipo 27 o Personalizza eroe.
 Per trasferirla serve firmware 0.74 / USB15; nuovi backup nativi PDD34 letti da questa app.
+Creazione del cannone riconosciuta: gratuito per riposo lungo, poi slot scelto e confermato.
+Richiede firmware 0.77 / USB16; backup PC v19 e nativi PDD35. Altre varianti manuali.
 Contatori manuali Beyond separati dagli utilizzi; saldi in Stato, risorse e note e Usi sul dispositivo.
 Backup PC v18 solo con questi contatori, protocolli USB esistenti. Nessun recupero automatico.
 Verifica rapida difese: Danni > Difese per tipo > Completa sul dispositivo (0.75).

@@ -1,5 +1,6 @@
 #include "pocketdd.h"
 #include "damage.h"
+#include "magic.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
@@ -18,6 +19,14 @@ int main(int argc,char **argv){
   for(unsigned i=0;i<state.resource_count;i++)printf("%s[%u,%u]",i?",":"",state.resources[i].current,state.resources[i].maximum);
   printf("],\"powers\":[");
   for(unsigned i=0;i<state.magic.count;i++){const pd_power *p=&state.magic.powers[i];printf("%s[%u,%u,%u,%u,%u]",i?",":"",p->kind,p->flags,p->maximum,p->remaining,p->recovery);}
+  printf("],\"cannonUses\":[");
+  for(unsigned i=0;i<state.magic.count;i++)if(state.magic.powers[i].effect==3){
+   for(unsigned choice=0;choice<19;choice++){
+    unsigned slot=choice?choice<=9?choice:choice-9:0;bool pact=choice>9;decoded=state;bool ok=pd_magic_use(&decoded,i,slot,pact);before=state;
+    if(ok){before.magic.powers[i].remaining=decoded.magic.powers[i].remaining;if(slot)(pact?before.magic.pact:before.magic.slots)[slot-1].current=(pact?decoded.magic.pact:decoded.magic.slots)[slot-1].current;}
+    assert(!memcmp(&before,&decoded,sizeof before));printf("%s[%s,%u,%u]",choice?",":"",ok?"true":"false",decoded.magic.powers[i].remaining,slot?(pact?decoded.magic.pact:decoded.magic.slots)[slot-1].current:0);
+   }break;
+  }
   printf("],\"damage\":[");
   for(unsigned i=0;i<13;i++){pd_damage_summary d;assert(pd_damage_preview(&state,&(pd_damage_plan){.type=i,.amount=9,.concentration=PD_CONCENTRATION_KEEP},&d));printf("%s[%s,%u,%u,%s]",i?",":"",d.configured?"true":"false",d.flags,d.adjusted,d.allowed?"true":"false");}
   puts("]}");

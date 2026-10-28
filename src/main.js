@@ -147,7 +147,7 @@ if(b.dataset.action==='manage-powers'){openPowerManager();return}
 if(b.dataset.usePower){
   const power=state.powers.find(item=>item.id===b.dataset.usePower);
   if(power?.type==='spell'&&power.concentration&&state.concentration&&!confirm('Il nuovo lancio sostituisce la concentrazione attuale. Continuare?'))return;
-  try{const level=document.querySelector(`[data-slot-for="${power.id}"]`)?.value??0;const next=usePower(state,power.id,level);rememberUndo();state=next;powerMessage=`${power.name}: risorsa utilizzata. Risolvi l’effetto con il DM.`;save()}catch(error){powerMessage=error.message}
+  try{const level=document.querySelector(`[data-slot-for="${power.id}"]`)?.value??0;const next=usePower(state,power.id,level);if(power.effect==='eldritch-cannon'){if(!confirm(power.remaining>0?'Creare il cannone usando la creazione gratuita? Verifica strumenti e cannone attivo.':`Creare il cannone spendendo uno slot ${availableSlots(state,power).find(s=>s.value===String(level)).label}? Verifica strumenti e cannone attivo. Nessun altro saldo cambia.`))return;commitExtended(next);}else{rememberUndo();state=next;}powerMessage=`${power.name}: risorsa utilizzata. Risolvi l’effetto con il DM.`;if(power.effect!=='eldritch-cannon')save()}catch(error){powerMessage=error.message}
 }
 if(b.dataset.action==='end-concentration'){rememberUndo();state={...state,concentration:null};powerMessage='Concentrazione terminata.';save()}
 if(b.dataset.ac){targetAc=Math.max(1,Math.min(30,targetAc+Number(b.dataset.ac)));combat=null;damageResult=null}
@@ -315,11 +315,11 @@ function openEditor(fresh=false){
 function powersView(tabs){
   const concentration=state.powers.find(p=>p.id===state.concentration);
   const card=power=>{
-    const spell=power.type==='spell',stats=spell?spellStats(state,power):null,slots=spell?availableSlots(state,power):[];
-    const slotNeeded=spell&&power.level>0&&power.usesSpellSlot!==false;
-    const disabled=power.passive||(!spell&&(power.remaining===0||power.effect==='rage'&&(state.hp===0||state.extended?.combat.raging)||power.effect==='relentless-endurance'&&state.hp!==0))||(spell&&(power.prepared===false||power.limited?.remaining===0||state.extended?.combat.raging||power.concentration&&state.hp===0||slotNeeded&&!slots.length));
+    const spell=power.type==='spell',stats=spell?spellStats(state,power):null,cannon=power.effect==='eldritch-cannon',slots=spell||cannon?availableSlots(state,power):[];
+    const slotNeeded=spell&&power.level>0&&power.usesSpellSlot!==false||cannon&&power.remaining===0;
+    const disabled=power.passive||(!spell&&(power.remaining===0&&(!cannon||!slots.length)||cannon&&state.hp===0||power.effect==='rage'&&(state.hp===0||state.extended?.combat.raging)||power.effect==='relentless-endurance'&&state.hp!==0))||(spell&&(power.prepared===false||power.limited?.remaining===0||state.extended?.combat.raging||power.concentration&&state.hp===0||slotNeeded&&!slots.length));
     const detail=spell?`${power.level===0?'Trucchetto':`Magia ${power.level}°`} · ${stats.ability} · attacco ${signed(stats.attack)} · CD ${stats.dc}${power.prepared===false?' · non preparata':''}${power.limited?` · usi ${power.limited.remaining}/${power.limited.maxUses}`:''}`:power.passive?'Nota · effetti gestiti al tavolo':`Capacità · ${power.remaining}/${power.maxUses} · recupero ${power.recovery==='short'?'breve':power.recovery==='long'?'lungo':'manuale'}`;
-    return `<article class="power-card"><strong>${escapeHtml(power.name)}</strong><p>${escapeHtml(power.description)||'Nessuna nota.'}</p><small>${detail}</small>${power.passive?'':`<div class="power-controls">${slotNeeded?`<label>Slot<select data-slot-for="${power.id}" aria-label="Slot per ${escapeHtml(power.name)}">${slots.map(s=>`<option value="${s.value}">${s.label}</option>`).join('')}</select></label>`:''}<button data-use-power="${power.id}" ${disabled?'disabled':''}>${spell?'Lancia':'Usa'}</button></div>`}</article>`;
+    return `<article class="power-card"><strong>${escapeHtml(power.name)}</strong><p>${escapeHtml(power.description)||'Nessuna nota.'}</p><small>${detail}</small>${power.passive?'':`<div class="power-controls">${slotNeeded?`<label>Slot<select data-slot-for="${power.id}" aria-label="Slot per ${escapeHtml(power.name)}">${slots.map(s=>`<option value="${s.value}">${s.label}</option>`).join('')}</select></label>`:''}<button data-use-power="${power.id}" ${disabled?'disabled':''}>${spell?'Lancia':cannon?'Crea cannone':'Usa'}</button></div>`}</article>`;
   };
   const ordinary=state.slots.map((s,i)=>s.max?`<span>${i+1}° <b>${s.current}/${s.max}</b></span>`:'').join('');
   const pact=state.extended?.pactSlots.map((s,i)=>s.max?`<span>Patto ${i+1}° <b>${s.current}/${s.max}</b></span>`:'').join('')??'';
@@ -490,7 +490,7 @@ function deviceInventoryPreview(s,packet){
   return `<details data-device-inventory><summary>Zaino · ${packet.inventory.items.length} voci</summary><p>${w?`Arma scelta: ${escapeHtml(w.name)} · attacco ${(w.attackBonus>=0?'+':'')+w.attackBonus} · danni ${w.diceCount}d${w.dieSides} ${(w.damageBonus>=0?'+':'')+w.damageBonus}.`:'Nessuna arma scelta.'} Note e proprietà speciali restano sul PC.</p><table class="device-training-table"><thead><tr><th>Oggetto</th><th>Quantità</th><th>Tipo</th></tr></thead><tbody>${packet.inventory.items.map(v=>`<tr><td>${escapeHtml(v.name)}</td><td>${v.quantity}</td><td>${['Oggetto','Consumabile','Cura','Arma'][v.kind]}</td></tr>`).join('')}</tbody></table></details>`;
 }
 function deviceMagicPreview(s,packet){
-  const rows=packet.magic.powers.map((v,i)=>{const p=s.powers[i],stats=p.type==='spell'?spellStats(s,p):null;return `<tr><td>${escapeHtml(v.name)}</td><td>${stats?`Attacco ${(stats.attack>=0?'+':'')+stats.attack} / CD ${stats.dc}`:`${v.remaining}/${v.maximum} usi`}</td><td>${v.flags&32?'Estratto 500 caratteri':`${v.description.length} caratteri`}</td></tr>`});
+  const rows=packet.magic.powers.map((v,i)=>{const p=s.powers[i],stats=p.type==='spell'?spellStats(s,p):null;return `<tr><td>${escapeHtml(v.name)}</td><td>${stats?`Attacco ${(stats.attack>=0?'+':'')+stats.attack} / CD ${stats.dc}`:`${v.remaining}/${v.maximum} usi${v.effect===3?' gratuiti; poi slot a scelta':''}`}</td><td>${v.flags&32?'Estratto 500 caratteri':`${v.description.length} caratteri`}</td></tr>`});
   return `<details data-device-magic><summary>Magie e capacità · ${packet.magic.powers.length} voci</summary><p>Slot ordinari e patto separati. Utilizzi e concentrazione richiedono conferma sul dispositivo; effetti da risolvere con il DM. Tasti configurabili da Eroe → Aspetto → Tasti.</p><table class="device-training-table"><thead><tr><th>Voce</th><th>Valori</th><th>Testo</th></tr></thead><tbody>${rows.join('')}</tbody></table></details>`;
 }
 function deviceStatusPreview(packet){

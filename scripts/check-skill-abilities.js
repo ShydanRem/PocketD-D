@@ -13,7 +13,7 @@ for(const [id,key] of Object.entries(beyondSkillIds))for(let a=0;a<6;a++)for(con
  packets.push(projectDevice(r.draft).packet);expected.push({key,a,grade,level});
 }
 const valid=packets.length;
-for(const mutate of [p=>delete p.training.skillAbilities,p=>p.training.skillAbilities.perception=7,p=>p.training.skillAbilities.perception=-1,p=>p.training.skillAbilities.perception='1',p=>p.training.skillAbilities.perception=.5,p=>delete p.training.skillAbilities.perception,p=>p.training.skillAbilities.extra=0,p=>p.training.skillAbilities=null,p=>p.training.skillAbilities=[],p=>p.version=14,p=>p.version=16]){const p=structuredClone(packets[0]);mutate(p);packets.push(p);}
+for(const mutate of [p=>delete p.training.skillAbilities,p=>p.training.skillAbilities.perception=7,p=>p.training.skillAbilities.perception=-1,p=>p.training.skillAbilities.perception='1',p=>p.training.skillAbilities.perception=.5,p=>delete p.training.skillAbilities.perception,p=>p.training.skillAbilities.extra=0,p=>p.training.skillAbilities=null,p=>p.training.skillAbilities=[],p=>p.version=14,p=>p.version=17]){const p=structuredClone(packets[0]);mutate(p);packets.push(p);}
 const path='firmware/tests/out/skill-abilities.synthetic.jsonl';writeFileSync(path,packets.map(JSON.stringify).join('\n')+'\n');
 const native=spawnSync('firmware/tests/out/beyond-equipment-probe',[path],{encoding:'utf8',maxBuffer:16*1024*1024});assert.equal(native.status,0,native.stderr);const records=native.stdout.trim().split('\n').map(JSON.parse);assert.equal(records.length,packets.length);assert.ok(records.slice(0,valid).every(r=>r.valid));assert.ok(records.slice(valid).every(r=>!r.valid));
 writeFileSync(path,packets.slice(0,valid).map(JSON.stringify).join('\n')+'\n');

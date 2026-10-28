@@ -53,3 +53,13 @@ export function beyondManualFixture(count=5){
  for(let i=0;i<count;i++)p.data.actions.class.push({id:`manual-${i}`,componentId:500,name:`Riserva manuale ${i+1}`,description:'Testo sintetico.',limitedUse:{maxUses:i===2?50:4,numberUsed:i===2?15:i%4,resetType:4}});
  return p;
 }
+
+// Recognized source identities plus invented values/text; never a real character JSON.
+export function beyondCannonFixture(remaining=0){
+ const p=beyondManualFixture(),c=p.data,book=[{sourceId:67,sourceType:1}],cl=c.classes[0];
+ cl.level=10;Object.assign(cl.definition,{id:252717,name:'Artificer',isHomebrew:false,sources:book});
+ cl.subclassDefinition={id:254188,name:'Artillerist',isHomebrew:false,sources:book};
+ cl.classFeatures.push({definition:{id:1138963,name:'Eldritch Cannon',requiredLevel:3,sources:book,description:'Capacità sintetica con pagamento alternativo verificato.'}});
+ c.actions.class.push({id:'1038966',componentId:1138963,componentTypeId:12168134,name:'Create Eldritch Cannon',activation:{activationType:1,activationTime:null},limitedUse:{maxUses:1,numberUsed:1-remaining,resetType:2,minNumberConsumed:1,maxNumberConsumed:1,statModifierUsesId:null,useProficiencyBonus:false,resetDice:null}});
+ return p;
+}

@@ -9,7 +9,7 @@
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
 #define PD_RECORD_SIZE 75204
-#define PD_RECORD_MAGIC "PDDY"
+#define PD_RECORD_MAGIC "PDDZ"
 #define PD_SCENES 3
 #define PD_TURN_NAME_BYTES 21
 #define PD_COINS 5

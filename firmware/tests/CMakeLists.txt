@@ -169,3 +169,7 @@ target_link_libraries(room-cache lvgl m)
 add_executable(class-looks test_class_looks.c ../core/class_looks.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
 target_include_directories(class-looks PRIVATE ../core)
 target_compile_options(class-looks PRIVATE -Wall -Wextra -Werror)
+
+add_executable(cannon test_cannon.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
+target_include_directories(cannon PRIVATE ../core)
+target_compile_options(cannon PRIVATE -Wall -Wextra -Werror)

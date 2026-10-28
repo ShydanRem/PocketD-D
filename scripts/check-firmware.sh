@@ -33,6 +33,7 @@ node scripts/check-manual-resources.js
 node scripts/check-beyond-abilities.js
 node scripts/check-beyond-training.js
 node scripts/check-skill-abilities.js
+node scripts/check-cannon.js
 cc -std=c11 -Wall -Wextra -Werror -Ifirmware/core -I"$IDF_PATH/components/json/cJSON" firmware/core/pocketdd.c firmware/core/status.c firmware/core/magic.c firmware/core/checks.c firmware/core/combat.c firmware/core/dice_pool.c firmware/core/rest.c firmware/core/packet.c firmware/tests/status_probe.c "$IDF_PATH/components/json/cJSON/cJSON.c" -lm -o firmware/tests/out/status-probe
 node scripts/check-status.js
 cc -std=c11 -Wall -Wextra -Werror -Wno-unused-parameter -Ifirmware/core -Ifirmware/tests/fake firmware/core/pocketdd.c firmware/core/magic.c firmware/core/checks.c firmware/core/combat.c firmware/core/dice_pool.c firmware/tests/test_storage.c -o firmware/tests/out/storage
@@ -43,7 +44,7 @@ firmware/tests/out/history-storage
 firmware/tests/out/storage
 cmake -S firmware/tests -B firmware/tests/out/ui-build -G Ninja
 cmake --build firmware/tests/out/ui-build --parallel 4
-(export PD_TEST_CLASS_PACK="$PWD/public/assets/classes.pdc"; cd firmware/tests/out/ui-build && ./dice && ./pool && ./avatar && ./room-cache && ./appearance && ./wallet && ./vitals && ./quantities && ./power && ./catalog && ./history && ./diagnostics diagnostics-codec.json && ./input-check && ./backup ../backup-fixture.json && ./checks && ./combat && ./magic && ./preparation && ./rest && ./status && ./death-roll && ./effects && ./durations && ./damage && ./death-damage && ./concentration && ./links && ./temporary-defences && ./mixed-damage && ./conditional-defences && ./multiple-defences && ./reductions && ./reduction-profiles && ./profile-costs && ./slot-costs && ./turns && ./external-turns && ./turn-names && ./time && ./charges && ./multi-costs && ./alternative-costs && ./recharge && ./roll-conditions && ./screen && ./buttons && ./alloc && ./ui)
+(export PD_TEST_CLASS_PACK="$PWD/public/assets/classes.pdc"; cd firmware/tests/out/ui-build && ./dice && ./pool && ./avatar && ./room-cache && ./appearance && ./wallet && ./vitals && ./quantities && ./power && ./catalog && ./history && ./diagnostics diagnostics-codec.json && ./input-check && ./backup ../backup-fixture.json && ./checks && ./combat && ./magic && ./cannon && ./preparation && ./rest && ./status && ./death-roll && ./effects && ./durations && ./damage && ./death-damage && ./concentration && ./links && ./temporary-defences && ./mixed-damage && ./conditional-defences && ./multiple-defences && ./reductions && ./reduction-profiles && ./profile-costs && ./slot-costs && ./turns && ./external-turns && ./turn-names && ./time && ./charges && ./multi-costs && ./alternative-costs && ./recharge && ./roll-conditions && ./screen && ./buttons && ./alloc && ./ui)
 firmware/tests/out/ui-build/avatar --hashes > firmware/tests/out/avatar-hashes.txt
 rm -f firmware/tests/out/species-hashes.txt
 firmware/tests/out/ui-build/avatar --species-hashes > firmware/tests/out/species-hashes.txt
