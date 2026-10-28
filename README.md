@@ -2,6 +2,8 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
+**Stato v0.73:** [report generale, limiti e roadmap](docs/STATO-SOFTWARE.md), aggiornato al 28 ottobre. [Personalizzazioni Beyond di abilità/salvezze](docs/BEYOND-PERSONALIZZAZIONI-TIRI.md): gradi espliciti, bonus separati, duplicati/limiti e anteprima completa. Oggetti inattivi esclusi dai bonus dei tiri e blocchi per origini ambigue conservati. 240 test JS, 160 stati nel codice C e 14.400 confronti. Rilettura reale del PG invariata; nuove personalizzazioni con prove sintetiche. USB fisico ancora da verificare.
+
 **Stato v0.72:** [caratteristiche Beyond: punteggi fissati e massimi aumentati](docs/BEYOND-CARATTERISTICHE.md). Riconciliazione delle concessioni esplicite, bonus personalizzati dopo il limite e override finale; COS/DES finali alimentano PF e CA. 230 test JS, 432 stati nel parser/codec C e 12.960 confronti sui tiri. Prova reale invariata per il PG 144777811; nuovi massimi/oggetti fissapunteggio con prove sintetiche. Conversione parziale e USB fisico ancora aperto.
 
 **Stato v0.71:** [inventario Beyond operativo e difese ai danni](docs/BEYOND-INVENTARIO-DIFESE.md): cariche separate dalle quantità, consumabili, pozioni con cura esplicita e concessioni incondizionate riconciliate. Anteprima, configurazione dei tipi sconosciuti e trasferimento USB14; backup PC v16 solo con profilo difese. Nuova lettura reale del PG 144777811: caratteristiche, PF 32/73, CA 17, 41 voci e quattro pozioni 2d4+2 verificati anche nel parser C host. Cariche e resistenze provate con dati sintetici. Conversione ancora parziale; collaudo USB fisico aperto.

@@ -65,10 +65,12 @@ test('Installer: reset failure after verified writing is distinct from write fai
 });
 test('Installer server: loopback, binary MIME, invalid paths/origins/hosts and write requests',async()=>{
  const dir=await mkdtemp(`${tmpdir()}/pdd-installer-`);await mkdir(`${dir}/firmware`);await writeFile(`${dir}/index.html`,'<!doctype html>');await writeFile(`${dir}/firmware/app.bin`,new Uint8Array([0,255,233]));
+ await mkdir(`${dir}/downloads`);await writeFile(`${dir}/downloads/PocketDD-Stato.md`,'# Software status');
  const server=createInstallerServer(pathToFileURL(dir+'/'));await new Promise(r=>server.listen(0,'127.0.0.1',r));
  try{
   const root=`http://127.0.0.1:${server.address().port}`;
   assert.equal((await fetch(root+'/')).status,200);
+  const report=await fetch(root+'/downloads/PocketDD-Stato.md');assert.equal(report.status,200);assert.match(report.headers.get('content-type'),/^text\/markdown/);assert.equal(await report.text(),'# Software status');assert.equal((await fetch(root+'/downloads/other.md')).status,404);
   const bin=await fetch(root+'/firmware/app.bin');assert.equal(bin.headers.get('content-type'),'application/octet-stream');assert.equal(bin.headers.get('x-content-type-options'),'nosniff');assert.ok((await bin.arrayBuffer()).byteLength>0);
   for(const path of ['/../package.json','/%2e%2e/package.json','/firmware/../../package.json','/.git/config','/manifest.json?x','/assets/../../package.json'])assert.equal((await fetch(root+path)).status,404);
   assert.equal((await fetch(root+'/',{headers:{origin:'https://evil.example'}})).status,403);

@@ -1,5 +1,10 @@
 # Beyond: punteggi fissati e massimi aumentati — v0.72
 
+> Aggiornamento v0.73, 28 ottobre: [personalizzazioni standard dei tiri](BEYOND-PERSONALIZZAZIONI-TIRI.md)
+> e [report generale con roadmap e limiti](STATO-SOFTWARE.md). Nessun nuovo formato;
+> nuova lettura reale distinta dalle prove sintetiche; verifica USB fisica ancora aperta.
+
+
 27 ottobre 2026. Un nuovo blocco dell'importazione PC: caratteristiche fissate
 (per esempio da un oggetto), aumenti espliciti del massimo e ordine corretto
 dei bonus personalizzati. Nessuna dipendenza Foundry, scrittura verso Beyond

@@ -1,5 +1,10 @@
 # Riconciliazione Beyond — correzione PC del 26 ottobre 2026
 
+> Aggiornamento v0.73, 28 ottobre: [personalizzazioni standard dei tiri](BEYOND-PERSONALIZZAZIONI-TIRI.md)
+> e [report generale con roadmap e limiti](STATO-SOFTWARE.md). Nessun nuovo formato;
+> nuova lettura reale distinta dalle prove sintetiche; verifica USB fisica ancora aperta.
+
+
 > Aggiornamento v0.72: [punteggi fissati, massimi e bonus delle caratteristiche](BEYOND-CARATTERISTICHE.md).
 > Supportate concessioni esplicite riconciliate; valori derivati verificati anche nel parser C.
 > Nessun nuovo formato. Restano restrizioni, origini e override non supportati; le prove datate sotto mantengono il proprio contesto.

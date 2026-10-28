@@ -1,9 +1,10 @@
+import {parseBeyondTraining} from './beyond-training.js';
 // Reconcile structural/cosmetic source fields. Never infer mechanics from prose.
 import {beyondText} from './beyond-details.js';
 const array=v=>Array.isArray(v)?v:[];
 const integer=(v,min,max)=>Number.isSafeInteger(v)&&v>=min&&v<=max;
 export function normalizeBeyondSource(payload){
-  const result={payload:structuredClone(payload),blockers:[],evidence:[],omissions:[]};
+  const result={payload:structuredClone(payload),blockers:[],evidence:[],omissions:[],training:[]};
   const c=result.payload?.data;if(!c||typeof c!=='object'||Array.isArray(c))return result;
   const block=t=>{if(!result.blockers.includes(t))result.blockers.push(t);};
   if(!Array.isArray(c.inventory))return result;
@@ -40,7 +41,7 @@ export function normalizeBeyondSource(payload){
     if(value.typeId===8){row.pocketddOriginalName??=row.definition.name;row.definition.name=value.value;}
     else row.pocketddNote=[row.pocketddCustom?row.pocketddNote:'',value.value].filter(Boolean).join(' ');
   }
-  if(Array.isArray(c.characterValues))c.characterValues=remaining;
+  if(Array.isArray(c.characterValues)){const t=parseBeyondTraining(remaining);c.characterValues=t.remaining;result.training=t.training;t.blockers.forEach(block);}
   for(const row of c.inventory){
     if(row?.pocketddCustom){const note=beyondText(row.pocketddNote??row.definition.description??'');row.pocketddNote=note;}
     else if(row?.pocketddNote!=null)row.pocketddNote=beyondText(row.pocketddNote);

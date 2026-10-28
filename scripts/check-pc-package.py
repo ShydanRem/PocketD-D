@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1];archive=ROOT/'dist/install/downloads/PocketDD-PC.zip'
 with zipfile.ZipFile(archive) as z:
  assert z.testzip() is None
- names=z.namelist();assert all(n.startswith('PocketDD-PC/') and '..' not in Path(n).parts for n in names)
+ names=z.namelist();assert 'PocketDD-PC/docs/STATO-SOFTWARE.md' in names;assert z.read('PocketDD-PC/docs/STATO-SOFTWARE.md')==(ROOT/'docs/STATO-SOFTWARE.md').read_bytes();assert all(n.startswith('PocketDD-PC/') and '..' not in Path(n).parts for n in names)
  assert not any('/node_modules/' in n or '/device-backups/' in n or '/.git/' in n for n in names)
  with tempfile.TemporaryDirectory(prefix='pocketdd-pc-') as tmp:
   z.extractall(tmp);app=Path(tmp)/'PocketDD-PC';assert (app/'Avvia-PocketDD.cmd').exists();assert not (app/'node_modules').exists()

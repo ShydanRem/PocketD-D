@@ -21,6 +21,10 @@ try:
    page.get_by_role('link',name='Scarica app PC per Windows').click()
   artifact=download.value;assert artifact.suggested_filename=='PocketDD-PC.zip'
   assert Path(artifact.path()).read_bytes()==(ROOT/'dist/install/downloads/PocketDD-PC.zip').read_bytes()
+  with page.expect_download() as report_download:
+   page.locator('a[download][href$="PocketDD-Stato.md"]').click()
+  report=report_download.value;assert report.suggested_filename=='PocketDD-Stato.md'
+  assert Path(report.path()).read_bytes()==(ROOT/'docs/STATO-SOFTWARE.md').read_bytes()
   page.screenshot(path='/workspace/PocketD-D-installer-preview.png',full_page=True)
   page.locator('input[value=update]').check();page.locator('#install').click();expect(page.locator('#status')).to_contain_text('annullata');expect(page.locator('#install')).to_be_enabled();assert page.evaluate('window.chooserCalls')==1
   assert not errors,errors;assert all(u.startswith(url) for u in requests),requests
@@ -39,5 +43,5 @@ try:
   assert Path(sd_download.value.path()).read_bytes()==(ROOT/'public/assets/PocketDD-SD.zip').read_bytes()
   # The real production library is bundled. This deliberately does not test USB flashing.
   browser.close()
- print('Installer browser: exact PC ZIP download, local assets/no CDN, SHA256-ready state, model gate, chooser cancel/retry, corrupt download/retry, unsupported browser and mobile layout passed; USB/hardware not tested')
+ print('Installer browser: exact PC ZIP/report download, local assets/no CDN, SHA256-ready state, model gate, chooser cancel/retry, corrupt download/retry, unsupported browser and mobile layout passed; USB/hardware not tested')
 finally:server.terminate();server.wait(timeout=5)

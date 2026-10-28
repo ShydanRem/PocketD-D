@@ -78,3 +78,5 @@ for name in ('beyond-defences-import.png','beyond-defences-device.png'):
  shutil.copyfile(source,out/'assets'/name)
 page=out/'index.html'
 page.write_text(page.read_text().replace('</main>', '<section class="after"><h2>Inventario e difese · v0.71</h2><p>Cariche separate dalle quantità, cure con formula esplicita e difese incondizionate riconciliate da Beyond. Gli altri tipi restano da verificare. Il profilo difese richiede firmware 0.71 / USB14; la conversione resta parziale.</p><p>Catture del firmware eseguito su PC con dati sintetici: anteprima prima della conferma e difese ricevute. Non attestano il trasferimento USB fisico.</p><div class="import-captures"><img src="assets/beyond-defences-import.png" width="466" height="466" alt="Anteprima importazione con due tipi verificati"><img src="assets/beyond-defences-device.png" width="466" height="466" alt="Difese ricevute nella scheda del dispositivo"></div></section></main>'))
+
+shutil.copyfile(ROOT/'docs/STATO-SOFTWARE.md',out/'downloads/PocketDD-Stato.md')

@@ -20,7 +20,7 @@ export const BEYOND_LIMITATIONS = [
 
 // Deliberately bounded conversion. Unknown core effects block creation instead of
 // turning a successful HTTP request into a claim of mechanical equivalence.
-function convertCoreNormalized(payload, expectedId, normalization) {
+function convertCoreNormalized(payload, expectedId, normalization, extended=false) {
   const report = previewBeyond(payload, expectedId), c = {...payload.data};
   report.inventory.items.forEach((item,i)=>{if(c.inventory?.[i]?.pocketddEquipmentUnknown)item.equipped=null;});
   const blockers = [...normalization.blockers], evidence = [...normalization.evidence];
@@ -29,6 +29,7 @@ function convertCoreNormalized(payload, expectedId, normalization) {
     if (c[key]!=null && !Array.isArray(c[key])) block(`Elenco ${key} non valido.`);
     c[key]=Array.isArray(c[key])?c[key]:[];
   }
+  if(normalization.training.length&&!extended)block('Le personalizzazioni dei tiri richiedono la conversione estesa, non la sola scheda di base.');
   const groups = c.modifiers;
   if (!groups || typeof groups !== 'object' || Array.isArray(groups)) block('Modificatori mancanti: impossibile verificare i valori finali.');
   for (const group of ['race','class','background','feat','item']) {
@@ -177,4 +178,4 @@ function convertCoreNormalized(payload, expectedId, normalization) {
 }
 
 export function convertBeyondCore(payload,expectedId){const n=normalizeBeyondSource(payload);return convertCoreNormalized(n.payload,expectedId,n);}
-export function convertBeyond(payload,expectedId){const n=normalizeBeyondSource(payload);return addBeyondAppearance(extendBeyond(convertCoreNormalized(n.payload,expectedId,n),n.payload.data),n.payload.data);}
+export function convertBeyond(payload,expectedId){const n=normalizeBeyondSource(payload);return addBeyondAppearance(extendBeyond(convertCoreNormalized(n.payload,expectedId,n,true),n.payload.data,n.training),n.payload.data);}

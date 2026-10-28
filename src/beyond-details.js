@@ -1,3 +1,4 @@
+import {applyBeyondTraining} from './beyond-training.js';
 import {skills,abilityKeys,modifier,proficiency,parseBackup,serialize,describeRoll,weaponStats} from './model.js';
 import {emptyExtended} from './extended.js';
 import {validatePower,spellStats} from './powers.js';
@@ -19,7 +20,7 @@ export function beyondText(html){
   }).replace(/\r/g,'').replace(/[ \t]+/g,' ').replace(/\n\s*\n+/g,'\n\n').trim();
 }
 
-export function extendBeyond(report,c){
+export function extendBeyond(report,c,customTraining=[]){
   if(!report.draft)return {...report,version:3,conversion:{...report.conversion,scope:'extended-v1',coverage:[]}};
   const state=structuredClone(report.draft),ext=emptyExtended(),issues=[],evidence=[],facts=[];
   state.extended=ext;
@@ -29,25 +30,32 @@ export function extendBeyond(report,c){
   const choices=(group)=>array(c.choices?.[group]);
   const selected=(group,m)=>choices(group).find(choice=>choice?.id?.endsWith(`-${m.id}`));
   const options=array(c.choices?.choiceDefinitions).flatMap(x=>array(x?.options));
+  const targetChecks=sub=>sub==='ability-checks'?[...skills.map(s=>`skill:${s.id}`),...abilityKeys.map(k=>`check:${k}`)]:sub==='saving-throws'?abilityKeys.map(k=>`save:${k}`):skillBySlug.has(sub)?[`skill:${skillBySlug.get(sub)}`]:abilityNames.some(n=>sub===`${n}-saving-throws`)?[`save:${abilityKeys[abilityNames.findIndex(n=>sub===`${n}-saving-throws`)]}`]:[];
+  const blockTraining=(m,reason)=>{const targets=targetChecks(m.subType);for(const t of targets)if(!ext.blockedChecks.includes(t))ext.blockedChecks.push(t);if(targets.length)warn(`Tiro ${m.subType}: ${reason}; verificare prima di usare il tiro.`);};
   const mods=[];
   for(const [group,values] of Object.entries(c.modifiers??{}))for(const original of array(values)){
     if(!original||typeof original.subType!=='string')continue;
     let m={...original,group};
-    if(group==='class'){
-      const owner=array(c.classes).find(cl=>array(cl.classFeatures).some(f=>f?.definition?.id===m.componentId));
-      if(!owner)continue;
-      const feature=owner.classFeatures.find(f=>f?.definition?.id===m.componentId).definition;
-      if(feature.requiredLevel>owner.level)continue;
-    }
-    if(group==='item'){
-      if(!array(c.inventory).some(i=>i?.equipped&&(!i.definition?.canAttune||i.isAttuned)&&array(i.definition?.grantedModifiers).some(g=>g?.id!=null&&String(g.id)===String(m.id))))continue;
-    }
     const choice=selected(group,m);
     if(choice&&choice.optionValue==null){
       if(m.type==='proficiency'&&m.subType.startsWith('choose-'))warn('Una scelta di competenza è ancora vuota nel sorgente Beyond: non è stata inventata.');
       continue;
     }
     if(m.isGranted===false&&!choice)continue;
+    if(group==='class'){
+      const owners=array(c.classes).filter(cl=>array(cl.classFeatures).some(f=>f?.definition?.id===m.componentId));
+      const owner=owners.length===1?owners[0]:null,features=array(owner?.classFeatures).filter(f=>f?.definition?.id===m.componentId);
+      if(!owner||features.length!==1||!integer(features[0]?.definition?.requiredLevel,1,20)){blockTraining(m,'origine o livello di classe non univoci');continue;}
+      if(features[0].definition.requiredLevel>owner.level)continue;
+    }
+    if(group==='item'){
+      const owners=array(c.inventory).filter(i=>m.id!=null&&array(i.definition?.grantedModifiers).some(g=>g?.id!=null&&String(g.id)===String(m.id)));
+      if(owners.length!==1){blockTraining(m,'origine oggetto non univoca');continue;}
+      const i=owners[0],grants=array(i.definition.grantedModifiers).filter(g=>g?.id!=null&&String(g.id)===String(m.id)),g=grants[0];
+      if(i.quantity===0||i.equipped===false||(i.definition.canAttune===true||m.requiresAttunement===true||g.requiresAttunement===true)&&i.isAttuned===false)continue;
+      if(!integer(i.quantity,1,999)||i.equipped!==true||(i.definition.canAttune||m.requiresAttunement||g.requiresAttunement)&&i.isAttuned!==true){blockTraining(m,'equipaggiamento o sintonia da verificare');continue;}
+      if(targetChecks(m.subType).length&&(i.definition.canAttune!=null&&typeof i.definition.canAttune!=='boolean'||grants.length!==1||g.isGranted!=null&&typeof g.isGranted!=='boolean'||g.requiresAttunement!=null&&typeof g.requiresAttunement!=='boolean'||g.type!==m.type||g.subType!==m.subType||g.value!==m.value||(g.statId??null)!==(m.statId??null)||(g.restriction??'')!==(m.restriction??'')||g.duration!=null||g.dice!=null||g.tagConstraints!=null&&(!Array.isArray(g.tagConstraints)||g.tagConstraints.length)||g.isGranted===false)){blockTraining(m,'riepilogo e requisiti originali dell’oggetto discordanti');continue;}
+    }
     if(m.isGranted===false&&choice&&choice.optionValue!=null&&!m.subType.startsWith('choose-')){
       const option=options.find(o=>o.id===choice.optionValue);
       if(!option||slug(option.label)!==m.subType){
@@ -64,11 +72,12 @@ export function extendBeyond(report,c){
     mods.push(m);
   }
   const skillRanks={...state.skillRanks},saves={...state.saveProficiencies};
-  const targetChecks=sub=>sub==='ability-checks'?[...skills.map(s=>`skill:${s.id}`),...abilityKeys.map(k=>`check:${k}`)]:sub==='saving-throws'?abilityKeys.map(k=>`save:${k}`):skillBySlug.has(sub)?[`skill:${skillBySlug.get(sub)}`]:abilityNames.some(n=>sub===`${n}-saving-throws`)?[`save:${abilityKeys[abilityNames.findIndex(n=>sub===`${n}-saving-throws`)]}`]:[];
+
   for(const m of mods){
     const targets=targetChecks(m.subType);
     if(m.type==='language'||(m.type==='proficiency'&&!targets.length&&!m.subType.startsWith('choose-')))fact(`${m.type==='language'?'Lingua':'Competenza'}: ${m.friendlySubtypeName??m.subType}`);
     if(!targets.length)continue;
+    if(!['race','class','background','feat','item'].includes(m.group)||m.requiresAttunement!=null&&typeof m.requiresAttunement!=='boolean'||m.isGranted!=null&&typeof m.isGranted!=='boolean'||m.duration!=null||m.dice!=null||m.tagConstraints!=null&&(!Array.isArray(m.tagConstraints)||m.tagConstraints.length)){blockTraining(m,'formula, durata o requisiti non rappresentati');continue;}
     if(m.restriction){fact(`${m.friendlySubtypeName??m.subType}: ${m.type}; ${beyondText(m.restriction)}`);continue;}
     for(const target of targets){
       const [kind,key]=target.split(':');
@@ -85,7 +94,11 @@ export function extendBeyond(report,c){
   }
   if(array(c.customProficiencies).length)warn('Competenze personalizzate non standard: controllare i tiri; consultare il sorgente Beyond.');
   state.skillRanks=skillRanks;state.saveProficiencies=saves;
-  evidence.push(`Competenze: ${Object.values(skillRanks).filter(Boolean).length} abilità, ${Object.values(saves).filter(Boolean).length} salvezze; scelte risolte tramite identificativi, senza inferenza dalla classe.`);
+  const trainingProblems=applyBeyondTraining(state,customTraining);
+  if(trainingProblems.length)return {...report,checks:{...report.checks,conversion:'blocked'},draft:null,canImport:false,conversion:{...report.conversion,blockers:trainingProblems,coverage:[]},warnings:trainingProblems};
+  if(customTraining.length)evidence.push(`Personalizzazioni dei tiri: ${customTraining.length} campi numerici riconciliati. Bonus aggiunti una sola volta; gradi espliciti sostituiscono la competenza, compreso assente. Blocchi dovuti ad altri effetti conservati.`);
+
+  evidence.push(`Competenze: ${Object.values(state.skillRanks).filter(Boolean).length} abilità, ${Object.values(state.saveProficiencies).filter(Boolean).length} salvezze; scelte risolte tramite identificativi, senza inferenza dalla classe.`);
 
   const weaponIssues=[];
   state.inventory=state.inventory.map((item,index)=>{
@@ -266,8 +279,8 @@ export function extendBeyond(report,c){
   state.importInfo={...state.importInfo,scope:'extended-v1',limitations:omissions.length<=30?omissions:[...omissions.slice(0,29),`Altre ${omissions.length-29} eccezioni nei dettagli del personaggio.`]};
   state.title='Da D&D Beyond';
   const draft=parseBackup(serialize(state));
-  const skillSummary=skills.map(s=>({id:s.id,name:s.name,rank:draft.skillRanks[s.id],...describeRoll(draft,{kind:'skill',key:s.id})}));
-  const saveSummary=abilityKeys.map(key=>({id:key,proficient:draft.saveProficiencies[key],...describeRoll(draft,{kind:'save',key})}));
+  const skillSummary=skills.map(s=>({id:s.id,name:s.name,rank:draft.skillRanks[s.id],extra:ext.skillBonuses[s.id],half:ext.halfSkills.includes(s.id),customized:customTraining.some(t=>t.kind==='skill'&&t.key===s.id),...describeRoll(draft,{kind:'skill',key:s.id})}));
+  const saveSummary=abilityKeys.map(key=>({id:key,proficient:draft.saveProficiencies[key],extra:ext.saveBonuses[key],customized:customTraining.some(t=>t.kind==='save'&&t.key===key),...describeRoll(draft,{kind:'save',key})}));
   const weaponSummary=weapons.map(w=>{const result=weaponStats({...draft,equippedWeaponId:w.id});return{id:w.id,name:w.name,attack:result.attackBonus,damage:`${w.diceCount}d${w.dieSides}${result.damageBonus>=0?'+':''}${result.damageBonus}`,reach:w.reach,properties:w.profile.properties}});
   const coverage=[{section:'Cariche e consumabili',status:itemImport.unresolved?'partial':'converted',count:itemImport.charges+itemImport.consumables},{section:'Difese ai danni',status:'partial',count:defenceImport.rows.filter(r=>r.flags!==null).length},{section:'Abilità e salvezze',status:ext.blockedChecks.length?'partial':'converted',count:skillSummary.length+saveSummary.length},{section:'Armi e attacchi',status:weaponIssues.length?'partial':'converted',count:weapons.length},{section:'Magie e capacità',status:issues.some(t=>/magia|Magia|risorsa|formula|contatore/.test(t))?'partial':'converted',count:powers.length},{section:'Stato e risorse',status:'data-only',count:ext.conditions.length+ext.hitDice.length}];
   return {...report,version:3,checks:{...report.checks,conversion:'supported-extended'},conversion:{scope:'extended-v1',complete:false,sourceCounts:report.conversion.sourceCounts,blockers:[],evidence:[...report.conversion.evidence.filter(t=>!t.startsWith('Inventario:')),...evidence],omissions,coverage},draft,canImport:true,warnings:omissions,details:{skills:skillSummary,saves:saveSummary,weapons:weaponSummary,spells:powers.filter(p=>p.type==='spell').map(p=>({id:p.id,name:p.name,level:p.level,...spellStats(draft,p)})),facts:ext.facts,items:{charges:itemImport.charges,consumables:itemImport.consumables,healing:itemImport.healing},defences:defenceImport.rows}};
