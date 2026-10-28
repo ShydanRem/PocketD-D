@@ -13,7 +13,7 @@ export function openBeyondImport({commit}) {
     <p data-status role="status" aria-live="polite"></p>
     <section data-preview hidden><h3 data-name></h3><p data-checks></p><dl data-values></dl>
       <section data-appearance><h4>Avatar sul dispositivo</h4><div data-appearance-sprite></div><p data-appearance-status></p><label>Specie · famiglia visiva<select data-lineage></select></label><label>Silhouette<select data-body></select></label><label>Look classe · solo estetica<select data-outfit></select></label><p data-class-status></p><p>Solo aspetto: non cambia caratteristiche, capacità o regole. Puoi modificarlo anche sul dispositivo.</p></section><h4>Verifica dei calcoli</h4><ul data-evidence></ul>
-      <h4>Campi compilati</h4><ul data-coverage></ul><ul data-training></ul><ul data-attacks></ul><ul data-powers></ul>
+      <h4>Campi compilati</h4><ul data-coverage></ul><ul data-training></ul><ul data-attacks></ul><ul data-powers></ul><ul data-manual-resources></ul>
       <label data-weapon-label hidden>Arma attiva<select data-weapon></select></label>
       <details data-defence-preview><summary>Difese ai danni · tipi verificati e mancanti</summary><p>Solo le concessioni incondizionate riconciliate vengono proposte al dispositivo. Gli altri tipi non sono dichiarati normali.</p><ul data-defences></ul></details><h4>Inventario sorgente e uso locale</h4><ul data-items></ul>
       <h4 data-blocker-title hidden>Problemi che bloccano l’importazione</h4><ul data-blockers role="alert"></ul><h4>Limiti e dati da completare</h4><ul data-omissions></ul>
@@ -59,6 +59,7 @@ export function openBeyondImport({commit}) {
       list('[data-training]',[...(report.details?.skills??[]).filter(s=>s.rank||s.half||s.extra||s.customized||s.blocked).map(s=>`${s.name}: ${s.bonus>=0?'+':''}${s.bonus}${s.half?' · mezza competenza':''}${s.customized?' · personalizzato':''} · ${s.parts}${s.blocked?' · tiro da verificare':''}`),...(report.details?.saves??[]).filter(s=>s.proficient||s.extra||s.customized||s.blocked).map(s=>`${s.label}: ${s.bonus>=0?'+':''}${s.bonus}${s.half?' · mezza competenza':''}${s.customized?' · personalizzato':''} · ${s.parts}${s.blocked?' · tiro da verificare':''}`)]);
       list('[data-attacks]',(report.details?.weapons??[]).map(w=>`${w.name}: attacco ${w.attack>=0?'+':''}${w.attack} · ${w.damage} · portata ${w.reach} caselle`));
       list('[data-powers]',(report.draft?.powers??[]).map(p=>`${p.name}: ${p.type==='spell'?`magia ${p.level}° · ${p.castingAbility??'caratteristica locale'}${p.limited?` · usi ${p.limited.remaining}/${p.limited.maxUses}`:''}`:p.passive?'nota/effetto manuale':`${p.remaining}/${p.maxUses} utilizzi`}`));
+      list('[data-manual-resources]',(report.draft?.extended?.manualResources??[]).map(r=>`${r.name}: contatore manuale · residuo ${r.current}/${r.max} · separato dagli utilizzi`));
       const weapons=report.draft?.inventory.filter(i=>i.type==='weapon'&&i.quantity>0)??[];
       $('[data-weapon-label]').hidden=!weapons.length;
       $('[data-weapon]').replaceChildren();

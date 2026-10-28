@@ -18,7 +18,9 @@ export function projectDevice(input){
     'Nomi limitati ad ASCII: accenti traslitterati, altri simboli sostituiti; nome massimo 48 caratteri, contatori 32.'
   ];
   // Structured resources belong to magic, never to duplicated manual counters.
-  const counters=!s.importInfo?[{name:'Slancio',current:s.resolve,maximum:1}]:[];
+  const counters=s.extended?.manualResources!==undefined?s.extended.manualResources.map(r=>({name:r.name,current:r.current,maximum:r.max})):!s.importInfo?[{name:'Slancio',current:s.resolve,maximum:1}]:[];
+  if(counters.length>DEVICE_MAX_RESOURCES)throw new Error('Oltre 8 contatori manuali: nessun saldo viene tagliato.');
+  if(s.extended?.manualResources!==undefined)warnings.push('Contatori manuali: saldi sorgente separati dalle capacità, senza consumo o recupero automatico. Sul dispositivo: Contatori. Il residuo non indica necessariamente azioni disponibili, PF del personaggio o una risorsa condivisa.');
   const map=(names,source)=>Object.fromEntries(names.map(k=>[k,integer(source?.[k]??0,-30,30,k)]));
   const training={skillRanks:{...s.skillRanks},saveProficiencies:{...s.saveProficiencies},
     skillBonuses:map(skills.map(k=>k.id),s.extended?.skillBonuses),saveBonuses:map(abilityKeys,s.extended?.saveBonuses),checkBonuses:map(abilityKeys,s.extended?.checkBonuses),
@@ -63,7 +65,7 @@ export function projectDevice(input){
     avatar:Object.fromEntries(['skin','hair','cloak','style'].map(k=>[k,integer(s.avatar[k],0,2,k)])),
     training,inventory,magic,recovery,status,wallet,
     abilities:Object.fromEntries(abilityKeys.map(k=>[k,integer(s.abilities[k],1,30,k)])),
-    resources:counters.slice(0,DEVICE_MAX_RESOURCES).map(r=>({name:ascii(r.name,32),current:integer(r.current,0,999,r.name),maximum:integer(r.maximum,1,999,r.name)}))};
+    resources:counters.map(r=>({name:ascii(r.name,32),current:integer(r.current,0,999,r.name),maximum:integer(r.maximum,1,999,r.name)}))};
   if(mapped){training.skillAbilities=Object.fromEntries(skills.map(v=>[v.id,s.extended.skillAbilities[v.id]?abilityKeys.indexOf(s.extended.skillAbilities[v.id])+1:0]));Object.assign(packet.avatar,identity,{outfit});packet.defences={configured:0,resistance:0,vulnerability:0,immunity:0};warnings.push('Caratteristiche delle abilità personalizzate: richiede firmware 0.74 / USB15; competenze, bonus ed effetti usano la caratteristica effettiva.');}
   if(defences!==undefined){packet.defences=validateDefences(defences);Object.assign(packet.avatar,identity,{outfit});warnings.push('Profilo difese: richiede USB14 / firmware 0.71. Solo i tipi verificati si applicano nel calcolo Danni; gli altri richiedono configurazione. Effetti temporanei e condizioni non vengono dedotti.');}
   if(outfit){packet.avatar.outfit=outfit;warnings.push('Look classe: richiede firmware 0.70 / USB13 e pocketdd/classes.pdc sulla SD. Senza asset viene mostrato lo stile originale, mantenendo la scelta. Colori e taglio del preset sono fissi; nessun valore di gioco cambia.');}

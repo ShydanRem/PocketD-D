@@ -1,4 +1,5 @@
 import {applyBeyondTraining} from './beyond-training.js';
+import {BeyondError} from './beyond.js';
 import {skills,abilityKeys,modifier,proficiency,parseBackup,serialize,describeRoll,weaponStats} from './model.js';
 import {emptyExtended} from './extended.js';
 import {validatePower,spellStats} from './powers.js';
@@ -140,7 +141,7 @@ export function extendBeyond(report,c,customTraining=[]){
   const weapons=state.inventory.filter(i=>i.type==='weapon');
   evidence.push(`Armi: ${weapons.length} configurate con competenza, caratteristica, dadi, bonus e portata; ${equipped.length} equipaggiate nel sorgente.`);
 
-  const powers=[],featureDefs=[],actionKeys=new Set();
+  const powers=[],featureDefs=[],actionKeys=new Set(),manualResources=[],manualActionIds=new Map();
   for(const cl of array(c.classes)){
     fact(`${cl.definition?.name??'Classe'} · livello ${cl.level}`);
     for(const f of array(cl.classFeatures))if(f?.definition&&f.definition.requiredLevel<=cl.level)featureDefs.push({group:'class',d:f.definition,scale:f.levelScale,owner:cl});
@@ -153,11 +154,13 @@ export function extendBeyond(report,c,customTraining=[]){
     if(typeof power.name!=='string'||!power.name.trim()||power.name.length>40){warn('Nome di una magia/capacità oltre 40 caratteri: voce non importata.');return;}
     try{powers.push(validatePower(power,true))}catch{warn(`${power.name}: risorsa non rappresentabile; consultare il sorgente.`);}
   };
-  const getResource=(limited,name)=>{
+  const getResource=(limited,name,manualCounter=false)=>{
     if(!limited)return null;
+    const allowed=['name','statModifierUsesId','resetType','numberUsed','minNumberConsumed','maxNumberConsumed','maxUses','operator','useProficiencyBonus','proficiencyBonusOperator','resetDice'];
+    if(typeof limited!=='object'||Array.isArray(limited)||Object.keys(limited).some(k=>!allowed.includes(k))){warn(`${name}: requisiti o collegamenti della risorsa non rappresentati; conservata come nota.`);return null;}
     if(limited.minNumberConsumed!=null&&limited.minNumberConsumed!==1||limited.maxNumberConsumed!=null&&limited.maxNumberConsumed!==1){warn(`${name}: costo variabile o condiviso da gestire manualmente.`);return null;}
     let max=limited.maxUses;
-    if(!integer(max,0,99)){warn(`${name}: formula degli utilizzi non risolta, capacità conservata come nota.`);return null;}
+    if(!integer(max,0,manualCounter?999:99)){warn(`${name}: formula degli utilizzi non risolta, capacità conservata come nota.`);return null;}
     if(limited.statModifierUsesId!=null){
       if(!integer(limited.statModifierUsesId,1,6)||![1,2].includes(limited.operator)){warn(`${name}: formula degli utilizzi non risolta.`);return null;}
       const value=modifier(state.abilities[abilityKeys[limited.statModifierUsesId-1]]);max=limited.operator===2?max*value:max+value;
@@ -166,21 +169,37 @@ export function extendBeyond(report,c,customTraining=[]){
       if(![1,2].includes(limited.proficiencyBonusOperator)){warn(`${name}: formula di competenza non risolta.`);return null;}
       max=limited.proficiencyBonusOperator===2?max*proficiency(state.level):max+proficiency(state.level);
     }
-    if(!integer(max,1,99)||!integer(limited.numberUsed,0,max)){warn(`${name}: contatore degli utilizzi incompleto o incoerente.`);return null;}
+    if(!integer(max,1,manualCounter?999:99)||!integer(limited.numberUsed,0,max)){warn(`${name}: contatore degli utilizzi incompleto o incoerente.`);return null;}
     const recovery=limited.resetType===1?'short':limited.resetType===2?'long':'manual';
-    if(recovery==='manual'||limited.resetDice)warn(`${name}: recupero giornaliero/variabile da gestire manualmente.`);
+    if(!manualCounter&&(recovery==='manual'||limited.resetDice))warn(`${name}: recupero giornaliero/variabile da gestire manualmente.`);
     return {maxUses:max,remaining:max-limited.numberUsed,recovery:limited.resetDice?'manual':recovery};
   };
   for(const [group,values] of Object.entries(c.actions??{}))for(const a of array(values)){
     if(!a||typeof a.name!=='string')continue;
-    const f=featureDefs.find(f=>f.group===group&&f.d.id===a.componentId);
+    if(group!=='item'&&a.limitedUse?.resetType===4&&a.id!=null){
+      const key=`${group}:${a.id}`,value=JSON.stringify(a);
+      if(manualActionIds.has(key)){if(manualActionIds.get(key)!==value)throw new BeyondError('CONFLICTING_RESOURCE','Azione con contatore manuale duplicata e discordante.');continue;}
+      manualActionIds.set(key,value);
+    }
+    const owners=featureDefs.filter(f=>f.group===group&&f.d.id===a.componentId),f=owners.length===1?owners[0]:null;
     if(group==='class'&&!f){warn(`${a.name}: origine o livello non risolti, azione non importata.`);continue;}
     const itemResource=group==='item'&&a.limitedUse;
     if(itemResource)warn(`${a.name}: utilizzi da oggetto conservati come nota; gestire le cariche dall’inventario, senza contatore duplicato.`);
-    const resource=itemResource?null:getResource(a.limitedUse,a.name);
+    const manualCounter=group!=='item'&&a.limitedUse?.resetType===4;
+    let resource=itemResource?null:getResource(a.limitedUse,a.name,manualCounter);
     let description=text(a.description||f?.d.description||a.snippet,a.name);
     if(f?.scale?.fixedValue!=null)description=description.replace(/\{\{scalevalue#signed\}\}/g,`+${f.scale.fixedValue}`).replace(/\{\{scalevalue\}\}/g,String(f.scale.fixedValue));
     if(/\{\{/.test(description))warn(`${a.name}: descrizione con formula dinamica non risolta.`);
+    if(manualCounter&&resource){
+      if(manualResources.length>=8)throw new BeyondError('RESOURCE_LIMIT','Oltre 8 contatori manuali: conversione interrotta senza tagliare i saldi.');
+      if(a.name.trim().length>40||!a.name.trim()){warn('Nome di un contatore manuale non rappresentabile: azione conservata come nota.');resource=null;}
+      else{
+        manualResources.push({id:`ddb-counter-${powers.length+1}`,name:a.name.trim(),current:resource.remaining,max:resource.maxUses});
+        description=`Contatore manuale separato in Contatori: ${a.name.trim()}. Residuo = massimo meno valore usato del sorgente; non indica necessariamente azioni disponibili. Nessun recupero o costo automatico.\n\n${description}`.slice(0,6000);
+        evidence.push(`${a.name}: contatore manuale ${resource.remaining}/${resource.maxUses}, separato dagli utilizzi della capacità.`);
+        resource=null;
+      }
+    }
     const power={id:`ddb-action-${group}-${powers.length+1}`,type:'feature',name:a.name,description,...(resource??{maxUses:0,remaining:0,recovery:'manual',passive:true})};
     if(resource&&group==='class'&&a.componentId===51&&f?.owner?.definition?.id===9&&integer(f.scale?.fixedValue,1,10)){
       const heavy=array(c.inventory).some(i=>i.equipped&&i.definition?.armorTypeId===3);
@@ -189,6 +208,7 @@ export function extendBeyond(report,c,customTraining=[]){
     if(resource&&group==='race'&&a.componentId===58&&f?.d.name==='Relentless Endurance')power.effect='relentless-endurance';
     addPower(power);actionKeys.add(`${group}:${a.componentId}:${slug(a.name)}`);
   }
+  if(manualResources.length)ext.manualResources=manualResources;
   for(const f of featureDefs){
     if(actionKeys.has(`${f.group}:${f.d.id}:${slug(f.d.name)}`))continue;
     addPower({id:`ddb-feature-${f.group}-${powers.length+1}`,type:'feature',name:f.d.name,description:text(f.d.description,f.d.name),maxUses:0,remaining:0,recovery:'manual',passive:true});
@@ -282,6 +302,6 @@ export function extendBeyond(report,c,customTraining=[]){
   const skillSummary=skills.map(s=>({id:s.id,name:s.name,rank:draft.skillRanks[s.id],extra:ext.skillBonuses[s.id],half:ext.halfSkills.includes(s.id),customized:customTraining.some(t=>t.kind==='skill'&&t.key===s.id),...describeRoll(draft,{kind:'skill',key:s.id})}));
   const saveSummary=abilityKeys.map(key=>({id:key,proficient:draft.saveProficiencies[key],extra:ext.saveBonuses[key],customized:customTraining.some(t=>t.kind==='save'&&t.key===key),...describeRoll(draft,{kind:'save',key})}));
   const weaponSummary=weapons.map(w=>{const result=weaponStats({...draft,equippedWeaponId:w.id});return{id:w.id,name:w.name,attack:result.attackBonus,damage:`${w.diceCount}d${w.dieSides}${result.damageBonus>=0?'+':''}${result.damageBonus}`,reach:w.reach,properties:w.profile.properties}});
-  const coverage=[{section:'Cariche e consumabili',status:itemImport.unresolved?'partial':'converted',count:itemImport.charges+itemImport.consumables},{section:'Difese ai danni',status:'partial',count:defenceImport.rows.filter(r=>r.flags!==null).length},{section:'Abilità e salvezze',status:ext.blockedChecks.length?'partial':'converted',count:skillSummary.length+saveSummary.length},{section:'Armi e attacchi',status:weaponIssues.length?'partial':'converted',count:weapons.length},{section:'Magie e capacità',status:issues.some(t=>/magia|Magia|risorsa|formula|contatore/.test(t))?'partial':'converted',count:powers.length},{section:'Stato e risorse',status:'data-only',count:ext.conditions.length+ext.hitDice.length}];
+  const coverage=[{section:'Cariche e consumabili',status:itemImport.unresolved?'partial':'converted',count:itemImport.charges+itemImport.consumables},{section:'Difese ai danni',status:'partial',count:defenceImport.rows.filter(r=>r.flags!==null).length},{section:'Abilità e salvezze',status:ext.blockedChecks.length?'partial':'converted',count:skillSummary.length+saveSummary.length},{section:'Armi e attacchi',status:weaponIssues.length?'partial':'converted',count:weapons.length},{section:'Magie e capacità',status:issues.some(t=>/magia|Magia|risorsa|formula|contatore/.test(t))?'partial':'converted',count:powers.length},{section:'Contatori manuali',status:'data-only',count:manualResources.length},{section:'Stato e risorse',status:'data-only',count:ext.conditions.length+ext.hitDice.length}];
   return {...report,version:3,checks:{...report.checks,conversion:'supported-extended'},conversion:{scope:'extended-v1',complete:false,sourceCounts:report.conversion.sourceCounts,blockers:[],evidence:[...report.conversion.evidence.filter(t=>!t.startsWith('Inventario:')),...evidence],omissions,coverage},draft,canImport:true,warnings:omissions,details:{skills:skillSummary,saves:saveSummary,weapons:weaponSummary,spells:powers.filter(p=>p.type==='spell').map(p=>({id:p.id,name:p.name,level:p.level,...spellStats(draft,p)})),facts:ext.facts,items:{charges:itemImport.charges,consumables:itemImport.consumables,healing:itemImport.healing},defences:defenceImport.rows}};
 }

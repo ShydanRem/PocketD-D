@@ -14,6 +14,10 @@ int main(int argc,char **argv){
   uint32_t gen=0;size_t n=pd_encode(&state,71,record);assert(pd_decode(record,n,&decoded,&gen)&&gen==71&&!memcmp(&state,&decoded,sizeof state));
   printf("{\"valid\":true,\"hp\":%u,\"maxHp\":%u,\"armor\":%u,\"abilities\":[%u,%u,%u,%u,%u,%u],\"defences\":[%u,%u,%u,%u],\"avatar\":[%u,%u,%u],\"items\":[",state.hp,state.max_hp,state.armor,state.abilities[0],state.abilities[1],state.abilities[2],state.abilities[3],state.abilities[4],state.abilities[5],state.defences.configured,state.defences.resistance,state.defences.vulnerability,state.defences.immunity,state.lineage,state.body,state.outfit);
   for(unsigned i=0;i<state.item_count;i++){const pd_item *v=&state.items[i];printf("%s[%u,%u,%u,%u,%d,%u,%u,%u]",i?",":"",v->kind,v->quantity,v->count,v->sides,v->healing_modifier,v->charges.current,v->charges.maximum,v->charges.recovery);}
+  printf("],\"resources\":[");
+  for(unsigned i=0;i<state.resource_count;i++)printf("%s[%u,%u]",i?",":"",state.resources[i].current,state.resources[i].maximum);
+  printf("],\"powers\":[");
+  for(unsigned i=0;i<state.magic.count;i++){const pd_power *p=&state.magic.powers[i];printf("%s[%u,%u,%u,%u,%u]",i?",":"",p->kind,p->flags,p->maximum,p->remaining,p->recovery);}
   printf("],\"damage\":[");
   for(unsigned i=0;i<13;i++){pd_damage_summary d;assert(pd_damage_preview(&state,&(pd_damage_plan){.type=i,.amount=9,.concentration=PD_CONCENTRATION_KEEP},&d));printf("%s[%s,%u,%u,%s]",i?",":"",d.configured?"true":"false",d.flags,d.adjusted,d.allowed?"true":"false");}
   puts("]}");

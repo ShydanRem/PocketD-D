@@ -46,3 +46,10 @@ export function beyondRichFixture(){
   c.temporaryHitPoints=4;c.conditions=[{id:11,level:0},{id:4,level:1}];c.deathSaves={successCount:1,failCount:2,isStabilized:false};c.currencies={cp:1,sp:2,ep:0,gp:12,pp:0};
   return p;
 }
+
+// Invented manual action counters; no real sheet or rule text.
+export function beyondManualFixture(count=5){
+ const p=beyondRichFixture();
+ for(let i=0;i<count;i++)p.data.actions.class.push({id:`manual-${i}`,componentId:500,name:`Riserva manuale ${i+1}`,description:'Testo sintetico.',limitedUse:{maxUses:i===2?50:4,numberUsed:i===2?15:i%4,resetType:4}});
+ return p;
+}

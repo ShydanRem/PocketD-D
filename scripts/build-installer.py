@@ -96,3 +96,11 @@ for name in ('defence-setup-preview.png','defence-setup-complete.png'):
  shutil.copyfile(source,out/'assets'/name)
 page=out/'index.html'
 page.write_text(page.read_text().replace('</main>', '<section class="after"><h2>Difese pronte per il tavolo · v0.75</h2><p>Danni → Difese per tipo → Completa: controlla i tipi mancanti e confermali Normali di base solo dopo verifica. Difese note, regole ed extra restano conservati. Configurazione rapida disponibile anche sul PC; nessuna deduzione automatica da Beyond.</p><p>Catture del renderer del firmware su PC con dati sintetici. Il trasferimento USB sul dispositivo resta da verificare.</p><div class="import-captures"><img src="assets/defence-setup-preview.png" width="466" height="466" alt="Anteprima dei soli tipi da verificare"><img src="assets/defence-setup-complete.png" width="466" height="466" alt="Profilo completato con difese precedenti conservate"></div></section></main>'))
+
+# Manual counters are rendered by the existing native resources view; synthetic source.
+for name in ('manual-counter-first.png','manual-counter-note.png'):
+ source=ROOT/'firmware/tests/out/ui-build'/name
+ if not source.is_file():raise SystemExit(f'Missing manual counter capture: {name}')
+ shutil.copyfile(source,out/'assets'/name)
+page=out/'index.html'
+page.write_text(page.read_text().replace('</main>', '<section class="after"><h2>Contatori e capacità distinti · v0.76</h2><p>I saldi manuali Beyond arrivano nei contatori del dispositivo, separati dagli utilizzi delle capacità. Correzioni esplicite, nessun consumo o recupero automatico. Testi negli estratti attuali.</p><p>Catture del firmware su PC con dati sintetici. Nuova lettura reale verificata separatamente nel report; trasferimento USB fisico ancora da collaudare.</p><div class="import-captures"><img src="assets/manual-counter-first.png" width="466" height="466" alt="Saldo manuale separato dalle capacità"><img src="assets/manual-counter-note.png" width="466" height="466" alt="Capacità informativa senza utilizzi inventati"></div></section></main>'))

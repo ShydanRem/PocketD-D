@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **28 ottobre 2026 — v0.75**. Il dispositivo è il prodotto;
+Aggiornamento del **28 ottobre 2026 — v0.76**. Il dispositivo è il prodotto;
 il PC serve per importare, configurare e conservare i backup.
 
 Il software copre una prima sessione individuale offline. Il passaggio ancora
@@ -20,7 +20,7 @@ I test USB rimandati restano aperti, senza essere considerati superati.
 | Abilità e salvezze | Competenze, maestrie, mezza competenza supportata, bonus, associazioni a caratteristiche e tiri da verificare; personalizzazioni standard | Abilità non standard, mezza competenza/maestria alle salvezze, bonus condizionali e formule |
 | Armi | Configurazioni riconosciute: caratteristica, competenza, dadi, bonus, portata e alcune proprietà | Armi versatili/due armi, maestrie, munizioni e danni aggiuntivi speciali; arma attiva da scegliere se più armi sono equipaggiate |
 | Inventario | Fino a 60 voci, quantità distinte, custom riconciliati, consumabili, cariche e pozioni con cura esplicita | Peso, contenitori, gestione automatica della sintonia, pile con cariche individuali, proprietà arbitrarie; note degli oggetti conservate sul PC |
-| Magie e capacità | Fino a 120 voci, descrizioni, slot ordinari/patto, preparazione e contatori riconosciuti | Non tutti i recuperi o costi condivisi; magie/azioni da oggetto con usi restano note per evitare di duplicare le cariche; nessuna esecuzione generale degli effetti |
+| Magie e capacità | Fino a 120 voci, descrizioni, slot ordinari/patto, preparazione e contatori riconosciuti | Contatori manuali separati dagli utilizzi. Non tutti i recuperi o costi condivisi; magie/azioni da oggetto con usi restano note per evitare di duplicare le cariche; nessuna esecuzione generale degli effetti |
 | Stato del PG | PF temporanei, annotazioni delle condizioni, dadi vita e contatori morte supportati | Le annotazioni non attivano automaticamente tutti gli effetti; concentrazione in corso e altri stati speciali da impostare/verificare |
 | Difese ai danni | Concessioni incondizionate riconciliate, configurabili e trasferibili | Difese condizionali e immunità alle condizioni non sono ricostruite automaticamente; un tipo assente resta sconosciuto, non Normale |
 | Monete | Cinque saldi distinti, compreso lo zero verificato | Nessun cambio, acquisto o peso automatico |
@@ -30,7 +30,19 @@ il formato. Per dichiarare un dato convertito servono il controllo delle sue
 origini/regole e il confronto del risultato. Una descrizione importata non
 significa che il suo effetto sia automatizzato.
 
-### Nuovo nella v0.75
+### Nuovo nella v0.76
+
+[Contatori manuali delle azioni](BEYOND-CONTATORI-MANUALI.md) separati dagli
+utilizzi: residui conservati e modificabili sul PC e sul dispositivo, senza
+consumo o recupero automatico. Nel PG reale cinque saldi prima presentati
+come utilizzi vengono distinti dalla creazione del cannone con recupero lungo.
+Non sono ancora automatizzati collegamenti, costi condivisi o spese di slot.
+Backup PC v18 solo con questi contatori; USB e stato nativo invariati.
+
+**Testi estesi rimandati per scelta dell’utente:** i tagli attuali sono accettati
+per questa fase e non richiedono espansione su SD per chiudere l’importazione.
+
+### Disponibile dalla v0.75
 
 [Verifica rapida delle difese](DIFESE-VERIFICA-RAPIDA.md) sul dispositivo e sul PC:
 anteprima dei tipi mancanti e conferma manuale per dichiararli Normali di base.
@@ -63,8 +75,7 @@ origini o requisiti ambigui mantengono i tiri interessati da verificare.
 
 ### Ultima lettura reale del tuo PG
 
-28 ottobre 2026, personaggio **144777811**, con codice v0.73 e connettore esistente
-(nessuna nuova lettura reale nelle v0.74–0.75):
+28 ottobre 2026, personaggio **144777811**, con codice v0.76 e connettore esistente:
 
 - HTTP **200**, **426.718 byte**, struttura JSON valida.
 - FOR/DES/COS/INT/SAG/CAR: **8/18/14/18/10/10**; PF **32/73**, CA **17**.
@@ -72,8 +83,10 @@ origini o requisiti ambigui mantengono i tiri interessati da verificare.
 - Quattro pozioni di cura con formula esplicita **2d4+2**.
 - I **30 tiri** di caratteristica/abilità/salvezza della proiezione coincidono
   fra modello PC e calcolo C; nessuno risulta bloccato in questo sorgente.
-- Nessun bersaglio con le nuove personalizzazioni dei tiri: per quei casi la
-  prova di questa versione è **sintetica**, non dimostrata da questo PG.
+- Cinque contatori manuali coincidono nel parser/codec C: **4/4, 1/4, 50/50,
+  35/50, 50/50**. Create Eldritch Cannon rimane **0/1**, recupero lungo.
+- Nessun bersaglio con le personalizzazioni delle abilità/salvezze: per quei casi
+  la prova rimane **sintetica**, non dimostrata da questo PG.
 
 È una verifica dei dati ricevuti e della conversione, non un confronto con una
 schermata autenticata Beyond. Il parser e il codec C sono stati eseguiti sul PC:
@@ -144,25 +157,28 @@ compilata e un trasferimento fisico che oggi non è ancora confermato.
    acquisire un backup e provarne il ripristino con un caso controllato.
 4. **Provare una breve sessione:** un attacco, danni, cura, magia/concentrazione,
    spesa/recupero di una risorsa e un riposo. Poi correggere gli attriti osservati.
-5. **Ampliare l'import** sui casi concreti rimasti e completare l'informazione
-   consultabile sul dispositivo, poi continuare espressioni e rifiniture grafiche.
+5. **Ampliare l'import** sui casi concreti rimasti e completare gli altri dati
+   consultabili sul dispositivo, poi continuare espressioni e rifiniture grafiche.
+   I testi possono restare negli estratti attuali, come concordato.
 
 Non serve attendere tutte le regole D&D per questa prima sessione. Servono un
 trasferimento verificato, valori confrontati e progressi recuperabili.
 
 ## Verifiche di questa versione e compatibilità
 
-**249 test JS**, browser di produzione con profili isolati, **324 schede
+**253 test JS**, browser di produzione con profili isolati, **324 schede
 sintetiche** nel parser/codec C per le nuove associazioni, undici pacchetti
 incompatibili respinti e regressioni dell'intera scheda. Parser/codec e UI host verificati anche
 con ASan/UBSan. Compilazione ESP32-S3 riuscita. Tutti gli **8.192 sottoinsiemi**
-delle difese verificati in JS e C; nuova anteprima nelle **119 viste** del renderer. Questi risultati
+delle difese verificati in JS e C; **120 schede sintetiche** per i nuovi contatori,
+**119 viste** del renderer. Questi risultati
 non certificano touch, trasporto USB o memoria fisica.
 
-Nuovi dati opzionali: **USB15 / backup PC v17** con associazioni personalizzate;
-senza di esse si conserva il minimo precedente pertinente. Stato nativo
-**PDD34/PDDY**, lettura dei formati precedenti e partizioni invariate.
-Per trasferire la nuova informazione e leggere i nuovi backup nativi aggiornare
-app e firmware a 0.74. Il profilo difese richiede almeno 0.71 / USB14; i look
-classe almeno 0.70 e il relativo pacchetto SD. Il comando Completa sul dispositivo
-richiede 0.75; l’installer distribuisce 0.75.
+Compatibilità: le associazioni delle abilità richiedono **USB15 / backup PC v17**
+e firmware almeno 0.74. I contatori manuali richiedono **app PC 0.76 / backup PC v18**;
+sul dispositivo usano gli otto saldi già supportati, senza nuovo protocollo.
+Senza campi nuovi si conserva il minimo formato precedente pertinente.
+Stato nativo **PDD34/PDDY**, lettura dei formati precedenti e partizioni invariate.
+Il profilo difese richiede almeno 0.71 / USB14; i look classe almeno 0.70 e il
+relativo pacchetto SD. Completa sul dispositivo richiede 0.75.
+L’installer distribuisce 0.76. I testi rimangono negli estratti concordati.

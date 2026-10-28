@@ -2,6 +2,13 @@ import {validateDefences} from './defences.js';
 const integer=(n,min,max)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
 const keys=['FOR','DES','COS','INT','SAG','CAR'];
 export const skillIds=['acrobatics','animalHandling','arcana','athletics','deception','history','insight','intimidation','investigation','medicine','nature','perception','performance','persuasion','religion','sleightOfHand','stealth','survival'];
+export function validateManualResources(input){
+ if(!Array.isArray(input)||input.length>8)throw new Error('Massimo 8 contatori manuali');
+ const ids=new Set();return input.map(r=>{
+  if(!r||Object.keys(r).length!==4||typeof r.id!=='string'||!/^[a-zA-Z0-9_-]{1,64}$/.test(r.id)||ids.has(r.id)||typeof r.name!=='string'||!r.name.trim()||r.name.length>40||!integer(r.max,1,999)||!integer(r.current,0,r.max))throw new Error('Contatore manuale non valido');
+  ids.add(r.id);return {id:r.id,name:r.name.trim(),current:r.current,max:r.max};
+ });
+}
 export function validateSkillAbilities(input){
  if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(k=>!skillIds.includes(k)||!keys.includes(input[k])))throw new Error('Caratteristiche delle abilità non valide');
  return Object.fromEntries(Object.entries(input));
@@ -27,7 +34,7 @@ export function validateExtended(input){
   if(!Array.isArray(input.blockedChecks)||input.blockedChecks.some(k=>!allowedChecks.includes(k)))fail();
   const c=input.combat;if(!c||!integer(c.rageBonus,0,10)||!integer(c.extraMeleeCriticalDice,0,6)||['raging','greatWeaponMaster','greatWeaponMasterAvailable','thrown'].some(k=>typeof c[k]!=='boolean')||(c.greatWeaponMaster&&!c.greatWeaponMasterAvailable)||(c.raging&&!c.rageBonus))fail();
   if(!Array.isArray(input.facts)||input.facts.length>100||input.facts.some(t=>typeof t!=='string'||t.length>500))fail();
-  return {...(input.skillAbilities!==undefined?{skillAbilities:validateSkillAbilities(input.skillAbilities)}:{}),...(input.defences!==undefined?{defences:validateDefences(input.defences)}:{}),tempHp:input.tempHp,conditions,deathSaves:{successes:d.successes,failures:d.failures,stabilized:d.stabilized},hitDice,currenciesAvailable,currencies,pactSlots,skillBonuses:map(input.skillBonuses,skillIds),saveBonuses:map(input.saveBonuses,keys),checkBonuses:map(input.checkBonuses,keys),halfAbilityChecks:input.halfAbilityChecks,halfSkills:[...input.halfSkills],blockedChecks:[...new Set(input.blockedChecks)],combat:{rageBonus:c.rageBonus,raging:c.raging,greatWeaponMaster:c.greatWeaponMaster,greatWeaponMasterAvailable:c.greatWeaponMasterAvailable,extraMeleeCriticalDice:c.extraMeleeCriticalDice,thrown:c.thrown},facts:[...input.facts]};
+  return {...(input.manualResources!==undefined?{manualResources:validateManualResources(input.manualResources)}:{}),...(input.skillAbilities!==undefined?{skillAbilities:validateSkillAbilities(input.skillAbilities)}:{}),...(input.defences!==undefined?{defences:validateDefences(input.defences)}:{}),tempHp:input.tempHp,conditions,deathSaves:{successes:d.successes,failures:d.failures,stabilized:d.stabilized},hitDice,currenciesAvailable,currencies,pactSlots,skillBonuses:map(input.skillBonuses,skillIds),saveBonuses:map(input.saveBonuses,keys),checkBonuses:map(input.checkBonuses,keys),halfAbilityChecks:input.halfAbilityChecks,halfSkills:[...input.halfSkills],blockedChecks:[...new Set(input.blockedChecks)],combat:{rageBonus:c.rageBonus,raging:c.raging,greatWeaponMaster:c.greatWeaponMaster,greatWeaponMasterAvailable:c.greatWeaponMasterAvailable,extraMeleeCriticalDice:c.extraMeleeCriticalDice,thrown:c.thrown},facts:[...input.facts]};
 }
 export function setCombatOption(state,key,value){
   if(!state.extended||!['raging','greatWeaponMaster','thrown'].includes(key)||typeof value!=='boolean')throw new Error('Opzione non disponibile');

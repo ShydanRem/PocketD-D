@@ -1631,6 +1631,15 @@ int main(void) {
     effects_saves=save_calls;act(3900);assert(page==DEFENCE_LIST&&save_calls==effects_saves);act(100);click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));
     pd_demo(&state);act(1800);click("Difese per tipo");click("Completa");for(unsigned i=0;i<4;i++)click(">");bounds();wrapped_fits();assert(defence_setup_page==4);screenshot("defence-setup-thirteen.ppm");click("Conferma");assert(state.defences.configured==8191&&!state.defences.resistance&&!state.defences.vulnerability&&!state.defences.immunity);
     puts("Manual defence completion: explicit paged review, unknown bases only, conditional rules/all extras preserved, keys/import protected, cancel, save retry, no RNG, undo, 13-type bounds and native persistence in core tests passed; no physical USB");
+    /* Manual source counters occupy existing generic slots, not consumable powers. */
+    pd_demo(&state);page=HERO;pd_state manual_import=state;manual_import.resource_count=8;manual_import.magic.count=1;
+    manual_import.magic.powers[0]=(pd_power){.name="Azione informativa",.description="Contatore manuale separato in Usi. Nessun consumo o recupero automatico.",.kind=1,.flags=PD_PASSIVE|PD_PREPARED};
+    for(unsigned i=0;i<8;i++){snprintf(manual_import.resources[i].name,sizeof manual_import.resources[i].name,"Riserva manuale %u",i+1);manual_import.resources[i].maximum=i==7?999:50;manual_import.resources[i].current=i==7?999:35;}
+    assert(pd_valid(&manual_import)&&stage_import(&manual_import));click("Conferma");assert(state.resource_count==8);act(103);resource_index=0;render();bounds();screenshot("manual-counter-first.ppm");
+    effects_before=state;effects_saves=save_calls;effects_calls=random_calls;fail_save=true;click("-1");assert(!memcmp(&state,&effects_before,sizeof state));screenshot("manual-counter-save-error.ppm");fail_save=false;click("-1");assert(state.resources[0].current==34&&save_calls==effects_saves+2&&random_calls==effects_calls);act(100);click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));
+    act(103);for(unsigned i=0;i<7;i++)click("Prossimo");assert(resource_index==7);bounds();screenshot("manual-counter-last.ppm");click("-1");assert(state.resources[7].current==998);click("+1");assert(state.resources[7].current==999);click("Prossimo");assert(!resource_index);
+    click("Magie");click("Capacita");tap(233,222);assert(page==MAGIC_DETAIL);screenshot("manual-counter-note.ppm");effects_before=state;act(831);assert(!memcmp(&state,&effects_before,sizeof state)&&state.resources[0].current==35);
+    puts("Manual counters UI: 8 generic slots, exact source balances, passive ability separation, failed-save retry, undo, last slot/999 boundary and no RNG passed; synthetic, no physical USB");
     unsigned covered=0;
     for(unsigned p=0;p<=DEFENCE_SETUP;p++){
         covered+=styled_pages[p];
