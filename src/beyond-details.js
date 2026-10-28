@@ -158,6 +158,7 @@ export function extendBeyond(report,c,customTraining=[]){
     if(!limited)return null;
     const allowed=['name','statModifierUsesId','resetType','numberUsed','minNumberConsumed','maxNumberConsumed','maxUses','operator','useProficiencyBonus','proficiencyBonusOperator','resetDice'];
     if(typeof limited!=='object'||Array.isArray(limited)||Object.keys(limited).some(k=>!allowed.includes(k))){warn(`${name}: requisiti o collegamenti della risorsa non rappresentati; conservata come nota.`);return null;}
+    if(limited.useProficiencyBonus!=null&&typeof limited.useProficiencyBonus!=='boolean'){warn(`${name}: indicatore di competenza della risorsa non valido; conservata come nota.`);return null;}
     if(limited.minNumberConsumed!=null&&limited.minNumberConsumed!==1||limited.maxNumberConsumed!=null&&limited.maxNumberConsumed!==1){warn(`${name}: costo variabile o condiviso da gestire manualmente.`);return null;}
     let max=limited.maxUses;
     if(!integer(max,0,manualCounter?999:99)){warn(`${name}: formula degli utilizzi non risolta, capacità conservata come nota.`);return null;}
