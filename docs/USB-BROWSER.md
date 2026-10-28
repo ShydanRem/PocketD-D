@@ -1,5 +1,11 @@
 # Scheda e backup via USB dal browser — supporto PC
 
+> Aggiornamento v0.74: [associazioni personalizzate delle abilità](ABILITA-CARATTERISTICHE.md),
+> Beyond tipo 27 ed editor PC, USB15 / backup PC v17, PDD34/PDDY. Lettura dei precedenti
+> e partizioni invariate; nuova prova sintetica, verifica USB fisica ancora aperta.
+> Le descrizioni e prove datate sotto conservano il proprio contesto.
+
+
 > Aggiornamento v0.71, 27 ottobre 2026: [inventario operativo e difese Beyond](BEYOND-INVENTARIO-DIFESE.md).
 > Cariche, consumabili e cure esplicite; profilo difese opzionale con USB14 / backup PC v16.
 > Stato nativo PDD33 invariato. Prova reale e dati sintetici distinti; conversione ancora parziale.

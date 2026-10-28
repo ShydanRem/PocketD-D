@@ -31,6 +31,7 @@ cc -std=c11 -Wall -Wextra -Werror -Ifirmware/core -I"$IDF_PATH/components/json/c
 node scripts/check-beyond-equipment.js
 node scripts/check-beyond-abilities.js
 node scripts/check-beyond-training.js
+node scripts/check-skill-abilities.js
 cc -std=c11 -Wall -Wextra -Werror -Ifirmware/core -I"$IDF_PATH/components/json/cJSON" firmware/core/pocketdd.c firmware/core/status.c firmware/core/magic.c firmware/core/checks.c firmware/core/combat.c firmware/core/dice_pool.c firmware/core/rest.c firmware/core/packet.c firmware/tests/status_probe.c "$IDF_PATH/components/json/cJSON/cJSON.c" -lm -o firmware/tests/out/status-probe
 node scripts/check-status.js
 cc -std=c11 -Wall -Wextra -Werror -Wno-unused-parameter -Ifirmware/core -Ifirmware/tests/fake firmware/core/pocketdd.c firmware/core/magic.c firmware/core/checks.c firmware/core/combat.c firmware/core/dice_pool.c firmware/tests/test_storage.c -o firmware/tests/out/storage

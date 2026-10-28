@@ -111,6 +111,27 @@ class BackupTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             backup.validate(json.dumps(packet).encode())
 
+    def test_pdd34_skill_associations_are_retained_and_invalid_values_reject(self):
+        packet = json.loads(RAW)
+        old = base64.b64decode(packet['state'])
+        state = bytearray(old[:-4] + bytes(63+4+18+4))
+        state[3] = ord('Y')
+        for i in range(18):
+            state[-22+i] = i % 7
+        state[-4:] = zlib.crc32(state[:-4]).to_bytes(4, 'little')
+        packet['state'] = base64.b64encode(state).decode()
+        encoded = json.dumps(packet).encode()
+        checked, preview = backup.validate(encoded)
+        self.assertEqual(checked, packet)
+        port = Port(b'PDD BACKUP_READY 1\nPDD WAIT_RESTORE\nPDD RESTORED\n')
+        backup.restore(port, encoded, lambda _: None)
+        self.assertEqual(json.loads(port.sent.splitlines()[-1]), packet)
+        state[-22] = 7
+        state[-4:] = zlib.crc32(state[:-4]).to_bytes(4, 'little')
+        packet['state'] = base64.b64encode(state).decode()
+        with self.assertRaises(ValueError):
+            backup.validate(json.dumps(packet).encode())
+
     def test_private_complete_file_and_existing_paths_preserved(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)/'snapshot.json';backup.save_new(path, RAW)

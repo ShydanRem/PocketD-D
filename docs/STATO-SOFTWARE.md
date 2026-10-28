@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **28 ottobre 2026 — v0.73**. Il dispositivo è il prodotto;
+Aggiornamento del **28 ottobre 2026 — v0.74**. Il dispositivo è il prodotto;
 il PC serve per importare, configurare e conservare i backup.
 
 Il software copre una prima sessione individuale offline. Il passaggio ancora
@@ -17,7 +17,7 @@ I test USB rimandati restano aperti, senza essere considerati superati.
 | Creazione | Anteprima, problemi bloccanti distinti dai limiti, consenso e nuovo PG | Nessun aggiornamento automatico di una vecchia scheda con conservazione dei progressi |
 | Caratteristiche | Base, modificatori/scelte riconciliati, bonus personalizzati, massimi espliciti, valori fissati e override supportati | Origini/capacità sostitutive, altre restrizioni/formule e override numerici non riconosciuti |
 | PF e CA | Calcolati con le caratteristiche finali e gli effetti supportati; PF correnti e temporanei distinti | Sono fotografie all'importazione: cambiare equipaggiamento o salire di livello non ricalcola tutto |
-| Abilità e salvezze | Competenze, maestrie, mezza competenza supportata, bonus e tiri da verificare; v0.73 aggiunge personalizzazioni standard | Abilità non standard, cambio della caratteristica associata, mezza competenza/maestria alle salvezze, bonus condizionali e formule |
+| Abilità e salvezze | Competenze, maestrie, mezza competenza supportata, bonus, associazioni a caratteristiche e tiri da verificare; personalizzazioni standard | Abilità non standard, mezza competenza/maestria alle salvezze, bonus condizionali e formule |
 | Armi | Configurazioni riconosciute: caratteristica, competenza, dadi, bonus, portata e alcune proprietà | Armi versatili/due armi, maestrie, munizioni e danni aggiuntivi speciali; arma attiva da scegliere se più armi sono equipaggiate |
 | Inventario | Fino a 60 voci, quantità distinte, custom riconciliati, consumabili, cariche e pozioni con cura esplicita | Peso, contenitori, gestione automatica della sintonia, pile con cariche individuali, proprietà arbitrarie; note degli oggetti conservate sul PC |
 | Magie e capacità | Fino a 120 voci, descrizioni, slot ordinari/patto, preparazione e contatori riconosciuti | Non tutti i recuperi o costi condivisi; magie/azioni da oggetto con usi restano note per evitare di duplicare le cariche; nessuna esecuzione generale degli effetti |
@@ -30,7 +30,15 @@ il formato. Per dichiarare un dato convertito servono il controllo delle sue
 origini/regole e il confronto del risultato. Una descrizione importata non
 significa che il suo effetto sia automatizzato.
 
-### Nuovo nella v0.73
+### Nuovo nella v0.74
+
+[Caratteristica personalizzata per abilità](ABILITA-CARATTERISTICHE.md), importabile
+da Beyond e configurabile sul PC: per esempio Intimidire con FOR. La scelta
+arriva al dispositivo e segue punteggi ed effetti supportati senza alterare
+competenza o extra. Richiede firmware 0.74 / USB15 quando presente.
+Annullamento ed errore di salvataggio dell’editor conservano la scheda.
+
+### Disponibile dalla v0.73
 
 Personalizzazioni standard delle abilità e salvezze: bonus numerici separati,
 competenze esplicite e mezza competenza delle abilità. Un valore esplicito
@@ -46,7 +54,8 @@ origini o requisiti ambigui mantengono i tiri interessati da verificare.
 
 ### Ultima lettura reale del tuo PG
 
-28 ottobre 2026, personaggio **144777811**, tramite il connettore esistente:
+28 ottobre 2026, personaggio **144777811**, con codice v0.73 e connettore esistente
+(nessuna nuova lettura reale nella v0.74):
 
 - HTTP **200**, **426.718 byte**, struttura JSON valida.
 - FOR/DES/COS/INT/SAG/CAR: **8/18/14/18/10/10**; PF **32/73**, CA **17**.
@@ -134,13 +143,15 @@ trasferimento verificato, valori confrontati e progressi recuperabili.
 
 ## Verifiche di questa versione e compatibilità
 
-**240 test JS**, browser di produzione con profili isolati, **160 schede
-sintetiche** nel parser/codec C e **14.400 confronti** dei tiri; parser/roundtrip
-anche con ASan/UBSan. Compilazione ESP32-S3 riuscita. Questi risultati non
-certificano touch, trasporto USB o memoria fisica.
+**246 test JS**, browser di produzione con profili isolati, **324 schede
+sintetiche** nel parser/codec C per le nuove associazioni, undici pacchetti
+incompatibili respinti e regressioni dell'intera scheda. Parser/roundtrip e
+UI host anche con ASan/UBSan. Compilazione ESP32-S3 riuscita. Questi risultati
+non certificano touch, trasporto USB o memoria fisica.
 
-Nessun nuovo formato o partizionamento: PDD33/PDDX, USB9–USB14 e backup PC
-v11–v16 secondo i dati presenti. Le nuove personalizzazioni usano campi dei
-tiri già disponibili: non richiedono un nuovo firmware solo per quei valori.
-Il profilo difese continua a richiedere almeno firmware 0.71 / USB14; i look
-classe almeno 0.70 e il relativo pacchetto SD. L'installer distribuisce 0.73.
+Nuovi dati opzionali: **USB15 / backup PC v17** con associazioni personalizzate;
+senza di esse si conserva il minimo precedente pertinente. Stato nativo
+**PDD34/PDDY**, lettura dei formati precedenti e partizioni invariate.
+Per trasferire la nuova informazione e leggere i nuovi backup nativi aggiornare
+app e firmware a 0.74. Il profilo difese richiede almeno 0.71 / USB14; i look
+classe almeno 0.70 e il relativo pacchetto SD. L'installer distribuisce 0.74.

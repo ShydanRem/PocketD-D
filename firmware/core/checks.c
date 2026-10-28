@@ -8,7 +8,8 @@ bool pd_describe_check(const pd_state *s,pd_check_kind kind,unsigned index,pd_ch
     if(!s||!out||kind<PD_CHECK||kind>PD_SAVE||index>=(kind==PD_SKILL?PD_SKILLS:6)||
        (kind!=PD_CHECK&&!s->training.available))return false;
     const pd_training *t=&s->training;
-    pd_check_info r={.ability=kind==PD_SKILL?skill_ability[index]:index};
+    if(kind==PD_SKILL&&t->skill_abilities[index]>6)return false;
+    pd_check_info r={.ability=kind==PD_SKILL?(t->available&&t->skill_abilities[index]?(unsigned)t->skill_abilities[index]-1u:skill_ability[index]):index};
     r.base=pd_modifier(s->abilities[r.ability]);
     if(t->available) {
         r.rank=kind==PD_SKILL?t->ranks[index]:kind==PD_SAVE?((t->saves>>index)&1):0;

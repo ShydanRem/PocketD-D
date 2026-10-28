@@ -13,7 +13,7 @@ for(let flags=1;flags<8;flags++)for(let target=0;target<13;target++){
  const report=convertBeyond(p,'123456');assert.ok(report.canImport);report.draft.avatar={...report.draft.avatar,lineage:target%21,body:target%2,outfit:flags};packets.push(projectDevice(report.draft).packet);
 }
 const valid=packets.length;
-for(const change of [p=>delete p.defences,p=>p.defences.configured=8192,p=>p.defences.resistance=8192,p=>p.defences.immunity=2,p=>p.defences.extra=0,p=>p.defences.resistance='1',p=>p.defences.configured=-1,p=>p.version=13,p=>p.version=15,p=>delete p.avatar.outfit,p=>p.defences=null,p=>p.defences.resistance=.5]){const p=structuredClone(packets[0]);change(p);packets.push(p);}
+for(const change of [p=>delete p.defences,p=>p.defences.configured=8192,p=>p.defences.resistance=8192,p=>p.defences.immunity=2,p=>p.defences.extra=0,p=>p.defences.resistance='1',p=>p.defences.configured=-1,p=>p.version=13,p=>p.version=16,p=>delete p.avatar.outfit,p=>p.defences=null,p=>p.defences.resistance=.5]){const p=structuredClone(packets[0]);change(p);packets.push(p);}
 const path='firmware/tests/out/beyond-equipment.jsonl';writeFileSync(path,packets.map(JSON.stringify).join('\n')+'\n');
 const run=spawnSync('firmware/tests/out/beyond-equipment-probe',[path],{encoding:'utf8'});assert.equal(run.status,0,run.stderr);const rows=run.stdout.trim().split('\n').map(JSON.parse);assert.equal(rows.length,packets.length);
 for(let n=0;n<valid;n++){

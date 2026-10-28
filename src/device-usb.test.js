@@ -41,7 +41,7 @@ test('USB browser: fragmented real streams negotiate USB9, send the frozen copy 
  }
 });
 test('USB browser: old/future protocol, malformed copy, chooser cancellation and occupied port do not send a candidate',async()=>{
- for(const version of [1,8,15]){const f=fake({version});await assert.rejects(sendDeviceCopy(packet(),options(f)));assert.deepEqual(f.sent,['','PDD HELLO']);released(f);}
+ for(const version of [1,8,16]){const f=fake({version});await assert.rejects(sendDeviceCopy(packet(),options(f)));assert.deepEqual(f.sent,['','PDD HELLO']);released(f);}
  for(const p of [{},null,{format:'pocketdd-device',version:true},{format:'pocketdd-device',version:9,name:'é'},{format:'pocketdd-device',version:9,name:'x'.repeat(262144)}]){const f=fake();await assert.rejects(sendDeviceCopy(p,options(f)));assert.equal(f.chooser,0);}
  await assert.rejects(sendDeviceCopy(packet(),{serial:{requestPort:async()=>{throw new DOMException('No port','NotFoundError')}}}),/annullata/);
  const busy=fake({openError:true});await assert.rejects(sendDeviceCopy(packet(),options(busy)),/busy/);assert.equal(busy.writes.length,0);
@@ -74,7 +74,7 @@ test('USB browser: one task at a time, explicit abort releases the port, and a n
  await sendDeviceCopy(packet(),options(g));released(g);
 });
 test('USB browser: bounded line/buffer, stale ACK and corrupt negotiation are rejected',async()=>{
- for(const text of ['x'.repeat(257)+'\n','PDD IMPORTED\n','\u0000\n','PDD READY 15\n','x'.repeat(112000)]){
+ for(const text of ['x'.repeat(257)+'\n','PDD IMPORTED\n','\u0000\n','PDD READY 16\n','x'.repeat(112000)]){
   const f=fake();f.serial.requestPort=async()=>{f.push(text);return f.port;};await assert.rejects(sendDeviceCopy(packet(),options(f)));assert.ok(!f.sent.some(x=>x.startsWith('{')));
  }
 });
@@ -97,7 +97,7 @@ test('USB browser: bounded ESP32 startup lines and one lost HELLO recover withou
  const partial=fake({missHello:1,partialReady:true});await sendDeviceCopy(packet(),{...options(partial),timeouts:{...times,helloAttempt:10}});assert.equal(partial.sent.filter(s=>s.startsWith('{')).length,1);released(partial);
 });
 test('USB browser: bootloader, unrecognized text, excess logs and unknown READY remain errors with no character data exposed',async()=>{
- for(const [startup,pattern] of [['ESP-ROM:esp32s3-20210327\nwaiting for download\n',/bootloader/],['ESP-ROM:esp32s3-20210327\n'.repeat(513),/Limite dei log/],['{"name":"private-sheet-marker"}\n',/testo non riconosciuto/],['PDD READY 15\n',/PDD READY 15/]]){
+ for(const [startup,pattern] of [['ESP-ROM:esp32s3-20210327\nwaiting for download\n',/bootloader/],['ESP-ROM:esp32s3-20210327\n'.repeat(513),/Limite dei log/],['{"name":"private-sheet-marker"}\n',/testo non riconosciuto/],['PDD READY 16\n',/PDD READY 16/]]){
   const f=fake({startup});let message='';await assert.rejects(sendDeviceCopy(packet(),options(f)),e=>{message=e.message;return pattern.test(message);});assert.doesNotMatch(message,/private-sheet-marker/);assert.ok(!f.sent.some(s=>s.startsWith('{')));released(f);
  }
  const f=fake({startup:'I (24) boot: starting\n',unexpected:'PDD RESTORED\n'});
@@ -157,4 +157,10 @@ test('USB14 defence profile never travels to USB13 and retains the exact verifie
  const {emptyExtended}=await import('./extended.js');const s={...initialState(),extended:{...emptyExtended(),defences:{configured:32,resistance:32,vulnerability:0,immunity:0}}};const {packet:p}=projectDevice(s);assert.equal(p.version,14);
  const old=fake({version:13});await assert.rejects(sendDeviceCopy(p,options(old)),/USB14/);assert.deepEqual(old.sent,['','PDD HELLO']);released(old);
  const current=fake({version:14});await sendDeviceCopy(p,options(current));assert.deepEqual(JSON.parse(current.sent[2]).defences,p.defences);released(current);
+});
+
+test('USB15 skill associations reject USB14 before sending and preserve every mapped ability',async()=>{
+ const {emptyExtended}=await import('./extended.js');const s={...initialState(),extended:{...emptyExtended(),skillAbilities:{intimidation:'FOR',perception:'INT'}}};const p=projectDevice(s).packet;assert.equal(p.version,15);
+ const old=fake({version:14});await assert.rejects(sendDeviceCopy(p,options(old)),/USB15/);assert.deepEqual(old.sent,['','PDD HELLO']);released(old);
+ const current=fake({version:15});await sendDeviceCopy(p,options(current));assert.deepEqual(JSON.parse(current.sent[2]).training.skillAbilities,p.training.skillAbilities);released(current);
 });

@@ -2,6 +2,10 @@ import {validateDefences} from './defences.js';
 const integer=(n,min,max)=>Number.isSafeInteger(n)&&n>=min&&n<=max;
 const keys=['FOR','DES','COS','INT','SAG','CAR'];
 export const skillIds=['acrobatics','animalHandling','arcana','athletics','deception','history','insight','intimidation','investigation','medicine','nature','perception','performance','persuasion','religion','sleightOfHand','stealth','survival'];
+export function validateSkillAbilities(input){
+ if(!input||typeof input!=='object'||Array.isArray(input)||Object.keys(input).some(k=>!skillIds.includes(k)||!keys.includes(input[k])))throw new Error('Caratteristiche delle abilità non valide');
+ return Object.fromEntries(Object.entries(input));
+}
 export const emptyExtended=()=>({tempHp:0,conditions:[],deathSaves:{successes:0,failures:0,stabilized:false},hitDice:[],currenciesAvailable:false,currencies:{cp:0,sp:0,ep:0,gp:0,pp:0},pactSlots:Array.from({length:9},()=>({max:0,current:0})),skillBonuses:Object.fromEntries(skillIds.map(k=>[k,0])),saveBonuses:Object.fromEntries(keys.map(k=>[k,0])),checkBonuses:Object.fromEntries(keys.map(k=>[k,0])),halfAbilityChecks:false,halfSkills:[],blockedChecks:[],combat:{rageBonus:0,raging:false,greatWeaponMaster:false,greatWeaponMasterAvailable:false,extraMeleeCriticalDice:0,thrown:false},facts:[]});
 export function validateExtended(input){
   const fail=()=>{throw new Error('Dati estesi non validi')};
@@ -23,7 +27,7 @@ export function validateExtended(input){
   if(!Array.isArray(input.blockedChecks)||input.blockedChecks.some(k=>!allowedChecks.includes(k)))fail();
   const c=input.combat;if(!c||!integer(c.rageBonus,0,10)||!integer(c.extraMeleeCriticalDice,0,6)||['raging','greatWeaponMaster','greatWeaponMasterAvailable','thrown'].some(k=>typeof c[k]!=='boolean')||(c.greatWeaponMaster&&!c.greatWeaponMasterAvailable)||(c.raging&&!c.rageBonus))fail();
   if(!Array.isArray(input.facts)||input.facts.length>100||input.facts.some(t=>typeof t!=='string'||t.length>500))fail();
-  return {...(input.defences!==undefined?{defences:validateDefences(input.defences)}:{}),tempHp:input.tempHp,conditions,deathSaves:{successes:d.successes,failures:d.failures,stabilized:d.stabilized},hitDice,currenciesAvailable,currencies,pactSlots,skillBonuses:map(input.skillBonuses,skillIds),saveBonuses:map(input.saveBonuses,keys),checkBonuses:map(input.checkBonuses,keys),halfAbilityChecks:input.halfAbilityChecks,halfSkills:[...input.halfSkills],blockedChecks:[...new Set(input.blockedChecks)],combat:{rageBonus:c.rageBonus,raging:c.raging,greatWeaponMaster:c.greatWeaponMaster,greatWeaponMasterAvailable:c.greatWeaponMasterAvailable,extraMeleeCriticalDice:c.extraMeleeCriticalDice,thrown:c.thrown},facts:[...input.facts]};
+  return {...(input.skillAbilities!==undefined?{skillAbilities:validateSkillAbilities(input.skillAbilities)}:{}),...(input.defences!==undefined?{defences:validateDefences(input.defences)}:{}),tempHp:input.tempHp,conditions,deathSaves:{successes:d.successes,failures:d.failures,stabilized:d.stabilized},hitDice,currenciesAvailable,currencies,pactSlots,skillBonuses:map(input.skillBonuses,skillIds),saveBonuses:map(input.saveBonuses,keys),checkBonuses:map(input.checkBonuses,keys),halfAbilityChecks:input.halfAbilityChecks,halfSkills:[...input.halfSkills],blockedChecks:[...new Set(input.blockedChecks)],combat:{rageBonus:c.rageBonus,raging:c.raging,greatWeaponMaster:c.greatWeaponMaster,greatWeaponMasterAvailable:c.greatWeaponMasterAvailable,extraMeleeCriticalDice:c.extraMeleeCriticalDice,thrown:c.thrown},facts:[...input.facts]};
 }
 export function setCombatOption(state,key,value){
   if(!state.extended||!['raging','greatWeaponMaster','thrown'].includes(key)||typeof value!=='boolean')throw new Error('Opzione non disponibile');

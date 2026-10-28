@@ -38,9 +38,9 @@ static int named(const char *name,const char *const *names,int count) {
     for(int i=0;i<count;i++)if(!strcmp(name,names[i]))return i;
     return -1;
 }
-static bool training(cJSON *o,pd_training *t) {
-    const char *const fields[]={"skillRanks","saveProficiencies","skillBonuses","saveBonuses","checkBonuses","halfAbilityChecks","halfSkills","blockedChecks","poisoned","strengthAdvantage"};
-    if(!keys(o,fields,10))return false;
+static bool training(cJSON *o,pd_training *t,bool mapped) {
+    const char *const fields[]={"skillRanks","saveProficiencies","skillBonuses","saveBonuses","checkBonuses","halfAbilityChecks","halfSkills","blockedChecks","poisoned","strengthAdvantage","skillAbilities"};
+    if(!keys(o,fields,mapped?11:10))return false;
     cJSON *ranks=cJSON_GetObjectItemCaseSensitive(o,"skillRanks"),*saves=cJSON_GetObjectItemCaseSensitive(o,"saveProficiencies");
     if(!keys(ranks,pd_skill_ids,PD_SKILLS)||!keys(saves,pd_abilities,6))return false;
     for(int i=0;i<PD_SKILLS;i++) { int n=number(ranks,pd_skill_ids[i],0,2);if(n<0)return false;t->ranks[i]=n; }
@@ -75,6 +75,7 @@ static bool training(cJSON *o,pd_training *t) {
         if(bit<0||(t->blocked&(1u<<bit)))return false;
         t->blocked|=1u<<bit;
     }
+    if(mapped){cJSON *abilities=cJSON_GetObjectItemCaseSensitive(o,"skillAbilities");if(!keys(abilities,pd_skill_ids,PD_SKILLS))return false;for(unsigned i=0;i<PD_SKILLS;i++){int v=number(abilities,pd_skill_ids[i],0,6);if(v<0)return false;t->skill_abilities[i]=v;}}
     t->available=true;return true;
 }
 static bool inventory(cJSON *o,pd_state *s,bool charges) {
@@ -201,7 +202,7 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
     const char *const abilities[]={"FOR","DES","COS","INT","SAG","CAR"};
     const char *const resource_keys[]={"name","current","maximum"};
     const char *const avatar_keys[]={"skin","hair","cloak","style","lineage","body","outfit"};
-    int version=number(root,"version",1,14);
+    int version=number(root,"version",1,15);
     cJSON *fmt=cJSON_GetObjectItemCaseSensitive(root,"format");
     if (version<0 || end!=json+size || !keys(root,fields,version==1?10:version==2?11:version==3?12:version==4?13:version==5?14:version==6?15:version<9?16:version<14?17:18) || !cJSON_IsString(fmt) ||
         strcmp(fmt->valuestring,"pocketdd-device") ||
@@ -220,7 +221,7 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
         if(version>=10){int lineage=number(avatar,"lineage",0,version>=12?PD_SPECIES_COUNT-1:version>=11?15:11),body=number(avatar,"body",0,1);if(lineage<0||body<0)goto done;candidate.lineage=lineage;candidate.body=body;}
         if(version>=13){int outfit=number(avatar,"outfit",0,PD_OUTFITS-1);if(outfit<0)goto done;candidate.outfit=outfit;}
     }
-    if(version>=3&&!training(cJSON_GetObjectItemCaseSensitive(root,"training"),&candidate.training))goto done;
+    if(version>=3&&!training(cJSON_GetObjectItemCaseSensitive(root,"training"),&candidate.training,version>=15))goto done;
     if(version>=4&&!inventory(cJSON_GetObjectItemCaseSensitive(root,"inventory"),&candidate,version>=8))goto done;
     if(version>=5&&!magic(cJSON_GetObjectItemCaseSensitive(root,"magic"),&candidate.magic))goto done;
     if(version>=6&&!recovery(cJSON_GetObjectItemCaseSensitive(root,"recovery"),&candidate.recovery))goto done;

@@ -10,7 +10,7 @@ int main(int argc,char **argv){
     static uint8_t a[PD_RECORD_SIZE],b[PD_RECORD_SIZE],ha[PD_HISTORY_RECORD],hb[PD_HISTORY_RECORD];
     unsigned cases=0;const unsigned counts[]={0,1,3,60,119,120};
     for(unsigned c=0;c<6;c++)for(unsigned h=0;h<=20;h+=10)for(unsigned e=0;e<2;e++){
-        pd_demo(&state);state.history_epoch=e?UINT32_MAX:0;state.hp=17;state.temp_hp=7;
+        pd_demo(&state);for(unsigned i=0;i<PD_SKILLS;i++)state.training.skill_abilities[i]=(i+c)%7;state.history_epoch=e?UINT32_MAX:0;state.hp=17;state.temp_hp=7;
         state.wallet=(pd_wallet){.available=true,.coins={1,2,3,4,PD_COIN_MAX}};
         state.effects[0]=(pd_effect){.target=PD_EFFECT_ARMOR,.value=2,.active=true};state.effects[1]=(pd_effect){.target=PD_EFFECT_MAX_HP,.value=10,.active=true};state.effect_count=2;
         state.scene=(c+1)%PD_SCENES;state.shortcuts[0]=14;state.brightness=80;state.magic.count=counts[c];for(unsigned i=0;i<state.magic.count;i++)state.magic.powers[i]=(pd_power){.name="Potere",.flags=PD_PREPARED};

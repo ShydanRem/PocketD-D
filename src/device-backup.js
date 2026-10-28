@@ -21,8 +21,15 @@ function record(text,magic,max){
 }
 function text(bytes,start,capacity,empty=false){let end=start;while(end<start+capacity&&bytes[end]){if(bytes[end]<32||bytes[end]>126)fail();end++}if(end===start+capacity||(!empty&&end===start))fail();return String.fromCharCode(...bytes.subarray(start,end))}
 export function inspectDeviceBackup(raw){
-  const packet=envelope(raw),s=record(packet.state,['PDDP','PDDQ','PDDR','PDDS','PDDT','PDDU','PDDV','PDDW','PDDX'],75186),h=record(packet.history,'PDH1',2481),b=s.bytes,v=s.view;
-  const classed=b[3]===88,newest=b[3]===87||classed,expanded=b[3]===86||newest,identity=b[3]===85||expanded,scenery=b[3]===84||identity,named=b[3]===82||b[3]===83||scenery,trailer=(named?63:0)+(identity?3:scenery?1:0)+(classed?1:0);
+  const packet=envelope(raw),s=record(packet.state,['PDDP','PDDQ','PDDR','PDDS','PDDT','PDDU','PDDV','PDDW','PDDX','PDDY'],75204),h=record(packet.history,'PDH1',2481),mapped=s.bytes[3]===89;
+  const custom=mapped?s.bytes.subarray(s.bytes.length-22,s.bytes.length-4):new Uint8Array(18);
+  if(custom.length!==18||custom.some(v=>v>6))fail();
+  // CRC was checked on the complete record. Normalize offsets for preview only;
+  // packet.state remains the exact original record for restore.
+  const b=mapped?new Uint8Array([...s.bytes.subarray(0,-22),...s.bytes.subarray(-4)]):s.bytes,v=new DataView(b.buffer);
+  const skillIds=['acrobatics','animalHandling','arcana','athletics','deception','history','insight','intimidation','investigation','medicine','nature','perception','performance','persuasion','religion','sleightOfHand','stealth','survival'];
+  const skillAbilities=Object.fromEntries(skillIds.flatMap((id,i)=>custom[i]?[[id,['FOR','DES','COS','INT','SAG','CAR'][custom[i]-1]]]:[]));
+  const classed=b[3]===88||mapped,newest=b[3]===87||classed,expanded=b[3]===86||newest,identity=b[3]===85||expanded,scenery=b[3]===84||identity,named=b[3]===82||b[3]===83||scenery,trailer=(named?63:0)+(identity?3:scenery?1:0)+(classed?1:0);
   const shift=classed?1:0,outfit=classed?b[b.length-5]:0; if(outfit>12)fail();
   const scene=scenery?b[b.length-(identity?7:5)-shift]:0,lineage=identity?b[b.length-6-shift]:0,body=identity?b[b.length-5-shift]:0;if(scene>2||lineage>=(newest?avatarSpecies.length:expanded?16:12)||body>1)fail();
   if(b.length<8879+trailer||b[5123]>120||b.length!==8879+trailer+552*b[5123])fail();
@@ -51,5 +58,5 @@ export function inspectDeviceBackup(raw){
   }
   // This is an integrity check and a bounded preview. The device runs the full
   // native validators for all remaining rules before offering Restore.
-  return {nativeValidation:false,packet,scene,lineage,body,outfit,name,level,hp,maxHp,baseHp,tempHp,armor,baseArmor,effects,items:b[435],powers:b[5123],resources:b[71],wallet,keys,brightness,dim,turnSubjects,turnNames,payments,rolls};
+  return {nativeValidation:false,packet,skillAbilities,scene,lineage,body,outfit,name,level,hp,maxHp,baseHp,tempHp,armor,baseArmor,effects,items:b[435],powers:b[5123],resources:b[71],wallet,keys,brightness,dim,turnSubjects,turnNames,payments,rolls};
 }

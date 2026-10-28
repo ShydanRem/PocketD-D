@@ -3255,7 +3255,7 @@ static void usb_task(void *unused) {
             if(c=='\n') {
                 if(!overflow && used) {
                     line[used]=0;
-                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 14\n");
+                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 15\n");
                     else if(!strcmp(line,"PDD BACKUP HELLO"))reply("PDD BACKUP_READY 1\n");
                     else if(!strcmp(line,"PDD DIAGNOSTICS GET 1")){uint8_t request=1;if(xQueueSend(diagnostic_requests,&request,0)!=pdPASS)reply("PDD ERROR busy\n");}
                     else if(!strcmp(line,"PDD BACKUP GET 1")){pd_backup *request=NULL;if(xQueueSend(backup_packets,&request,0)!=pdPASS)reply("PDD ERROR busy\n");}

@@ -30,10 +30,10 @@ test('Beyond custom training: customization never removes a block caused by an u
 });
 test('Beyond custom training: unsupported fields stay blocked, cosmetic edits coexist and old local formats/collection stay unchanged',()=>{
  const p=beyondRichFixture();p.data.inventory[0].id=123;p.data.characterValues=[custom(24,14,2),{typeId:8,valueId:123,valueTypeId:1439493548,value:'Lancia locale'}];let r=convert(p);assert.ok(r.canImport);assert.equal(r.draft.inventory[0].name,'Lancia locale');assert.equal(JSON.parse(serialize(r.draft)).version,11);assert.equal(projectDevice(r.draft).packet.version,9);const library=createLibrary(),next=addCharacter(library,r.draft,'import');assert.deepEqual(next.characters[0],library.characters[0]);assert.deepEqual(parseLibrary(serializeLibrary(next)),next);assert.equal(convertBeyondCore(p,'123456').canImport,false);
- for(const typeId of [1,23,27,42]){p.data.characterValues=[custom(typeId,14,2)];assert.equal(convert(p).canImport,false);}
+ for(const typeId of [1,23,42]){p.data.characterValues=[custom(typeId,14,2)];assert.equal(convert(p).canImport,false);}
 });
 test('Beyond custom training parser accepts only the documented numeric namespace, preserving unknown entries for core validation',()=>{
- const unknown={typeId:27,valueId:14,value:4},r=parseBeyondTraining([unknown,custom(24,14,null),custom(24,6,0)]);assert.deepEqual(r.remaining,[unknown]);assert.equal(r.training.length,1);assert.deepEqual(r.blockers,[]);
+ const unknown={typeId:28,valueId:14,value:4},r=parseBeyondTraining([unknown,custom(24,14,null),custom(24,6,0)]);assert.deepEqual(r.remaining,[unknown]);assert.equal(r.training.length,1);assert.deepEqual(r.blockers,[]);
 });
 test('Beyond custom training: zero-quantity and inactive items cannot leak skill bonuses, and source origin ambiguity keeps rolls blocked',()=>{
  for(const patch of [{quantity:0},{equipped:false},{isAttuned:false}]){const p=beyondCoreFixture(),m={id:'item-training',type:'bonus',subType:'perception',value:5};p.data.modifiers.item.push(m);p.data.inventory.push({quantity:1,equipped:true,isAttuned:true,definition:{name:'Sonda tiri',filterType:'Other Gear',canAttune:true,grantedModifiers:[m]},...patch});p.data.characterValues=[custom(24,14,2)];assert.equal(convert(p).draft.extended.skillBonuses.perception,2);}

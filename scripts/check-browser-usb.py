@@ -15,7 +15,7 @@ Object.defineProperty(navigator,'serial',{value:{requestPort:async()=>{
  let controller,frame='',hellos=0;const boot=probe.boot;probe.boot=false;const push=text=>{const bytes=encode(text);for(let i=0;i<bytes.length;i+=17)controller.enqueue(bytes.subarray(i,i+17));};
  const ack=line=>{probe.confirm=()=>{probe.confirmed++;push(probe.action==='cancel'?'PDD CANCELLED user\n':probe.action==='error'?'PDD ERROR storage\n':line);};if(probe.action!=='pending')probe.confirm();};
  return {readable:new ReadableStream({start(c){controller=c;},cancel(){probe.cancelled++;}}),writable:new WritableStream({write(bytes){frame+=new TextDecoder().decode(bytes);let at;while((at=frame.indexOf('\n'))>=0){const line=frame.slice(0,at);frame=frame.slice(at+1);probe.sent.push(line);
- if(line==='PDD HELLO'){if(!boot||++hellos>1){push(probe.action==='wrong-protocol'?'PDD READY 15\n':'PDD READY 9\n');if(boot)push('PDD READY 9\n');}}
+ if(line==='PDD HELLO'){if(!boot||++hellos>1){push(probe.action==='wrong-protocol'?'PDD READY 16\n':'PDD READY 9\n');if(boot)push('PDD READY 9\n');}}
  else if(line==='PDD BACKUP HELLO')push('PDD BACKUP_READY 1\n');
  else if(line==='PDD BACKUP GET 1'){push('PDD WAIT_BACKUP\n');const raw=window.syntheticNative,body=probe.action==='corrupt'?raw.slice(1):raw;ack(`PDD BACKUP_DATA ${encode(body).length} ${probe.action==='corrupt'?'00000000':crc(encode(body))}\n${body}\nPDD BACKUP_DONE\n`);}
  else if(line.startsWith('{')){const p=JSON.parse(line),copy=p.format==='pocketdd-device';push(copy?'PDD WAIT_CONFIRM\n':'PDD WAIT_RESTORE\n');ack(copy?'PDD IMPORTED\n':'PDD RESTORED\n');}
@@ -46,7 +46,7 @@ try:
   assert page.evaluate('(at)=>window.usbProbe.sent.slice(at)',sent)==['','PDD HELLO']
   expect(dialog.locator('[data-usb-diagnostic-text]')).to_contain_text('verifica collegamento, nessun PG inviato')
   assert page.evaluate('localStorage.getItem("pocketdd-library-v1")')==before
-  sent=page.evaluate('window.usbProbe.sent.length');page.evaluate('window.usbProbe.action="wrong-protocol"');dialog.locator('[data-usb-check]').click();expect(dialog.locator('[data-usb-status]')).to_contain_text('PDD READY 15')
+  sent=page.evaluate('window.usbProbe.sent.length');page.evaluate('window.usbProbe.action="wrong-protocol"');dialog.locator('[data-usb-check]').click();expect(dialog.locator('[data-usb-status]')).to_contain_text('PDD READY 16')
   expect(dialog.locator('[data-usb-diagnostic-text]')).to_contain_text('Esito: non confermato')
   assert page.evaluate('(at)=>window.usbProbe.sent.slice(at)',sent)==['','PDD HELLO']
   page.evaluate('window.usbProbe.action="pending"')

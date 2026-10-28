@@ -19,7 +19,7 @@ test('Species: all visual choices persist in v12/USB10; old avatar stays v11/USB
   if(lineage||body){assert.equal(JSON.parse(raw).version,lineage>=16?14:lineage>=12?13:12);assert.equal(packet.avatar.lineage,lineage);assert.equal(packet.avatar.body,body);assert.throws(()=>parseBackup(JSON.stringify({...JSON.parse(raw),version:11})));if(lineage>=16)assert.throws(()=>parseBackup(JSON.stringify({...JSON.parse(raw),version:13})));if(lineage>=12)assert.throws(()=>parseBackup(JSON.stringify({...JSON.parse(raw),version:12})));}
   const image=deviceAvatarPixels(restored.avatar);assert.equal(image.pixels.length,2880);assert.ok(image.pixels.some(v=>v));
  }
- assert.deepEqual(original,before);assert.throws(()=>parseBackup(JSON.stringify({...JSON.parse(serialize(original)),version:17})));
+ assert.deepEqual(original,before);assert.throws(()=>parseBackup(JSON.stringify({...JSON.parse(serialize(original)),version:18})));
 });
 test('Species: proposal/override change only avatar, blocked report never creates a draft',()=>{
  const original=initialState(),report={draft:structuredClone(original),conversion:{evidence:[]}};

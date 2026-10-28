@@ -80,3 +80,11 @@ page=out/'index.html'
 page.write_text(page.read_text().replace('</main>', '<section class="after"><h2>Inventario e difese · v0.71</h2><p>Cariche separate dalle quantità, cure con formula esplicita e difese incondizionate riconciliate da Beyond. Gli altri tipi restano da verificare. Il profilo difese richiede firmware 0.71 / USB14; la conversione resta parziale.</p><p>Catture del firmware eseguito su PC con dati sintetici: anteprima prima della conferma e difese ricevute. Non attestano il trasferimento USB fisico.</p><div class="import-captures"><img src="assets/beyond-defences-import.png" width="466" height="466" alt="Anteprima importazione con due tipi verificati"><img src="assets/beyond-defences-device.png" width="466" height="466" alt="Difese ricevute nella scheda del dispositivo"></div></section></main>'))
 
 shutil.copyfile(ROOT/'docs/STATO-SOFTWARE.md',out/'downloads/PocketDD-Stato.md')
+
+# Actual production renderer, synthetic ability association; no physical USB claim.
+for name in ('skill-ability-list.png','skill-ability-detail.png'):
+ source=ROOT/'firmware/tests/out/ui-build'/name
+ if not source.is_file():raise SystemExit(f'Missing skill capture: {name}')
+ shutil.copyfile(source,out/'assets'/name)
+page=out/'index.html'
+page.write_text(page.read_text().replace('</main>', '<section class="after"><h2>La caratteristica giusta per il tuo tiro · v0.74</h2><p>Abilità con caratteristica personalizzata da Beyond o dall’editor PC fino al dispositivo. Per trasferire questa scelta occorre firmware 0.74. Competenza e bonus restano separati.</p><p>Intimidire con FOR: catture del renderer del firmware eseguito su PC con dati sintetici, non fotografie o prove USB fisiche.</p><div class="import-captures"><img src="assets/skill-ability-list.png" width="466" height="466" alt="Elenco abilità con il bonus personalizzato"><img src="assets/skill-ability-detail.png" width="466" height="466" alt="Intimidire con FOR più quattro, competenza più due e vantaggio FOR"></div></section></main>'))

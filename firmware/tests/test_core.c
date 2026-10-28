@@ -31,7 +31,7 @@
 #include "fixtures/state-v24.h"
 static void strip_charges(cJSON *root){cJSON *items=cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(root,"inventory"),"items");cJSON *item; cJSON_ArrayForEach(item,items)cJSON_DeleteItemFromObjectCaseSensitive(item,"charges");}
 static void record_crc(uint8_t *record) {
-    size_t size=8946; /* No powers: PDD27 prefix, recovery, status and CRC. */
+    size_t size=8964; /* No powers: PDD27 prefix, recovery, status and CRC. */
     uint32_t crc=pd_crc32(record,size-4);
     for(int i=0;i<4;i++)record[size-4+i]=crc>>(8*i);
 }
@@ -109,9 +109,9 @@ int main(int argc,char **argv) {
     assert(pd_select(legacy_v1,sizeof legacy_v1,b,record_size,&out,&gen)==1&&gen==42);
     b[368]=3;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
     pd_encode(&s,42,b);b[372]=2;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
-    pd_encode(&s,42,b);b[record_size-1035]=9;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
-    pd_encode(&s,42,b);b[record_size-1035]=101;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
-    pd_encode(&s,42,b);b[record_size-1034]=4;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
+    pd_encode(&s,42,b);b[record_size-1053]=9;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
+    pd_encode(&s,42,b);b[record_size-1053]=101;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
+    pd_encode(&s,42,b);b[record_size-1052]=4;record_crc(b);assert(!pd_decode(b,record_size,&out,&gen));
     pd_demo(&s);pd_encode(&s,41,a);s.hp=7;pd_encode(&s,42,b);
     assert(pd_select(a,record_size,b,record_size,&out,&gen)==1&&out.hp==7&&gen==42);
     /* Every header/CRC bit and distributed payload corruption falls back to older bank. */

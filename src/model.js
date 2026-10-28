@@ -61,12 +61,13 @@ export function effectiveMode(state, kind) {
   if (!state.condition || !['check','skill','attack'].includes(kind)) return state.mode;
   return state.mode === 'advantage' ? 'normal' : 'disadvantage';
 }
+export const skillAbility=(state,skill)=>state.extended?.skillAbilities?.[skill.id]??skill.ability;
 export function describeRoll(state, context = {kind:'free'}) {
   const {kind,key}=context;
   if(kind==='free')return {label:'Dado libero',bonus:state.bonus,parts:`Modificatore manuale`,mode:state.mode};
   if(!['check','save','skill'].includes(kind))throw new Error('Tipo di prova non valido');
   const skill=kind==='skill'?skills.find(skill=>skill.id===key):null;
-  const ability=skill?.ability ?? key;
+  const ability=skill?skillAbility(state,skill):key;
   if(!abilityKeys.includes(ability) || (kind==='skill'&&!skill))throw new Error('Prova non valida');
   const base=modifier(state.abilities[ability]);
   const rank=kind==='skill'?state.skillRanks[key]:kind==='save'?(state.saveProficiencies[key]?1:0):0;
@@ -134,9 +135,10 @@ function validInteger(value, min, max) {
 }
 export function parseBackup(raw) {
   const s = JSON.parse(raw);
-  if (!s || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16].includes(s.version)) throw new Error('Versione backup non supportata');
+  if (!s || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17].includes(s.version)) throw new Error('Versione backup non supportata');
   if(s.version<10&&s.extended!==undefined)throw new Error('I dati estesi richiedono il formato v10');
   if((s.version<16&&s.extended?.defences!==undefined)||(s.version===16&&s.extended?.defences===undefined))throw new Error('Il profilo difese richiede il formato v16');
+  if((s.version<17&&s.extended?.skillAbilities!==undefined)||(s.version===17&&s.extended?.skillAbilities===undefined))throw new Error('Le caratteristiche delle abilità richiedono il formato v17');
   const base = initialState();
   if (s.version >= 3) {
     if (typeof s.name !== 'string' || !s.name.trim() || s.name.length > 24 || typeof s.title !== 'string' || s.title.length > 40 || !validInteger(s.level, 1, 20) || !validInteger(s.maxHp, 1, 999) || !validInteger(s.armorClass, 1, 30)) throw new Error('Profilo non valido');
@@ -179,8 +181,8 @@ export function parseBackup(raw) {
   return {...base,...core,resolve:s.resolve};
 }
 export function serialize(state) {
-  const identity=avatarIdentity(state.avatar),outfit=avatarOutfit(state.avatar),defences=state.extended?.defences!==undefined,variant=Boolean(defences||outfit||identity.lineage||identity.body);
-  return JSON.stringify({...state,...(variant?{avatar:{...state.avatar,...identity,...(defences?{outfit}:{})}}:{}),version:defences?16:outfit?15:identity.lineage>=16?14:identity.lineage>=12?13:variant?12:11},null,2);
+  const identity=avatarIdentity(state.avatar),outfit=avatarOutfit(state.avatar),defences=state.extended?.defences!==undefined,mapped=state.extended?.skillAbilities!==undefined,variant=Boolean(mapped||defences||outfit||identity.lineage||identity.body);
+  return JSON.stringify({...state,...(variant?{avatar:{...state.avatar,...identity,...((mapped||defences)?{outfit}:{})}}:{}),version:mapped?17:defences?16:outfit?15:identity.lineage>=16?14:identity.lineage>=12?13:variant?12:11},null,2);
 }
 export function restore(raw) {
   try { return parseBackup(raw); } catch { return initialState(); }

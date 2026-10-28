@@ -1,5 +1,11 @@
 # Beyond: personalizzazioni di abilità e salvezze — v0.73
 
+> Aggiornamento v0.74: [associazioni personalizzate delle abilità](ABILITA-CARATTERISTICHE.md),
+> Beyond tipo 27 ed editor PC, USB15 / backup PC v17, PDD34/PDDY. Lettura dei precedenti
+> e partizioni invariate; nuova prova sintetica, verifica USB fisica ancora aperta.
+> Le descrizioni e prove datate sotto conservano il proprio contesto.
+
+
 28 ottobre 2026. Supporto ai campi standard riconciliati di `characterValues`,
 senza Foundry, autenticazione privata, scritture a Beyond o modifica della
 raccolta dell'utente. [Resoconto generale e roadmap](STATO-SOFTWARE.md).

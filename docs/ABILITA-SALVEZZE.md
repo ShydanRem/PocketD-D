@@ -1,5 +1,11 @@
 # Abilità, prove e tiri salvezza sul dispositivo — v0.20
 
+> Aggiornamento v0.74: [associazioni personalizzate delle abilità](ABILITA-CARATTERISTICHE.md),
+> Beyond tipo 27 ed editor PC, USB15 / backup PC v17, PDD34/PDDY. Lettura dei precedenti
+> e partizioni invariate; nuova prova sintetica, verifica USB fisica ancora aperta.
+> Le descrizioni e prove datate sotto conservano il proprio contesto.
+
+
 La sezione **Scheda** del firmware offre Caratt., Abilita e Salvezze. Le 18
 abilità sono divise in sei pagine da tre righe; le salvezze usano una griglia
 da sei pulsanti. Tutti i controlli restano nell'area circolare del display.

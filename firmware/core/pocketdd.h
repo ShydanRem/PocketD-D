@@ -8,7 +8,8 @@
 #define PD_RESOURCES 8
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
-#define PD_RECORD_SIZE 75186
+#define PD_RECORD_SIZE 75204
+#define PD_RECORD_MAGIC "PDDY"
 #define PD_SCENES 3
 #define PD_TURN_NAME_BYTES 21
 #define PD_COINS 5
@@ -28,6 +29,7 @@ typedef struct { uint8_t skin,hair,cloak,style; } pd_avatar;
 typedef struct {
     bool available,half_checks,poisoned,strength_advantage;
     uint8_t ranks[PD_SKILLS],saves;
+    uint8_t skill_abilities[PD_SKILLS]; /* 0 default; 1..6 explicit ability. */
     int8_t skill_bonus[PD_SKILLS],save_bonus[6],check_bonus[6];
     uint32_t half_skills,blocked;
 } pd_training;

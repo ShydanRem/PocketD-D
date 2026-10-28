@@ -26,5 +26,14 @@ int main(void) {
     s.training.available=false;assert(!pd_describe_check(&s,PD_SKILL,0,&info));
     assert(!pd_describe_check(&s,PD_SAVE,0,&info));assert(pd_describe_check(&s,PD_CHECK,0,&info)&&!info.blocked&&!info.trained&&!info.extra);
     assert(!pd_describe_check(&s,PD_CHECK,6,&info));assert(!pd_describe_check(NULL,PD_CHECK,0,&info));
+    pd_demo(&s);s.training.available=true;for(unsigned a=0;a<6;a++)s.abilities[a]=8+2*a;
+    for(unsigned skill=0;skill<PD_SKILLS;skill++)for(unsigned a=0;a<6;a++)for(unsigned level=1;level<=20;level++)for(unsigned rank=0;rank<3;rank++){
+        s.level=level;s.training.skill_abilities[skill]=a+1;s.training.ranks[skill]=rank;s.training.half_skills=1u<<skill;s.training.skill_bonus[skill]=-3;
+        assert(pd_describe_check(&s,PD_SKILL,skill,&info)&&info.ability==a&&info.base==(int)a-1);
+        int p=2+(level-1)/4;assert(info.total==(int)a-1+(rank?(int)rank*p:p/2)-3);
+        s.training.strength_advantage=true;s.training.poisoned=false;assert(pd_check_mode(&s,PD_SKILL,skill,0,false)==(a==0?1:0));
+        s.training.poisoned=true;assert(pd_check_mode(&s,PD_SKILL,skill,0,false)==(a==0?0:-1));
+    }
+    s.training.skill_abilities[0]=7;assert(!pd_valid(&s)&&!pd_describe_check(&s,PD_SKILL,0,&info));
     puts("Checks: levels 1..20, scores 1..30, ranks 0..2, extras -30..30, extrema -35/+52, effects, blocks and legacy unknown training passed");
 }

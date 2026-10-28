@@ -378,6 +378,10 @@ int main(void) {
     click("Salv. DES +7 >");screenshot("save-detail.ppm");click("Indietro");
     click("Scheda");click("FOR\n+2");click("Lancia");assert(result.count==2&&result.bonus==2);click("Accelera");
     assert(save_calls==check_saves&&!memcmp(&state,&trained,sizeof state));
+    pd_demo(&state);state.abilities[0]=18;state.training.ranks[7]=1;state.training.skill_abilities[7]=1;state.training.strength_advantage=true;
+    page=SHEET;sheet_tab=1;skill_page=2;ignore_effects=false;mode=0;render();bounds();screenshot("skill-ability-list.ppm");
+    random_values[0]=random_values[1]=9;click("Intimidire  +6");click("Lancia");assert(result.bonus==6&&result.total==16&&result.count==2);click("Accelera");
+    click("Intimidire +6 >");assert(page==CHECK_DETAIL);bounds();screenshot("skill-ability-detail.ppm");
     state.training=(pd_training){0};page=SHEET;sheet_tab=1;render();bounds();screenshot("skills-legacy.ppm");
     click("Caratt.");click("DES 16\n+3");click("Lancia");assert(result.count==1&&result.bonus==3);click("Accelera");
     /* Device inventory: atomic consumables, attack -> critical -> one damage roll. */
