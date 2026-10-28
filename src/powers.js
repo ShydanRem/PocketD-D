@@ -10,6 +10,7 @@ function resource(input){
 export function validatePower(power,extended=false){
   if(!power||typeof power.id!=='string'||!/^[a-zA-Z0-9_-]{1,64}$/.test(power.id)||!['spell','feature'].includes(power.type)||typeof power.name!=='string'||!power.name.trim()||power.name.length>40||typeof power.description!=='string'||power.description.length>(extended?6000:600))throw new Error('Nome o descrizione non validi');
   const base={id:power.id,type:power.type,name:power.name.trim(),description:power.description};
+  if(power.reference!==undefined&&(!extended||power.type!=='feature'||power.passive!==true||!integer(power.reference,0,6)||power.reference===6&&!integer(power.attackModifier,-15,30)))throw new Error('Dati della scheda non validi');
   if(power.effect==='eldritch-cannon'&&(!extended||power.type!=='feature'||power.passive===true||power.maxUses!==1||power.recovery!=='long'))throw new Error('Creazione cannone: capacità attiva, un utilizzo e recupero lungo richiesti');
   if(power.type==='spell'){
     if(!integer(power.level,0,9)||typeof power.concentration!=='boolean')throw new Error('Incantesimo non valido');
@@ -20,7 +21,7 @@ export function validatePower(power,extended=false){
     }
     if(extended&&power.limited!==undefined)base.limited=resource(power.limited);
   }else if(extended&&power.passive===true){
-    Object.assign(base,{maxUses:0,remaining:0,recovery:'manual',passive:true});
+    Object.assign(base,{maxUses:0,remaining:0,recovery:'manual',passive:true},power.reference!==undefined?{reference:power.reference,...(power.reference===6?{attackModifier:power.attackModifier}:{})}:{});
   }else{
     Object.assign(base,resource(power));
     if(extended&&power.effect!==undefined){

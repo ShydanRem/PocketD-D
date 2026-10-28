@@ -55,7 +55,7 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(port.sent, b'\nPDD HELLO\nPDD DIAGNOSTICS GET 1\n')
 
     def test_old_firmware_unknown_protocol_and_busy_do_not_send_character_or_backup(self):
-        for raw in [b'PDD READY 17\n', b'factory firmware\n', b'PDD ERROR busy\n']:
+        for raw in [b'PDD READY 18\n', b'factory firmware\n', b'PDD ERROR busy\n']:
             port = Port(raw)
             with self.assertRaises(RuntimeError):
                 check.acquire(port)

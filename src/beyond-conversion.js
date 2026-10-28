@@ -1,3 +1,5 @@
+import {finalizeBeyondReport} from './beyond-report.js';
+import {addBeyondReference} from './beyond-reference.js';
 import {reconcileAbilities,abilityFloorRestriction} from './beyond-abilities.js';
 import {normalizeBeyondSource,selectedAbilityBonus} from './beyond-normalize.js';
 import {addBeyondAppearance} from './beyond-avatar.js';
@@ -8,7 +10,7 @@ import {initialState, parseBackup, serialize} from './model.js';
 const keys = ['FOR','DES','COS','INT','SAG','CAR'];
 const integer = (n,min,max) => Number.isSafeInteger(n) && n>=min && n<=max;
 const mod = n => Math.floor((n-10)/2);
-const coreModifier = m => /score|hit-point|armor-class|armored|unarmored/i.test(m.subType ?? '');
+const coreModifier = m => m.subType!=='unarmored-movement'&&/score|hit-point|armor-class|armored|unarmored/i.test(m.subType ?? '');
 export const BEYOND_LIMITATIONS = [
   'Importazione parziale: abilità e salvezze sono senza competenze; completarle prima di usarne i tiri.',
   'Armi importate come oggetti: attacchi, danni, proprietà e arma attiva sono da configurare.',
@@ -179,3 +181,7 @@ function convertCoreNormalized(payload, expectedId, normalization, extended=fals
 
 export function convertBeyondCore(payload,expectedId){const n=normalizeBeyondSource(payload);return convertCoreNormalized(n.payload,expectedId,n);}
 export function convertBeyond(payload,expectedId){const n=normalizeBeyondSource(payload);return addBeyondAppearance(extendBeyond(convertCoreNormalized(n.payload,expectedId,n,true),n.payload.data,n.training),n.payload.data);}
+
+// Full first-version import. The historical bounded converter remains available for
+// adapters/tests that explicitly need the old projection without reference pages.
+export function convertBeyondFull(payload,expectedId){const n=normalizeBeyondSource(payload);return finalizeBeyondReport(addBeyondReference(convertBeyond(payload,expectedId),n.payload.data));}

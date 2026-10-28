@@ -8,7 +8,7 @@ static pd_state state,before,decoded;
 static char line[PD_PACKET_MAX+2];
 static uint8_t record[PD_RECORD_SIZE];
 int main(int argc,char **argv){
- assert(argc==2);FILE *f=fopen(argv[1],"r");assert(f);
+ assert(argc==2);FILE *f=!strcmp(argv[1],"-")?stdin:fopen(argv[1],"r");assert(f);
  while(fgets(line,sizeof line,f)){
   pd_demo(&state);before=state;bool valid=pd_parse_packet(line,strlen(line),&state);
   if(!valid){assert(!memcmp(&state,&before,sizeof state));puts("{\"valid\":false}");continue;}
@@ -19,6 +19,8 @@ int main(int argc,char **argv){
   for(unsigned i=0;i<state.resource_count;i++)printf("%s[%u,%u]",i?",":"",state.resources[i].current,state.resources[i].maximum);
   printf("],\"powers\":[");
   for(unsigned i=0;i<state.magic.count;i++){const pd_power *p=&state.magic.powers[i];printf("%s[%u,%u,%u,%u,%u]",i?",":"",p->kind,p->flags,p->maximum,p->remaining,p->recovery);}
+  printf("],\"reference\":[");
+  bool first_reference=true;for(unsigned i=0;i<state.magic.count;i++){const pd_power *p=&state.magic.powers[i];if(p->effect>=4){printf("%s[%u,%u,%u,%d,%u]",first_reference?"":",",i,p->effect,p->level,p->attack_modifier,pd_crc32((const uint8_t*)p->description,strlen(p->description)));first_reference=false;}}
   printf("],\"cannonUses\":[");
   for(unsigned i=0;i<state.magic.count;i++)if(state.magic.powers[i].effect==3){
    for(unsigned choice=0;choice<19;choice++){

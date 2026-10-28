@@ -21,6 +21,8 @@ export function openExtendedState({getState,commit,escapeHtml,focusDefences=fals
     <h3>Slot del patto</h3><div class="inventory-form-grid">${x.pactSlots.map((s,i)=>`${input(`${i+1}° attuali`,`pact-current-${i}`,s.current,0,9)}${input(`${i+1}° massimi`,`pact-max-${i}`,s.max,0,9)}`).join('')}</div>
     ${x.blockedChecks.length?'<label class="checkbox-label"><input type="checkbox" name="verify-checks">Ho corretto e verificato manualmente i tiri segnalati: sblocca i tiri.</label>':''}
     <p data-error role="alert"></p><button type="submit">Salva stato e risorse</button></form><h3>Dettagli importati</h3><ul data-facts></ul>`;
+  const refs=state.powers.filter(p=>p.reference!==undefined);
+  if(refs.length){const section=document.createElement('details'),heading=document.createElement('summary');heading.textContent='Profilo e dotazioni importati';section.append(heading);for(const p of refs){const name=document.createElement('h4'),body=document.createElement('p');name.textContent=p.name;body.textContent=p.description;section.append(name,body);}dialog.querySelector('form').before(section);}
   const list=dialog.querySelector('[data-facts]');for(const value of x.facts){const li=document.createElement('li');li.textContent=value;list.append(li);}
   dialog.querySelector('[data-close]').onclick=()=>dialog.close();
   const defenceEditor=dialog.querySelector('[data-defence-editor]'),enabled=dialog.querySelector('[name=defences-enabled]');

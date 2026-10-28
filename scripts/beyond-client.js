@@ -1,5 +1,5 @@
 import {BeyondError,beyondEndpoint,beyondCharacterId} from '../src/beyond.js';
-import {convertBeyond} from '../src/beyond-conversion.js';
+import {convertBeyondFull as convertBeyond} from '../src/beyond-conversion.js';
 export const MAX_BEYOND_BYTES=2*1024*1024;
 
 export async function probeBeyond(input,{fetcher=globalThis.fetch,timeoutMs=10000,maxBytes=MAX_BEYOND_BYTES,now=()=>Date.now()}={}){

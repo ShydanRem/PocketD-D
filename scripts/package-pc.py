@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 p=argparse.ArgumentParser();p.add_argument('output',type=Path,nargs='?',default=ROOT/'dist/install/downloads/PocketDD-PC.zip');args=p.parse_args()
 if not (ROOT/'dist/index.html').is_file():raise SystemExit('Run npm run build first')
-files=[ROOT/'package.json',ROOT/'Avvia-PocketDD.cmd',ROOT/'docs/STATO-SOFTWARE.md',ROOT/'docs/BEYOND-PERSONALIZZAZIONI-TIRI.md',ROOT/'docs/ABILITA-CARATTERISTICHE.md',ROOT/'docs/DIFESE-VERIFICA-RAPIDA.md',ROOT/'docs/BEYOND-CONTATORI-MANUALI.md',ROOT/'docs/BEYOND-CANNONE.md']
+files=[ROOT/'package.json',ROOT/'Avvia-PocketDD.cmd',ROOT/'docs/STATO-SOFTWARE.md',ROOT/'docs/BEYOND-PERSONALIZZAZIONI-TIRI.md',ROOT/'docs/ABILITA-CARATTERISTICHE.md',ROOT/'docs/DIFESE-VERIFICA-RAPIDA.md',ROOT/'docs/BEYOND-CONTATORI-MANUALI.md',ROOT/'docs/BEYOND-CANNONE.md',ROOT/'docs/BEYOND-V1.md',ROOT/'docs/WIFI.md',ROOT/'docs/BEYOND-TEMPO-REALE.md',ROOT/'docs/previews/v078-reference-wifi.png']
 for directory in ('src','scripts'):
  files += [f for f in (ROOT/directory).glob('*') if f.is_file() and f.suffix in ('.js','.json') and not f.name.endswith('.test.js')]
 files += [ROOT/'dist/index.html']+[f for f in (ROOT/'dist/assets').rglob('*') if f.is_file()]
@@ -25,6 +25,9 @@ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as z:
 7. Controlla caratteristiche, PF, CA, inventario e omissioni; crea il nuovo personaggio solo dopo la verifica.
 8. Prepara per dispositivo (USB) -> Invia al dispositivo via USB -> conferma sul display.
 
+Profilo PG, iniziativa e dotazioni: nuova importazione v20, firmware 0.78 / USB17.
+Wi-Fi: Aspetto > Schermo > Wi-Fi > Configura rete; vedi docs/WIFI.md.
+Il Wi-Fi non sincronizza ancora con Beyond; USB fisico resta da collaudare.
 L'app e gia compilata: non servono npm install o una compilazione del firmware.
 Caratteristica personalizzata delle abilita: da Beyond tipo 27 o Personalizza eroe.
 Per trasferirla serve firmware 0.74 / USB15; nuovi backup nativi PDD34 letti da questa app.

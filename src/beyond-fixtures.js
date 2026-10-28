@@ -63,3 +63,6 @@ export function beyondCannonFixture(remaining=0){
  c.actions.class.push({id:'1038966',componentId:1138963,componentTypeId:12168134,name:'Create Eldritch Cannon',activation:{activationType:1,activationTime:null},limitedUse:{maxUses:1,numberUsed:1-remaining,resetType:2,minNumberConsumed:1,maxNumberConsumed:1,statModifierUsesId:null,useProficiencyBonus:false,resetDice:null}});
  return p;
 }
+
+// Synthetic consultation fixture, with explicit zero/unknown distinctions.
+export function beyondProfileFixture(){const p=beyondCoreFixture(),c=p.data;c.modifiers.race=[];c.classes[0].definition={name:'Classe sonda',hitDice:8};c.race={fullName:'Specie sonda',weightSpeeds:{normal:{walk:30,fly:0,swim:0,climb:0,burrow:0}}};c.background={definition:{name:'Origine sonda'}};c.inventory=[{id:55,quantity:2,equipped:false,isAttuned:false,containerEntityId:c.id,definition:{name:'Corda sonda',filterType:'Adventuring Gear',grantedModifiers:[],canAttune:false,weight:5}}];return p;}

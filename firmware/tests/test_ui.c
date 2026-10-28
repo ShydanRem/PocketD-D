@@ -7,6 +7,13 @@ static void *ui_malloc(size_t size);
 #undef lv_malloc
 #include <stdlib.h>
 #include <math.h>
+static pd_wifi_info wifi_mock;
+static unsigned wifi_requested;
+void pd_wifi_boot(void){}
+uint32_t pd_wifi_random(void){return 0;}
+void pd_wifi_snapshot(pd_wifi_info *out){*out=wifi_mock;}
+bool pd_wifi_command(unsigned command){wifi_requested=command;return true;}
+bool pd_wifi_pause(bool paused){(void)paused;return true;}
 static bool fail_save,fail_canvas,fail_brightness,fail_storage_commit;
 static unsigned brightness_calls,brightness_last;
 static char last_reply[PD_DIAGNOSTICS_MAX+32];
@@ -1650,13 +1657,18 @@ int main(void) {
     pd_state paid_cannon=state;act(832);assert(!memcmp(&state,&paid_cannon,sizeof state));screenshot("cannon-paid-result.ppm");act(100);click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));
     state.magic.concentration=0;state.hp=0;power_index=0;page=MAGIC_DETAIL;render();effects_before=state;act(831);assert(page==MAGIC_DETAIL&&!memcmp(&state,&effects_before,sizeof state));screenshot("cannon-zero-hp.ppm");state.hp=32;for(unsigned i=0;i<9;i++)state.magic.slots[i].current=state.magic.pact[i].current=0;render();effects_before=state;act(831);assert(!memcmp(&state,&effects_before,sizeof state));screenshot("cannon-no-slot.ppm");
     puts("Cannon UI: free then selected ordinary/pact cost, staged/cancel, failed-save retry, no double confirmation, protected keys/import, exact undo, manual counters/concentration retained, zero HP/no slot and no RNG passed; synthetic, no hardware");
+    pd_demo(&state);page=HERO;act(1600);click("Wi-Fi >");assert(page==WIFI_HOME);bounds();screenshot("wifi-offline.ppm");click("Configura rete >");assert(wifi_requested==PD_WIFI_SETUP);
+    wifi_mock=(pd_wifi_info){.setup=true,.setup_seconds=300,.setup_ssid="PocketDD-DEMO",.setup_password="SYNTHETIC-ONLY"};render();bounds();screenshot("wifi-provisioning.ppm");click("Spegni");assert(wifi_requested==PD_WIFI_DISABLE);
+    wifi_mock=(pd_wifi_info){.state=PD_WIFI_CONNECTED,.configured=true,.ssid="Synthetic home network",.ip="192.168.1.23"};render();bounds();screenshot("wifi-connected.ppm");click("Dimentica");assert(page==WIFI_FORGET);effects_before=state;for(unsigned i=0;i<3;i++)shortcut(i);assert(page==WIFI_FORGET&&!stage_import(&imported_magic));bounds();screenshot("wifi-forget.ppm");click("Indietro");click("Dimentica");click("Conferma");assert(wifi_requested==PD_WIFI_FORGET&&!memcmp(&state,&effects_before,sizeof state));click("Indietro");
+    state.magic.available=true;state.magic.count=2;state.magic.powers[0]=(pd_power){.name="Movimento",.description="Passo: 30 ft. Volo: da verificare. Fotografia all importazione.",.kind=1,.flags=PD_PASSIVE|PD_PREPARED,.effect=4,.level=1};state.magic.powers[1]=(pd_power){.name="Iniziativa",.description="Bonus +4. Fotografia: ricontrollare dopo modifiche.",.kind=1,.flags=PD_PASSIVE|PD_PREPARED,.effect=5,.level=6,.attack_modifier=4};assert(pd_valid(&state));page=SHEET;sheet_tab=0;render();click("Profilo PG >");assert(page==REFERENCE_HOME);bounds();screenshot("reference-list.ppm");click("Movimento");assert(page==REFERENCE_TEXT);bounds();screenshot("reference-movement.ppm");click("Indietro");click("Iniziativa");bounds();screenshot("reference-initiative.ppm");effects_calls=random_calls;effects_before=state;click("Lancia");assert(page==DICE&&combat_roll==8&&random_calls==effects_calls+1&&result.bonus==4&&!memcmp(&state,&effects_before,sizeof state));act(16);bounds();screenshot("reference-initiative-result.ppm");click("Profilo");click("Iniziativa");state.roll_conditions=PD_FRIGHTENED;render();bounds();screenshot("reference-initiative-context.ppm");click("Contesto");click("Fonte paura in vista: ? >");click("Usa contesto");click("Lancia");assert(combat_roll==8);act(16);click("Profilo");click("Iniziativa");click("Contesto");click("Effetti tiro: applicati >");click("Usa contesto");effects_calls=random_calls;click("Lancia");assert(combat_roll==8&&random_calls==effects_calls+1&&result.bonus==4);act(16);act(100);
+    puts("Wi-Fi UI and reference/initiative: synthetic status only, no PG mutations, explicit forget guard, actual dice/history and current condition context passed; physical Wi-Fi still untested");
     unsigned covered=0;
-    for(unsigned p=0;p<=DEFENCE_SETUP;p++){
+    for(unsigned p=0;p<=REFERENCE_TEXT;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)DEFENCE_SETUP+1);
-    assert(covered==DEFENCE_SETUP+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)REFERENCE_TEXT+1);
+    assert(covered==REFERENCE_TEXT+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

@@ -1,3 +1,4 @@
+#include "wifi.h"
 /* Adapted display/touch initialization from Waveshare ESP32-S3-Touch-AMOLED-1.75
  * BSP at e4344e70c2fa78a13e8a06566507f1ba8af6672a (Apache-2.0).
  * PocketD-D changes: direct LVGL 9 partial DMA buffers, one owner task, no audio,
@@ -95,7 +96,7 @@ void pd_board_assets_refresh(void){
     else asset_card=NULL;
 }
 void pd_board_init(void) {
-    /* RF stays off. SAR-ADC entropy source remains enabled for esp_random().
+    /* Offline boot: SAR-ADC entropy remains enabled for esp_random().
        Disable it before any future ADC/PMIC sensing feature that conflicts. */
     bootloader_random_enable();
     flushed=xSemaphoreCreateBinary(); assert(flushed);
@@ -157,7 +158,7 @@ void pd_board_tick(void) {
     uint32_t duration=elapsed>UINT32_MAX?UINT32_MAX:(uint32_t)elapsed;
     if(duration>observations.lvgl_max_us)observations.lvgl_max_us=duration;
 }
-uint32_t pd_board_random(void *unused) { return esp_random(); }
+uint32_t pd_board_random(void *unused) { return pd_wifi_random(); }
 
 void pd_board_buttons(int levels[2]) {
     int64_t now=esp_timer_get_time()/1000;
@@ -193,8 +194,10 @@ void pd_board_power(pd_power_info *out,uint32_t now,bool force){
     *out=power_observed;
 }
 bool pd_board_pause(bool paused){
+    if(paused&&!pd_wifi_pause(true)){pd_wifi_pause(false);return false;}
     flush_wait(NULL);
-    if(esp_lcd_panel_disp_on_off(panel,!paused)!=ESP_OK)return false;
+    if(esp_lcd_panel_disp_on_off(panel,!paused)!=ESP_OK){if(paused)pd_wifi_pause(false);return false;}
+    if(!paused&&!pd_wifi_pause(false))return false;
     board_paused=paused;return true;
 }
 unsigned pd_board_power_wait(bool battery_only){
@@ -218,7 +221,7 @@ unsigned pd_board_power_wait(bool battery_only){
     esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_GPIO);esp_sleep_disable_wakeup_source(ESP_SLEEP_WAKEUP_TIMER);
     return error!=ESP_OK?PD_POWER_ERROR:cause==ESP_SLEEP_WAKEUP_GPIO?PD_POWER_WAKE:PD_POWER_WAIT;
 }
-bool pd_board_power_off(void){return !usb_serial_jtag_is_connected()&&pd_power_off(power_read,power_write,NULL);}
+bool pd_board_power_off(void){if(usb_serial_jtag_is_connected()||!pd_wifi_pause(true))return false;bool okay=pd_power_off(power_read,power_write,NULL);if(!okay)pd_wifi_pause(false);return okay;}
 
 void pd_board_diagnostics(pd_diagnostics *out){
     *out=observations;

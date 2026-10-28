@@ -37,6 +37,11 @@ for package in ('esptool-js','pako','tslib','atob-lite','crypto-js'):
   if path.is_file() and path.name.lower().startswith(('license','licence','copying','copyright','notice')):
    shutil.copyfile(path,licenses/f'{package}-{path.name}.txt');found=True
  if not found:raise SystemExit(f'Missing third-party license: {package}')
+# Linked firmware licenses also accompany the downloadable binary distribution.
+idf=Path(project['idf_path'])
+for label,path in [('ESP-IDF',idf/'LICENSE'),('esp32-wifi-lib',idf/'components/esp_wifi/lib/LICENSE'),('esp-phy-lib',idf/'components/esp_phy/lib/LICENSE')]:
+ if not path.is_file():raise SystemExit(f'Missing linked firmware license: {label}')
+ shutil.copyfile(path,licenses/f'{label}-LICENSE.txt')
 print(f'Installer: firmware {version}, 3 separate regions, SHA256, known partitions, bundled dependencies/licenses; no user data')
 gallery=ROOT/'firmware/tests/out/ui-build/appearance-preview.png'
 if gallery.is_file():
@@ -112,3 +117,16 @@ for name in ('cannon-free.png','cannon-paid-confirm.png'):
  shutil.copyfile(source,out/'assets'/name)
 page=out/'index.html'
 page.write_text(page.read_text().replace('</main>', '<section class="after"><h2>Creazione del cannone · v0.77</h2><p>Per l’Artillerist riconosciuto di Tasha’s: una creazione gratuita per riposo lungo, poi uno slot ordinario o del patto scelto e confermato. Contatori manuali e concentrazione conservati. Aggiorna app e firmware a 0.77; una nuova importazione aggiunge il nuovo comportamento conservando le schede precedenti.</p><p>Catture del renderer del firmware su PC con dati sintetici. La nuova lettura reale e i limiti sono distinti nel report; USB fisico ancora da verificare.</p><div class="import-captures"><img src="assets/cannon-free.png" width="466" height="466" alt="Creazione gratuita del cannone"><img src="assets/cannon-paid-confirm.png" width="466" height="466" alt="Conferma della creazione pagata con uno slot del patto"></div></section></main>'))
+
+# Native renderer, synthetic SSID/password only. Never copy runtime Wi-Fi credentials.
+for name in ('reference-list.png','reference-initiative.png','wifi-provisioning.png','wifi-connected.png'):
+ source=ROOT/'firmware/tests/out/ui-build'/name
+ if not source.is_file():raise SystemExit(f'Missing v0.78 capture: {name}')
+ shutil.copyfile(source,out/'assets'/name)
+for name in ('BEYOND-V1','WIFI','BEYOND-TEMPO-REALE'):
+ shutil.copyfile(ROOT/'docs'/f'{name}.md',out/'downloads'/f'PocketDD-{name}.md')
+ shutil.copyfile(ROOT/'docs'/f'{name}.md',out/'downloads'/f'{name}.md')
+(out/'downloads/previews').mkdir(exist_ok=True)
+shutil.copyfile(ROOT/'docs/previews/v078-reference-wifi.png',out/'downloads/previews/v078-reference-wifi.png')
+page=out/'index.html'
+page.write_text(page.read_text().replace('</main>', '<section class="after"><h2>Profilo e Wi-Fi · v0.78</h2><p>Scheda → Profilo PG: movimento, sensi/passivi, lingue, strumenti, dotazioni e iniziativa riconciliata. Le fotografie e i valori da verificare sono distinti dai comandi operativi. Reimporta da PC con app e firmware aggiornati; le altre schede restano conservate.</p><p>Aspetto → Schermo → Wi-Fi → Configura rete: collega il telefono o PC alla rete temporanea mostrata sul display e apri http://192.168.4.1. Le credenziali restano fuori dai backup del PG. Il Wi-Fi non sincronizza ancora con Beyond.</p><p><a href="downloads/PocketDD-BEYOND-V1.md">Ambito Beyond v1</a> · <a href="downloads/PocketDD-WIFI.md">Guida Wi-Fi</a> · <a href="downloads/PocketDD-BEYOND-TEMPO-REALE.md">Progetto tempo reale</a></p><p>Queste catture provengono dal firmware eseguito su PC con dati di prova e password fittizia. Non attestano USB o Wi-Fi fisici, ancora da collaudare.</p><div class="import-captures"><img src="assets/reference-list.png" width="466" height="466" alt="Profilo del PG sul dispositivo"><img src="assets/reference-initiative.png" width="466" height="466" alt="Iniziativa con bonus riconciliato"><img src="assets/wifi-provisioning.png" width="466" height="466" alt="Configurazione Wi-Fi con dati esclusivamente sintetici"><img src="assets/wifi-connected.png" width="466" height="466" alt="Stato connesso simulato"></div></section></main>'))

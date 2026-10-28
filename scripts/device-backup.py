@@ -31,7 +31,7 @@ def validate(raw):
             or obj['format'] != 'pocketdd-device-backup' or type(obj['version']) is not int or obj['version'] != 1):
         raise ValueError('Usa un backup nativo del dispositivo v1')
     records = []
-    for key, magic, maximum in [('state', (b'PDDP', b'PDDQ', b'PDDR', b'PDDS', b'PDDT', b'PDDU', b'PDDV', b'PDDW', b'PDDX', b'PDDY', b'PDDZ'), 75204), ('history', (b'PDH1',), 2481)]:
+    for key, magic, maximum in [('state', (b'PDDP', b'PDDQ', b'PDDR', b'PDDS', b'PDDT', b'PDDU', b'PDDV', b'PDDW', b'PDDX', b'PDDY', b'PDDZ', b'PDDa'), 75204), ('history', (b'PDH1',), 2481)]:
         text = obj[key]
         if not isinstance(text, str) or not text or len(text) > 4*((maximum+2)//3):
             raise ValueError('Record nativo fuori limite')
@@ -41,17 +41,17 @@ def validate(raw):
             raise ValueError('Record nativo corrotto o non supportato')
         records.append(data)
     state, history = records
-    mapped = state[:4] in (b'PDDY', b'PDDZ')
+    mapped = state[:4] in (b'PDDY', b'PDDZ', b'PDDa')
     if mapped:
         if len(state) < 8964 or any(v > 6 for v in state[-22:-4]):
             raise ValueError('Caratteristiche abilita non valide')
         # Full original CRC already verified; this local view preserves old offsets.
         state = state[:-22] + state[-4:]
-    classed = state[:4] in (b'PDDX', b'PDDY', b'PDDZ')
-    identity = state[:4] in (b'PDDU', b'PDDV', b'PDDW', b'PDDX', b'PDDY', b'PDDZ')
-    trailer = (63 if state[:4] in (b'PDDR', b'PDDS', b'PDDT', b'PDDU', b'PDDV', b'PDDW', b'PDDX', b'PDDY', b'PDDZ') else 0) + (3 if identity else 1 if state[:4] == b'PDDT' else 0) + int(classed)
+    classed = state[:4] in (b'PDDX', b'PDDY', b'PDDZ', b'PDDa')
+    identity = state[:4] in (b'PDDU', b'PDDV', b'PDDW', b'PDDX', b'PDDY', b'PDDZ', b'PDDa')
+    trailer = (63 if state[:4] in (b'PDDR', b'PDDS', b'PDDT', b'PDDU', b'PDDV', b'PDDW', b'PDDX', b'PDDY', b'PDDZ', b'PDDa') else 0) + (3 if identity else 1 if state[:4] == b'PDDT' else 0) + int(classed)
     shift = int(classed)
-    if (classed and state[-5] > 12) or (state[:4] == b'PDDT' and state[-5] >= 3) or (identity and (state[-7-shift] >= 3 or state[-6-shift] >= (21 if state[:4] in (b'PDDW', b'PDDX', b'PDDY', b'PDDZ') else 16 if state[:4] == b'PDDV' else 12) or state[-5-shift] >= 2)):
+    if (classed and state[-5] > 12) or (state[:4] == b'PDDT' and state[-5] >= 3) or (identity and (state[-7-shift] >= 3 or state[-6-shift] >= (21 if state[:4] in (b'PDDW', b'PDDX', b'PDDY', b'PDDZ', b'PDDa') else 16 if state[:4] == b'PDDV' else 12) or state[-5-shift] >= 2)):
         raise ValueError('Aspetto del backup non supportato')
     if (len(state) < 8879+trailer or state[5123] > 120 or len(state) != 8879+trailer+552*state[5123]
             or len(history) < 21 or history[16] > 20 or len(history) != 21+123*history[16]

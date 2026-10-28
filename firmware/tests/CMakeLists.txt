@@ -173,3 +173,15 @@ target_compile_options(class-looks PRIVATE -Wall -Wextra -Werror)
 add_executable(cannon test_cannon.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
 target_include_directories(cannon PRIVATE ../core)
 target_compile_options(cannon PRIVATE -Wall -Wextra -Werror)
+
+add_executable(wifi-setup test_wifi_setup.c ../core/wifi_setup.c)
+target_include_directories(wifi-setup PRIVATE ../core)
+target_compile_options(wifi-setup PRIVATE -Wall -Wextra -Werror)
+
+add_executable(reference test_reference.c ../core/catalog.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
+target_include_directories(reference PRIVATE ../core)
+target_compile_options(reference PRIVATE -Wall -Wextra -Werror)
+
+add_executable(wifi-service test_wifi_service.c ../core/wifi_setup.c)
+target_include_directories(wifi-service PRIVATE ../core ../main .)
+target_compile_options(wifi-service PRIVATE -Wall -Wextra -Werror -Wno-unused-parameter)

@@ -1,3 +1,7 @@
+> Aggiornamento v0.78: [profilo Beyond, iniziativa e formati](BEYOND-V1.md),
+> [Wi-Fi opzionale dal dispositivo](WIFI.md). USB17, PDD36/PDDa, dimensioni
+> e partizioni conservate. Le sezioni successive documentano gli incrementi storici.
+
 # Firmware PocketD-D 0.66 — avatar e sfondi locali
 
 > Aggiornamento v0.69: [21 famiglie e 42 silhouette](AVATAR-SELEZIONE-ESTESA.md),

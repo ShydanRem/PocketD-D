@@ -178,9 +178,9 @@ export function extendBeyond(report,c,customTraining=[]){
   };
   for(const [group,values] of Object.entries(c.actions??{}))for(const a of array(values)){
     if(!a||typeof a.name!=='string')continue;
-    if(group!=='item'&&a.limitedUse?.resetType===4&&a.id!=null){
+    if(a.id!=null){
       const key=`${group}:${a.id}`,value=JSON.stringify(a);
-      if(manualActionIds.has(key)){if(manualActionIds.get(key)!==value)throw new BeyondError('CONFLICTING_RESOURCE','Azione con contatore manuale duplicata e discordante.');continue;}
+      if(manualActionIds.has(key)){if(manualActionIds.get(key)!==value)throw new BeyondError('CONFLICTING_RESOURCE','Azione duplicata e discordante: nessuna risorsa viene duplicata.');continue;}
       manualActionIds.set(key,value);
     }
     const owners=featureDefs.filter(f=>f.group===group&&f.d.id===a.componentId),f=owners.length===1?owners[0]:null;
@@ -248,10 +248,10 @@ export function extendBeyond(report,c,customTraining=[]){
     if(group==='class'&&spellEntries.some(entry=>String(entry.s.id)===String(s.id)))continue;
     spellEntries.push({s,group,owner:null,ownerId:s.componentId});
   }
-  const spellIds=new Set(),casters=[];
+  const spellIds=new Map(),casters=[];
   for(const {s,group,owner,ownerId} of spellEntries){
     const d=s?.definition;if(!d||typeof d.name!=='string'){warn('Magia priva di definizione: non importata.');continue;}
-    const identity=`${group}:${ownerId}:${s.id??d.id}`;if(spellIds.has(identity))continue;spellIds.add(identity);
+    const identity=`${group}:${ownerId}:${s.id??d.id}`;if(spellIds.has(identity)){if(spellIds.get(identity)!==JSON.stringify(s))throw new BeyondError('CONFLICTING_RESOURCE','Magia duplicata e discordante: nessuna risorsa viene duplicata.');continue;}spellIds.set(identity,JSON.stringify(s));
     const stat=s.spellCastingAbilityId??s.spellcastingAbilityId??owner?.definition?.spellCastingAbilityId??owner?.subclassDefinition?.spellCastingAbilityId;
     if(group==='item'&&s.limitedUse){warn(`${d.name}: magia da oggetto conservata come nota; gestire le cariche dall’inventario, senza contatore duplicato.`);addPower({id:`ddb-spell-note-${powers.length+1}`,type:'feature',name:d.name,description:text(d.description,d.name),passive:true});continue;}
     const resource=getResource(s.limitedUse,d.name);

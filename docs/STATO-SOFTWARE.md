@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **28 ottobre 2026 — v0.77**. Il dispositivo è il prodotto;
+Aggiornamento del **28 ottobre 2026 — v0.78**. Il dispositivo è il prodotto;
 il PC serve per importare, configurare e conservare i backup.
 
 Il software copre una prima sessione individuale offline. Il passaggio ancora
@@ -19,7 +19,7 @@ I test USB rimandati restano aperti, senza essere considerati superati.
 | PF e CA | Calcolati con le caratteristiche finali e gli effetti supportati; PF correnti e temporanei distinti | Sono fotografie all'importazione: cambiare equipaggiamento o salire di livello non ricalcola tutto |
 | Abilità e salvezze | Competenze, maestrie, mezza competenza supportata, bonus, associazioni a caratteristiche e tiri da verificare; personalizzazioni standard | Abilità non standard, mezza competenza/maestria alle salvezze, bonus condizionali e formule |
 | Armi | Configurazioni riconosciute: caratteristica, competenza, dadi, bonus, portata e alcune proprietà | Armi versatili/due armi, maestrie, munizioni e danni aggiuntivi speciali; arma attiva da scegliere se più armi sono equipaggiate |
-| Inventario | Fino a 60 voci, quantità distinte, custom riconciliati, consumabili, cariche e pozioni con cura esplicita | Peso, contenitori, gestione automatica della sintonia, pile con cariche individuali, proprietà arbitrarie; note degli oggetti conservate sul PC |
+| Inventario | Fino a 60 voci, quantità, custom, consumabili, cariche e cure esplicite; stati/peso/contenitore sorgente consultabili | Dotazioni come fotografie; niente gestione automatica di peso, contenitori o sintonia. Pile con saldi individuali e proprietà arbitrarie restano manuali |
 | Magie e capacità | Fino a 120 voci, descrizioni, slot ordinari/patto, preparazione e contatori riconosciuti | Contatori manuali separati dagli utilizzi. Non tutti i recuperi o costi condivisi; magie/azioni da oggetto con usi restano note per evitare di duplicare le cariche; nessuna esecuzione generale degli effetti |
 | Stato del PG | PF temporanei, annotazioni delle condizioni, dadi vita e contatori morte supportati | Le annotazioni non attivano automaticamente tutti gli effetti; concentrazione in corso e altri stati speciali da impostare/verificare |
 | Difese ai danni | Concessioni incondizionate riconciliate, configurabili e trasferibili | Difese condizionali e immunità alle condizioni non sono ricostruite automaticamente; un tipo assente resta sconosciuto, non Normale |
@@ -29,6 +29,27 @@ La conversione resta **parziale**. HTTP 200 prova l'accesso; JSON valido prova
 il formato. Per dichiarare un dato convertito servono il controllo delle sue
 origini/regole e il confronto del risultato. Una descrizione importata non
 significa che il suo effetto sia automatizzato.
+
+### Nuovo nella v0.78
+
+[Profilo Beyond della prima versione](BEYOND-V1.md): consultazione sul dispositivo
+con identità/classi, movimento base, sensi/passivi, lingue, strumenti e dotazioni;
+tiro di iniziativa con bonus riconciliato e contesto attuale. Incertezza distinta
+dallo zero. Duplicati di azioni/magie non creano riserve doppie. Resoconto per PG
+con regole manuali, fotografie ed eccezioni specifiche; estratti accettati.
+USB17 / backup PC v20 quando c’è il profilo, PDD36 senza crescita dello stato.
+
+[Wi-Fi](WIFI.md): rete temporanea protetta, configurazione dal telefono o PC,
+salvataggio dopo connessione verificata, spegni/dimentica e sospensione della radio.
+Nessuna credenziale nel PG. Prove software del servizio, non della radio fisica.
+[Tempo reale](BEYOND-TEMPO-REALE.md): ricerca e progetto del ponte opzionale;
+nessuna sincronizzazione o animazione Beyond è ancora implementata.
+
+La nuova lettura reale conferma i valori v0.77 sotto riportati. Aggiunge 14 pagine
+di profilo (64 voci complessive), tutte confrontate nel parser/codec C: passo/volo
+30 ft con restrizione del volo, scurovisione 60 ft, passivi 14/10/14 e iniziativa +4.
+I dati di dotazione non disponibili restano `?`; azioni custom ed effetti generici
+restano manuali. Nessuna raccolta personale modificata e nessun trasferimento USB.
 
 ### Nuovo nella v0.77
 

@@ -135,7 +135,9 @@ function validInteger(value, min, max) {
 }
 export function parseBackup(raw) {
   const s = JSON.parse(raw);
-  if (!s || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19].includes(s.version)) throw new Error('Versione backup non supportata');
+  if (!s || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].includes(s.version)) throw new Error('Versione backup non supportata');
+  const reference=Array.isArray(s.powers)&&s.powers.some(p=>p?.reference!==undefined);
+  if((s.version<20&&reference)||(s.version===20&&!reference))throw new Error('I dati della scheda richiedono il formato v20');
   const cannon=Array.isArray(s.powers)&&s.powers.some(p=>p?.effect==='eldritch-cannon');
   if((s.version<19&&cannon)||(s.version===19&&!cannon))throw new Error('Il costo del cannone richiede il formato v19');
   if((s.version<18&&s.extended?.manualResources!==undefined)||(s.version===18&&s.extended?.manualResources===undefined))throw new Error('I contatori manuali richiedono il formato v18');
@@ -184,8 +186,8 @@ export function parseBackup(raw) {
   return {...base,...core,resolve:s.resolve};
 }
 export function serialize(state) {
-  const identity=avatarIdentity(state.avatar),outfit=avatarOutfit(state.avatar),defences=state.extended?.defences!==undefined,mapped=state.extended?.skillAbilities!==undefined,manual=state.extended?.manualResources!==undefined,cannon=state.powers.some(p=>p.effect==='eldritch-cannon'),variant=Boolean(cannon||manual||mapped||defences||outfit||identity.lineage||identity.body);
-  return JSON.stringify({...state,...(variant?{avatar:{...state.avatar,...identity,...((cannon||manual||mapped||defences)?{outfit}:{})}}:{}),version:cannon?19:manual?18:mapped?17:defences?16:outfit?15:identity.lineage>=16?14:identity.lineage>=12?13:variant?12:11},null,2);
+  const identity=avatarIdentity(state.avatar),outfit=avatarOutfit(state.avatar),defences=state.extended?.defences!==undefined,mapped=state.extended?.skillAbilities!==undefined,manual=state.extended?.manualResources!==undefined,cannon=state.powers.some(p=>p.effect==='eldritch-cannon'),reference=state.powers.some(p=>p.reference!==undefined),variant=Boolean(reference||cannon||manual||mapped||defences||outfit||identity.lineage||identity.body);
+  return JSON.stringify({...state,...(variant?{avatar:{...state.avatar,...identity,...((reference||cannon||manual||mapped||defences)?{outfit}:{})}}:{}),version:reference?20:cannon?19:manual?18:mapped?17:defences?16:outfit?15:identity.lineage>=16?14:identity.lineage>=12?13:variant?12:11},null,2);
 }
 export function restore(raw) {
   try { return parseBackup(raw); } catch { return initialState(); }

@@ -20,6 +20,7 @@
 #include "recharge.h"
 #include "status.h"
 #include "damage.h"
+#include "wifi.h"
 #ifndef PD_UI_TEST
 #include "esp_attr.h"
 #define PD_EXT EXT_RAM_BSS_ATTR
@@ -42,7 +43,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM, POWER_HOME, POWER_OFF, ITEM_SEARCH, POWER_SEARCH, MAGIC_MANAGE, MAGIC_PREPARATION, ITEM_QUANTITY_CONFIRM, AVATAR_EDIT, SCENE_EDIT, APPEARANCE_CONFIRM, DEFENCE_SETUP } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM, POWER_HOME, POWER_OFF, ITEM_SEARCH, POWER_SEARCH, MAGIC_MANAGE, MAGIC_PREPARATION, ITEM_QUANTITY_CONFIRM, AVATAR_EDIT, SCENE_EDIT, APPEARANCE_CONFIRM, DEFENCE_SETUP, WIFI_HOME, WIFI_FORGET, REFERENCE_HOME, REFERENCE_TEXT } page_t;
 static const pd_theme_kind page_themes[]={
     [HERO]=PD_THEME_NONE,
     [SHEET]=PD_THEME_SHEET,
@@ -90,6 +91,8 @@ static const pd_theme_kind page_themes[]={
     [DAMAGE_HOME]=PD_THEME_DAMAGE,
     [DEFENCE_LIST]=PD_THEME_DAMAGE,
     [DEFENCE_SETUP]=PD_THEME_DAMAGE,
+    [WIFI_HOME]=PD_THEME_KEYS,[WIFI_FORGET]=PD_THEME_KEYS,
+    [REFERENCE_HOME]=PD_THEME_SHEET,[REFERENCE_TEXT]=PD_THEME_SHEET,
     [DEFENCE_EDIT]=PD_THEME_DAMAGE,
     [DEFENCE_CONFIRM]=PD_THEME_DAMAGE,
     [DAMAGE_CONFIRM]=PD_THEME_DAMAGE,
@@ -259,7 +262,7 @@ static bool item_rolled;
 static pd_pool item_result;
 static unsigned item_gained;
 static bool appearance_editing(void){return page==AVATAR_EDIT||page==SCENE_EDIT||page==APPEARANCE_CONFIRM;}
-static bool confirmation_open(void){return page==DEFENCE_SETUP||appearance_editing()||page==ITEM_QUANTITY_CONFIRM||page==MAGIC_PREPARATION||page==ITEM_SEARCH||page==POWER_SEARCH||power_paused||power_off_attempted||page==POWER_OFF||page==NUMBER_ENTRY||page==VITAL_CONFIRM||page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
+static bool confirmation_open(void){return page==WIFI_FORGET||page==DEFENCE_SETUP||appearance_editing()||page==ITEM_QUANTITY_CONFIRM||page==MAGIC_PREPARATION||page==ITEM_SEARCH||page==POWER_SEARCH||power_paused||power_off_attempted||page==POWER_OFF||page==NUMBER_ENTRY||page==VITAL_CONFIRM||page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
 static pd_damage_plan damage_plan; /* First component + explicit concentration choice. */
 static pd_damage_component damage_extra[PD_DAMAGE_COMPONENTS-1],damage_part_draft;
 static pd_damage_context damage_context,damage_extra_context[PD_DAMAGE_COMPONENTS-1],damage_part_context,source_context_draft;
@@ -671,7 +674,7 @@ static void frame(void) {
     const pd_theme_spec *theme=pd_theme_get(kind);assert(theme);
     lv_obj_t *menu=button("Menu",126,27,54,44,2300,!import_pending&&!confirmation_open()&&!dice_animation.active);
     lv_obj_set_style_text_font(menu,&lv_font_montserrat_16,0);
-    lv_obj_t *title=label(theme->title,187,36,118,false);
+    lv_obj_t *title=label(page==WIFI_HOME||page==WIFI_FORGET?"Rete":theme->title,187,36,118,false);
     lv_obj_set_style_text_color(title,lv_color_hex(theme->accent),0);
     const char *status=ui_storage_status();
     unsigned c=ui_status_color(status);
@@ -708,6 +711,10 @@ static void input_check_action(intptr_t action){
     }else return;
     pd_screen_activity(&display_screen,lv_tick_get());render();
 }
+static unsigned reference_page;
+static unsigned reference_count(void){unsigned n=0;for(unsigned i=0;i<state.magic.count;i++)if(state.magic.powers[i].effect>=4)n++;return n;}
+static unsigned reference_at(unsigned n){for(unsigned i=0;i<state.magic.count;i++)if(state.magic.powers[i].effect>=4){if(!n)return i;n--;}return PD_POWERS;}
+static const char *wifi_notice="";
 static void act(intptr_t action) {
     if(action>=2900&&action<2913){input_check_action(action);return;}
     if(input_check_open())return;
@@ -730,6 +737,7 @@ static void act(intptr_t action) {
     if(page==WALLET_CONFIRM&&action!=2411&&action!=2412&&action!=2409)return;
     if(page==MAGIC_STOP&&action!=852&&action!=853)return;
     if(page==MAGIC_CONFIRM&&action!=832&&action!=833)return;
+    if(page==WIFI_FORGET&&action!=4506&&action!=4507)return;
     if(page==DEFENCE_SETUP&&(action<3901||action>3904))return;
     if(page==DEFENCE_CONFIRM&&action!=1816&&action!=1817&&action!=2010)return;
     if(page==DEFENCE_GRANT_REVIEW&&action!=1817&&action!=2010&&action!=2035&&action!=2036)return;
@@ -772,13 +780,27 @@ static void act(intptr_t action) {
     if(page==HIT_CONFIRM&&hit_rolled&&action!=914)return;
     /* Disabled controls also reject queued/synthetic events while dice are in flight. */
     if (dice_animation.active && action!=13 && action!=16) return;
-    bool new_roll=((action==13||action==72)&&!dice_animation.active)||action==46||(action==89&&!item_rolled&&item_index<state.item_count&&state.items[item_index].kind==PD_HEALING)||action==90||action==914||action==1865||action==2179||(action==1505&&status_command==STATUS_ROLL);
+    bool new_roll=(action==4605&&page==REFERENCE_TEXT)||((action==13||action==72)&&!dice_animation.active)||action==46||(action==89&&!item_rolled&&item_index<state.item_count&&state.items[item_index].kind==PD_HEALING)||action==90||action==914||action==1865||action==2179||(action==1505&&status_command==STATUS_ROLL);
     if(new_roll&&history_pending){history_return=HERO;history_page=0;page=HISTORY_HOME;render();return;}
     pd_screen_activity(&display_screen,lv_tick_get());
     feedback.active=false;bool report_feedback=feedback_action(action);if(report_feedback)feedback_capture(&feedback_before);
     #define next scratch
     next=state;
     if (action>=100 && action<104) { page=action-100;if(combat_roll>=4)invalidate_strike();rest_active=false;dice_setup=false;die_picker=false; }
+    else if(action==4500&&page==DEVICE_SETTINGS){wifi_notice="";page=WIFI_HOME;}
+    else if(action==4501&&page==WIFI_HOME)page=DEVICE_SETTINGS;
+    else if((action==4502||action==4503||action==4504)&&page==WIFI_HOME){if(!pd_wifi_command(action==4502?PD_WIFI_ENABLE:action==4503?PD_WIFI_DISABLE:PD_WIFI_SETUP))wifi_notice="Richiesta occupata: riprova";else wifi_notice="Richiesta inviata";}
+    else if(action==4505&&page==WIFI_HOME)page=WIFI_FORGET;
+    else if(action==4506&&page==WIFI_FORGET)page=WIFI_HOME;
+    else if(action==4507&&page==WIFI_FORGET){wifi_notice=pd_wifi_command(PD_WIFI_FORGET)?"Rimozione richiesta":"Richiesta occupata: riprova";page=WIFI_HOME;}
+    else if(action==4600&&(page==SHEET||page==DICE)){reference_page=0;page=REFERENCE_HOME;}
+    else if(action==4601&&page==REFERENCE_HOME)page=SHEET;
+    else if(action==4602&&page==REFERENCE_HOME&&reference_page)reference_page--;
+    else if(action==4603&&page==REFERENCE_HOME&&(reference_page+1)*3<reference_count())reference_page++;
+    else if(action>=4610&&action<4613&&page==REFERENCE_HOME){unsigned index=reference_at(reference_page*3+action-4610);if(index>=state.magic.count)return;power_index=index;text_page=0;page=REFERENCE_TEXT;combat_roll=0;ability=1;check_kind=PD_CHECK;ignore_effects=false;mode=0;roll_context=(pd_roll_context){0};}
+    else if(action==4604&&page==REFERENCE_TEXT)page=REFERENCE_HOME;
+    else if(action==4605&&page==REFERENCE_TEXT){const pd_power *p=&state.magic.powers[power_index];pd_check_resolution gate;if(p->effect!=5||!pd_check_resolve(&state,PD_CHECK,1,mode,ignore_effects,roll_context,&gate)||!gate.allowed)return;result=pd_d20(p->attack_modifier,gate.mode,pd_board_random,NULL);journal_d20(PD_H_CHECK,"Iniziativa",&result,gate.mode,ignore_effects?"Bonus importato; effetti esclusi":"Bonus importato; condizioni attuali");combat_roll=8;pool_view=false;has_roll=false;pd_dice_start(&dice_animation,&result,lv_tick_get());page=DICE;}
+    else if(action==4606&&page==REFERENCE_TEXT){mode=mode==0?1:mode==1?-1:0;}
     else if ((action>=200&&action<206)||(action>=220&&action<238)||(action>=240&&action<246)) {
         pd_check_kind selected_kind=action>=240?PD_SAVE:action>=220?PD_SKILL:PD_CHECK;
         int index=action-(selected_kind==PD_SAVE?240:selected_kind==PD_SKILL?220:200);
@@ -1240,7 +1262,7 @@ static void act(intptr_t action) {
     else if(action==2206&&page==CONDITION_EFFECTS)page=CONDITION_EFFECTS_CONFIRM;
     else if(action==2207&&page==CONDITION_EFFECTS_CONFIRM)page=CONDITION_EFFECTS;
     else if(action==2208&&page==CONDITION_EFFECTS_CONFIRM){if(!pd_condition_effects_set(&next,condition_effects_draft))return;bool changed=memcmp(&next,&state,sizeof state)!=0;if(!changed||pd_storage_save(&next)){if(changed){previous=state;undo_available=true;state=next;invalidate_strike();has_roll=false;roll_context=(pd_roll_context){0};ignore_effects=false;}page=CONDITION_EFFECTS;}}
-    else if(action==2230&&(page==COMBAT||page==COMBAT_DETAIL||page==CHECK_DETAIL||(page==DICE&&(combat_roll==1||(!combat_roll&&!pool_view&&ability>=0))))&&state.roll_conditions&&!dice_animation.active){context_return=page;context_draft=roll_context;context_ignore_draft=ignore_effects;page=ROLL_CONTEXT;}
+    else if(action==2230&&(page==COMBAT||page==COMBAT_DETAIL||page==CHECK_DETAIL||page==REFERENCE_TEXT||(page==DICE&&(combat_roll==1||(!combat_roll&&!pool_view&&ability>=0))))&&state.roll_conditions&&!dice_animation.active){context_return=page;context_draft=roll_context;context_ignore_draft=ignore_effects;page=ROLL_CONTEXT;}
     else if(action==2231&&page==ROLL_CONTEXT)page=context_return;
     else if((action==2232||action==2233)&&page==ROLL_CONTEXT){unsigned bit=action==2232?PD_CONTEXT_SIGHT:PD_CONTEXT_FEAR;pd_condition_result effect;if(current_condition_context(context_draft,context_ignore_draft,&effect)&&context_relevant(bit)){if(!(context_draft.known&bit))context_draft.known|=bit;else if(!(context_draft.values&bit))context_draft.values|=bit;else{context_draft.known&=~bit;context_draft.values&=~bit;}}}
     else if(action==2234&&page==ROLL_CONTEXT)context_ignore_draft=!context_ignore_draft;
@@ -1625,7 +1647,7 @@ static void render_sheet(void) {
     if(sheet_tab==1) {
         snprintf(text,sizeof text,"Abilita %d/6",skill_page+1);label(text,139,111,188,false);
         button("<",83,99,48,44,63,skill_page>0);button(">",335,99,48,44,64,skill_page<5);
-    } else label(sheet_tab==2?"Tiri salvezza":"Caratteristiche",83,111,300,true);
+    } else if(reference_count())button("Profilo PG >",83,99,300,44,4600,true);else label(sheet_tab==2?"Tiri salvezza":"Caratteristiche",83,111,300,true);
     const char *tabs[]={"Caratt.","Abilita","Salvezze"};
     for(int i=0;i<3;i++) {
         lv_obj_t *b=button(tabs[i],83+i*104,149,92,44,60+i,true);
@@ -1944,7 +1966,7 @@ static void render_magic_text(void) {
         while(at+take<total) {
             chunk[take]=p->description[at+take];chunk[++take]=0;
             lv_text_get_size(&size,chunk,&lv_font_montserrat_16,0,0,300,LV_TEXT_FLAG_NONE);
-            if(size.y>138){take--;break;}
+            if(size.y>(page==REFERENCE_TEXT&&p->effect==5&&state.roll_conditions?120:138)){take--;break;}
             if(chunk[take-1]==' ')last_space=take;
         }
         if(at+take<total&&last_space>take/2)take=last_space;
@@ -1958,9 +1980,13 @@ static void render_magic_text(void) {
     small_label(p->name,83,151,300,PD_GOLD);
     memcpy(chunk,p->description+starts[text_page],lengths[text_page]);chunk[lengths[text_page]]=0;
     lv_obj_t *body=small_label(chunk[0]?chunk:"Nessuna descrizione disponibile",83,183,300,PD_TEXT);
-    lv_label_set_long_mode(body,LV_LABEL_LONG_WRAP);lv_obj_set_height(body,138);lv_obj_set_style_text_align(body,LV_TEXT_ALIGN_LEFT,0);
-    small_label(p->flags&PD_EXCERPT?"Estratto: testo completo sul PC":"Testo personale; effetti al tavolo",83,325,300,PD_MUTED);
-    button("Indietro",83,359,300,48,833,true);
+    lv_label_set_long_mode(body,LV_LABEL_LONG_WRAP);lv_obj_set_height(body,page==REFERENCE_TEXT&&p->effect==5&&state.roll_conditions?120:138);lv_obj_set_style_text_align(body,LV_TEXT_ALIGN_LEFT,0);
+    if(!(page==REFERENCE_TEXT&&p->effect==5&&state.roll_conditions))small_label(page==REFERENCE_TEXT?"Fotografia all importazione":p->flags&PD_EXCERPT?"Estratto: testo completo sul PC":"Testo personale; effetti al tavolo",83,325,300,PD_MUTED);
+    if(page==REFERENCE_TEXT&&p->effect==5){pd_check_resolution gate;bool valid=pd_check_resolve(&state,PD_CHECK,1,mode,ignore_effects,roll_context,&gate)&&gate.allowed;
+        const char *names[]={"Elenco",mode>0?"Vant":mode<0?"Svant":"Base",state.roll_conditions?"Contesto":"Lancia"};const unsigned actions[]={4604,4606,state.roll_conditions?2230:4605};
+        for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names[i],83+i*104,359,92,48,actions[i],i<2||state.roll_conditions||valid);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
+        if(state.roll_conditions){lv_obj_t *b=button(valid?"Lancia":"Verifica contesto",83,313,300,44,4605,valid);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
+    }else button("Indietro",83,359,300,48,page==REFERENCE_TEXT?4604:833,true);
 }
 static void render_magic_other(void) {
     char text[180];
@@ -2194,12 +2220,36 @@ static void render_power(void){
     const char *names[]={"Indietro","Pausa","Spegni"};const unsigned actions[]={1600,3701,3702};
     for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names[i],83+i*104,359,92,48,actions[i],i==0||(ready&&(i==1||battery)));lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
 }
+static void render_wifi(void){
+    pd_wifi_info info;pd_wifi_snapshot(&info);char text[120];
+    if(page==WIFI_FORGET){label("Dimenticare la rete?",83,111,300,false);small_label("Cancella nome rete e password Wi-Fi",83,181,300,PD_TEXT);small_label("Scheda e backup PG conservati",83,225,300,PD_GOLD);button("Indietro",83,359,144,48,4506,true);button("Conferma",239,359,144,48,4507,true);return;}
+    label(info.setup?"Configura Wi-Fi":"Wi-Fi 2,4 GHz",83,111,300,true);
+    if(info.setup){
+        small_label("1. Collega telefono/PC alla rete:",83,153,300,PD_TEXT);small_label(info.setup_ssid,83,179,300,PD_GOLD);
+        snprintf(text,sizeof text,"Password: %s",info.setup_password);small_label(text,83,207,300,PD_MINT);
+        small_label("2. Apri http://192.168.4.1",83,237,300,PD_TEXT);snprintf(text,sizeof text,"Portale: %u sec | %s",info.setup_seconds,info.setup_saved?"salvato":info.setup_failed?"riprova":info.state==PD_WIFI_CONNECTING?"connessione...":"attesa");small_label(text,83,267,300,PD_MUTED);
+    }else{
+        small_label((const char *const[]){"Spento: gioco offline","Connessione in corso...","Collegato alla rete","Connessione non riuscita"}[info.state<=3?info.state:3],83,155,300,PD_MINT);
+        lv_obj_t *network=small_label(info.configured?info.ssid[0]?info.ssid:"Rete salvata":"Nessuna rete salvata",83,187,300,PD_TEXT);lv_label_set_long_mode(network,LV_LABEL_LONG_DOT);lv_obj_set_height(network,24);
+        snprintf(text,sizeof text,"IP: %s",info.ip[0]?info.ip:"non disponibile");small_label(text,83,221,300,PD_MUTED);
+        button("Configura rete >",83,251,300,44,4504,true);
+    }
+    small_label(info.error==PD_WIFI_ERROR_STORAGE?"Salvataggio rete non confermato":info.error==PD_WIFI_ERROR_UNAVAILABLE?"Wi-Fi non disponibile":info.error==PD_WIFI_ERROR_NETWORK?"Controlla rete 2,4 GHz e password":wifi_notice,83,309,300,PD_GOLD);
+    const char *names[]={"Indietro",info.state==PD_WIFI_OFF&&!info.setup?"Accendi":"Spegni","Dimentica"};const unsigned actions[]={4501,info.state==PD_WIFI_OFF&&!info.setup?4502:4503,4505};
+    for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names[i],83+i*104,359,92,48,actions[i],i==0||i==1?(i==0||info.configured||info.setup):info.configured);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
+}
+static void render_reference(void){
+    unsigned n=reference_count(),pages=(n+2)/3;if(!pages)pages=1;if(reference_page>=pages)reference_page=pages-1;
+    char text[80];snprintf(text,sizeof text,"Profilo PG %u/%u",reference_page+1,pages);label(text,139,111,188,false);button("<",83,99,48,44,4602,reference_page>0);button(">",335,99,48,44,4603,reference_page+1<pages);
+    for(unsigned i=0;i<3;i++){unsigned index=reference_at(reference_page*3+i);if(index>=state.magic.count)break;lv_obj_t *b=button(state.magic.powers[index].name,83,159+i*52,300,44,4610+i,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
+    small_label(n?"Valori e dotazioni all importazione":"Reimporta da PC per aggiungere i dati",83,325,300,PD_MUTED);button("Scheda",83,359,300,48,4601,true);
+}
 static void render_settings(void){
     char text[120];label("Schermo",83,111,300,true);
     snprintf(text,sizeof text,"Luminosita %u%%",state.brightness);label(text,83,155,300,false);
     button("-10",83,193,144,44,1601,state.brightness>10);button("+10",239,193,144,44,1602,state.brightness<100);
     snprintf(text,sizeof text,"Attenua: %s >",(const char *const[]){"mai","30 sec","60 sec","120 sec"}[state.dim_timeout]);button(text,83,251,300,44,1603,true);
-    button(display_screen.failed?"Errore schermo | Alimentazione >":"Alimentazione >",83,303,300,44,3700,true);
+    lv_obj_t *power=button("Alimentazione >",83,303,144,44,3700,true);lv_obj_set_style_text_font(power,&lv_font_montserrat_16,0);button("Wi-Fi >",239,303,144,44,4500,true);
     const char *names[]={"Indietro","Tasti","Backup"};const unsigned actions[]={50,850,2800};
     for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names[i],83+i*104,359,92,48,actions[i],true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
 }
@@ -3004,6 +3054,9 @@ static void render_content(void) {
     if(page==BACKUP_HOME||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM){render_backup();return;}
     if(page==HISTORY_HOME||page==HISTORY_DETAIL||page==HISTORY_DISCARD){render_history();return;}
     if(page==WALLET_HOME||page==WALLET_EDIT||page==WALLET_CONFIRM){render_wallet();return;}
+    if(page==WIFI_HOME||page==WIFI_FORGET){render_wifi();return;}
+    if(page==REFERENCE_HOME){render_reference();return;}
+    if(page==REFERENCE_TEXT){render_magic_text();return;}
     if(page>=DAMAGE_HOME){render_damage();return;}
     if(page>=EFFECT_LIST){render_effects();return;}
     if(page==DEVICE_SETTINGS){render_settings();return;}
@@ -3047,6 +3100,7 @@ static void render_content(void) {
             snprintf(text,sizeof text,"Attacco %+d",strike_ready?strike.roll.bonus:w.attack_bonus);
         }
         else if(combat_roll==3||combat_roll==4)snprintf(text,sizeof text,"Cura %ud%u %+d",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
+        else if(combat_roll==8)snprintf(text,sizeof text,"Iniziativa %+d",result.bonus);
         else if(combat_roll==7)snprintf(text,sizeof text,"Ricarica %ud%u %+d",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
         else if(combat_roll==5){if(has_roll)snprintf(text,sizeof text,"Morte: %u %+d = %d",result.natural,result.bonus,result.total);else snprintf(text,sizeof text,"Salvezza morte %+d",result.bonus);}
         else if(combat_roll==6)snprintf(text,sizeof text,"COS %+d | CD %u",result.bonus,incoming_result.concentration_dc);
@@ -3092,7 +3146,8 @@ static void render_content(void) {
         lv_obj_t *outcome=label(text,73,269,320,false);if(has_roll&&!combat_roll&&!pool_view)lv_obj_set_style_text_color(outcome,lv_color_hex(result.natural==20?PD_GOLD:result.natural==1?PD_DANGER:PD_TEXT),0);
         if(automatic_failure)label("Nessun dado",73,183,320,false);
         else if(!dice_pixels)label("Animazione non disponibile",73,183,320,false);
-        if(combat_roll==7){
+        if(combat_roll==8){button("Profilo",83,296,144,44,4600,!dice_animation.active);button(dice_animation.active?"Accelera":"Fine",239,296,144,44,dice_animation.active?16:100,true);
+        } else if(combat_roll==7){
             button("Zaino",83,296,76,44,80,!dice_animation.active);button(dice_animation.active?"Accelera":"Riepilogo",167,296,132,44,dice_animation.active?16:2180,true);button("Fine",307,296,76,44,100,!dice_animation.active);
         } else if(combat_roll==6){
             button("Stato",83,296,76,44,1500,!dice_animation.active);
@@ -3137,7 +3192,7 @@ static void render_content(void) {
     }
 }
 #ifdef PD_UI_TEST
-static bool styled_pages[DEFENCE_SETUP+1];
+static bool styled_pages[REFERENCE_TEXT+1];
 static void capture_styled_page(unsigned view);
 #endif
 static void render(void){
@@ -3278,7 +3333,7 @@ static void usb_task(void *unused) {
             if(c=='\n') {
                 if(!overflow && used) {
                     line[used]=0;
-                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 16\n");
+                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 17\n");
                     else if(!strcmp(line,"PDD BACKUP HELLO"))reply("PDD BACKUP_READY 1\n");
                     else if(!strcmp(line,"PDD DIAGNOSTICS GET 1")){uint8_t request=1;if(xQueueSend(diagnostic_requests,&request,0)!=pdPASS)reply("PDD ERROR busy\n");}
                     else if(!strcmp(line,"PDD BACKUP GET 1")){pd_backup *request=NULL;if(xQueueSend(backup_packets,&request,0)!=pdPASS)reply("PDD ERROR busy\n");}
@@ -3316,6 +3371,7 @@ void app_main(void) {
     diagnostic_requests=xQueueCreate(1,sizeof(uint8_t));assert(diagnostic_requests);
     assert(xTaskCreate(usb_task,"usb_import",12288,NULL,3,&usb_thread)==pdPASS);
     render();
+    pd_wifi_boot(); /* USB, queues and initial UI allocate first; Wi-Fi failure stays recoverable. */
     for(;;) {
         pd_state *incoming=NULL;
         if(xQueueReceive(packets,&incoming,0)==pdPASS) {stage_import(incoming);free(incoming);}
@@ -3328,6 +3384,8 @@ void app_main(void) {
         uint8_t diagnostic_request;
         if(xQueueReceive(diagnostic_requests,&diagnostic_request,0)==pdPASS)report_diagnostics();
         pd_board_tick();
+        static uint32_t wifi_redrawn;static pd_wifi_info wifi_visible;
+        if(page==WIFI_HOME&&!import_pending&&!power_paused&&!display_screen.touch_down&&(uint32_t)(lv_tick_get()-wifi_redrawn)>=1000){wifi_redrawn=lv_tick_get();pd_wifi_info info;pd_wifi_snapshot(&info);if(memcmp(&info,&wifi_visible,sizeof info)){wifi_visible=info;render();}}
         if(!power_paused&&!power_off_attempted){int levels[2];pd_board_buttons(levels);screen_service(levels[0],levels[1]);}
         power_service();
         vTaskDelay(pdMS_TO_TICKS(5));

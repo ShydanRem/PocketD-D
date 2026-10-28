@@ -493,10 +493,10 @@ size_t pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
     memcpy(p,s->training.skill_abilities,PD_SKILLS);p+=PD_SKILLS;
     size_t size=pd_encoded_size(s);put32(out+size-4,pd_crc32(out,size-4));return size;
 }
-static bool record_payments(const uint8_t *data){return !memcmp(data,"PDDS",4)||!memcmp(data,"PDDT",4)||!memcmp(data,"PDDU",4)||!memcmp(data,"PDDV",4)||(!memcmp(data,"PDDW",4)||(!memcmp(data,"PDDX",4)||(!memcmp(data,"PDDY",4)||!memcmp(data,"PDDZ",4))));}
+static bool record_payments(const uint8_t *data){return !memcmp(data,"PDDS",4)||!memcmp(data,"PDDT",4)||!memcmp(data,"PDDU",4)||!memcmp(data,"PDDV",4)||(!memcmp(data,"PDDW",4)||(!memcmp(data,"PDDX",4)||(!memcmp(data,"PDDY",4)||(!memcmp(data,"PDDZ",4)||!memcmp(data,"PDDa",4)))));}
 bool pd_record_known(const uint8_t *data,size_t size) {
     if(!data)return false;
-    if(size>=8964&&size<=PD_RECORD_SIZE&&(!memcmp(data,"PDDY",4)||!memcmp(data,"PDDZ",4))&&data[5123]<=PD_POWERS)return size==8964u+552u*data[5123];
+    if(size>=8964&&size<=PD_RECORD_SIZE&&(!memcmp(data,"PDDY",4)||(!memcmp(data,"PDDZ",4)||!memcmp(data,"PDDa",4)))&&data[5123]<=PD_POWERS)return size==8964u+552u*data[5123];
     if(size>=8946&&size<=75186&&!memcmp(data,"PDDX",4)&&data[5123]<=PD_POWERS)return size==8946u+552u*data[5123];
     if(size==384&&(!memcmp(data,"PDD1",4)||!memcmp(data,"PDD2",4)))return true;
     if(size==512&&!memcmp(data,"PDD3",4))return true;
@@ -573,14 +573,15 @@ static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint
         pd_magic *m=&candidate.magic;if(*p>1)goto invalid;m->available=*p++;m->count=*p++;m->concentration=*p++;
         for(int i=0;i<9;i++){m->slots[i].current=*p++;m->slots[i].maximum=*p++;m->pact[i].current=*p++;m->pact[i].maximum=*p++;}
         memcpy(candidate.shortcuts,p,3);p+=3;
-        if(memcmp(data,"PDDT",4)&&memcmp(data,"PDDU",4)&&memcmp(data,"PDDV",4)&&memcmp(data,"PDDW",4)&&memcmp(data,"PDDX",4)&&memcmp(data,"PDDY",4)&&memcmp(data,"PDDZ",4)&&(candidate.shortcuts[0]>13||candidate.shortcuts[1]>13||candidate.shortcuts[2]>13))goto invalid;
+        if(memcmp(data,"PDDT",4)&&memcmp(data,"PDDU",4)&&memcmp(data,"PDDV",4)&&memcmp(data,"PDDW",4)&&memcmp(data,"PDDX",4)&&memcmp(data,"PDDY",4)&&memcmp(data,"PDDZ",4)&&memcmp(data,"PDDa",4)&&(candidate.shortcuts[0]>13||candidate.shortcuts[1]>13||candidate.shortcuts[2]>13))goto invalid;
         if((memcmp(data,"PDDP",4)&&(memcmp(data,"PDDQ",4)&&(memcmp(data,"PDDR",4)&&!record_payments(data))))&&(candidate.shortcuts[0]>12||candidate.shortcuts[1]>12||candidate.shortcuts[2]>12))goto invalid;
         for(int i=0;i<m->count;i++) {
             pd_power *v=&m->powers[i];memcpy(v->name,p,41);p+=41;memcpy(v->description,p,PD_POWER_TEXT_BYTES);p+=PD_POWER_TEXT_BYTES;
             v->kind=*p++;v->level=*p++;v->flags=*p++;v->ability=*p++;v->maximum=*p++;v->remaining=*p++;v->recovery=*p++;v->effect=*p++;
             if(p[0]>45||p[1]>45)goto invalid;
             v->attack_modifier=(int)*p++-15;v->save_modifier=(int)*p++-15;
-            if(v->effect==3&&memcmp(data,"PDDZ",4))goto invalid;
+            if(v->effect==3&&memcmp(data,"PDDZ",4)&&memcmp(data,"PDDa",4))goto invalid;
+            if(v->effect>=4&&memcmp(data,"PDDa",4))goto invalid;
         }
     }
     if(!memcmp(data,"PDD6",4)||!memcmp(data,"PDD7",4)||!memcmp(data,"PDD8",4)||!memcmp(data,"PDD9",4)||!memcmp(data,"PDDA",4)||!memcmp(data,"PDDB",4)||!memcmp(data,"PDDC",4)||!memcmp(data,"PDDD",4)||!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data))))) {
@@ -659,10 +660,10 @@ static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint
     }
     if((!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data))))){candidate.history_epoch=get32(p);p+=4;}
     if((!memcmp(data,"PDDR",4)||record_payments(data))){memcpy(candidate.turn_names,p,sizeof candidate.turn_names);p+=sizeof candidate.turn_names;}
-    if(!memcmp(data,"PDDT",4)||!memcmp(data,"PDDU",4)||!memcmp(data,"PDDV",4)||(!memcmp(data,"PDDW",4)||(!memcmp(data,"PDDX",4)||(!memcmp(data,"PDDY",4)||!memcmp(data,"PDDZ",4)))))candidate.scene=*p++;
-    if(!memcmp(data,"PDDU",4)||!memcmp(data,"PDDV",4)||(!memcmp(data,"PDDW",4)||(!memcmp(data,"PDDX",4)||(!memcmp(data,"PDDY",4)||!memcmp(data,"PDDZ",4))))){candidate.lineage=*p++;candidate.body=*p++;}
-    if((!memcmp(data,"PDDX",4)||(!memcmp(data,"PDDY",4)||!memcmp(data,"PDDZ",4))))candidate.outfit=*p++;
-    if((!memcmp(data,"PDDY",4)||!memcmp(data,"PDDZ",4))){memcpy(candidate.training.skill_abilities,p,PD_SKILLS);p+=PD_SKILLS;}
+    if(!memcmp(data,"PDDT",4)||!memcmp(data,"PDDU",4)||!memcmp(data,"PDDV",4)||(!memcmp(data,"PDDW",4)||(!memcmp(data,"PDDX",4)||(!memcmp(data,"PDDY",4)||(!memcmp(data,"PDDZ",4)||!memcmp(data,"PDDa",4))))))candidate.scene=*p++;
+    if(!memcmp(data,"PDDU",4)||!memcmp(data,"PDDV",4)||(!memcmp(data,"PDDW",4)||(!memcmp(data,"PDDX",4)||(!memcmp(data,"PDDY",4)||(!memcmp(data,"PDDZ",4)||!memcmp(data,"PDDa",4)))))){candidate.lineage=*p++;candidate.body=*p++;}
+    if((!memcmp(data,"PDDX",4)||(!memcmp(data,"PDDY",4)||(!memcmp(data,"PDDZ",4)||!memcmp(data,"PDDa",4)))))candidate.outfit=*p++;
+    if((!memcmp(data,"PDDY",4)||(!memcmp(data,"PDDZ",4)||!memcmp(data,"PDDa",4)))){memcpy(candidate.training.skill_abilities,p,PD_SKILLS);p+=PD_SKILLS;}
     if((!memcmp(data,"PDDU",4)&&candidate.lineage>=12)||(!memcmp(data,"PDDV",4)&&candidate.lineage>=16))goto invalid;
     if (!pd_valid(&candidate)) goto invalid;
     *gen=get32(data+4);return true;

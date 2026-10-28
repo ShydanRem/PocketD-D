@@ -1,3 +1,7 @@
+> Stato corrente v0.78: [contratto della prima versione, lettura reale e limiti](BEYOND-V1.md).
+> Profilo sul dispositivo e resoconto specifico; USB fisico ancora aperto.
+> Le prove storiche sotto non attestano automaticamente nuove funzioni.
+
 # Beyond: importazione estesa PC v0.14 — 19 ottobre 2026
 
 > Aggiornamento v0.73, 28 ottobre: [personalizzazioni standard dei tiri](BEYOND-PERSONALIZZAZIONI-TIRI.md)

@@ -1,3 +1,7 @@
+> Aggiornamento v0.78: [prima versione offline e verifica dei dati](BEYOND-V1.md),
+> [Wi-Fi](WIFI.md), [metodo proposto per il tempo reale](BEYOND-TEMPO-REALE.md).
+> Le verifiche di fattibilità storiche sotto non attestano scritture o sincronizzazione.
+
 # D&D Beyond: fattibilità per PocketD-D
 
 > Aggiornamento v0.73, 28 ottobre: [personalizzazioni standard dei tiri](BEYOND-PERSONALIZZAZIONI-TIRI.md)

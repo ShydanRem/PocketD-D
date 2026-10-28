@@ -74,3 +74,14 @@ richiede un'osservazione reale; indicare eventuali prove parziali nelle note.
 - Misure energetiche e tenuta ai guasti ancora aperte:
 
 Nessun risultato automatico della diagnostica compila queste voci da solo.
+
+## Aggiunta v0.78 ancora da collaudare
+
+- Aggiornare firmware e app PC insieme, conservando la raccolta e facendo backup.
+- Importare il PG: conferma display e ACK finale, riavvio, rilettura e ripristino.
+  Il precedente flash nero/Elian non è stato dichiarato risolto.
+- Profilo PG e iniziativa: valori, contesto, tasti configurabili e storico.
+- Wi-Fi: [procedura](WIFI.md), rete giusta/errata, conferma del salvataggio,
+  riavvio, perdita della rete e riaggancio, pausa/risveglio, spegni e dimentica.
+- Nessuna scheda persa dopo dimentica rete o restore PG; nessuna password nel backup.
+- Misurare heap, fluidità, batteria e consumi con radio attiva e spenta.
