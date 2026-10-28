@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **28 ottobre 2026 — v0.78**. Il dispositivo è il prodotto;
+Aggiornamento del **28 ottobre 2026 — v0.79**. Il dispositivo è il prodotto;
 il PC serve per importare, configurare e conservare i backup.
 
 Il software copre una prima sessione individuale offline. Il passaggio ancora
@@ -30,6 +30,32 @@ il formato. Per dichiarare un dato convertito servono il controllo delle sue
 origini/regole e il confronto del risultato. Una descrizione importata non
 significa che il suo effetto sia automatizzato.
 
+### Nuovo nella v0.79
+
+[Ponte Beyond sperimentale](PONTE-BEYOND.md): ESP32 → HTTPS LAN → coda privata
+sul PC → estensione Chrome/Edge → pagina Beyond autenticata. Abbinamento con
+certificato e conferma sul display; chiavi separate dal PG e dai backup.
+Tiri già salvati, con facce/bonus/totali invariati, e PF attuali/temporanei;
+nessun secondo lancio, nessun requisito Foundry. Pausa con conservazione della
+coda, riconciliazione esplicita senza reinvio, revoca e storico degli esiti.
+
+| Livello | Esito / limite |
+| --- | --- |
+| HTTPS e protocollo | Certificato, SAN IPv4, autenticazione, formato e storico C verificati localmente |
+| Conversione dei tiri | Confronto facce, modalità, bonus e totale; minimo zero non rappresentabile bloccato |
+| Browser | UI e adattatore PF/broker su pagina sintetica; worker con API Chrome simulate. Installazione MV3 bloccata dalla policy amministrativa del browser di sviluppo |
+| Ricezione dei dadi | «Osservato» richiede eco corrispondente dal broker; persistenza Beyond dopo reload non provata |
+| PF | «Verificato» richiede rilettura concordante dal connettore pubblico; nel test il servizio è sintetico |
+| Hardware e account | Nessuna scrittura sul tuo Beyond, nessun collaudo RF/ESP32 o estensione sulla tua sessione |
+
+La sincronizzazione **non è dichiarata pronta per la produzione**. L’adattatore
+usa interfacce interne del sito, può richiedere aggiornamenti e riconosce la
+gestione PF inglese supportata. Non sono sincronizzati PF massimi, condizioni,
+inventario, slot o utilizzi. La direzione inversa resta successiva. Restano
+aperti il problema USB già segnalato, le prove Wi-Fi fisiche e il test controllato
+su una scheda Beyond di prova. Raccolta personale e account non modificati.
+USB17 / backup PC v20 / stato nativo PDD36-PDDa invariati.
+
 ### Nuovo nella v0.78
 
 [Profilo Beyond della prima versione](BEYOND-V1.md): consultazione sul dispositivo
@@ -43,7 +69,7 @@ USB17 / backup PC v20 quando c’è il profilo, PDD36 senza crescita dello stato
 salvataggio dopo connessione verificata, spegni/dimentica e sospensione della radio.
 Nessuna credenziale nel PG. Prove software del servizio, non della radio fisica.
 [Tempo reale](BEYOND-TEMPO-REALE.md): ricerca e progetto del ponte opzionale;
-nessuna sincronizzazione o animazione Beyond è ancora implementata.
+ponte sperimentale implementato nella v0.79; animazione Beyond non implementata.
 
 La nuova lettura reale conferma i valori v0.77 sotto riportati. Aggiunge 14 pagine
 di profilo (64 voci complessive), tutte confrontate nel parser/codec C: passo/volo

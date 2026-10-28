@@ -182,6 +182,19 @@ add_executable(reference test_reference.c ../core/catalog.c ../core/pocketdd.c .
 target_include_directories(reference PRIVATE ../core)
 target_compile_options(reference PRIVATE -Wall -Wextra -Werror)
 
-add_executable(wifi-service test_wifi_service.c ../core/wifi_setup.c)
+add_executable(wifi-service test_wifi_service.c ../core/wifi_setup.c $ENV{IDF_PATH}/components/json/cJSON/cJSON.c)
 target_include_directories(wifi-service PRIVATE ../core ../main .)
 target_compile_options(wifi-service PRIVATE -Wall -Wextra -Werror -Wno-unused-parameter)
+
+target_include_directories(wifi-service PRIVATE "$ENV{IDF_PATH}/components/json/cJSON")
+
+add_executable(sync-codec test_sync.c ../core/sync_config.c ../core/sync_snapshot.c ../core/history.c ../core/pocketdd.c ../core/magic.c ../core/checks.c $ENV{IDF_PATH}/components/json/cJSON/cJSON.c)
+target_include_directories(sync-codec PRIVATE ../core "$ENV{IDF_PATH}/components/json/cJSON")
+target_compile_options(sync-codec PRIVATE -Wall -Wextra -Werror)
+target_link_libraries(sync-codec m)
+
+find_package(OpenSSL REQUIRED)
+add_executable(sync-service test_sync_service.c ../core/sync_config.c ../core/sync_snapshot.c ../core/history.c ../core/pocketdd.c ../core/magic.c ../core/checks.c $ENV{IDF_PATH}/components/json/cJSON/cJSON.c)
+target_include_directories(sync-service PRIVATE ../core ../main . "$ENV{IDF_PATH}/components/json/cJSON")
+target_compile_options(sync-service PRIVATE -Wall -Wextra -Werror -Wno-unused-function -Wno-unused-parameter)
+target_link_libraries(sync-service m OpenSSL::Crypto)

@@ -2,7 +2,9 @@
 
 Wi-Fi **2,4 GHz** opzionale. La scheda funziona offline. Il firmware parte con
 radio spenta se non è stata salvata e abilitata una rete. Wi-Fi collegato non
-significa ancora importazione autonoma o sincronizzazione con Beyond.
+prova una sincronizzazione. Dalla v0.79 è disponibile il [ponte sperimentale
+Beyond](PONTE-BEYOND.md), con abbinamento separato e conferma sul display;
+l’importazione autonoma dal dispositivo resta successiva.
 
 ## Configurazione da telefono o PC
 

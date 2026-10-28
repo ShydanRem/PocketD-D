@@ -5,9 +5,10 @@ from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 p=argparse.ArgumentParser();p.add_argument('output',type=Path,nargs='?',default=ROOT/'dist/install/downloads/PocketDD-PC.zip');args=p.parse_args()
 if not (ROOT/'dist/index.html').is_file():raise SystemExit('Run npm run build first')
-files=[ROOT/'package.json',ROOT/'Avvia-PocketDD.cmd',ROOT/'docs/STATO-SOFTWARE.md',ROOT/'docs/BEYOND-PERSONALIZZAZIONI-TIRI.md',ROOT/'docs/ABILITA-CARATTERISTICHE.md',ROOT/'docs/DIFESE-VERIFICA-RAPIDA.md',ROOT/'docs/BEYOND-CONTATORI-MANUALI.md',ROOT/'docs/BEYOND-CANNONE.md',ROOT/'docs/BEYOND-V1.md',ROOT/'docs/WIFI.md',ROOT/'docs/BEYOND-TEMPO-REALE.md',ROOT/'docs/previews/v078-reference-wifi.png']
+files=[ROOT/'package.json',ROOT/'Avvia-PocketDD.cmd',ROOT/'Avvia-Ponte.cmd',ROOT/'docs/PONTE-BEYOND.md',ROOT/'docs/PONTE-BEYOND-PROVE.md',ROOT/'docs/STATO-SOFTWARE.md',ROOT/'docs/BEYOND-PERSONALIZZAZIONI-TIRI.md',ROOT/'docs/ABILITA-CARATTERISTICHE.md',ROOT/'docs/DIFESE-VERIFICA-RAPIDA.md',ROOT/'docs/BEYOND-CONTATORI-MANUALI.md',ROOT/'docs/BEYOND-CANNONE.md',ROOT/'docs/BEYOND-V1.md',ROOT/'docs/WIFI.md',ROOT/'docs/BEYOND-TEMPO-REALE.md',ROOT/'docs/previews/v078-reference-wifi.png',ROOT/'docs/previews/v079-bridge.png']
 for directory in ('src','scripts'):
  files += [f for f in (ROOT/directory).glob('*') if f.is_file() and f.suffix in ('.js','.json') and not f.name.endswith('.test.js')]
+files += [f for folder in ('extension','tools/bridge') for f in (ROOT/folder).rglob('*') if f.is_file()]
 files += [ROOT/'dist/index.html']+[f for f in (ROOT/'dist/assets').rglob('*') if f.is_file()]
 # Include newly added launcher files before their first commit; no scans of runtime/private directories.
 version=json.loads((ROOT/'package.json').read_text())['version'];commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
@@ -27,7 +28,8 @@ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as z:
 
 Profilo PG, iniziativa e dotazioni: nuova importazione v20, firmware 0.78 / USB17.
 Wi-Fi: Aspetto > Schermo > Wi-Fi > Configura rete; vedi docs/WIFI.md.
-Il Wi-Fi non sincronizza ancora con Beyond; USB fisico resta da collaudare.
+Ponte Beyond sperimentale: Avvia-Ponte.cmd e cartella extension. Guida docs/PONTE-BEYOND.md.
+Nessuna prova reale autenticata o fisica implicita; l’importazione USB resta da collaudare.
 L'app e gia compilata: non servono npm install o una compilazione del firmware.
 Caratteristica personalizzata delle abilita: da Beyond tipo 27 o Personalizza eroe.
 Per trasferirla serve firmware 0.74 / USB15; nuovi backup nativi PDD34 letti da questa app.

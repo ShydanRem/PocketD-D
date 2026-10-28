@@ -9,6 +9,18 @@ with zipfile.ZipFile(archive) as z:
  assert not any('/node_modules/' in n or '/device-backups/' in n or '/.git/' in n for n in names)
  with tempfile.TemporaryDirectory(prefix='pocketdd-pc-') as tmp:
   z.extractall(tmp);app=Path(tmp)/'PocketDD-PC';assert (app/'Avvia-PocketDD.cmd').exists();assert not (app/'node_modules').exists()
+  for name in ['Avvia-Ponte.cmd','docs/PONTE-BEYOND.md','extension/manifest.json','extension/background.js','extension/protocol.js','tools/bridge/index.html']:
+   assert (app/name).read_bytes()==(ROOT/name).read_bytes()
+  assert (app/'extension/protocol.js').read_bytes()==(app/'src/sync-protocol.js').read_bytes()
+  # Exercise the extracted bridge without checkout dependencies, user profile or a remote service.
+  bridge=subprocess.Popen(['node','--input-type=module','-e',"import {createBridge} from './scripts/bridge-server.js';const b=createBridge({directory:process.argv[1],ip:'127.0.0.1',test:true,devicePort:0,adminPort:0});await b.listen();console.log('http://127.0.0.1:'+b.admin.address().port);process.on('SIGTERM',async()=>{await b.close();process.exit(0)});",str(Path(tmp)/'private-bridge')],cwd=app,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)
+  try:
+   import select
+   assert select.select([bridge.stdout],[],[],10)[0]
+   bridge_url=bridge.stdout.readline().strip();assert bridge_url.startswith('http://127.0.0.1:')
+   bridge_html=urllib.request.urlopen(bridge_url).read().decode();assert 'CSRF_PLACEHOLDER' not in bridge_html and '<title>Ponte PocketD-D</title>' in bridge_html
+   for asset in ['/bridge.js','/bridge.css']:assert urllib.request.urlopen(bridge_url+asset).status==200
+  finally:bridge.terminate();bridge.wait(timeout=5)
   server=subprocess.Popen(['node','--use-env-proxy','scripts/start-pc.js'],cwd=app,env={**os.environ,'POCKETDD_APP_PORT':'8797','POCKETDD_NO_OPEN':'1'},stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
   try:
    base='http://127.0.0.1:8797'
@@ -25,4 +37,4 @@ with zipfile.ZipFile(archive) as z:
    try:urllib.request.urlopen(req);raise AssertionError('Invalid Beyond URL accepted')
    except urllib.error.HTTPError as e:assert e.code==400
   finally:server.terminate();server.wait(timeout=5)
-print('PC ZIP: CRC, safe paths, Windows launcher, extracted app without node_modules, built assets and local Beyond connector validation passed; Windows shell itself not run')
+print('PC ZIP: CRC, safe paths, Windows launchers, exact extension/protocol/guide, extracted HTTPS bridge UI without node_modules, built app/assets and local Beyond connector validation passed; Windows shell, loaded MV3, RF and authenticated Beyond not run')

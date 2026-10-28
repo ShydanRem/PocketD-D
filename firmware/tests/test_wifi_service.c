@@ -1,6 +1,9 @@
 #define _POSIX_C_SOURCE 200809L
 #define PD_WIFI_TEST 1
 #include "../main/wifi.c"
+bool pd_sync_pause(bool value){(void)value;return true;}
+static bool mock_stage;static unsigned mock_stage_calls;
+bool pd_sync_stage_json(const char *json,size_t size){assert(size==2&&!strcmp(json,"{}"));mock_stage_calls++;return mock_stage;}
 static void mock_run(unsigned ticks){mock_ticks=ticks;if(!setjmp(mock_yield))service(NULL);}
 static void command(unsigned cmd){assert(pd_wifi_command(cmd));mock_run(1);}
 static httpd_req_t form(const char *ssid,const char *password){static char body[256];snprintf(body,sizeof body,"ssid=%s&password=%s&token=%s",ssid,password,csrf);return (httpd_req_t){.host="192.168.4.1",.origin="http://192.168.4.1",.type="application/x-www-form-urlencoded",.body=body,.content_len=(int)strlen(body)};}
@@ -13,6 +16,8 @@ int main(int argc,char **argv){
  if(argc==2&&!strcmp(argv[1],"--page")){httpd_req_t root={.host="192.168.4.1"};assert(page(&root)==0);puts(root.response);return 0;}
  httpd_req_t r={.host="evil.example"};assert(page(&r)==0&&r.status==403);r=(httpd_req_t){.host="192.168.4.1",.origin="https://evil.example"};assert(page(&r)==0&&r.status==403);
  r=(httpd_req_t){.host="192.168.4.1"};assert(page(&r)==0&&strstr(r.response,"name=token")&&!strstr(r.response,"SYNTHETIC-PASSWORD"));
+ /* Portal only stages the exact bundle after origin, MIME, CSRF and bounded JSON checks. */
+ char bridge_body[256];snprintf(bridge_body,sizeof bridge_body,"{\"token\":\"%s\",\"bundle\":\"{}\"}",csrf);httpd_req_t br={.host="192.168.4.1",.origin="http://192.168.4.1",.type="application/json",.body=bridge_body,.content_len=(int)strlen(bridge_body)};mock_stage=true;assert(bridge_handler(&br)==0&&br.status==202&&mock_stage_calls==1&&!mock_stores);br.at=0;br.origin="https://evil.example";assert(bridge_handler(&br)==0&&br.status==400&&mock_stage_calls==1);br.origin="http://192.168.4.1";br.type="text/plain";assert(bridge_handler(&br)==0&&br.status==400&&mock_stage_calls==1);br.type="application/json";bridge_body[10]='X';br.at=0;assert(bridge_handler(&br)==0&&br.status==400&&mock_stage_calls==1);mock_stage=false;
  r=form("Casa_sintetica","SYNTHETIC-PASSWORD");assert(connect_handler(&r)==0&&r.status==202&&!mock_stores&&!saved.ssid[0]);httpd_req_t busy=form("Altro","12345678");assert(connect_handler(&busy)==0&&busy.status==503);mock_run(1);assert(pending&&current.state==PD_WIFI_CONNECTING&&!mock_stores);mock_config.sta.ssid[0]='X';ip();assert(pending&&!mock_stores);mock_config.sta.ssid[0]='C';ip();assert(!pending&&current.setup_saved&&!current.setup_failed&&current.state==PD_WIFI_CONNECTED&&mock_stores==1&&mock_commits==1&&current.configured);assert(!strcmp(saved.ssid,"Casa_sintetica"));r=(httpd_req_t){.host="192.168.4.1"};assert(page(&r)==0&&!strstr(r.response,"SYNTHETIC-PASSWORD"));
  mock_clock+=60000;mock_associated=false;event(NULL,WIFI_EVENT,WIFI_EVENT_STA_DISCONNECTED,NULL);mock_run(1);assert(current.state==PD_WIFI_CONNECTING);ip();assert(current.state==PD_WIFI_CONNECTED&&!retry_at);
  __typeof__(saved) original=saved;unsigned stores=mock_stores;memset(&saved,0,sizeof saved);load();assert(!memcmp(&saved,&original,sizeof saved));

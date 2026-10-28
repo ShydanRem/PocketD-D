@@ -39,7 +39,7 @@ for package in ('esptool-js','pako','tslib','atob-lite','crypto-js'):
  if not found:raise SystemExit(f'Missing third-party license: {package}')
 # Linked firmware licenses also accompany the downloadable binary distribution.
 idf=Path(project['idf_path'])
-for label,path in [('ESP-IDF',idf/'LICENSE'),('esp32-wifi-lib',idf/'components/esp_wifi/lib/LICENSE'),('esp-phy-lib',idf/'components/esp_phy/lib/LICENSE')]:
+for label,path in [('ESP-IDF',idf/'LICENSE'),('mbedTLS',idf/'components/mbedtls/mbedtls/LICENSE'),('esp32-wifi-lib',idf/'components/esp_wifi/lib/LICENSE'),('esp-phy-lib',idf/'components/esp_phy/lib/LICENSE')]:
  if not path.is_file():raise SystemExit(f'Missing linked firmware license: {label}')
  shutil.copyfile(path,licenses/f'{label}-LICENSE.txt')
 print(f'Installer: firmware {version}, 3 separate regions, SHA256, known partitions, bundled dependencies/licenses; no user data')
@@ -123,10 +123,16 @@ for name in ('reference-list.png','reference-initiative.png','wifi-provisioning.
  source=ROOT/'firmware/tests/out/ui-build'/name
  if not source.is_file():raise SystemExit(f'Missing v0.78 capture: {name}')
  shutil.copyfile(source,out/'assets'/name)
-for name in ('BEYOND-V1','WIFI','BEYOND-TEMPO-REALE'):
+for name in ('BEYOND-V1','WIFI','BEYOND-TEMPO-REALE','PONTE-BEYOND','PONTE-BEYOND-PROVE'):
  shutil.copyfile(ROOT/'docs'/f'{name}.md',out/'downloads'/f'PocketDD-{name}.md')
  shutil.copyfile(ROOT/'docs'/f'{name}.md',out/'downloads'/f'{name}.md')
 (out/'downloads/previews').mkdir(exist_ok=True)
 shutil.copyfile(ROOT/'docs/previews/v078-reference-wifi.png',out/'downloads/previews/v078-reference-wifi.png')
 page=out/'index.html'
-page.write_text(page.read_text().replace('</main>', '<section class="after"><h2>Profilo e Wi-Fi · v0.78</h2><p>Scheda → Profilo PG: movimento, sensi/passivi, lingue, strumenti, dotazioni e iniziativa riconciliata. Le fotografie e i valori da verificare sono distinti dai comandi operativi. Reimporta da PC con app e firmware aggiornati; le altre schede restano conservate.</p><p>Aspetto → Schermo → Wi-Fi → Configura rete: collega il telefono o PC alla rete temporanea mostrata sul display e apri http://192.168.4.1. Le credenziali restano fuori dai backup del PG. Il Wi-Fi non sincronizza ancora con Beyond.</p><p><a href="downloads/PocketDD-BEYOND-V1.md">Ambito Beyond v1</a> · <a href="downloads/PocketDD-WIFI.md">Guida Wi-Fi</a> · <a href="downloads/PocketDD-BEYOND-TEMPO-REALE.md">Progetto tempo reale</a></p><p>Queste catture provengono dal firmware eseguito su PC con dati di prova e password fittizia. Non attestano USB o Wi-Fi fisici, ancora da collaudare.</p><div class="import-captures"><img src="assets/reference-list.png" width="466" height="466" alt="Profilo del PG sul dispositivo"><img src="assets/reference-initiative.png" width="466" height="466" alt="Iniziativa con bonus riconciliato"><img src="assets/wifi-provisioning.png" width="466" height="466" alt="Configurazione Wi-Fi con dati esclusivamente sintetici"><img src="assets/wifi-connected.png" width="466" height="466" alt="Stato connesso simulato"></div></section></main>'))
+page.write_text(page.read_text().replace('</main>', '<section class="after"><h2>Profilo e Wi-Fi · v0.78</h2><p>Scheda → Profilo PG: movimento, sensi/passivi, lingue, strumenti, dotazioni e iniziativa riconciliata. Le fotografie e i valori da verificare sono distinti dai comandi operativi. Reimporta da PC con app e firmware aggiornati; le altre schede restano conservate.</p><p>Aspetto → Schermo → Wi-Fi → Configura rete: collega il telefono o PC alla rete temporanea mostrata sul display e apri http://192.168.4.1. Le credenziali restano fuori dai backup del PG. La v0.79 aggiunge il ponte sperimentale descritto sotto.</p><p><a href="downloads/PocketDD-BEYOND-V1.md">Ambito Beyond v1</a> · <a href="downloads/PocketDD-WIFI.md">Guida Wi-Fi</a> · <a href="downloads/PocketDD-BEYOND-TEMPO-REALE.md">Progetto tempo reale</a></p><p>Queste catture provengono dal firmware eseguito su PC con dati di prova e password fittizia. Non attestano USB o Wi-Fi fisici, ancora da collaudare.</p><div class="import-captures"><img src="assets/reference-list.png" width="466" height="466" alt="Profilo del PG sul dispositivo"><img src="assets/reference-initiative.png" width="466" height="466" alt="Iniziativa con bonus riconciliato"><img src="assets/wifi-provisioning.png" width="466" height="466" alt="Configurazione Wi-Fi con dati esclusivamente sintetici"><img src="assets/wifi-connected.png" width="466" height="466" alt="Stato connesso simulato"></div></section></main>'))
+
+# Experimental bridge: software evidence only, no authenticated account/hardware claim.
+page=out/'index.html'
+page.write_text(page.read_text().replace('</main>', '<section class="after"><h2>Ponte Beyond sperimentale · v0.79</h2><p>Pocket → Wi-Fi → HTTPS sul PC → estensione Chrome/Edge → pagina Beyond. Stesse facce e totale dei tiri salvati; PF attuali e temporanei con verifica, conflitti visibili e nessun reinvio automatico dopo un esito incerto. Nessun requisito Foundry.</p><p>Nel pacchetto PC trovi Avvia-Ponte.cmd e la cartella extension. <a href="downloads/PocketDD-PONTE-BEYOND.md">Leggi la guida di abbinamento e i limiti</a>. I controlli software usano dati e pagine sintetiche: account Beyond, persistenza remota e radio ESP32 restano da collaudare. Il precedente problema USB resta aperto.</p></section></main>'))
+
+shutil.copyfile(ROOT/'docs/previews/v079-bridge.png',out/'downloads/previews/v079-bridge.png')

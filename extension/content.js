@@ -1,0 +1,1 @@
+(()=>{const instance=crypto.randomUUID();let busy=false;async function tick(){if(busy)return;busy=true;try{await chrome.runtime.sendMessage({type:'tick',instance})}catch{}finally{busy=false}}setInterval(tick,1500);tick();})();

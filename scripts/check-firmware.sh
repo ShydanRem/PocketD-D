@@ -58,3 +58,5 @@ cc -std=c11 -Wall -Wextra -Werror -Ifirmware/core firmware/core/backup.c firmwar
 node scripts/check-backup.js
 python3 scripts/check-device-backup.py
 python3 scripts/check-device-check.py
+node scripts/check-sync-native.js
+firmware/tests/out/ui-build/sync-service firmware/tests/out/sync-config.synthetic.json

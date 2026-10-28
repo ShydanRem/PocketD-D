@@ -1,3 +1,10 @@
+> Aggiornamento v0.79: [ponte Beyond sperimentale](PONTE-BEYOND.md),
+> conferma dell’abbinamento da Wi-Fi → Ponte, TLS verificato e invio dei soli
+> valori salvati. USB17/PDDa/backup PC20 invariati. Collaudo RF e account aperto.
+> I controlli host richiedono anche gli header/libreria OpenSSL per il test
+> SHA256 del servizio simulato; il firmware usa mbedTLS di ESP-IDF, il ponte
+> Node.js usa `node:crypto` senza dipendenza da un comando OpenSSL esterno.
+
 > Aggiornamento v0.78: [profilo Beyond, iniziativa e formati](BEYOND-V1.md),
 > [Wi-Fi opzionale dal dispositivo](WIFI.md). USB17, PDD36/PDDa, dimensioni
 > e partizioni conservate. Le sezioni successive documentano gli incrementi storici.

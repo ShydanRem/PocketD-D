@@ -1,3 +1,9 @@
+> Aggiornamento v0.79: la proposta sotto è stata seguita da una prima
+> [implementazione sperimentale del ponte](PONTE-BEYOND.md). HTTPS, coda,
+> estensione e conversione verificati con dati sintetici. La ricezione e
+> persistenza reali sul tuo account e il percorso ESP32 restano da collaudare.
+> Nessun aggiornamento Beyond reale è stato eseguito durante lo sviluppo.
+
 # Tempo reale con Beyond: metodo proposto dopo la prima versione
 
 Ricerca del 28 ottobre 2026. Nessuna scrittura Beyond o invio di dadi effettuato.

@@ -64,7 +64,7 @@ typedef struct {int content_len;const char *host,*origin,*type,*body;unsigned at
 typedef struct {const char *uri;int method;esp_err_t(*handler)(httpd_req_t*);} httpd_uri_t;
 static unsigned mock_clock,mock_ticks,mock_inits,mock_starts,mock_stops,mock_stores,mock_erases,mock_commits;
 static bool mock_rf,mock_sar=true,mock_associated,mock_fail_init,mock_fail_start,mock_fail_stop,mock_fail_store,mock_fail_connect;
-static unsigned char mock_blob[128],mock_staged[128],mock_queue[3][256];static size_t mock_blob_size,mock_staged_size,mock_request_size;static unsigned mock_queued;
+static unsigned char mock_blob[2048],mock_staged[2048],mock_queue[3][256];static size_t mock_blob_size,mock_staged_size,mock_request_size;static unsigned mock_queued;
 static wifi_config_t mock_config;static jmp_buf mock_yield;static int mock_netif;static bool mock_netif_fail;
 static void mock_run(unsigned ticks);
 static void *xSemaphoreCreateMutex(void){return (void*)1;}
@@ -103,10 +103,11 @@ static int esp_event_handler_register(esp_event_base_t b,int id,void(*handler)(v
 static void esp_log_level_set(const char *tag,int level){(void)tag;(void)level;}
 static esp_netif_t *esp_netif_get_handle_from_ifkey(const char *key){assert(!strcmp(key,"WIFI_STA_DEF"));return &mock_netif;}
 static int esp_netif_get_ip_info(esp_netif_t *net,esp_netif_ip_info_t *ip){(void)net;ip->ip=1;return 0;}
+static const char *mock_namespace="pdd_wifi";
 static int nvs_flash_init_partition(const char *p){assert(!strcmp(p,"pdd_nvs"));return 0;}
-static int nvs_open_from_partition(const char *p,const char *ns,int mode,nvs_handle_t *h){assert(!strcmp(p,"pdd_nvs")&&!strcmp(ns,"pdd_wifi"));*h=1;return mode==NVS_READONLY&&!mock_blob_size?ESP_ERR_NVS_NOT_FOUND:0;}
+static int nvs_open_from_partition(const char *p,const char *ns,int mode,nvs_handle_t *h){assert(!strcmp(p,"pdd_nvs")&&!strcmp(ns,mock_namespace));*h=1;return mode==NVS_READONLY&&!mock_blob_size?ESP_ERR_NVS_NOT_FOUND:0;}
 static int nvs_get_blob(nvs_handle_t h,const char *key,void *out,size_t *n){(void)h;assert(!strcmp(key,"config"));if(!mock_blob_size||*n<mock_blob_size)return -1;memcpy(out,mock_blob,mock_blob_size);*n=mock_blob_size;return 0;}
-static int nvs_set_blob(nvs_handle_t h,const char *key,const void *p,size_t n){(void)h;assert(!strcmp(key,"config")&&n<=128);mock_stores++;if(mock_fail_store)return -1;memcpy(mock_staged,p,n);mock_staged_size=n;return 0;}
+static int nvs_set_blob(nvs_handle_t h,const char *key,const void *p,size_t n){(void)h;assert(!strcmp(key,"config")&&n<=2048);mock_stores++;if(mock_fail_store)return -1;memcpy(mock_staged,p,n);mock_staged_size=n;return 0;}
 static int nvs_erase_all(nvs_handle_t h){assert(h==1);mock_erases++;mock_staged_size=0;return mock_fail_store?-1:0;}
 static int nvs_commit(nvs_handle_t h){(void)h;mock_commits++;if(mock_fail_store)return -1;memcpy(mock_blob,mock_staged,mock_staged_size);mock_blob_size=mock_staged_size;return 0;}
 static void nvs_close(nvs_handle_t h){(void)h;}

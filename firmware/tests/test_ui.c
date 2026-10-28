@@ -14,6 +14,14 @@ uint32_t pd_wifi_random(void){return 0;}
 void pd_wifi_snapshot(pd_wifi_info *out){*out=wifi_mock;}
 bool pd_wifi_command(unsigned command){wifi_requested=command;return true;}
 bool pd_wifi_pause(bool paused){(void)paused;return true;}
+static pd_sync_info sync_mock;static bool sync_fail_save;static unsigned sync_decisions;
+void pd_sync_boot(void){}
+void pd_sync_snapshot(pd_sync_info *out){*out=sync_mock;}
+void pd_sync_observe(const pd_state *s,const pd_history *h,bool durable){(void)s;(void)h;(void)durable;}
+bool pd_sync_pause(bool value){(void)value;return true;}
+bool pd_sync_stage_json(const char *json,size_t size){(void)json;(void)size;return true;}
+bool pd_sync_decide(bool accept,uint32_t epoch){(void)epoch;if(accept&&sync_fail_save)return false;sync_decisions++;sync_mock.offer=false;sync_mock.configured=accept;if(accept)sync_mock.state=PD_SYNC_BASELINE;return true;}
+bool pd_sync_forget(void){if(sync_fail_save)return false;sync_mock=(pd_sync_info){0};return true;}
 static bool fail_save,fail_canvas,fail_brightness,fail_storage_commit;
 static unsigned brightness_calls,brightness_last;
 static char last_reply[PD_DIAGNOSTICS_MAX+32];
@@ -1662,13 +1670,15 @@ int main(void) {
     wifi_mock=(pd_wifi_info){.state=PD_WIFI_CONNECTED,.configured=true,.ssid="Synthetic home network",.ip="192.168.1.23"};render();bounds();screenshot("wifi-connected.ppm");click("Dimentica");assert(page==WIFI_FORGET);effects_before=state;for(unsigned i=0;i<3;i++)shortcut(i);assert(page==WIFI_FORGET&&!stage_import(&imported_magic));bounds();screenshot("wifi-forget.ppm");click("Indietro");click("Dimentica");click("Conferma");assert(wifi_requested==PD_WIFI_FORGET&&!memcmp(&state,&effects_before,sizeof state));click("Indietro");
     state.magic.available=true;state.magic.count=2;state.magic.powers[0]=(pd_power){.name="Movimento",.description="Passo: 30 ft. Volo: da verificare. Fotografia all importazione.",.kind=1,.flags=PD_PASSIVE|PD_PREPARED,.effect=4,.level=1};state.magic.powers[1]=(pd_power){.name="Iniziativa",.description="Bonus +4. Fotografia: ricontrollare dopo modifiche.",.kind=1,.flags=PD_PASSIVE|PD_PREPARED,.effect=5,.level=6,.attack_modifier=4};assert(pd_valid(&state));page=SHEET;sheet_tab=0;render();click("Profilo PG >");assert(page==REFERENCE_HOME);bounds();screenshot("reference-list.ppm");click("Movimento");assert(page==REFERENCE_TEXT);bounds();screenshot("reference-movement.ppm");click("Indietro");click("Iniziativa");bounds();screenshot("reference-initiative.ppm");effects_calls=random_calls;effects_before=state;click("Lancia");assert(page==DICE&&combat_roll==8&&random_calls==effects_calls+1&&result.bonus==4&&!memcmp(&state,&effects_before,sizeof state));act(16);bounds();screenshot("reference-initiative-result.ppm");click("Profilo");click("Iniziativa");state.roll_conditions=PD_FRIGHTENED;render();bounds();screenshot("reference-initiative-context.ppm");click("Contesto");click("Fonte paura in vista: ? >");click("Usa contesto");click("Lancia");assert(combat_roll==8);act(16);click("Profilo");click("Iniziativa");click("Contesto");click("Effetti tiro: applicati >");click("Usa contesto");effects_calls=random_calls;click("Lancia");assert(combat_roll==8&&random_calls==effects_calls+1&&result.bonus==4);act(16);act(100);
     puts("Wi-Fi UI and reference/initiative: synthetic status only, no PG mutations, explicit forget guard, actual dice/history and current condition context passed; physical Wi-Fi still untested");
+    pd_demo(&state);page=WIFI_HOME;wifi_mock=(pd_wifi_info){0};render();click("Ponte");assert(page==SYNC_HOME);bounds();screenshot("sync-offline.ppm");sync_mock=(pd_sync_info){.offer=true,.character_id="123456",.host="192.168.1.10",.fingerprint="0123456789abcdef0123456789abcdef"};page=SYNC_REVIEW;render();effects_before=state;bounds();screenshot("sync-review.ppm");for(unsigned i=0;i<3;i++)shortcut(i);assert(page==SYNC_REVIEW&&!stage_import(&imported_magic));sync_fail_save=true;click("Conferma");assert(page==SYNC_REVIEW&&sync_mock.offer&&!memcmp(&state,&effects_before,sizeof state)&&!strcmp(sync_notice,"Salvataggio non confermato"));bounds();screenshot("sync-save-error.ppm");sync_fail_save=false;click("Conferma");assert(page==SYNC_HOME&&!sync_mock.offer&&sync_mock.configured&&!memcmp(&state,&effects_before,sizeof state));sync_mock.state=PD_SYNC_CONFLICT;render();bounds();screenshot("sync-conflict.ppm");click("Rimuovi");assert(page==SYNC_FORGET);bounds();screenshot("sync-forget.ppm");click("Indietro");click("Rimuovi");click("Conferma");assert(page==SYNC_HOME&&!sync_mock.configured&&!memcmp(&state,&effects_before,sizeof state));
+    puts("Sync UI: synthetic pairing/fingerprint, protected confirmation, failed-save retry, conflict, forget and unchanged character passed; no physical network or Beyond write tested");
     unsigned covered=0;
-    for(unsigned p=0;p<=REFERENCE_TEXT;p++){
+    for(unsigned p=0;p<=SYNC_FORGET;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)REFERENCE_TEXT+1);
-    assert(covered==REFERENCE_TEXT+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)SYNC_FORGET+1);
+    assert(covered==SYNC_FORGET+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }
