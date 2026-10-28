@@ -1,5 +1,10 @@
 # Beyond: inventario operativo e difese — v0.71
 
+> Aggiornamento v0.75: [verifica rapida delle difese](DIFESE-VERIFICA-RAPIDA.md)
+> sul dispositivo e sul PC. Completamento manuale dei tipi mancanti con anteprima
+> e conferma; l’importazione continua a lasciarli sconosciuti. Formati invariati.
+
+
 > Aggiornamento v0.72: [punteggi fissati, massimi e bonus delle caratteristiche](BEYOND-CARATTERISTICHE.md).
 > Supportate concessioni esplicite riconciliate; valori derivati verificati anche nel parser C.
 > Nessun nuovo formato. Restano restrizioni, origini e override non supportati; le prove datate sotto mantengono il proprio contesto.

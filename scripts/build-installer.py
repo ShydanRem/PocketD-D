@@ -88,3 +88,11 @@ for name in ('skill-ability-list.png','skill-ability-detail.png'):
  shutil.copyfile(source,out/'assets'/name)
 page=out/'index.html'
 page.write_text(page.read_text().replace('</main>', '<section class="after"><h2>La caratteristica giusta per il tuo tiro · v0.74</h2><p>Abilità con caratteristica personalizzata da Beyond o dall’editor PC fino al dispositivo. Per trasferire questa scelta occorre firmware 0.74. Competenza e bonus restano separati.</p><p>Intimidire con FOR: catture del renderer del firmware eseguito su PC con dati sintetici, non fotografie o prove USB fisiche.</p><div class="import-captures"><img src="assets/skill-ability-list.png" width="466" height="466" alt="Elenco abilità con il bonus personalizzato"><img src="assets/skill-ability-detail.png" width="466" height="466" alt="Intimidire con FOR più quattro, competenza più due e vantaggio FOR"></div></section></main>'))
+
+# Explicit defence setup; actual native renderer, synthetic character only.
+for name in ('defence-setup-preview.png','defence-setup-complete.png'):
+ source=ROOT/'firmware/tests/out/ui-build'/name
+ if not source.is_file():raise SystemExit(f'Missing defence setup capture: {name}')
+ shutil.copyfile(source,out/'assets'/name)
+page=out/'index.html'
+page.write_text(page.read_text().replace('</main>', '<section class="after"><h2>Difese pronte per il tavolo · v0.75</h2><p>Danni → Difese per tipo → Completa: controlla i tipi mancanti e confermali Normali di base solo dopo verifica. Difese note, regole ed extra restano conservati. Configurazione rapida disponibile anche sul PC; nessuna deduzione automatica da Beyond.</p><p>Catture del renderer del firmware su PC con dati sintetici. Il trasferimento USB sul dispositivo resta da verificare.</p><div class="import-captures"><img src="assets/defence-setup-preview.png" width="466" height="466" alt="Anteprima dei soli tipi da verificare"><img src="assets/defence-setup-complete.png" width="466" height="466" alt="Profilo completato con difese precedenti conservate"></div></section></main>'))

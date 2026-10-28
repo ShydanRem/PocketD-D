@@ -7,6 +7,20 @@ static void crc(uint8_t *p,size_t n){uint32_t c=pd_crc32(p,n-4);for(unsigned i=0
 int main(void){
  static pd_state s,before,next;pd_damage_summary r,output_before;pd_damage_plan plan={0};unsigned cases=0;
  pd_demo(&s);before=s;memset(&r,0x5a,sizeof r);output_before=r;
+ /* Every subset: explicit normal completion changes only the configured mask.
+    Conditional base rules, all three grants and unrelated state stay byte-exact. */
+ for(unsigned mask=0;mask<8192;mask++){
+  pd_demo(&s);
+  for(unsigned type=0;type<PD_DAMAGE_TYPES;type++){
+   if(mask&(1u<<type)){assert(pd_defence_set(&s,type,true,type%8));if(type%8&1)assert(pd_defence_rule_set(&s,type,false,0,PD_RULE_NONMAGICAL));}
+   for(unsigned slot=0;slot<PD_DEFENCE_SLOTS;slot++)assert(pd_defence_grant_set(&s,type,slot,(pd_defence_temporary){.flags=1+type%7,.active=true,.timed=true,.rounds=slot+1}));
+  }
+  before=s;next=s;next.defences.configured=8191;assert(pd_defence_complete_normals(&s)&&pd_valid(&s)&&!memcmp(&s,&next,sizeof s));
+  assert(pd_defence_complete_normals(&s)&&!memcmp(&s,&next,sizeof s));
+  if(mask%127==0){static uint8_t record[PD_RECORD_SIZE];uint32_t generation;size_t size=pd_encode(&s,12,record);assert(pd_decode(record,size,&next,&generation)&&generation==12&&!memcmp(&s,&next,sizeof s));}
+ }
+ assert(!pd_defence_complete_normals(NULL));s.level=0;before=s;assert(!pd_defence_complete_normals(&s)&&!memcmp(&s,&before,sizeof s));
+ pd_demo(&s);before=s;
  assert(!pd_damage_apply(&s,&plan,&r)&&!memcmp(&s,&before,sizeof s)&&!memcmp(&r,&output_before,sizeof r));
  assert(pd_damage_preview(&s,&plan,&r)&&!r.configured&&!r.allowed&&r.hp_after==24);
  const unsigned hps[]={0,1,24},temps[]={0,1,7};

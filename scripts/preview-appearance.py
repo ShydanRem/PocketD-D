@@ -21,3 +21,5 @@ for path in BASE.glob('class-*.ppm'):Image.open(path).save(path.with_suffix('.pn
 for path in BASE.glob('beyond-defences-*.ppm'):Image.open(path).save(path.with_suffix('.png'))
 
 for path in BASE.glob('skill-ability-*.ppm'):Image.open(path).save(path.with_suffix('.png'))
+
+for path in BASE.glob('defence-setup-*.ppm'):Image.open(path).save(path.with_suffix('.png'))

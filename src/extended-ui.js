@@ -1,10 +1,10 @@
-import {damageNames,emptyDefences,defenceFlags,defenceLabel} from './defences.js';
+import {damageNames,emptyDefences,defenceFlags,defenceLabel,completeNormalDefences} from './defences.js';
 import {parseBackup,serialize} from './model.js';
 export function importedSummary(state){
   const x=state.extended;if(!x)return '';
   return `<div class="extended-summary"><span>PF temporanei <b>${x.tempHp}</b> · ${x.conditions.length} condizioni · ${x.hitDice.reduce((sum,h)=>sum+h.max-h.used,0)} dadi vita disponibili</span><button data-action="extended-state">Stato, risorse e note</button></div>`;
 }
-export function openExtendedState({getState,commit,escapeHtml}){
+export function openExtendedState({getState,commit,escapeHtml,focusDefences=false}){
   const state=getState(),x=state.extended;if(!x)return;
   const dialog=document.createElement('dialog');dialog.className='editor-dialog beyond-import';
   const input=(label,name,value,min,max)=>`<label>${label}<input type="number" name="${name}" min="${min}" max="${max}" value="${value}" required></label>`;
@@ -22,7 +22,31 @@ export function openExtendedState({getState,commit,escapeHtml}){
     <p data-error role="alert"></p><button type="submit">Salva stato e risorse</button></form><h3>Dettagli importati</h3><ul data-facts></ul>`;
   const list=dialog.querySelector('[data-facts]');for(const value of x.facts){const li=document.createElement('li');li.textContent=value;list.append(li);}
   dialog.querySelector('[data-close]').onclick=()=>dialog.close();
-  dialog.querySelector('[name=defences-enabled]').onchange=event=>dialog.querySelectorAll('[name^=defence-]').forEach(e=>e.disabled=!event.target.checked);
+  const defenceEditor=dialog.querySelector('[data-defence-editor]'),enabled=dialog.querySelector('[name=defences-enabled]');
+  const setup=document.createElement('div');
+  setup.innerHTML='<p data-defence-count role="status"></p><button type="button" data-defence-review>Completa i tipi da verificare…</button><section data-defence-completion hidden><p>Hai controllato la scheda e le regole del PG? Questi tipi saranno dichiarati Normali nel profilo base:</p><ul data-defence-missing></ul><p>Le difese già impostate restano conservate. Effetti temporanei o condizionali richiedono una gestione separata sul dispositivo. La scelta resta in bozza fino a Salva stato e risorse.</p><button type="button" data-defence-confirm>Ho verificato: imposta Normale</button><button type="button" data-defence-cancel>Annulla scelta</button></section>';
+  defenceEditor.append(setup);
+  const selectors=[...dialog.querySelectorAll('[name^=defence-]')],review=setup.querySelector('[data-defence-completion]');
+  const readDefences=()=>{
+    const d=emptyDefences();selectors.forEach((select,i)=>{const f=Number(select.value);if(!Number.isInteger(f)||f< -1||f>7)throw new Error('Difesa non valida');if(f>=0){const bit=1<<i;d.configured|=bit;if(f&1)d.resistance|=bit;if(f&2)d.vulnerability|=bit;if(f&4)d.immunity|=bit;}});return d;
+  };
+  const updateDefences=()=>{
+    review.hidden=true;selectors.forEach(e=>e.disabled=!enabled.checked);
+    const missing=selectors.filter(e=>e.value==='-1').length;
+    setup.querySelector('[data-defence-count]').textContent=enabled.checked?`${13-missing}/13 tipi verificati · ${missing} da verificare`:'Profilo non trasferito. Abilitalo per configurare le difese.';
+    setup.querySelector('[data-defence-review]').disabled=!enabled.checked||!missing;
+  };
+  enabled.onchange=updateDefences;selectors.forEach(e=>e.onchange=updateDefences);updateDefences();
+  let reviewed;
+  setup.querySelector('[data-defence-review]').onclick=()=>{
+    reviewed=readDefences();const list=setup.querySelector('[data-defence-missing]');list.replaceChildren();
+    damageNames.forEach((name,i)=>{if(defenceFlags(reviewed,i)===null){const li=document.createElement('li');li.textContent=name;list.append(li);}});review.hidden=false;
+  };
+  setup.querySelector('[data-defence-cancel]').onclick=()=>{review.hidden=true;};
+  setup.querySelector('[data-defence-confirm]').onclick=()=>{
+    if(!enabled.checked||JSON.stringify(readDefences())!==JSON.stringify(reviewed)){updateDefences();return;}
+    const completed=completeNormalDefences(reviewed);selectors.forEach((e,i)=>e.value=String(defenceFlags(completed,i)));updateDefences();
+  };
   dialog.querySelector('form').onsubmit=event=>{
     event.preventDefault();const data=new FormData(event.target);
     try{
@@ -32,9 +56,10 @@ export function openExtendedState({getState,commit,escapeHtml}){
         currenciesAvailable:data.has('currencies-known'),hitDice:x.hitDice.map((h,i)=>({...h,used:Number(data.get(`hd-${i}`))})),currencies:Object.fromEntries(Object.keys(x.currencies).map(k=>[k,Number(data.get(`coin-${k}`))])),
         pactSlots:x.pactSlots.map((s,i)=>({current:Number(data.get(`pact-current-${i}`)),max:Number(data.get(`pact-max-${i}`))})),blockedChecks:data.has('verify-checks')?[]:x.blockedChecks};
       delete extended.defences;
-      if(data.has('defences-enabled')){const d=emptyDefences();for(let i=0;i<13;i++){const f=Number(data.get(`defence-${i}`));if(!Number.isInteger(f)||f< -1||f>7)throw new Error('Difesa non valida');if(f>=0){const bit=1<<i;d.configured|=bit;if(f&1)d.resistance|=bit;if(f&2)d.vulnerability|=bit;if(f&4)d.immunity|=bit;}}extended.defences=d;}
+      if(data.has('defences-enabled'))extended.defences=readDefences();
       commit(parseBackup(serialize({...state,extended,condition:data.has('poisoned-effect')})));dialog.close();
     }catch(error){dialog.querySelector('[data-error]').textContent=error.message;}
   };
   document.body.append(dialog);dialog.addEventListener('close',()=>dialog.remove(),{once:true});dialog.showModal();
+  if(focusDefences){defenceEditor.open=true;enabled.focus();enabled.scrollIntoView({block:'center'});}
 }

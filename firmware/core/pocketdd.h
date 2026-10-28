@@ -168,6 +168,8 @@ unsigned pd_defence_flags(const pd_state *state,unsigned type);
 bool pd_defence_conditional(const pd_state *state,unsigned type);
 bool pd_defence_rule_set(pd_state *state,unsigned type,bool temporary,unsigned property,unsigned condition);
 bool pd_defence_set(pd_state *state,unsigned type,bool configured,unsigned flags);
+/* Explicit manual verification: fills unknown bases with normal, preserves all grants/rules. */
+bool pd_defence_complete_normals(pd_state *state);
 bool pd_defence_temporary_set(pd_state *state,unsigned type,pd_defence_temporary defence);
 /* Legacy setters above address slot 0; slots are stable and never compacted. */
 const pd_defence_temporary *pd_defence_grant(const pd_state *state,unsigned type,unsigned slot);

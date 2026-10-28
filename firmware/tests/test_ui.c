@@ -1615,13 +1615,29 @@ int main(void) {
     assert(stage_import(&imported_defences));assert(pending.defences.resistance==32);wrapped_fits();screenshot("beyond-defences-import.ppm");click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));assert(stage_import(&imported_defences));fail_save=true;click("Conferma");assert(!import_pending&&!memcmp(&state,&effects_before,sizeof state));fail_save=false;assert(stage_import(&imported_defences));click("Conferma");assert(!import_pending&&state.defences.configured==48&&state.defences.resistance==32&&state.defences.immunity==16&&state.items[2].charges.current==5);assert(!(state.defences.configured&1));
     act(1800);screenshot("beyond-defences-device.ppm");act(100);
     puts("Beyond defenses UI: imported verified masks/charges, pending preview/cancel, failed save and confirmation preserve the old sheet until commit; unknown types remain unknown (synthetic, no USB hardware)");
+    /* Explicit completion preserves known conditional bases and independent extras. */
+    pd_demo(&state);state.hp=32;state.temp_hp=7;
+    assert(pd_defence_set(&state,0,true,1)&&pd_defence_rule_set(&state,0,false,0,PD_RULE_NONMAGICAL));
+    assert(pd_defence_set(&state,5,true,6));
+    for(unsigned slot=0;slot<3;slot++)assert(pd_defence_grant_set(&state,12,slot,(pd_defence_temporary){.flags=slot+1,.active=true,.timed=true,.rounds=slot+1}));
+    act(1800);click("Difese per tipo");screenshot("defence-setup-list.ppm");effects_before=state;effects_saves=save_calls;effects_calls=random_calls;
+    click("Completa");assert(page==DEFENCE_SETUP);bounds();wrapped_fits();screenshot("defence-setup-preview.ppm");
+    for(unsigned i=0;i<3;i++){shortcut(i);act(100);act(1852);assert(page==DEFENCE_SETUP&&!stage_import(&imported_magic)&&!memcmp(&state,&effects_before,sizeof state));}
+    click(">");click(">");click(">");bounds();wrapped_fits();assert(defence_setup_page==3);screenshot("defence-setup-last.ppm");
+    act(3904);assert(defence_setup_page==3);click("Indietro");assert(page==DEFENCE_LIST&&!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves);
+    click("Completa");fail_save=true;click("Conferma");assert(page==DEFENCE_SETUP&&!memcmp(&state,&effects_before,sizeof state));screenshot("defence-setup-save-error.ppm");
+    fail_save=false;click("Conferma");assert(page==DEFENCE_LIST&&state.defences.configured==8191&&random_calls==effects_calls&&save_calls==effects_saves+2);
+    pd_state completed_defences=effects_before;completed_defences.defences.configured=8191;assert(!memcmp(&state,&completed_defences,sizeof state));screenshot("defence-setup-complete.ppm");
+    effects_saves=save_calls;act(3900);assert(page==DEFENCE_LIST&&save_calls==effects_saves);act(100);click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));
+    pd_demo(&state);act(1800);click("Difese per tipo");click("Completa");for(unsigned i=0;i<4;i++)click(">");bounds();wrapped_fits();assert(defence_setup_page==4);screenshot("defence-setup-thirteen.ppm");click("Conferma");assert(state.defences.configured==8191&&!state.defences.resistance&&!state.defences.vulnerability&&!state.defences.immunity);
+    puts("Manual defence completion: explicit paged review, unknown bases only, conditional rules/all extras preserved, keys/import protected, cancel, save retry, no RNG, undo, 13-type bounds and native persistence in core tests passed; no physical USB");
     unsigned covered=0;
-    for(unsigned p=0;p<=APPEARANCE_CONFIRM;p++){
+    for(unsigned p=0;p<=DEFENCE_SETUP;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)APPEARANCE_CONFIRM+1);
-    assert(covered==APPEARANCE_CONFIRM+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)DEFENCE_SETUP+1);
+    assert(covered==DEFENCE_SETUP+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

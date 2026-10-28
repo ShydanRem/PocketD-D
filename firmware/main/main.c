@@ -42,7 +42,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM, POWER_HOME, POWER_OFF, ITEM_SEARCH, POWER_SEARCH, MAGIC_MANAGE, MAGIC_PREPARATION, ITEM_QUANTITY_CONFIRM, AVATAR_EDIT, SCENE_EDIT, APPEARANCE_CONFIRM } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM, POWER_HOME, POWER_OFF, ITEM_SEARCH, POWER_SEARCH, MAGIC_MANAGE, MAGIC_PREPARATION, ITEM_QUANTITY_CONFIRM, AVATAR_EDIT, SCENE_EDIT, APPEARANCE_CONFIRM, DEFENCE_SETUP } page_t;
 static const pd_theme_kind page_themes[]={
     [HERO]=PD_THEME_NONE,
     [SHEET]=PD_THEME_SHEET,
@@ -89,6 +89,7 @@ static const pd_theme_kind page_themes[]={
     [ROUND_DEFENCES]=PD_THEME_EFFECTS,
     [DAMAGE_HOME]=PD_THEME_DAMAGE,
     [DEFENCE_LIST]=PD_THEME_DAMAGE,
+    [DEFENCE_SETUP]=PD_THEME_DAMAGE,
     [DEFENCE_EDIT]=PD_THEME_DAMAGE,
     [DEFENCE_CONFIRM]=PD_THEME_DAMAGE,
     [DAMAGE_CONFIRM]=PD_THEME_DAMAGE,
@@ -258,7 +259,7 @@ static bool item_rolled;
 static pd_pool item_result;
 static unsigned item_gained;
 static bool appearance_editing(void){return page==AVATAR_EDIT||page==SCENE_EDIT||page==APPEARANCE_CONFIRM;}
-static bool confirmation_open(void){return appearance_editing()||page==ITEM_QUANTITY_CONFIRM||page==MAGIC_PREPARATION||page==ITEM_SEARCH||page==POWER_SEARCH||power_paused||power_off_attempted||page==POWER_OFF||page==NUMBER_ENTRY||page==VITAL_CONFIRM||page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
+static bool confirmation_open(void){return page==DEFENCE_SETUP||appearance_editing()||page==ITEM_QUANTITY_CONFIRM||page==MAGIC_PREPARATION||page==ITEM_SEARCH||page==POWER_SEARCH||power_paused||power_off_attempted||page==POWER_OFF||page==NUMBER_ENTRY||page==VITAL_CONFIRM||page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
 static pd_damage_plan damage_plan; /* First component + explicit concentration choice. */
 static pd_damage_component damage_extra[PD_DAMAGE_COMPONENTS-1],damage_part_draft;
 static pd_damage_context damage_context,damage_extra_context[PD_DAMAGE_COMPONENTS-1],damage_part_context,source_context_draft;
@@ -293,7 +294,7 @@ static pd_damage_summary concentration_damage;
 static pd_roll concentration_result;
 static int concentration_mode,concentration_extra;
 static bool concentration_rolled,concentration_cap30;
-static unsigned damage_hp_before,damage_temp_before,defence_index,defence_page,defence_flags;
+static unsigned damage_hp_before,damage_temp_before,defence_index,defence_page,defence_flags,defence_setup_page;
 static bool defence_configured,defence_rule_temporary,rule_review_temporary;
 static uint8_t defence_conditions[3];
 static unsigned defence_rule_property,rule_review_property;
@@ -729,6 +730,7 @@ static void act(intptr_t action) {
     if(page==WALLET_CONFIRM&&action!=2411&&action!=2412&&action!=2409)return;
     if(page==MAGIC_STOP&&action!=852&&action!=853)return;
     if(page==MAGIC_CONFIRM&&action!=832&&action!=833)return;
+    if(page==DEFENCE_SETUP&&(action<3901||action>3904))return;
     if(page==DEFENCE_CONFIRM&&action!=1816&&action!=1817&&action!=2010)return;
     if(page==DEFENCE_GRANT_REVIEW&&action!=1817&&action!=2010&&action!=2035&&action!=2036)return;
     if(page==DEFENCE_RULE_REVIEW&&action!=1817&&(action<2011||action>2014))return;
@@ -1359,6 +1361,15 @@ static void act(intptr_t action) {
     else if(action==1850&&defence_page)defence_page--;
     else if(action==1851&&(defence_page+1)*3<PD_DAMAGE_TYPES)defence_page++;
     else if(action==1852&&page==DEFENCE_LIST)page=DAMAGE_HOME;
+    else if(action==3900&&page==DEFENCE_LIST&&state.defences.configured!=8191){defence_setup_page=0;page=DEFENCE_SETUP;}
+    else if(action==3901&&page==DEFENCE_SETUP)page=DEFENCE_LIST;
+    else if(action==3902&&page==DEFENCE_SETUP&&state.defences.configured!=8191){
+        next=state;
+        if(!pd_defence_complete_normals(&next))return;
+        if(pd_storage_save(&next)){previous=state;undo_available=true;state=next;invalidate_strike();damage_plan.concentration=0;page=DEFENCE_LIST;}
+    }
+    else if(action==3903&&page==DEFENCE_SETUP&&defence_setup_page)defence_setup_page--;
+    else if(action==3904&&page==DEFENCE_SETUP&&(defence_setup_page+1)*3<PD_DAMAGE_TYPES-bit_count(state.defences.configured))defence_setup_page++;
     else if(action==1700)page=EFFECT_LIST;
     else if(action==1701&&state.effect_count<PD_EFFECTS){effect_index=state.effect_count;effect_draft=(pd_effect){.active=true};effect_removing=false;page=EFFECT_EDIT;}
     else if(action>=1720&&action<1720+PD_EFFECTS&&action-1720<state.effect_count){effect_index=action-1720;effect_draft=state.effects[effect_index];effect_removing=false;page=EFFECT_EDIT;}
@@ -2563,7 +2574,7 @@ static void render_damage(void) {
         small_label(has_reductions(&damage_details)?"Riduzioni e totale: vedi Conto":"Stesso tipo e difese: somma prima",83,333,300,PD_MUTED);button("<",83,359,60,48,1932,damage_type_page>0);button("Riepilogo",155,359,156,48,1931,true);button(">",323,359,60,48,1933,damage_type_page+1<pages);
     } else if(page==DEFENCE_LIST){
         unsigned pages=(PD_DAMAGE_TYPES+2)/3;if(defence_page>=pages)defence_page=pages-1;
-        snprintf(text,sizeof text,"Difese manuali %u/%u",defence_page+1,pages);label(text,83,99,300,true);small_label("Non dedotte da Beyond o dal testo",83,133,300,PD_GOLD);
+        snprintf(text,sizeof text,"Difese manuali %u/%u",defence_page+1,pages);label(text,83,99,300,true);snprintf(text,sizeof text,"%u/13 tipi base verificati",bit_count(state.defences.configured));small_label(text,83,133,300,PD_GOLD);
         for(unsigned row=0;row<3;row++){
             unsigned i=defence_page*3+row;if(i>=PD_DAMAGE_TYPES)break;
             snprintf(text,sizeof text,"%s | %s",pd_damage_name(i),defence_profile(&state,i));
@@ -2571,7 +2582,18 @@ static void render_damage(void) {
             lv_obj_t *b=button(text,83,159+row*48,300,44,1820+i,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
         }
         button("<",83,305,60,44,1850,defence_page>0);button("1 round",155,305,156,44,1740,timed_effects());button(">",323,305,60,44,1851,defence_page+1<pages);
-        button("Indietro",83,359,300,48,1852,true);
+        button("Indietro",83,359,144,48,1852,true);button("Completa",239,359,144,48,3900,state.defences.configured!=8191);
+    } else if(page==DEFENCE_SETUP){
+        unsigned count=PD_DAMAGE_TYPES-bit_count(state.defences.configured),types[PD_DAMAGE_TYPES],found=0;
+        for(unsigned i=0;i<PD_DAMAGE_TYPES;i++)if(!(state.defences.configured&(1u<<i)))types[found++]=i;
+        unsigned pages=count?(count+2)/3:1;if(defence_setup_page>=pages)defence_setup_page=pages-1;
+        label("Conferma tipi normali",83,99,300,true);
+        snprintf(text,sizeof text,"%u basi da verificare | %u/%u",count,defence_setup_page+1,pages);small_label(text,83,137,300,PD_GOLD);
+        for(unsigned row=0;row<3;row++){unsigned at=defence_setup_page*3+row;if(at>=count)break;snprintf(text,sizeof text,"%s -> normale",pd_damage_name(types[at]));small_label(text,83,168+row*29,300,PD_TEXT);}
+        small_label("Conferma solo dopo verifica del PG",83,262,300,PD_GOLD);
+        small_label("Difese note ed extra conservati",83,285,300,PD_MUTED);
+        button("<",83,307,60,44,3903,defence_setup_page>0);small_label("Scelta manuale",155,320,156,PD_MUTED);button(">",323,307,60,44,3904,defence_setup_page+1<pages);
+        button("Indietro",83,359,144,48,3901,true);button("Conferma",239,359,144,48,3902,count>0);
     } else if(page==DEFENCE_EDIT){
         label(pd_damage_name(defence_index),83,111,204,false);lv_obj_t *rule=button("Regole",299,99,84,44,2000,true);lv_obj_set_style_text_font(rule,&lv_font_montserrat_16,0);small_label("Profilo base; difesa a tempo separata",83,149,300,PD_GOLD);
         const char *names[]={"Resistenza","Vulnerabilita","Immunita","Configurato"};
@@ -3114,7 +3136,7 @@ static void render_content(void) {
     }
 }
 #ifdef PD_UI_TEST
-static bool styled_pages[APPEARANCE_CONFIRM+1];
+static bool styled_pages[DEFENCE_SETUP+1];
 static void capture_styled_page(unsigned view);
 #endif
 static void render(void){

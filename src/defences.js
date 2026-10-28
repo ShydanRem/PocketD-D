@@ -2,6 +2,8 @@
 export const damageTypes=Object.freeze(['bludgeoning','piercing','slashing','acid','cold','fire','force','lightning','necrotic','poison','psychic','radiant','thunder']);
 export const damageNames=Object.freeze(['Contundente','Perforante','Tagliente','Acido','Freddo','Fuoco','Forza','Fulmine','Necrotico','Veleno','Psichico','Radiante','Tuono']);
 export const emptyDefences=()=>({configured:0,resistance:0,vulnerability:0,immunity:0});
+// An explicit user decision only: never used as an import default.
+export function completeNormalDefences(profile){return {...validateDefences(profile),configured:8191};}
 export function validateDefences(input){
  const keys=['configured','resistance','vulnerability','immunity'];
  if(!input||Array.isArray(input)||Object.keys(input).length!==4||keys.some(k=>!Object.hasOwn(input,k)||!Number.isInteger(input[k])||input[k]<0||input[k]>8191)||((input.resistance|input.vulnerability|input.immunity)&~input.configured))throw new Error('Profilo difese non valido');

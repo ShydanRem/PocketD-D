@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **28 ottobre 2026 — v0.74**. Il dispositivo è il prodotto;
+Aggiornamento del **28 ottobre 2026 — v0.75**. Il dispositivo è il prodotto;
 il PC serve per importare, configurare e conservare i backup.
 
 Il software copre una prima sessione individuale offline. Il passaggio ancora
@@ -30,7 +30,16 @@ il formato. Per dichiarare un dato convertito servono il controllo delle sue
 origini/regole e il confronto del risultato. Una descrizione importata non
 significa che il suo effetto sia automatizzato.
 
-### Nuovo nella v0.74
+### Nuovo nella v0.75
+
+[Verifica rapida delle difese](DIFESE-VERIFICA-RAPIDA.md) sul dispositivo e sul PC:
+anteprima dei tipi mancanti e conferma manuale per dichiararli Normali di base.
+Le difese note, regole ed effetti temporanei restano conservati. Annullamento,
+errore di salvataggio e riprova non applicano modifiche parziali. Il collegamento
+nell’anteprima USB apre direttamente la configurazione sul PC.
+Nessun tipo viene completato automaticamente durante l’importazione.
+
+### Disponibile dalla v0.74
 
 [Caratteristica personalizzata per abilità](ABILITA-CARATTERISTICHE.md), importabile
 da Beyond e configurabile sul PC: per esempio Intimidire con FOR. La scelta
@@ -55,7 +64,7 @@ origini o requisiti ambigui mantengono i tiri interessati da verificare.
 ### Ultima lettura reale del tuo PG
 
 28 ottobre 2026, personaggio **144777811**, con codice v0.73 e connettore esistente
-(nessuna nuova lettura reale nella v0.74):
+(nessuna nuova lettura reale nelle v0.74–0.75):
 
 - HTTP **200**, **426.718 byte**, struttura JSON valida.
 - FOR/DES/COS/INT/SAG/CAR: **8/18/14/18/10/10**; PF **32/73**, CA **17**.
@@ -143,10 +152,11 @@ trasferimento verificato, valori confrontati e progressi recuperabili.
 
 ## Verifiche di questa versione e compatibilità
 
-**246 test JS**, browser di produzione con profili isolati, **324 schede
+**249 test JS**, browser di produzione con profili isolati, **324 schede
 sintetiche** nel parser/codec C per le nuove associazioni, undici pacchetti
-incompatibili respinti e regressioni dell'intera scheda. Parser/roundtrip e
-UI host anche con ASan/UBSan. Compilazione ESP32-S3 riuscita. Questi risultati
+incompatibili respinti e regressioni dell'intera scheda. Parser/codec e UI host verificati anche
+con ASan/UBSan. Compilazione ESP32-S3 riuscita. Tutti gli **8.192 sottoinsiemi**
+delle difese verificati in JS e C; nuova anteprima nelle **119 viste** del renderer. Questi risultati
 non certificano touch, trasporto USB o memoria fisica.
 
 Nuovi dati opzionali: **USB15 / backup PC v17** con associazioni personalizzate;
@@ -154,4 +164,5 @@ senza di esse si conserva il minimo precedente pertinente. Stato nativo
 **PDD34/PDDY**, lettura dei formati precedenti e partizioni invariate.
 Per trasferire la nuova informazione e leggere i nuovi backup nativi aggiornare
 app e firmware a 0.74. Il profilo difese richiede almeno 0.71 / USB14; i look
-classe almeno 0.70 e il relativo pacchetto SD. L'installer distribuisce 0.74.
+classe almeno 0.70 e il relativo pacchetto SD. Il comando Completa sul dispositivo
+richiede 0.75; l’installer distribuisce 0.75.

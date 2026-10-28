@@ -224,6 +224,11 @@ bool pd_defence_set(pd_state *s,unsigned type,bool configured,unsigned flags) {
     for(unsigned i=0;i<3;i++)if(!(flags&(1u<<i)))d->conditions[type][i]=0;
     return true;
 }
+bool pd_defence_complete_normals(pd_state *s){
+    if(!s||!pd_valid(s))return false;
+    s->defences.configured=(1u<<PD_DAMAGE_TYPES)-1;
+    return true;
+}
 unsigned pd_reduction_cost_max(const pd_state *s,unsigned kind,unsigned index){
     if(!s)return 0;
     if(kind==PD_COST_COUNTER&&s->resource_count<=PD_RESOURCES&&index<s->resource_count)return s->resources[index].maximum;

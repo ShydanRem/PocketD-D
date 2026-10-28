@@ -2,7 +2,7 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Stato v0.74:** [abilità con caratteristica personalizzata](docs/ABILITA-CARATTERISTICHE.md), da Beyond e dall'editor PC fino al calcolo sul dispositivo. Associazione dinamica, competenza/extra separati, effetti FOR coerenti e salvataggio dell'editor atomico. USB15 / backup PC v17 solo con la nuova mappa; PDD34/PDDY con lettura dei precedenti, partizioni invariate. 246 test JS e 324 schede nel parser/codec C; nuove prove sintetiche, verifica USB fisica ancora aperta.
+**Stato v0.75:** [verifica rapida delle difese](docs/DIFESE-VERIFICA-RAPIDA.md), sul dispositivo e sul PC, con elenco, conferma e salvataggio atomico. Completa soltanto i tipi mancanti dopo verifica manuale; difese note, regole ed extra conservati. Nessuna deduzione di Normale da Beyond. Formati e partizioni invariati. Prove sintetiche; verifica USB fisica ancora aperta. [Report generale](docs/STATO-SOFTWARE.md).
 
 **Stato v0.73:** [report generale, limiti e roadmap](docs/STATO-SOFTWARE.md), aggiornato al 28 ottobre. [Personalizzazioni Beyond di abilità/salvezze](docs/BEYOND-PERSONALIZZAZIONI-TIRI.md): gradi espliciti, bonus separati, duplicati/limiti e anteprima completa. Oggetti inattivi esclusi dai bonus dei tiri e blocchi per origini ambigue conservati. 240 test JS, 160 stati nel codice C e 14.400 confronti. Rilettura reale del PG invariata; nuove personalizzazioni con prove sintetiche. USB fisico ancora da verificare.
 
