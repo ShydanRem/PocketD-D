@@ -1,5 +1,10 @@
 # Da zero al tuo eroe — PocketD-D v0.84
 
+Per **aggiornare il firmware o installare i look sulla SD**, basta la pagina
+web in Chrome/Edge con il Pocket collegato via USB: nessun pacchetto da
+riscaricare. [GitHub Pages e attivazione iniziale](GITHUB-PAGES.md).
+
+I passaggi seguenti servono per l’**importazione Beyond tramite connettore locale**.
 Su **Windows x64**, usa Chrome o Edge e il pacchetto PC completo. Node.js e
 firmware sono inclusi: non serve installare Node, Python, npm o compilare.
 

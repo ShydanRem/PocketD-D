@@ -47,7 +47,7 @@ gallery=ROOT/'firmware/tests/out/ui-build/appearance-preview.png'
 if gallery.is_file():
  shutil.copyfile(gallery,out/'assets/personalizzazione.png')
  (out/'assets/personalizzazione.css').write_text('body{margin:0;background:#07151e;color:#ffefd2;font:17px system-ui}main{max-width:1500px;margin:auto;padding:24px}a{color:#8ce6c2}img{display:block;width:100%;height:auto;margin-top:24px}p{max-width:800px;line-height:1.6}')
- (out/'personalizzazione.html').write_text(f'''<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>PocketD-D {version} · Personalizzazione</title><link rel="stylesheet" href="assets/personalizzazione.css"><main><a href="/">← PocketD-D</a><h1>Il tuo eroe, il tuo ambiente</h1><p>Pelle, capelli, taglio e mantello configurabili sul dispositivo. Accampamento, rovine lunari e porto all’alba, con anteprima e conferma.</p><p>Queste sono catture del software del firmware {version} eseguito su PC con un personaggio di prova. La verifica sul dispositivo resta da fare.</p><a href="assets/personalizzazione.png">Apri l’immagine alla risoluzione originale</a><img src="assets/personalizzazione.png" width="1470" height="980" alt="Tre ambienti della home PocketD-D e le schermate per personalizzare e confermare l’aspetto del personaggio"></main></html>''')
+ (out/'personalizzazione.html').write_text(f'''<!doctype html><html lang="it"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>PocketD-D {version} · Personalizzazione</title><link rel="stylesheet" href="assets/personalizzazione.css"><main><a href="./">← PocketD-D</a><h1>Il tuo eroe, il tuo ambiente</h1><p>Pelle, capelli, taglio e mantello configurabili sul dispositivo. Accampamento, rovine lunari e porto all’alba, con anteprima e conferma.</p><p>Queste sono catture del software del firmware {version} eseguito su PC con un personaggio di prova. La verifica sul dispositivo resta da fare.</p><a href="assets/personalizzazione.png">Apri l’immagine alla risoluzione originale</a><img src="assets/personalizzazione.png" width="1470" height="980" alt="Tre ambienti della home PocketD-D e le schermate per personalizzare e confermare l’aspetto del personaggio"></main></html>''')
 
 # Native resolution screenshots from the production renderer, never concept replacements.
 species=json.loads((ROOT/'src/avatar-species.json').read_text())
@@ -160,3 +160,5 @@ shutil.copyfile(ROOT/'docs/SD-WEB-USB.md',out/'downloads/PocketDD-SD-WEB-USB.md'
 shutil.copyfile(ROOT/'docs/previews/v083-sd-install.png',out/'downloads/previews/v083-sd-install.png')
 
 shutil.copyfile(ROOT/'docs/previews/v084-wifi-direct.png',out/'downloads/previews/v084-wifi-direct.png')
+
+shutil.copyfile(ROOT/'docs/GITHUB-PAGES.md',out/'downloads/PocketDD-GITHUB-PAGES.md')

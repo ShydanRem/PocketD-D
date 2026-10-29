@@ -2,6 +2,8 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
+**Pagina web:** firmware e look SD direttamente dal browser; nessun installer da scaricare a ogni aggiornamento. [GitHub Pages: pubblicazione e prima attivazione](docs/GITHUB-PAGES.md). Il pacchetto PC resta opzionale per Beyond. Firmware invariato v0.84.
+
 **Nuovo v0.84:** [Wi-Fi dal display](docs/WIFI.md): ricerca reti, segnale, tastiera per la password e conferma del collegamento/salvataggio. Hotspot opzionale, tasti fisici e credenziali separati dal PG. Compilato e provato con radio simulata; router reale ancora da verificare.
 
 **Nuovo v0.83:** [installa i look sulla SD dal browser via USB](docs/SD-WEB-USB.md), con SD nel Pocket: pacchetto verificato, avanzamento e conferma dopo rilettura. Flusso studiato sul TamaPoke pubblico; 504 look, nessuna formattazione o modifica del PG. Richiede aggiornamento firmware; prove software superate, trasferimento SD fisico ancora da collaudare.

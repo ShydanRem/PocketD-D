@@ -11,3 +11,6 @@
 [data-sd-install]{font:inherit;cursor:pointer;border:1px solid #8ce6c2}[data-sd-install]:disabled{opacity:.45;cursor:wait}[data-sd-root][inert]{opacity:.5}[data-sd-root] pre{font-size:12px;max-height:260px;overflow:auto}.sd-installer progress{width:100%}
 
 [data-sd-root] [hidden]{display:none!important}
+
+.pc-tools{margin:26px 0;border-top:1px solid #365756;padding-top:14px}.pc-tools>summary{font-weight:700;color:var(--gold);cursor:pointer;min-height:44px}.pc-tools .pc-download{margin-top:12px}.guided-install .pc-tools{display:none}
+.card{margin-bottom:28px}#look-sd>h2{margin-bottom:12px}

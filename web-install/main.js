@@ -11,8 +11,9 @@ if(guided){document.body.classList.add('guided-install');document.querySelector(
 const announce=(phase,value)=>{if(guided&&parent!==window)parent.postMessage({type:'pocketdd:install',phase,value},location.origin);};
 if(!guided){
   const fold=(node,title,cls)=>{if(!node)return;const details=document.createElement('details'),summary=document.createElement('summary');details.className=cls;summary.textContent=title;node.before(details);details.append(summary,node);};
-  fold(document.querySelector('.card'),'Installa soltanto il firmware dal browser','direct-install');
-  fold(document.querySelector('#look-sd'),'Installa look sulla SD via USB · opzionale','sd-choice');
+  const firmware=document.querySelector('.card'),sd=document.querySelector('#look-sd'),pc=document.querySelector('#app-pc');
+  document.querySelector('.intro').after(firmware,sd,pc);
+  fold(pc,'Importa Beyond e configura dal PC · opzionale','pc-tools');
   const extras=[...document.querySelectorAll('main>section.after')];if(extras.length){const details=document.createElement('details'),summary=document.createElement('summary');details.className='release-history';summary.textContent='Anteprime, novità e limiti delle versioni';extras[0].before(details);details.append(summary,...extras);}
 }
 

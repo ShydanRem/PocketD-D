@@ -2,10 +2,10 @@
 <html lang="it"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="dark"><title>Installa PocketD-D</title></head>
 <body><main>
   <header><span class="mark" aria-hidden="true">◆</span><div><p class="eyebrow">POCKETD-D · USB</p><h1>Il tuo eroe, sul dispositivo.</h1></div></header>
-  <p class="intro">Un solo pacchetto per installare PocketD-D, importare il tuo personaggio e portarlo sul dispositivo.</p>
+  <p class="intro">Collega il Pocket via USB e aggiorna da questa pagina. Firmware e look sulla SD si installano dal browser: nessuno ZIP da scaricare.</p>
   <section class="pc-download" aria-labelledby="pc-title" id="app-pc">
-    <h2 id="pc-title">Parti da qui</h2>
-    <ol class="steps"><li><strong>Scarica ed estrai</strong> il pacchetto Windows.</li><li>Apri <strong>Avvia-PocketDD.cmd</strong>.</li><li>Segui la guida: <strong>Pocket → Personaggio → Al tavolo</strong>.</li></ol>
+    <h2 id="pc-title">Importazione Beyond e strumenti PC</h2>
+    <p>Per importare un PG da Beyond serve ancora il connettore locale. Se lo hai già, non occorre scaricarlo di nuovo per ogni aggiornamento del firmware.</p><ol class="steps"><li><strong>Scarica ed estrai</strong> il pacchetto Windows solo quando ti serve.</li><li>Apri <strong>Avvia-PocketDD.cmd</strong>.</li><li>Segui la guida: <strong>Pocket → Personaggio → Al tavolo</strong>.</li></ol>
     <a class="download-button" href="#app-pc" download="PocketDD-PC.zip">Scarica app PC per Windows ↓</a>
     <p class="note"><strong>Windows x64 · Chrome o Edge.</strong> App, firmware e Node.js sono inclusi. Non servono installazioni separate di strumenti.</p>
     <p class="note">Se il Pocket è già pronto, salti il firmware. Puoi preparare il PG anche senza dispositivo e inviarlo più tardi.</p>
@@ -13,7 +13,7 @@
     <p id="pc-download-status" role="status"></p>
   </section>
   <section class="pc-download" id="look-sd" aria-labelledby="sd-title">
-    <h2 id="sd-title">Dodici classi, 21 specie, due silhouette</h2>
+    <h2 id="sd-title">2 · Installa i look sulla SD</h2>
     <p>504 look con abiti e armi distinti. Lascia la microSD FAT32 nel Pocket: il browser copia e verifica i file via USB.</p>
     <div data-sd-root><button class="download-button" data-sd-install disabled>Installa look sulla SD</button><p data-sd-status role="status"></p><progress data-sd-progress max="100" value="0" hidden></progress><button data-sd-abort hidden>Interrompi installazione SD</button><details data-sd-diagnostic hidden><summary>Dettagli USB della SD</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></details></div>
     <p class="note">Richiede firmware 0.83. PG, progressi e altri file della SD restano conservati. Dopo l’installazione scegli la Classe sul Pocket. <a href="./downloads/PocketDD-SD-WEB-USB.md">Guida SD via USB</a>.</p>
@@ -21,11 +21,11 @@
     <a href="./personalizzazione.html#classi">Guarda le catture del firmware e i look →</a>
   </section>
   <section class="card" aria-labelledby="install-title">
-    <div class="card-top"><h2 id="install-title">Installa PocketD-D</h2><span id="version">Firmware</span></div>
+    <div class="card-top"><h2 id="install-title">1 · Installa o aggiorna</h2><span id="version">Firmware</span></div>
     <ol class="steps"><li>Apri in <strong>Chrome o Edge su PC</strong>.</li><li>Collega la scheda con un <strong>cavo USB dati</strong>.</li><li>Premi Installa, scegli la porta e attendi la verifica.</li></ol>
     <fieldset><legend>Cosa vuoi fare?</legend>
-      <label class="choice"><input type="radio" name="mode" value="first" checked><span><strong>Prima installazione</strong><small>Sostituisce il firmware presente. Conserva prima il suo eventuale backup.</small></span></label>
-      <label class="choice"><input type="radio" name="mode" value="update"><span><strong>Aggiorna PocketD-D</strong><small>Controlla le partizioni prima di scrivere; conserva scheda, progressi e impostazioni PocketD-D.</small></span></label>
+      <label class="choice"><input type="radio" name="mode" value="first"><span><strong>Prima installazione</strong><small>Sostituisce il firmware presente. Conserva prima il suo eventuale backup.</small></span></label>
+      <label class="choice"><input type="radio" name="mode" value="update" checked><span><strong>Aggiorna PocketD-D</strong><small>Controlla le partizioni prima di scrivere; conserva scheda, progressi e impostazioni PocketD-D.</small></span></label>
     </fieldset>
     <label class="board-check"><input type="checkbox" id="board"><span>Ho la <strong>Waveshare ESP32-S3-Touch-AMOLED-1.75 standard</strong>, senza suffisso C.</span></label>
     <p class="note">Il chip viene controllato automaticamente; la revisione della scheda va verificata sull’hardware. Chiudi altri programmi che usano la porta USB.</p>
@@ -36,5 +36,5 @@
   </section>
   <section class="after"><h2>Dopo l’installazione</h2><p>Attendi l’eroe sul display. Poi puoi trasferire la scheda dall’app PocketD-D per PC. L’installazione del firmware non importa il personaggio e non modifica la raccolta PC.</p></section>
   <details><summary>Se non si collega</summary><ul><li>Prova un altro cavo USB dati e chiudi monitor seriali o altre schede dell’installer.</li><li>Se la porta non compare, segui la procedura BOOT/RESET della tua revisione Waveshare; la porta può cambiare dopo il reset.</li><li>Non scollegare il cavo durante la scrittura. Se viene interrotta, rientra nel bootloader e ripeti l’installazione.</li><li>Firefox, Safari e i browser mobili non sono il percorso supportato. Un file HTML aperto direttamente non basta: usa il link HTTPS o l’avvio locale.</li></ul></details>
-  <footer><p>Installazione USB con <a href="https://github.com/espressif/esptool-js">esptool-js</a>. Nessuna cancellazione completa della flash.</p><p>Firmware compilato e verificato su host. Installazione, avvio e comandi sull’hardware reale ancora da collaudare.</p></footer>
+  <footer><p>Pagina stabile: <a href="https://shydanrem.github.io/PocketD-D/">PocketD-D su GitHub Pages</a> · <a href="https://github.com/ShydanRem/PocketD-D">Repository</a></p><p>Installazione USB con <a href="https://github.com/espressif/esptool-js">esptool-js</a>. Nessuna cancellazione completa della flash.</p><p>Avvio e prima importazione PG riferiti riusciti dall’utente. SD, Wi-Fi, riavvio e gli altri controlli fisici restano da completare.</p></footer>
 </main><script type="module" src="./main.js"></script></body></html>

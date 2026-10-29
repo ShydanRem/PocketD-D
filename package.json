@@ -14,7 +14,9 @@
     "firmware:deps": "python3 scripts/firmware-deps.py",
     "firmware:test": "bash scripts/check-firmware.sh",
     "installer:build": "npm run build && vite build --config vite.installer.config.js && python3 scripts/build-installer.py && python3 scripts/package-pc.py",
-    "installer": "node scripts/installer-server.js"
+    "installer": "node scripts/installer-server.js",
+    "pages:prepare": "python3 scripts/publish-pages.py",
+    "pages:publish": "python3 scripts/publish-pages.py --push"
   },
   "devDependencies": {
     "vite": "^7.1.0"

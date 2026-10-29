@@ -1,9 +1,9 @@
-# Installazione USB da browser — firmware v0.66
+# Installazione USB da browser — firmware v0.84
 
-La v0.66 aggiunge la [personalizzazione di avatar e sfondi](PERSONALIZZAZIONE.md).
-Usa le stesse partizioni. Il firmware legge i salvataggi precedenti; dopo un
-nuovo salvataggio PDD29 serve il software aggiornato per leggere il backup.
-Il problema di trasferimento USB del PG rimane una verifica separata e aperta.
+La pagina web installa firmware e look SD via USB, senza scaricare un installer
+sul PC. [GitHub Pages e prima attivazione](GITHUB-PAGES.md): sorgenti e cronologia
+di main restano privati; sul ramo gh-pages ci sono solo i file distribuibili.
+Il firmware resta v0.84 e mantiene partizioni e formati precedenti.
 
 L'installer permette di mettere il firmware già compilato sulla scheda dal PC,
 con una pagina, scelta della porta USB e avanzamento. Non richiede Arduino,
@@ -18,10 +18,10 @@ non scaricate da CDN mentre si installa.
 
 ## Percorso rapido
 
-1. Aprire l'[installer PocketD-D](https://pocketdd-installer.shydan.chatgpt.site)
-   in **Chrome o Edge su PC**. Il Site è privato del proprietario e può richiedere
-   accesso con il relativo account ChatGPT. Firefox, Safari e browser mobili
-   non sono il percorso supportato.
+1. Aprire la pagina **GitHub Pages** dopo l’attivazione iniziale descritta nella
+   [guida](GITHUB-PAGES.md), in **Chrome o Edge su PC**. Durante l’attivazione
+   resta disponibile l’[installer precedente](https://pocketdd-installer.shydan.chatgpt.site),
+   privato del proprietario. Firefox, Safari e browser mobili non sono supportati.
 2. Collegare un cavo **USB dati**. Chiudere monitor seriali, strumenti USB
    dell'app e altre pagine che usano la porta.
 3. Scegliere **Prima installazione** oppure **Aggiorna PocketD-D** e verificare
@@ -49,9 +49,8 @@ della scheda e non legge né modifica la raccolta PC o Beyond.
 
 ## Scaricare l'app PC
 
-La pagina dell'installer offre **Scarica app PC per Windows**, con download HTTPS
-del file [PocketDD-PC.zip](https://pocketdd-installer.shydan.chatgpt.site/downloads/PocketDD-PC.zip).
-È un pacchetto separato e già compilato, di circa 220 KB, per importazione Beyond,
+La sezione opzionale **Importa Beyond e configura dal PC** offre **Scarica app PC per Windows**, con download verificato del pacchetto completo.
+È un pacchetto separato, con runtime Windows x64 incluso, per importazione Beyond,
 trasferimento della scheda e backup. Estrarre tutto e aprire Avvia-PocketDD.cmd;
 Node.js 24 attuale è l'unico requisito runtime. Non serve compilare o eseguire
 npm install. I link a file interni del workspace non sono usati per questo download.

@@ -8,6 +8,15 @@ l’avvio e riferito riuscito l’import del PG 167361077. Restano da verificare
 persistenza dopo riavvio, backup/ripristino e gli altri controlli fisici; questa
 segnalazione non equivale al collaudo completo di USB, batteria o salvataggi.
 
+## Pagina web di installazione
+
+[Pubblicazione GitHub Pages](GITHUB-PAGES.md): firmware e SD visibili subito,
+aggiornamento predefinito e pacchetto PC opzionale. Sito compilato nel ramo
+gh-pages, separato da main privato; publisher con verifica dei file e provenienza.
+L’attivazione Pages del proprietario resta distinta dal push del ramo.
+Il connettore Beyond richiede ancora l’app locale; firmware e SD non richiedono
+riscaricare il pacchetto. Firmware, formati del PG e partizioni invariati.
+
 ## Nuovo nella v0.84
 
 [Wi-Fi direttamente dal Pocket](WIFI.md): cerca le reti 2,4 GHz, scegli la rete,

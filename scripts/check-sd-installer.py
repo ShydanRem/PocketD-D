@@ -50,8 +50,8 @@ try:
   # Entry point inside the editor must retain the unsaved appearance draft.
   page.locator('[data-action=edit]').click();editor=page.locator('.hero-editor-dialog');editor.locator('[name=outfit]').select_option('9');editor.locator('[data-editor-sd]').click();root=page.locator('.sd-installer');expect(root.locator('[data-sd-install]')).to_be_enabled();root.locator('[data-sd-close]').click();expect(editor.locator('[name=outfit]')).to_have_value('9');editor.get_by_role('button',name='Annulla',exact=True).click();assert page.evaluate('JSON.stringify({...localStorage})')==before
   # Hosted page uses the same uploader and prevents firmware operations concurrently.
-  page.goto('http://127.0.0.1:8794/');page.locator('.direct-install>summary').click();expect(page.locator('#status')).to_contain_text('Firmware pronto');page.locator('#board').check();expect(page.locator('#install')).to_be_enabled()
-  page.locator('.sd-choice>summary').click();root=page.locator('[data-sd-root]');expect(root.locator('[data-sd-install]')).to_be_enabled();root.locator('[data-sd-install]').click();page.wait_for_function('sd.finished===true',timeout=60000);expect(page.locator('#install')).to_be_disabled();expect(root.locator('[data-sd-status]')).to_contain_text('Verifico')
+  page.goto('http://127.0.0.1:8794/');expect(page.locator('#status')).to_contain_text('Firmware pronto');page.locator('#board').check();expect(page.locator('#install')).to_be_enabled()
+  root=page.locator('[data-sd-root]');expect(root.locator('[data-sd-install]')).to_be_enabled();root.locator('[data-sd-install]').click();page.wait_for_function('sd.finished===true',timeout=60000);expect(page.locator('#install')).to_be_disabled();expect(root.locator('[data-sd-status]')).to_contain_text('Verifico')
   for width in [1100,390,320]:
    page.set_viewport_size({'width':width,'height':900});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
   page.screenshot(path='/workspace/PocketD-D-sd-installer-mobile.png',full_page=True);page.evaluate('sd.done()');expect(root.locator('[data-sd-status]')).to_contain_text('Look verificati');expect(page.locator('#install')).to_be_enabled()
