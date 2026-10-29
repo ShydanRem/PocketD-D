@@ -31,6 +31,11 @@ static struct { char magic[4],ssid[33],password[65];uint8_t open,enabled; } save
 typedef struct { unsigned kind;uint32_t generation;pd_wifi_credentials credentials; } request;
 static QueueHandle_t requests;static SemaphoreHandle_t lock,entropy_lock;
 static pd_wifi_info current,view;
+static pd_wifi_scan_info scan,scan_view;
+static atomic_bool scan_busy,scan_done;
+static atomic_uint scan_status;
+static bool scan_active;
+static uint32_t scan_started;
 static uint32_t generation,published_generation;static char published_csrf[33];
 static esp_netif_t *sta_net,*ap_net;static bool driver_ready,wifi_registered,ip_registered;static pd_wifi_credentials trial;
 static bool initialized,running,wanted,paused,resume_wanted,pending;
@@ -38,7 +43,7 @@ static atomic_bool got_ip,disconnected,provision_busy;
 static uint32_t started,setup_started,retry_at;static unsigned retries;
 static httpd_handle_t http;static char csrf[33];
 static uint32_t now_ms(void){return (uint32_t)(xTaskGetTickCount()*portTICK_PERIOD_MS);}
-static void publish(void){current.configured=saved.ssid[0]!=0;current.suspended=paused;current.radio_active=running;xSemaphoreTake(lock,portMAX_DELAY);view=current;published_generation=generation;memcpy(published_csrf,csrf,sizeof csrf);xSemaphoreGive(lock);}
+static void publish(void){current.configured=saved.ssid[0]!=0;current.suspended=paused;current.radio_active=running;current.joining=pending;xSemaphoreTake(lock,portMAX_DELAY);view=current;scan_view=scan;published_generation=generation;memcpy(published_csrf,csrf,sizeof csrf);xSemaphoreGive(lock);}
 static bool storage(bool erase){
  nvs_handle_t h;if(nvs_flash_init_partition("pdd_nvs")!=ESP_OK||nvs_open_from_partition("pdd_nvs","pdd_wifi",NVS_READWRITE,&h)!=ESP_OK)return false;
  esp_err_t e=erase?nvs_erase_all(h):nvs_set_blob(h,"config",&saved,sizeof saved);if(e==ESP_OK)e=nvs_commit(h);nvs_close(h);return e==ESP_OK;
@@ -54,6 +59,7 @@ static void event(void *arg,esp_event_base_t base,int32_t id,void *data){
  (void)arg;(void)data;
  if(base==IP_EVENT&&id==IP_EVENT_STA_GOT_IP)got_ip=true;
  if(base==WIFI_EVENT&&id==WIFI_EVENT_STA_DISCONNECTED)disconnected=true;
+ if(base==WIFI_EVENT&&id==WIFI_EVENT_SCAN_DONE){scan_status=data?((wifi_event_sta_scan_done_t*)data)->status:0;scan_done=true;}
 
 }
 static esp_netif_t *create_netif(bool station){
@@ -83,6 +89,45 @@ static bool start_radio(void){
 static bool stop_radio(void){
  if(!running)return true;
  xSemaphoreTake(entropy_lock,portMAX_DELAY);esp_err_t e=esp_wifi_stop();if(e==ESP_OK){running=false;bootloader_random_enable();}xSemaphoreGive(entropy_lock);return e==ESP_OK;
+}
+static void stop_portal(void);
+static void cancel_scan(void){
+ if(scan_active){esp_wifi_scan_stop();esp_wifi_clear_ap_list();}
+ scan_active=false;scan_done=false;memset(&scan,0,sizeof scan);publish();scan_busy=false;
+}
+static void scan_end(bool okay){
+ scan_active=false;scan_done=false;scan.complete=okay;scan.error=okay?0:PD_WIFI_ERROR_UNAVAILABLE;
+ if(!wanted&&!pending&&!current.setup&&!stop_radio())scan.error=PD_WIFI_ERROR_UNAVAILABLE;
+ publish();scan_busy=false;
+}
+static void start_scan(void){
+ memset(&scan,0,sizeof scan);
+ if(paused||pending||current.state==PD_WIFI_CONNECTING){scan.error=PD_WIFI_ERROR_NETWORK;publish();scan_busy=false;return;}
+ stop_portal();
+ if(!init_radio()||(!running&&(esp_wifi_set_mode(WIFI_MODE_STA)!=ESP_OK||!start_radio()))){scan_end(false);return;}
+ running=true;scan_done=false;scan_active=true;scan_started=now_ms();
+ wifi_scan_config_t config={.show_hidden=false};
+ if(esp_wifi_scan_start(&config,false)!=ESP_OK){cancel_scan();scan_end(false);}
+}
+static void collect_scan(void){
+ if(scan_status){esp_wifi_clear_ap_list();scan_end(false);return;}
+ uint16_t total=0;if(esp_wifi_scan_get_ap_num(&total)!=ESP_OK){esp_wifi_clear_ap_list();scan_end(false);return;}
+ uint16_t count=total>64?64:total;wifi_ap_record_t *records=count?calloc(count,sizeof *records):NULL;
+ if(count&&(!records||esp_wifi_scan_get_ap_records(&count,records)!=ESP_OK)){free(records);esp_wifi_clear_ap_list();scan_end(false);return;}
+ esp_wifi_clear_ap_list();scan.truncated=total>64;
+ for(unsigned i=0;i<count;i++){
+  pd_wifi_network n={.rssi=records[i].rssi,.security=PD_WIFI_UNSUPPORTED};
+  memcpy(n.ssid,records[i].ssid,32);pd_wifi_credentials valid={.open=true};memcpy(valid.ssid,n.ssid,33);if(!pd_wifi_credentials_valid(&valid))continue;
+  unsigned auth=records[i].authmode;
+  if(auth==WIFI_AUTH_OPEN)n.security=PD_WIFI_OPEN;
+  else if(auth==WIFI_AUTH_WPA2_PSK||auth==WIFI_AUTH_WPA_WPA2_PSK||auth==WIFI_AUTH_WPA3_PSK||auth==WIFI_AUTH_WPA2_WPA3_PSK)n.security=PD_WIFI_PERSONAL;
+  unsigned at=0;while(at<scan.count&&(strcmp(scan.networks[at].ssid,n.ssid)||scan.networks[at].security!=n.security))at++;
+  if(at<scan.count){if(scan.networks[at].rssi>=n.rssi)continue;scan.networks[at]=n;}
+  else if(scan.count<PD_WIFI_NETWORKS)scan.networks[scan.count++]=n;
+  else{scan.truncated=true;if(scan.networks[scan.count-1].rssi>=n.rssi)continue;scan.networks[scan.count-1]=n;}
+  for(unsigned j=scan.count-1;j>0;j--)if(scan.networks[j].rssi>scan.networks[j-1].rssi){pd_wifi_network tmp=scan.networks[j];scan.networks[j]=scan.networks[j-1];scan.networks[j-1]=tmp;}
+ }
+ free(records);scan_end(true);
 }
 uint32_t pd_wifi_random(void){if(!entropy_lock)return esp_random();xSemaphoreTake(entropy_lock,portMAX_DELAY);uint32_t value=esp_random();xSemaphoreGive(entropy_lock);return value;}
 static void stop_portal(void){
@@ -145,34 +190,42 @@ static bool station(const pd_wifi_credentials *c){
  if(!init_radio())return false;
  retry_at=0;got_ip=disconnected=false;
  if(running){esp_wifi_disconnect();wifi_ap_record_t ap;for(unsigned i=0;i<20&&esp_wifi_sta_get_ap_info(&ap)==ESP_OK;i++)vTaskDelay(pdMS_TO_TICKS(20));if(esp_wifi_sta_get_ap_info(&ap)==ESP_OK)return false;}
- wifi_config_t config={0};memcpy(config.sta.ssid,c->ssid,strlen(c->ssid));memcpy(config.sta.password,c->password,strlen(c->password));config.sta.threshold.authmode=c->open?WIFI_AUTH_OPEN:WIFI_AUTH_WPA2_PSK;config.sta.pmf_cfg.capable=true;
+ wifi_config_t config={0};memcpy(config.sta.ssid,c->ssid,strlen(c->ssid));memcpy(config.sta.password,c->password,strlen(c->password));config.sta.threshold.authmode=c->open?WIFI_AUTH_OPEN:WIFI_AUTH_WPA2_PSK;config.sta.pmf_cfg.capable=true;config.sta.sae_pwe_h2e=WPA3_SAE_PWE_BOTH;
  if(esp_wifi_set_mode(current.setup?WIFI_MODE_APSTA:WIFI_MODE_STA)!=ESP_OK||esp_wifi_set_config(WIFI_IF_STA,&config)!=ESP_OK){memset(&config,0,sizeof config);return false;}memset(&config,0,sizeof config);
  if(!running){if(!start_radio())return false;running=true;}
  got_ip=disconnected=false;started=now_ms();retries=0;current.state=PD_WIFI_CONNECTING;snprintf(current.ssid,sizeof current.ssid,"%s",c->ssid);current.ip[0]=0;return esp_wifi_connect()==ESP_OK;
 }
 static void saved_station(void){pd_wifi_credentials c={0};memcpy(c.ssid,saved.ssid,33);memcpy(c.password,saved.password,65);c.open=saved.open==1;if(saved.ssid[0]&&station(&c))wanted=true;else{current.state=PD_WIFI_FAILED;current.error=PD_WIFI_ERROR_NETWORK;}memset(&c,0,sizeof c);}
-static void radio_off(void){retry_at=0;stop_portal();bool stopped=stop_radio();pending=false;provision_busy=false;wanted=false;current.state=stopped?PD_WIFI_OFF:PD_WIFI_FAILED;if(!stopped)current.error=PD_WIFI_ERROR_UNAVAILABLE;current.ip[0]=0;memset(&trial,0,sizeof trial);}
+static void trial_failed(void){
+ pending=false;provision_busy=false;current.setup_saved=false;current.setup_failed=true;current.error=PD_WIFI_ERROR_NETWORK;memset(&trial,0,sizeof trial);
+ if(saved.enabled&&saved.ssid[0])saved_station();
+ else if(!current.setup){wanted=false;current.error=stop_radio()?PD_WIFI_ERROR_NETWORK:PD_WIFI_ERROR_UNAVAILABLE;current.state=PD_WIFI_FAILED;current.ip[0]=0;}
+}
+static void radio_off(void){cancel_scan();retry_at=0;stop_portal();bool stopped=stop_radio();pending=false;provision_busy=false;wanted=false;current.state=stopped?PD_WIFI_OFF:PD_WIFI_FAILED;if(!stopped)current.error=PD_WIFI_ERROR_UNAVAILABLE;current.ip[0]=0;memset(&trial,0,sizeof trial);}
 static void service(void *unused){
  (void)unused;request q;for(;;){bool received=xQueueReceive(requests,&q,pdMS_TO_TICKS(200))==pdTRUE;
   if(received){
-   if(q.kind==10&&current.setup&&!pending&&q.generation==generation){trial=q.credentials;pending=true;provision_busy=true;current.setup_saved=current.setup_failed=false;current.error=0;if(!station(&trial)){pending=false;provision_busy=false;memset(&trial,0,sizeof trial);current.setup_failed=true;current.error=PD_WIFI_ERROR_NETWORK;if(saved.enabled&&saved.ssid[0])saved_station();}}
-   else if(q.kind==PD_WIFI_SETUP&&!paused){pending=false;provision_busy=false;memset(&trial,0,sizeof trial);stop_portal();current.error=0;if(!start_portal()){stop_portal();if(!wanted)stop_radio();current.error=PD_WIFI_ERROR_UNAVAILABLE;}}
-   else if(q.kind==PD_WIFI_ENABLE&&!paused){current.error=0;if(saved.ssid[0]){if(!saved.enabled){saved.enabled=1;if(!storage(false))current.error=PD_WIFI_ERROR_STORAGE;}}saved_station();}
+   if(((q.kind==10&&current.setup&&q.generation==generation)||(q.kind==11&&!paused))&&!pending){if(q.kind==11){cancel_scan();stop_portal();}trial=q.credentials;pending=true;provision_busy=true;current.setup_saved=current.setup_failed=false;current.error=0;if(!station(&trial)){trial_failed();}}
+   else if(q.kind==PD_WIFI_SETUP&&!paused){cancel_scan();pending=false;provision_busy=false;memset(&trial,0,sizeof trial);stop_portal();current.error=0;if(!start_portal()){stop_portal();if(!wanted)stop_radio();current.error=PD_WIFI_ERROR_UNAVAILABLE;}}
+   else if(q.kind==PD_WIFI_ENABLE&&!paused){cancel_scan();current.error=0;if(saved.ssid[0]){if(!saved.enabled){saved.enabled=1;if(!storage(false))current.error=PD_WIFI_ERROR_STORAGE;}}saved_station();}
    else if(q.kind==PD_WIFI_DISABLE){radio_off();saved.enabled=0;if(saved.ssid[0]&&!storage(false))current.error=PD_WIFI_ERROR_STORAGE;}
    else if(q.kind==PD_WIFI_FORGET){radio_off();if(storage(true)){memset(&saved,0,sizeof saved);if(current.state==PD_WIFI_OFF)current.error=0;}else current.error=PD_WIFI_ERROR_STORAGE;}
+   else if(q.kind==PD_WIFI_SCAN)start_scan();
+   else if(q.kind==PD_WIFI_SCAN_CANCEL){cancel_scan();if(!wanted&&!pending&&!current.setup)stop_radio();}
    else if(q.kind==20){resume_wanted=wanted;radio_off();paused=true;}
    else if(q.kind==21){paused=false;if(resume_wanted)saved_station();resume_wanted=false;}
-   if(q.kind==10&&!pending)provision_busy=false;
+   if((q.kind==10||q.kind==11)&&!pending)provision_busy=false;
    memset(&q,0,sizeof q);
   }
   uint32_t now=now_ms();
+  if(scan_active){if(atomic_exchange(&scan_done,false))collect_scan();else if((uint32_t)(now-scan_started)>=15000){cancel_scan();scan_end(false);}}
   if(atomic_exchange(&got_ip,false)&&running&&(wanted||pending)){wifi_ap_record_t ap;if(esp_wifi_sta_get_ap_info(&ap)==ESP_OK&&(!pending||(strnlen((const char*)ap.ssid,32)==strlen(trial.ssid)&&!memcmp(ap.ssid,trial.ssid,strlen(trial.ssid))))){
     current.state=PD_WIFI_CONNECTED;current.error=0;retry_at=0;retries=0;started=now;esp_netif_ip_info_t ip;esp_netif_t *net=esp_netif_get_handle_from_ifkey("WIFI_STA_DEF");if(net&&esp_netif_get_ip_info(net,&ip)==ESP_OK)snprintf(current.ip,sizeof current.ip,IPSTR,IP2STR(&ip.ip));
     if(pending){__typeof__(saved) old=saved;memset(&saved,0,sizeof saved);memcpy(saved.magic,"PWF1",4);memcpy(saved.ssid,trial.ssid,33);memcpy(saved.password,trial.password,65);saved.open=trial.open;saved.enabled=1;if(!storage(false)){saved=old;current.error=PD_WIFI_ERROR_STORAGE;current.setup_failed=true;}else current.setup_saved=true;memset(&old,0,sizeof old);memset(&trial,0,sizeof trial);pending=false;provision_busy=false;wanted=true;}
    }}
   if(atomic_exchange(&disconnected,false)&&running&&(wanted||pending)&&current.state!=PD_WIFI_OFF){if(current.state==PD_WIFI_CONNECTED){started=now;retries=0;}if(retries<3&&(uint32_t)(now-started)<CONNECT_MS){retries++;retry_at=now+1000;}else started=now-CONNECT_MS;current.state=PD_WIFI_CONNECTING;}
   if(retry_at&&(int32_t)(now-retry_at)>=0&&running){retry_at=0;esp_wifi_connect();}
-  if(current.state==PD_WIFI_CONNECTING&&(uint32_t)(now-started)>=CONNECT_MS){current.state=PD_WIFI_FAILED;current.error=PD_WIFI_ERROR_NETWORK;if(pending){pending=false;provision_busy=false;current.setup_failed=true;memset(&trial,0,sizeof trial);if(saved.enabled&&saved.ssid[0])saved_station();}}
+  if(current.state==PD_WIFI_CONNECTING&&(uint32_t)(now-started)>=CONNECT_MS){current.state=PD_WIFI_FAILED;current.error=PD_WIFI_ERROR_NETWORK;if(pending){trial_failed();}}
   if(current.setup){uint32_t elapsed=now-setup_started;if(elapsed>=SETUP_MS){stop_portal();if(!wanted&&!pending)stop_radio();}else current.setup_seconds=(SETUP_MS-elapsed+999)/1000;}
   publish();
  }
@@ -182,7 +235,20 @@ void pd_wifi_boot(void){
  lock=xSemaphoreCreateMutex();entropy_lock=xSemaphoreCreateMutex();requests=xQueueCreate(3,sizeof(request));if(!lock||!entropy_lock||!requests){if(requests)vQueueDelete(requests);requests=NULL;return;}load();publish();if(xTaskCreate(service,"pdd_wifi",6144,NULL,4,NULL)!=pdPASS){vQueueDelete(requests);requests=NULL;return;}if(saved.enabled&&saved.ssid[0])pd_wifi_command(PD_WIFI_ENABLE);
 }
 void pd_wifi_snapshot(pd_wifi_info *out){if(!out)return;memset(out,0,sizeof *out);if(!lock||!requests){out->error=PD_WIFI_ERROR_UNAVAILABLE;return;}if(xSemaphoreTake(lock,pdMS_TO_TICKS(20))==pdTRUE){*out=view;xSemaphoreGive(lock);}else out->error=PD_WIFI_ERROR_UNAVAILABLE;}
-bool pd_wifi_command(unsigned command){if(!requests||command<1||command>4)return false;request q={.kind=command};return xQueueSend(requests,&q,0)==pdTRUE;}
+bool pd_wifi_command(unsigned command){
+ if(!requests||command<1||command>PD_WIFI_SCAN_CANCEL)return false;
+ if(command==PD_WIFI_SCAN&&(atomic_load(&provision_busy)||atomic_exchange(&scan_busy,true)))return false;
+ request q={.kind=command};bool okay=xQueueSend(requests,&q,0)==pdTRUE;if(!okay&&command==PD_WIFI_SCAN)scan_busy=false;return okay;
+}
+void pd_wifi_networks(pd_wifi_scan_info *out){
+ if(!out)return;
+ memset(out,0,sizeof *out);if(!requests||!lock){out->error=PD_WIFI_ERROR_UNAVAILABLE;return;}
+ if(xSemaphoreTake(lock,pdMS_TO_TICKS(20))==pdTRUE){*out=scan_view;out->scanning=atomic_load(&scan_busy);xSemaphoreGive(lock);}else out->error=PD_WIFI_ERROR_UNAVAILABLE;
+}
+bool pd_wifi_join(const pd_wifi_credentials *credentials){
+ if(!requests||!pd_wifi_credentials_valid(credentials)||atomic_load(&scan_busy)||atomic_exchange(&provision_busy,true))return false;
+ request q={.kind=11,.credentials=*credentials};bool okay=xQueueSend(requests,&q,0)==pdTRUE;memset(&q,0,sizeof q);if(!okay)provision_busy=false;return okay;
+}
 bool pd_wifi_pause(bool value){
  if(!pd_sync_pause(value))return false;
  if(!requests)return true;

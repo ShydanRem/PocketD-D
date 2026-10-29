@@ -2,6 +2,8 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
+**Nuovo v0.84:** [Wi-Fi dal display](docs/WIFI.md): ricerca reti, segnale, tastiera per la password e conferma del collegamento/salvataggio. Hotspot opzionale, tasti fisici e credenziali separati dal PG. Compilato e provato con radio simulata; router reale ancora da verificare.
+
 **Nuovo v0.83:** [installa i look sulla SD dal browser via USB](docs/SD-WEB-USB.md), con SD nel Pocket: pacchetto verificato, avanzamento e conferma dopo rilettura. Flusso studiato sul TamaPoke pubblico; 504 look, nessuna formattazione o modifica del PG. Richiede aggiornamento firmware; prove software superate, trasferimento SD fisico ancora da collaudare.
 
 **Correzione v0.82.1:** [conferma Beyond e armi personalizzate](docs/BEYOND-CONSENSO-V0821.md). La caratteristica dell’arma non altera il punteggio del PG; personalizzazioni note restano oggetti da configurare. Blocchi visibili e consenso accessibile. Lettura reale con valori confermati dall’utente, 297 test JS; per questa correzione basta aggiornare il PC.

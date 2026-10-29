@@ -1,4 +1,4 @@
-# Da zero al tuo eroe — PocketD-D v0.83
+# Da zero al tuo eroe — PocketD-D v0.84
 
 Su **Windows x64**, usa Chrome o Edge e il pacchetto PC completo. Node.js e
 firmware sono inclusi: non serve installare Node, Python, npm o compilare.
@@ -51,6 +51,10 @@ usano la SD opzionale: con firmware 0.83 e scheda FAT32 nel Pocket, premi
 Attendi la verifica finale e scegli Classe → Anteprima → Conferma sul Pocket.
 [Procedura SD e limiti](SD-WEB-USB.md). Il gioco offline non richiede Wi-Fi,
 ponte, account Beyond collegato o Foundry.
+
+Wi-Fi opzionale: **Menu → ingranaggio → Wi-Fi → Cerca reti**. Scegli la rete,
+inserisci la password sul Pocket, **Avanti → Collega** e attendi la conferma
+di salvataggio. Non serve aprire l’hotspot. [Dettagli e limiti](WIFI.md).
 
 ## Se qualcosa non va
 

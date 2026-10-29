@@ -23,6 +23,10 @@ typedef int esp_err_t;
 #define WIFI_IF_AP 1
 #define WIFI_AUTH_OPEN 0
 #define WIFI_AUTH_WPA2_PSK 3
+#define WIFI_AUTH_WPA_WPA2_PSK 4
+#define WIFI_AUTH_WPA3_PSK 6
+#define WIFI_AUTH_WPA2_WPA3_PSK 7
+#define WPA3_SAE_PWE_BOTH 2
 #define ESP_MAC_WIFI_SOFTAP 1
 #define WIFI_EVENT mock_wifi_event
 static const char mock_wifi_event[]="wifi";
@@ -30,6 +34,7 @@ static const char mock_wifi_event[]="wifi";
 static const char mock_ip_event[]="ip";
 #define IP_EVENT_STA_GOT_IP 1
 #define WIFI_EVENT_STA_DISCONNECTED 2
+#define WIFI_EVENT_SCAN_DONE 3
 #define NVS_READONLY 0
 #define NVS_READWRITE 1
 #define pdTRUE 1
@@ -48,9 +53,11 @@ static const char mock_ip_event[]="ip";
 #define ESP_NETIF_DEFAULT_WIFI_AP() ((esp_netif_config_t){.station=false})
 typedef struct {bool station;} esp_netif_config_t;
 typedef struct {int nvs_enable;} wifi_init_config_t;
-typedef struct {uint8_t ssid[32],password[64];unsigned ssid_len,authmode,max_connection,channel;struct{unsigned authmode;}threshold;struct{bool capable;}pmf_cfg;} wifi_part;
+typedef struct {uint8_t ssid[32],password[64];unsigned ssid_len,authmode,max_connection,channel,sae_pwe_h2e;struct{unsigned authmode;}threshold;struct{bool capable;}pmf_cfg;} wifi_part;
 typedef union {wifi_part sta,ap;} wifi_config_t;
-typedef struct {uint8_t ssid[33];} wifi_ap_record_t;
+typedef struct {uint8_t ssid[33];int8_t rssi;unsigned authmode;} wifi_ap_record_t;
+typedef struct {bool show_hidden;} wifi_scan_config_t;
+typedef struct {unsigned status;} wifi_event_sta_scan_done_t;
 typedef struct {int ip;} esp_netif_ip_info_t;
 typedef int esp_netif_t;
 typedef const char *esp_event_base_t;
@@ -66,6 +73,7 @@ static unsigned mock_clock,mock_ticks,mock_inits,mock_starts,mock_stops,mock_sto
 static bool mock_rf,mock_sar=true,mock_associated,mock_fail_init,mock_fail_start,mock_fail_stop,mock_fail_store,mock_fail_connect;
 static unsigned char mock_blob[2048],mock_staged[2048],mock_queue[3][256];static size_t mock_blob_size,mock_staged_size,mock_request_size;static unsigned mock_queued;
 static wifi_config_t mock_config;static jmp_buf mock_yield;static int mock_netif;static bool mock_netif_fail;
+static wifi_ap_record_t mock_aps[64];static uint16_t mock_ap_count;static bool mock_scan_fail,mock_scanning;static unsigned mock_scan_clears;
 static void mock_run(unsigned ticks);
 static void *xSemaphoreCreateMutex(void){return (void*)1;}
 static int xSemaphoreTake(SemaphoreHandle_t l,unsigned wait){(void)l;(void)wait;return 1;}
@@ -98,6 +106,11 @@ static int esp_wifi_stop(void){assert(!mock_sar);mock_stops++;if(mock_fail_stop)
 static int esp_wifi_disconnect(void){mock_associated=false;return 0;}
 static int esp_wifi_set_config(int iface,const wifi_config_t *c){if(iface==WIFI_IF_STA)mock_config=*c;else assert(c->ap.authmode==WIFI_AUTH_WPA2_PSK&&c->ap.ssid_len&&strlen((const char*)c->ap.password)==16);return 0;}
 static int esp_wifi_connect(void){return mock_fail_connect?-1:0;}
+static int esp_wifi_scan_start(const wifi_scan_config_t *config,bool blocking){assert(!blocking&&!config->show_hidden&&mock_rf);if(mock_scan_fail)return -1;mock_scanning=true;return 0;}
+static int esp_wifi_scan_stop(void){mock_scanning=false;return 0;}
+static int esp_wifi_scan_get_ap_num(uint16_t *n){*n=mock_ap_count;return mock_scan_fail?-1:0;}
+static int esp_wifi_scan_get_ap_records(uint16_t *n,wifi_ap_record_t *out){if(mock_scan_fail)return -1;if(*n>mock_ap_count)*n=mock_ap_count;memcpy(out,mock_aps,*n*sizeof *out);mock_scanning=false;return 0;}
+static int esp_wifi_clear_ap_list(void){mock_scan_clears++;return 0;}
 static int esp_wifi_sta_get_ap_info(wifi_ap_record_t *ap){if(!mock_associated)return -1;memset(ap,0,sizeof *ap);memcpy(ap->ssid,mock_config.sta.ssid,32);return 0;}
 static int esp_event_handler_register(esp_event_base_t b,int id,void(*handler)(void*,esp_event_base_t,int32_t,void*),void *ctx){(void)b;(void)id;(void)handler;(void)ctx;return 0;}
 static void esp_log_level_set(const char *tag,int level){(void)tag;(void)level;}

@@ -25,7 +25,8 @@ Questa release non dichiara conclusa la sincronizzazione di produzione.
    rimane necessario. Conserva un backup del PG. Il problema USB precedente
    resta da collaudare: il ponte non prova che sia risolto.
 2. Collega PC e Pocket alla stessa rete privata. Il Wi-Fi del Pocket si configura
-   da **Aspetto → Schermo → Wi-Fi → Configura rete** con il portale temporaneo.
+   da **Menu → ingranaggio → Wi-Fi → Cerca reti**, con password sul display.
+   **Configura da telefono / PC** conserva il portale come alternativa.
 3. Avvia **Avvia-Ponte.cmd**. Si apre **http://127.0.0.1:8787/**. Lascia aperta
    la finestra. Se Windows chiede l’accesso di rete, usa la rete privata del PC.
    Il servizio del dispositivo usa HTTPS sulla porta **8788**, sul solo IPv4
@@ -46,7 +47,7 @@ Questa release non dichiara conclusa la sincronizzazione di produzione.
 
 1. Nel ponte inserisci il link o ID del PG e scegli registro personale oppure
    campagna della pagina aperta. Crea l’abbinamento e copia la configurazione.
-2. Sul Pocket apri nuovamente **Configura rete**. Collega temporaneamente PC o
+2. Sul Pocket apri **Wi-Fi → Configura da telefono / PC**. Collega temporaneamente PC o
    telefono alla rete PocketDD indicata sul display, poi apri **http://192.168.4.1**.
 3. Nella sezione **Collega il ponte Beyond** incolla la configurazione.
    Sul Pocket compare un’anteprima con nome locale, ID Beyond, IP del PC e

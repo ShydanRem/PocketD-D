@@ -1,12 +1,25 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **29 ottobre 2026 — v0.83**. Il dispositivo è il prodotto;
+Aggiornamento del **29 ottobre 2026 — v0.84**. Il dispositivo è il prodotto;
 il PC serve per importare, configurare e conservare i backup.
 
 Il software copre una prima sessione individuale offline. L’utente ha osservato
 l’avvio e riferito riuscito l’import del PG 167361077. Restano da verificare
 persistenza dopo riavvio, backup/ripristino e gli altri controlli fisici; questa
 segnalazione non equivale al collaudo completo di USB, batteria o salvataggi.
+
+## Nuovo nella v0.84
+
+[Wi-Fi direttamente dal Pocket](WIFI.md): cerca le reti 2,4 GHz, scegli la rete,
+inserisci la password con tastiera sul display e conferma. Segnale, tipo di
+sicurezza, password nascosta/mostrabile, reti aperte con conferma, annullamento
+e comandi fisici locali. Hotspot e portale restano un’alternativa per telefono,
+SSID nascosti e abbinamento del ponte. Credenziali separate dal PG e salvate
+solo dopo DHCP coerente; errore radio e salvataggio fallito restano distinti.
+
+Compilazione ESP32 e prove del servizio con SDK simulato, 131 viste native,
+ASAN/UBSAN e regressioni software. Radio/router fisici ancora da collaudare.
+Formati PG, backup, protocollo USB e partizioni invariati.
 
 ## Nuovo nella v0.83
 
