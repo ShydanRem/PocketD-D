@@ -22,13 +22,14 @@ try:
    page.get_by_role('link',name='Scarica app PC per Windows').click()
   artifact=download.value;assert artifact.suggested_filename=='PocketDD-PC.zip'
   assert Path(artifact.path()).read_bytes()==(ROOT/'dist/install/downloads/PocketDD-PC.zip').read_bytes()
+  page.route('**/PocketDD-PC.part0.bin',lambda route:route.fulfill(body=b'corrupt',content_type='application/octet-stream'));page.get_by_role('link',name='Scarica app PC per Windows').click();expect(page.locator('#pc-download-status')).to_contain_text('alterato');page.unroute('**/PocketDD-PC.part0.bin')
   with page.expect_download() as report_download:
    page.locator('a[download][href$="PocketDD-Stato.md"]').click()
   report=report_download.value;assert report.suggested_filename=='PocketDD-Stato.md'
   assert Path(report.path()).read_bytes()==(ROOT/'docs/STATO-SOFTWARE.md').read_bytes()
   page.screenshot(path='/workspace/PocketD-D-installer-preview.png',full_page=True)
   page.locator('input[value=update]').check();page.locator('#install').click();expect(page.locator('#status')).to_contain_text('annullata');expect(page.locator('#install')).to_be_enabled();assert page.evaluate('window.chooserCalls')==1
-  assert not errors,errors;assert all(u.startswith(url) for u in requests),requests
+  assert not errors,errors;assert all(u.startswith(url) or u.startswith('blob:'+url) for u in requests),requests
   page.set_viewport_size({'width':390,'height':844});page.screenshot(path='/workspace/PocketD-D-installer-mobile.png',full_page=True);assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
   # Corrupt one download: no install is possible, even after board confirmation.
   page.route('**/firmware/app.bin',lambda route:route.fulfill(body=b'corrupt',content_type='application/octet-stream'));page.reload();page.locator('.direct-install>summary').click();expect(page.locator('#status')).to_contain_text('incompleto o alterato');page.locator('#board').check();expect(page.locator('#install')).to_be_disabled();expect(page.locator('#retry')).to_be_visible()

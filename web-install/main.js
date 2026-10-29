@@ -2,6 +2,7 @@ import {ESPLoader,Transport} from 'esptool-js';
 import CryptoJS from 'crypto-js';
 import {prepareFirmware,installFirmware} from './flasher.js';
 import './style.css';
+import {preparePcPackage} from './package-download.js';
 const $=s=>document.querySelector(s),status=$('#status'),button=$('#install'),progress=$('#progress');
 let prepared=null,busy=false;
 const guided=new URLSearchParams(location.search).get('guided')==='1';
@@ -42,3 +43,6 @@ button.addEventListener('click',async()=>{
   }
 });
 prepare();
+
+const pcLink=document.querySelector('[download="PocketDD-PC.zip"]');
+if(pcLink)pcLink.addEventListener('click',async event=>{event.preventDefault();if(pcLink.getAttribute('aria-disabled')==='true')return;const status=document.querySelector('#pc-download-status');pcLink.setAttribute('aria-disabled','true');status.textContent='Preparo il download…';try{const data=await preparePcPackage(new URL('./downloads/pc-package.json',location.href),{fetcher:url=>fetch(url,{signal:AbortSignal.timeout(90000),cache:'no-store'}),onProgress:n=>status.textContent=`Scarico e verifico il pacchetto · ${n}%`});const url=URL.createObjectURL(new Blob([data],{type:'application/zip'})),a=document.createElement('a');a.href=url;a.download='PocketDD-PC.zip';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);status.textContent='Pacchetto verificato. Estrai tutto lo ZIP e apri Avvia-PocketDD.cmd.';}catch(error){status.textContent=/^(Pacchetto|Descrizione|Download|Verifica)/.test(error.message??'')?error.message:'Download non riuscito. Ricarica la pagina e riprova.';}finally{pcLink.removeAttribute('aria-disabled');}});

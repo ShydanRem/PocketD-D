@@ -67,3 +67,7 @@ sintetici: non sostituisce il collaudo del tuo hardware o del ponte autenticato.
 La raccolta personale e il tuo account Beyond non vengono modificati dai test.
 
 ![Guida reale dell’app su PC, con personaggi e servizi sintetici](previews/v081-setup-flow.png)
+
+Il sito scarica blocchi verificati e li ricompone automaticamente in un unico
+PocketDD-PC.zip. Nessun passaggio manuale: parte mancante o checksum errato
+impediscono la creazione dello ZIP. Non usare vecchi link diretti al file.

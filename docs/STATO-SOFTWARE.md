@@ -45,7 +45,7 @@ poi invio USB e conferma sul display. Nessun completamento dopo il solo flash,
 un file scaricato o un controllo porta. L’editor del solo aspetto conserva gli
 altri campi. Errori di memoria non creano duplicati o avanzamenti fittizi.
 
-285 test JS, prove browser guidate e regressioni della UI/USB simulate,
+288 test JS, prove browser guidate e regressioni della UI/USB simulate,
 pacchetto estratto, identità/architettura SHA256 del runtime Windows e build
 ESP32 verificati. La shell/esecuzione Windows non è eseguita nell’host Linux;
 USB fisico e ponte Beyond autenticato restano aperti. Nessuna lettura o scrittura

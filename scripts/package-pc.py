@@ -62,3 +62,10 @@ Chiusura: Ctrl+C nella finestra del programma.
 ''')
  z.writestr('PocketDD-PC/package-info.json',json.dumps(dict(version=version,source_commit=commit,personal_data=False,firmware_included=True,windows_runtime=runtime_info['version']),indent=2)+'\n')
 digest=hashlib.sha256(args.output.read_bytes()).hexdigest();args.output.with_suffix('.zip.sha256').write_text(f'{digest}  {args.output.name}\n');print(f'PC package: {args.output.stat().st_size} bytes, SHA256 {digest}')
+
+# Keep hosting files below per-object limits; browser returns one byte-identical ZIP.
+data=args.output.read_bytes();parts=[]
+for old in args.output.parent.glob('PocketDD-PC.part*.bin'):old.unlink()
+for i,at in enumerate(range(0,len(data),16*1024*1024)):
+ block=data[at:at+16*1024*1024];name=f'PocketDD-PC.part{i}.bin';(args.output.parent/name).write_bytes(block);parts.append(dict(path=name,size=len(block),sha256=hashlib.sha256(block).hexdigest()))
+(args.output.parent/'pc-package.json').write_text(json.dumps(dict(version=1,filename='PocketDD-PC.zip',size=len(data),sha256=digest,parts=parts),indent=2)+'\n')
