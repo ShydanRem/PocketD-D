@@ -2,6 +2,8 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
+**Correzione v0.82.1:** [conferma Beyond e armi personalizzate](docs/BEYOND-CONSENSO-V0821.md). La caratteristica dell’arma non altera il punteggio del PG; personalizzazioni note restano oggetti da configurare. Blocchi visibili e consenso accessibile. Lettura reale con valori confermati dall’utente, 297 test JS; per questa correzione basta aggiornare il PC.
+
 **Stato v0.82:** [Sessione e preparazione del collaudo](docs/SESSIONE-V082.md): verifica continua delle regole e dei salvataggi, scelta diretta delle scorciatoie, controllo della scheda con editor mirati e report USB scaricabile con diagnosi firmware di sola lettura. 293 test JS e 127 viste native; nuove prove sintetiche, USB fisico ancora aperto.
 
 **Stato v0.81:** [Da zero al tuo eroe](docs/INIZIA-QUI.md): un pacchetto Windows x64 con runtime ufficiale incluso, guida Pocket → Personaggio → Al tavolo, installer nella stessa app, importazione e aspetto guidati, invio concluso soltanto dopo ACK del Pocket. Raccolta e origine locale conservate; USB fisico ancora aperto. Per ricostruire il pacchetto: `python3 scripts/fetch-windows-runtime.py`, poi `npm run installer:build`.

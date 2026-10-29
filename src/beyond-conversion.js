@@ -10,7 +10,9 @@ import {initialState, parseBackup, serialize} from './model.js';
 const keys = ['FOR','DES','COS','INT','SAG','CAR'];
 const integer = (n,min,max) => Number.isSafeInteger(n) && n>=min && n<=max;
 const mod = n => Math.floor((n-10)/2);
-const coreModifier = m => m.subType!=='unarmored-movement'&&/score|hit-point|armor-class|armored|unarmored/i.test(m.subType ?? '');
+// A weapon's casting ability is not an increase to the character's score.
+// These modifiers are retained for explicit manual weapon configuration below.
+const coreModifier = m => m.type!=='replace-weapon-ability'&&m.subType!=='unarmored-movement'&&/score|hit-point|armor-class|armored|unarmored/i.test(m.subType ?? '');
 export const BEYOND_LIMITATIONS = [
   'Importazione parziale: abilità e salvezze sono senza competenze; completarle prima di usarne i tiri.',
   'Armi importate come oggetti: attacchi, danni, proprietà e arma attiva sono da configurare.',

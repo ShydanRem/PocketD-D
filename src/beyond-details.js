@@ -109,6 +109,7 @@ export function extendBeyond(report,c,customTraining=[]){
     const propertyNames=array(d.properties).map(p=>p?.name).filter(n=>typeof n==='string');
     const has=name=>propertyNames.some(p=>slug(p)===name);
     const note=message=>{weaponIssues.push(message);warn(`${item.name}: ${message}`);return item};
+    if(src.pocketddWeaponManual)return note('attacco personalizzato o caratteristica sostituita: oggetto conservato; configura e verifica i tiri dell’arma con Beyond.');
     if(!integer(d.damage?.diceCount,1,6)||!DIE_SIDES.includes(d.damage?.diceValue)||![1,2].includes(d.attackType)||d.fixedDamage||d.damage.fixedValue) return note('danno o attacco non standard; oggetto conservato, arma da configurare.');
     const ranged=d.attackType===2;
     const ability=ranged?'DES':has('finesse')&&state.abilities.DES>state.abilities.FOR?'DES':'FOR';

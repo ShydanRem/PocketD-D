@@ -153,3 +153,4 @@ shutil.copyfile(ROOT/'docs/previews/v081-setup-flow.png',out/'downloads/previews
 
 shutil.copyfile(ROOT/'docs/SESSIONE-V082.md',out/'downloads/SESSIONE-V082.md')
 shutil.copyfile(ROOT/'docs/previews/v082-key-picker.png',out/'downloads/previews/v082-key-picker.png')
+shutil.copyfile(ROOT/'docs/BEYOND-CONSENSO-V0821.md',out/'downloads/BEYOND-CONSENSO-V0821.md')

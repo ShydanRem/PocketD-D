@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **29 ottobre 2026 — v0.82**. Il dispositivo è il prodotto;
+Aggiornamento del **29 ottobre 2026 — v0.82.1**. Il dispositivo è il prodotto;
 il PC serve per importare, configurare e conservare i backup.
 
 Il software copre una prima sessione individuale offline. Il passaggio ancora
@@ -29,6 +29,22 @@ La conversione resta **parziale**. HTTP 200 prova l'accesso; JSON valido prova
 il formato. Per dichiarare un dato convertito servono il controllo delle sue
 origini/regole e il confronto del risultato. Una descrizione importata non
 significa che il suo effetto sia automatizzato.
+
+### Correzione v0.82.1
+
+[Consenso Beyond e armi personalizzate](BEYOND-CONSENSO-V0821.md): riprodotto il
+blocco sul PG reale 167361077. La sostituzione della caratteristica dell’arma
+non è un aumento di punteggio. Personalizzazioni di un’arma con ID/namespace
+riconosciuti non bloccano la scheda intera: le armi interessate rimangono oggetti
+senza tiri automatici, da configurare esplicitamente. Gli altri blocchi restano.
+
+I problemi sono visibili prima dell’avatar; se manca una bozza convertibile,
+una spiegazione sostituisce la casella disabilitata. Risposta coerente e consenso
+restano obbligatori. Casella/etichetta verificate con clic reali e pulsante senza
+sovrapposizione. 297 test JS, browser classico/guidato e build ESP32. Valori reali
+confermati dall’utente, 11 oggetti e 30 bonus concordanti nel parser C; nessuna
+creazione nella raccolta reale o prova USB aggiunta. Aggiornare solo il PC è
+sufficiente; firmware già presente compatibile. Formati e partizioni invariati.
 
 ### Nuovo nella v0.82
 

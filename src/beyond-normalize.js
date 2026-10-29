@@ -8,7 +8,7 @@ export function normalizeBeyondSource(payload){
   const c=result.payload?.data;if(!c||typeof c!=='object'||Array.isArray(c))return result;
   const block=t=>{if(!result.blockers.includes(t))result.blockers.push(t);};
   if(!Array.isArray(c.inventory))return result;
-  for(const row of c.inventory)if(row&&typeof row==='object')for(const key of ['pocketddCustom','pocketddEquipmentUnknown','pocketddNote','pocketddOriginalName'])delete row[key];
+  for(const row of c.inventory)if(row&&typeof row==='object')for(const key of ['pocketddCustom','pocketddEquipmentUnknown','pocketddNote','pocketddOriginalName','pocketddWeaponManual'])delete row[key];
   const original=c.inventory.length,custom=array(c.customItems),seen=new Set();let added=0,linked=0;
   for(const item of custom){
     if(!item||!integer(item.id,1,Number.MAX_SAFE_INTEGER)||seen.has(item.id)||typeof item.name!=='string'||!item.name.trim()||!integer(item.quantity,0,999)||[item.description,item.notes].some(t=>t!=null&&typeof t!=='string')){
@@ -29,7 +29,17 @@ export function normalizeBeyondSource(payload){
   // A merged custom row without its source definition is ambiguous, not generic loot.
   for(const row of c.inventory)if(row?.definition?.isCustomItem===true&&!row.pocketddCustom)block('Definizione originale di un oggetto personalizzato non riconciliata.');
   const remaining=[],overrides=new Map();
+  const manualWeapons=new Set();
   for(const value of array(c.characterValues)){
+    // Known item-scoped weapon customizations stay manual. Do not guess whether
+    // a number replaces or adds to the calculated attack/damage, or guess tags.
+    if(value&&[10,12,20].includes(value.typeId)){
+      const rows=c.inventory.filter(i=>i?.id!=null&&String(i.id)===String(value.valueId));
+      const validValue=value.value===null||(value.typeId===20?typeof value.value==='boolean':integer(value.value,-1000,1000));
+      if(rows.length!==1||String(value.valueTypeId)!=='1439493548'||rows[0].definition?.filterType!=='Weapon'||!validValue){block('Personalizzazione arma senza oggetto univoco, tipo o valore riconciliato.');continue;}
+      if(value.value!==null)manualWeapons.add(rows[0]);
+      continue;
+    }
     if(!value||![8,9].includes(value.typeId)){remaining.push(value);continue;}
     const rows=c.inventory.filter(i=>i?.id!=null&&String(i.id)===String(value.valueId));
     if(rows.length!==1||String(value.valueTypeId)!=='1439493548'||typeof value.value!=='string'){
@@ -40,6 +50,13 @@ export function normalizeBeyondSource(payload){
     overrides.set(key,value.value);const row=rows[0];
     if(value.typeId===8){row.pocketddOriginalName??=row.definition.name;row.definition.name=value.value;}
     else row.pocketddNote=[row.pocketddCustom?row.pocketddNote:'',value.value].filter(Boolean).join(' ');
+  }
+  const replacements=Object.values(c.modifiers??{}).flatMap(array).filter(m=>m?.type==='replace-weapon-ability');
+  if(replacements.length)for(const row of c.inventory)if(row?.definition?.filterType==='Weapon')manualWeapons.add(row);
+  for(const row of manualWeapons)row.pocketddWeaponManual=true;
+  if(manualWeapons.size){
+    result.evidence.push(`${manualWeapons.size} armi con personalizzazioni o sostituzione della caratteristica separate dai punteggi del PG.`);
+    result.omissions.push('Armi personalizzate o con caratteristica sostituita: conservate come oggetti, senza tiri automatici. Configura caratteristica, competenza, bonus e danni confrontandoli con Beyond prima di usarle.');
   }
   if(Array.isArray(c.characterValues)){const t=parseBeyondTraining(remaining);c.characterValues=t.remaining;result.training=t.training;t.blockers.forEach(block);}
   for(const row of c.inventory){

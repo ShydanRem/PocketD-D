@@ -1,4 +1,4 @@
-# Da zero al tuo eroe — PocketD-D v0.82
+# Da zero al tuo eroe — PocketD-D v0.82.1
 
 Su **Windows x64**, usa Chrome o Edge e il pacchetto PC completo. Node.js e
 firmware sono inclusi: non serve installare Node, Python, npm o compilare.
@@ -30,6 +30,11 @@ non convertite: i problemi restano visibili e la conferma viene disabilitata.
 Prima dell’invio puoi aprire **Controlla dati e regole del PG**: mostra i valori
 attuali e porta direttamente agli editor. Le omissioni Beyond restano
 consultabili anche dopo una correzione locale. [Dettagli e prove](SESSIONE-V082.md).
+
+Se la conversione è bloccata, i problemi compaiono subito sotto i valori e la
+conferma viene sostituita da una spiegazione. [Correzione 0.82.1 e limiti delle
+armi personalizzate](BEYOND-CONSENSO-V0821.md). Per aggiornare questa parte basta
+il nuovo pacchetto PC: se il Pocket mostra già l’eroe, salta il firmware.
 
 ## Aspetto e uso
 
