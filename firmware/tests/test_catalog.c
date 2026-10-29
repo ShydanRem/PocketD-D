@@ -47,5 +47,34 @@ int main(void){
     s.inventory_available=false;expect(PD_CATALOG_ITEMS,"",NULL,0);s.inventory_available=true;s.item_count=61;expect(PD_CATALOG_ITEMS,"",NULL,0);
     s.magic.available=false;expect(PD_CATALOG_POWERS,"",NULL,0);s.magic.available=true;s.magic.count=121;expect(PD_CATALOG_POWERS,"",NULL,0);
     s=before;memset(s.items[59].name,'W',40);s.items[59].name[40]=0;expect(PD_CATALOG_ITEMS,"WWWWWWWWWWWWWWWWWWWW",(unsigned[]){59},1);
+    /* Representative play inventory: no auto-consumption or index remapping. */
+    pd_demo(&s);s.item_count=6;s.equipped=0;
+    s.items[0]=(pd_item){.name="Sword",.kind=PD_WEAPON,.quantity=1};
+    s.items[1]=(pd_item){.name="Healing potion",.kind=PD_HEALING,.quantity=2};
+    s.items[2]=(pd_item){.name="Spent potion",.kind=PD_HEALING,.quantity=0};
+    s.items[3]=(pd_item){.name="Wand",.quantity=1,.charges={.current=2,.maximum=3}};
+    s.items[4]=(pd_item){.name="Empty wand",.quantity=1,.charges={.maximum=3}};
+    s.items[5]=(pd_item){.name="Ration",.kind=PD_CONSUMABLE,.quantity=1};before=s;
+    assert(pd_catalog_filtered_count(&s,PD_CATALOG_ITEMS,"",PD_CATALOG_POUCH)==3);
+    const unsigned pouch_indices[]={1,3,5};for(unsigned i=0;i<3;i++)assert(pd_catalog_filtered_index(&s,PD_CATALOG_ITEMS,"",PD_CATALOG_POUCH,i)==(int)pouch_indices[i]);
+    assert(pd_catalog_filtered_index(&s,PD_CATALOG_ITEMS,"wand",PD_CATALOG_POUCH,0)==3);
+    assert(pd_catalog_filtered_index(&s,PD_CATALOG_ITEMS,"",PD_CATALOG_POUCH,3)==-1&&!memcmp(&s,&before,sizeof s));
+    /* Readiness is a view of preparation/pools, never execution or a promise
+       that a situational class rule is satisfied. Slot levels matter. */
+    s.magic.available=true;s.magic.count=7;memset(s.magic.slots,0,sizeof s.magic.slots);memset(s.magic.pact,0,sizeof s.magic.pact);
+    s.magic.powers[0]=(pd_power){.name="Cantrip",.flags=PD_PREPARED};
+    s.magic.powers[1]=(pd_power){.name="Unprepared",.flags=PD_USES_SLOT,.level=1};
+    s.magic.powers[2]=(pd_power){.name="Prepared level two",.flags=PD_PREPARED|PD_USES_SLOT,.level=2};
+    s.magic.powers[3]=(pd_power){.name="Spent innate",.flags=PD_PREPARED|PD_LIMITED,.maximum=1};
+    s.magic.powers[4]=(pd_power){.name="Feature",.kind=1,.remaining=1,.maximum=1};
+    s.magic.powers[5]=(pd_power){.name="Passive",.kind=1,.flags=PD_PASSIVE};
+    s.magic.powers[6]=(pd_power){.name="Cannon",.kind=1,.effect=3,.maximum=1};
+    before=s;assert(pd_catalog_filtered_count(&s,PD_CATALOG_POWERS,"",PD_CATALOG_READY)==2);
+    assert(pd_catalog_filtered_index(&s,PD_CATALOG_POWERS,"",PD_CATALOG_READY,0)==0&&pd_catalog_filtered_index(&s,PD_CATALOG_POWERS,"",PD_CATALOG_READY,1)==4&&!memcmp(&s,&before,sizeof s));
+    s.magic.slots[0].current=1;assert(pd_catalog_filtered_count(&s,PD_CATALOG_POWERS,"",PD_CATALOG_READY)==3);
+    s.magic.pact[1].current=1;assert(pd_catalog_filtered_count(&s,PD_CATALOG_POWERS,"",PD_CATALOG_READY)==4);
+    assert(pd_catalog_filtered_index(&s,PD_CATALOG_SPELLS,"two",PD_CATALOG_READY,0)==2);
+    s.combat.raging=true;assert(pd_catalog_filtered_count(&s,PD_CATALOG_POWERS,"",PD_CATALOG_READY)==2);
+    assert(!pd_catalog_filtered_count(&s,PD_CATALOG_ITEMS,"",PD_CATALOG_READY)&&!pd_catalog_filtered_count(&s,PD_CATALOG_POWERS,"",PD_CATALOG_POUCH)&&pd_catalog_filtered_index(&s,PD_CATALOG_POWERS,"",99,0)==-1);
     printf("Catalog: %u case/substring/original-index checks, 60 items/120 powers, type intersections, duplicate/depleted rows, literal spaces/punctuation and bounded query normalization passed\n",cases);
 }

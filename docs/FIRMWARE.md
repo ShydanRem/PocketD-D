@@ -1,3 +1,7 @@
+> Aggiornamento v0.80: [navigazione e uso pratico](USO-PRATICO.md), azioni
+> dirette dalla home, filtri, swipe e aiuto delle icone. Tasti configurabili
+> conservati; nessuna modifica ai formati del PG o alle partizioni.
+
 > Aggiornamento v0.79: [ponte Beyond sperimentale](PONTE-BEYOND.md),
 > conferma dell’abbinamento da Wi-Fi → Ponte, TLS verificato e invio dei soli
 > valori salvati. USB17/PDDa/backup PC20 invariati. Collaudo RF e account aperto.

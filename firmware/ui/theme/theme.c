@@ -48,6 +48,7 @@ void pd_theme_begin(lv_obj_t *root,pd_theme_kind kind,bool dice_tray){
     lv_obj_remove_flag(crest,LV_OBJ_FLAG_CLICKABLE|LV_OBJ_FLAG_SCROLLABLE);
     rect(root,208,426,50,2,current->accent,190,0);
 }
+void pd_theme_hide_crest(void){if(crest)lv_obj_add_flag(crest,LV_OBJ_FLAG_HIDDEN);}
 void pd_theme_button(lv_obj_t *b,bool primary){
     unsigned accent=current?current->accent:PD_MINT;
     lv_obj_set_style_radius(b,6,0);

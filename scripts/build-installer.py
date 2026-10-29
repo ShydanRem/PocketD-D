@@ -136,3 +136,13 @@ page=out/'index.html'
 page.write_text(page.read_text().replace('</main>', '<section class="after"><h2>Ponte Beyond sperimentale · v0.79</h2><p>Pocket → Wi-Fi → HTTPS sul PC → estensione Chrome/Edge → pagina Beyond. Stesse facce e totale dei tiri salvati; PF attuali e temporanei con verifica, conflitti visibili e nessun reinvio automatico dopo un esito incerto. Nessun requisito Foundry.</p><p>Nel pacchetto PC trovi Avvia-Ponte.cmd e la cartella extension. <a href="downloads/PocketDD-PONTE-BEYOND.md">Leggi la guida di abbinamento e i limiti</a>. I controlli software usano dati e pagine sintetiche: account Beyond, persistenza remota e radio ESP32 restano da collaudare. Il precedente problema USB resta aperto.</p></section></main>'))
 
 shutil.copyfile(ROOT/'docs/previews/v079-bridge.png',out/'downloads/previews/v079-bridge.png')
+
+# Actual native renderer with synthetic data. No USB/touch/radio hardware claim.
+shutil.copyfile(ROOT/'docs/USO-PRATICO.md',out/'downloads/PocketDD-USO-PRATICO.md')
+shutil.copyfile(ROOT/'docs/previews/v080-practical-device.png',out/'downloads/previews/v080-practical-device.png')
+for name in ('practical-home','practical-vitals','practical-magic','practical-ready'):
+ source=ROOT/'firmware/tests/out/ui-build'/f'{name}.png'
+ if not source.is_file():raise SystemExit(f'Missing v0.80 native capture: {name}')
+ shutil.copyfile(source,out/'assets'/f'{name}.png')
+page=out/'index.html'
+page.write_text(page.read_text().replace('</main>', '<section class="after"><h2>Più gioco, meno passaggi · v0.80</h2><p>Arma e magie direttamente dalla home; Danni e Cura in prima riga. Icone coerenti con aiuto su pressione lunga, filtri Consumabili e Pronte, swipe nelle liste. I tasti configurabili e le conferme restano disponibili. Il PC segue tre passaggi: importa, verifica e trasferisci, conserva le copie.</p><p><a href="downloads/PocketDD-USO-PRATICO.md">Guida rapida al dispositivo</a>. Catture del firmware su PC con dati sintetici: non fotografie o prove fisiche. Il problema USB e il collaudo del ponte reale restano aperti.</p><div class="import-captures"><img src="assets/practical-home.png" width="466" height="466" alt="Home con arma e magie dirette"><img src="assets/practical-vitals.png" width="466" height="466" alt="Danni e cura prima delle correzioni manuali"><img src="assets/practical-magic.png" width="466" height="466" alt="Lista magie con ricerca e filtri"><img src="assets/practical-ready.png" width="466" height="466" alt="Filtro delle magie e capacità con risorse disponibili"></div></section></main>'))

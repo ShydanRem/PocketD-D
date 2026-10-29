@@ -4,6 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 : "${IDF_PATH:?Activate ESP-IDF v5.5.5 first}"
 mkdir -p firmware/tests/out
+python3 scripts/generate-control-icons.py --check
 python3 scripts/generate-device-art.py --check
 python3 scripts/generate-avatar-art.py --check
 python3 scripts/generate-species-art.py --check

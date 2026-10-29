@@ -2,6 +2,8 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
+**Stato v0.80:** [uso pratico sul dispositivo](docs/USO-PRATICO.md): attacco e magie diretti dalla home, Danni/Cura in prima riga, icone e aiuto coerenti, filtri per consumabili e magie pronte, swipe nelle liste. Tasti configurabili e conferme conservati. PC organizzato per importare, verificare e trasferire. Formati del PG invariati; prove USB/hardware ancora aperte.
+
 **Stato v0.79:** [Ponte Beyond sperimentale](docs/PONTE-BEYOND.md): tiri salvati e PF attuali/temporanei dal Pocket via HTTPS al PC e all’estensione Chrome/Edge. Abbinamento e conferma sul dispositivo, coda persistente, conflitti e ricevute senza reinvio automatico. Stesse facce e totale; nessun secondo lancio. Prove software sintetiche, non collaudo con account Beyond o radio reale. Formati PG invariati; nessuna dipendenza da Foundry. [Report generale](docs/STATO-SOFTWARE.md).
 
 **Stato v0.78:** [Beyond per la prima versione offline](docs/BEYOND-V1.md): profilo sul dispositivo, iniziativa, movimento/sensi/passivi, lingue/strumenti e dotazioni sorgente. Resoconto per PG e protezione dai contatori duplicati. [Wi-Fi 2,4 GHz](docs/WIFI.md) configurabile dal telefono/PC con portale temporaneo; radio spenta in pausa e credenziali fuori dai backup. USB17 / backup PC v20 / PDD36 a dimensioni invariate. [Ricerca sul tempo reale](docs/BEYOND-TEMPO-REALE.md), seguita dal ponte sperimentale della v0.79; nessuna dipendenza da Foundry. USB e Wi-Fi fisici restano da collaudare. [Report generale](docs/STATO-SOFTWARE.md).

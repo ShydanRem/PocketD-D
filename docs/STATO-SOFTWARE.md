@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **28 ottobre 2026 — v0.79**. Il dispositivo è il prodotto;
+Aggiornamento del **29 ottobre 2026 — v0.80**. Il dispositivo è il prodotto;
 il PC serve per importare, configurare e conservare i backup.
 
 Il software copre una prima sessione individuale offline. Il passaggio ancora
@@ -29,6 +29,21 @@ La conversione resta **parziale**. HTTP 200 prova l'accesso; JSON valido prova
 il formato. Per dichiarare un dato convertito servono il controllo delle sue
 origini/regole e il confronto del risultato. Una descrizione importata non
 significa che il suo effetto sia automatizzato.
+
+### Nuovo nella v0.80
+
+[Revisione dell’uso pratico](USO-PRATICO.md): spada e magie direttamente dalla
+home, Danni/Cura in prima riga, menu e ricerca con icone coerenti e pressione
+lunga per l’aiuto. Filtri Consumabili e Pronte insieme alla ricerca, paging
+con swipe nelle liste, senza attivare righe o conferme al rilascio. Le azioni
+usano ancora i controlli di regole, anteprima e persistenza esistenti.
+
+Sul PC: importa/personalizza → verifica/trasferisci → copie/collegamenti;
+i prototipi sono sotto una sezione richiudibile. 283 test JS, 126 viste native,
+input pointer LVGL, verifiche di memoria e browser. È una prova software con
+dati sintetici: nessuna raccolta personale modificata, nessuna prova USB,
+touch o Beyond autenticato aggiunta. I problemi fisici e i limiti della v0.79
+restano aperti. Nessun nuovo campo nel PG: USB17/PC20/PDDa invariati.
 
 ### Nuovo nella v0.79
 

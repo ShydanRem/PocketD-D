@@ -11,6 +11,7 @@
 #include "companion.h"
 #include "../ui/scenes/scenes.h"
 #include "theme.h"
+#include "../ui/icons.h"
 #include "checks.h"
 #include "combat.h"
 #include "magic.h"
@@ -225,6 +226,7 @@ static pd_pool recharge_result;
 static bool recharge_rolled;
 static unsigned recharge_gained,recharge_before,recharge_after,recharge_maximum,recharge_index;
 static char recharge_name[PD_ITEM_NAME_BYTES];
+static bool pouch_view,ready_view;
 static unsigned inventory_page,item_index,target_armor=15,healing_gained;
 static char item_query[PD_SEARCH_BYTES],power_query[PD_SEARCH_BYTES],search_draft[PD_SEARCH_BYTES];
 static unsigned search_key_page;
@@ -537,7 +539,7 @@ static void invalidate_strike(void) {
     if(combat_roll) {combat_roll=0;pool_view=false;has_roll=false;ability=-1;pd_dice_idle(&dice_animation,1);}
 }
 static void adopt_pending_state(void){
-    clear_damage_reductions();item_query[0]=power_query[0]=search_draft[0]=0;magic_page=0;state=pending;item_rolled=false;rest_active=false;hit_rolled=false;combat_roll=0;strike_ready=false;inventory_page=0;item_index=0;undo_available=false;resource_index=0;has_roll=false;ability=-1;mode=0;page=HERO;pool_view=false;dice_setup=false;die_picker=false;pd_dice_idle(&dice_animation,1);
+    clear_damage_reductions();pouch_view=ready_view=false;item_query[0]=power_query[0]=search_draft[0]=0;magic_page=0;state=pending;item_rolled=false;rest_active=false;hit_rolled=false;combat_roll=0;strike_ready=false;inventory_page=0;item_index=0;undo_available=false;resource_index=0;has_roll=false;ability=-1;mode=0;page=HERO;pool_view=false;dice_setup=false;die_picker=false;pd_dice_idle(&dice_animation,1);
 }
 static void apply(pd_state *next) {
     if (pd_storage_save(next)) { previous=state; undo_available=true; state=*next;invalidate_strike(); }
@@ -670,13 +672,16 @@ static void meter(unsigned current,unsigned maximum,int y,unsigned color) {
     if(current&&maximum){unsigned filled=(288*current+maximum-1)/maximum;decoration(89,y,filled,4,color,0);for(unsigned x=24;x<filled;x+=24)decoration(89+x,y,2,4,PD_PANEL_LOW,0);}
 }
 static lv_obj_t *button(const char *text,int x,int y,int w,int h,intptr_t action,bool enabled);
+static lv_obj_t *icon_button(const char *name,pd_ui_icon_id icon,int x,int y,int w,int h,intptr_t action,bool enabled);
 static void frame(void) {
     pd_theme_kind kind=import_pending?PD_THEME_IMPORT:page==NUMBER_ENTRY&&number_target==NUMBER_ITEM?PD_THEME_PACK:page_themes[page];
     pd_theme_begin(lv_screen_active(),kind,page==DICE&&!dice_setup&&!import_pending);
     const pd_theme_spec *theme=pd_theme_get(kind);assert(theme);
-    lv_obj_t *menu=button("Menu",126,27,54,44,2300,!import_pending&&!confirmation_open()&&!dice_animation.active);
+    lv_obj_t *menu=icon_button("Menu",PD_UI_MENU,126,27,54,44,2300,!import_pending&&!confirmation_open()&&!dice_animation.active);
     lv_obj_set_style_text_font(menu,&lv_font_montserrat_16,0);
-    lv_obj_t *title=label(page==WIFI_HOME||page==WIFI_FORGET||page==SYNC_HOME||page==SYNC_REVIEW||page==SYNC_FORGET?"Rete":theme->title,187,36,118,false);
+    pd_theme_hide_crest();
+    lv_obj_t *home=icon_button("Torna all'eroe",PD_UI_HOME,298,27,44,44,100,!import_pending&&!confirmation_open()&&!dice_animation.active);lv_obj_set_style_bg_opa(home,LV_OPA_COVER,0);
+    lv_obj_t *title=label(page==WIFI_HOME||page==WIFI_FORGET||page==SYNC_HOME||page==SYNC_REVIEW||page==SYNC_FORGET?"Rete":theme->title,187,36,110,false);
     lv_obj_set_style_text_color(title,lv_color_hex(theme->accent),0);
     const char *status=ui_storage_status();
     unsigned c=ui_status_color(status);
@@ -823,6 +828,8 @@ static void act(intptr_t action) {
     }
     else if(action==2300)page=HOME_MENU;
     else if(action==2301)page=HOME_VITALS;
+    else if(action==4800&&page==INVENTORY){pouch_view=!pouch_view;inventory_page=0;}
+    else if(action==4801&&page==MAGIC_LIST){ready_view=!ready_view;magic_page=0;}
     else if(action==4000&&page==MAGIC_DETAIL&&state.magic.available&&power_index<state.magic.count&&!state.magic.powers[power_index].kind)page=MAGIC_MANAGE;
     else if(action==4001&&page==MAGIC_MANAGE&&state.magic.available&&power_index<state.magic.count&&!state.magic.powers[power_index].kind){preparation_target=!(state.magic.powers[power_index].flags&PD_PREPARED);page=MAGIC_PREPARATION;}
     else if(action==4002&&page==MAGIC_PREPARATION)page=MAGIC_MANAGE;
@@ -1596,8 +1603,13 @@ static lv_obj_t *button(const char *text,int x,int y,int w,int h,intptr_t action
     bool primary=action==13||action==46||action==30||!strcmp(text,"Conferma")||!strcmp(text,"Applica")||!strcmp(text,"Lancia")||!strcmp(text,"Usa");
     pd_theme_button(b,primary);
     lv_obj_t *l=lv_label_create(b);lv_label_set_text(l,text);lv_obj_center(l);
+    if(!strcmp(text,"<")||!strcmp(text,">")){pd_ui_name(b,!strcmp(text,"<")?"<":">");lv_obj_add_flag(l,LV_OBJ_FLAG_HIDDEN);const lv_image_dsc_t *im=pd_ui_icon(!strcmp(text,"<")?PD_UI_BACK:PD_UI_NEXT);art(im,(w-(int)im->header.w)/2,(h-(int)im->header.h)/2,b);}
     if (!enabled) lv_obj_add_state(b,LV_STATE_DISABLED);
     lv_obj_add_event_cb(b,event,LV_EVENT_CLICKED,(void*)action);return b;
+}
+static lv_obj_t *icon_button(const char *name,pd_ui_icon_id icon,int x,int y,int w,int h,intptr_t action,bool enabled){
+    lv_obj_t *b=button("",x,y,w,h,action,enabled);pd_ui_name(b,name);
+    const lv_image_dsc_t *im=pd_ui_icon(icon);if(im)art(im,(w-(int)im->header.w)/2,(h-(int)im->header.h)/2,b);return b;
 }
 static void render_dice_setup(void) {
     char text[80];
@@ -1690,17 +1702,13 @@ static void render_sheet(void) {
 static lv_obj_t *search_button(const char *text,int x,int y,int width,bool enabled,bool active){
     lv_obj_t *b=button(text,x,y,width,48,3800,enabled);lv_obj_set_style_pad_all(b,0,0);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
     lv_obj_t *caption=lv_obj_get_child(b,0);lv_obj_set_width(caption,width-38);lv_obj_set_height(caption,19);lv_label_set_long_mode(caption,LV_LABEL_LONG_DOT);lv_obj_align(caption,LV_ALIGN_LEFT_MID,32,0);
-    const char *pixels[]={".###....","#...#...","#...#...","#...#...",".###....","....#...",".....#..","......#."};
-    unsigned color=active?PD_GOLD:PD_MINT;if(active)lv_obj_set_style_border_color(b,lv_color_hex(PD_GOLD),0);
-    for(unsigned row=0;row<8;row++)for(unsigned col=0;col<8;col++)if(pixels[row][col]=='#'){
-        lv_obj_t *pixel=lv_obj_create(b);lv_obj_remove_style_all(pixel);lv_obj_set_pos(pixel,8+col*2,16+row*2);lv_obj_set_size(pixel,2,2);
-        lv_obj_set_style_bg_color(pixel,lv_color_hex(color),0);lv_obj_set_style_bg_opa(pixel,LV_OPA_COVER,0);lv_obj_remove_flag(pixel,LV_OBJ_FLAG_CLICKABLE|LV_OBJ_FLAG_SCROLLABLE);
-    }
+    if(active)lv_obj_set_style_border_color(b,lv_color_hex(PD_GOLD),0);
+    art(pd_ui_icon(PD_UI_SEARCH),5,12,b);
     return b;
 }
 static void render_search(void){
     bool items=page==ITEM_SEARCH;unsigned catalog=items?PD_CATALOG_ITEMS:magic_filter==2?PD_CATALOG_POWERS:magic_filter==1?PD_CATALOG_FEATURES:PD_CATALOG_SPELLS;
-    char text[100];snprintf(text,sizeof text,"Cerca %u/%u | %u voci",search_key_page+1,search_pages(),pd_catalog_count(&state,catalog,search_draft));small_label(text,139,113,188,PD_TEXT);
+    char text[100];snprintf(text,sizeof text,"Cerca %u/%u | %u voci",search_key_page+1,search_pages(),pd_catalog_filtered_count(&state,catalog,search_draft,items?(pouch_view?PD_CATALOG_POUCH:PD_CATALOG_ALL):(ready_view?PD_CATALOG_READY:PD_CATALOG_ALL)));small_label(text,139,113,188,PD_TEXT);
     button("<",83,99,48,44,3801,search_key_page>0);button(">",335,99,48,44,3802,search_key_page+1<search_pages());
     lv_obj_t *query=small_label(search_draft[0]?search_draft:"Nome o parte del nome",83,149,216,PD_GOLD);lv_label_set_long_mode(query,LV_LABEL_LONG_WRAP);lv_obj_set_height(query,40);
     lv_obj_t *clear=button("Azzera",307,147,76,44,3804,search_draft[0]!=0);lv_obj_set_style_text_font(clear,&lv_font_montserrat_16,0);
@@ -1713,16 +1721,16 @@ static void render_search(void){
 }
 static void render_inventory(void) {
     char text[160];
-    unsigned count=pd_catalog_count(&state,PD_CATALOG_ITEMS,item_query),pages=count?(count+2)/3:1;if(inventory_page>=pages)inventory_page=pages-1;
-    if(item_query[0])snprintf(text,sizeof text,"%u voci %u/%u",count,inventory_page+1,pages);else snprintf(text,sizeof text,"Zaino %u/%u",inventory_page+1,pages);
+    unsigned count=pd_catalog_filtered_count(&state,PD_CATALOG_ITEMS,item_query,pouch_view?PD_CATALOG_POUCH:PD_CATALOG_ALL),pages=count?(count+2)/3:1;if(inventory_page>=pages)inventory_page=pages-1;
+    if(item_query[0])snprintf(text,sizeof text,"%u voci %u/%u",count,inventory_page+1,pages);else snprintf(text,sizeof text,"%s %u/%u",pouch_view?"Consumabili":"Zaino",inventory_page+1,pages);
     label(text,139,111,188,false);button("<",83,99,48,44,82,inventory_page>0);
     button(">",335,99,48,44,83,inventory_page+1<pages);
     if(!state.inventory_available) {
         small_label("Inventario non disponibile",83,190,300,PD_GOLD);
         small_label("Importa una copia aggiornata",83,220,300,PD_TEXT);
-    } else if(!state.item_count)label("Zaino vuoto",83,210,300,false);
+    } else if(!count)label(pouch_view?"Nessun consumabile disponibile":item_query[0]?"Nessun nome trovato":"Zaino vuoto",83,210,300,false);
     else for(unsigned row=0;row<3;row++) {
-        int selected=pd_catalog_index(&state,PD_CATALOG_ITEMS,item_query,inventory_page*3+row);if(selected<0)break;unsigned i=(unsigned)selected;
+        int selected=pd_catalog_filtered_index(&state,PD_CATALOG_ITEMS,item_query,pouch_view?PD_CATALOG_POUCH:PD_CATALOG_ALL,inventory_page*3+row);if(selected<0)break;unsigned i=(unsigned)selected;
         const pd_item *v=&state.items[i];
         /* Reserve space for quantity and equipment marker even for 40-char names. */
         size_t length=strlen(v->name),shown=length;lv_point_t extent;
@@ -1740,7 +1748,8 @@ static void render_inventory(void) {
         lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_align(l,LV_ALIGN_LEFT_MID,45,0);
     }
     if(item_query[0])snprintf(text,sizeof text,"Cerca: %s >",item_query);else strcpy(text,"Cerca nello zaino");
-    search_button(text,83,303,300,state.inventory_available&&(state.item_count||item_query[0]),item_query[0]!=0);
+    search_button(text,83,303,244,state.inventory_available&&(state.item_count||item_query[0]),item_query[0]!=0);
+    lv_obj_t *filter=icon_button("Consumabili",PD_UI_POUCH,335,303,48,48,4800,state.inventory_available);if(pouch_view)lv_obj_set_style_border_color(filter,lv_color_hex(PD_GOLD),0);
     const char *actions[]={"Monete","Usi","Attacco"};const unsigned ids[]={2400,103,81};
     for(unsigned i=0;i<3;i++){lv_obj_t *b=button(actions[i],83+i*104,359,92,48,ids[i],i!=2||state.equipped!=PD_NO_WEAPON);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
 }
@@ -1881,10 +1890,10 @@ static void render_combat(void) {
     button(state.combat.thrown?"Lancio: si":"Lancio: no",239,363,144,44,92,v->thrown_range>0);
 }
 static unsigned visible_powers(void) {
-    return pd_catalog_count(&state,magic_filter==2?PD_CATALOG_POWERS:magic_filter==1?PD_CATALOG_FEATURES:PD_CATALOG_SPELLS,power_query);
+    return pd_catalog_filtered_count(&state,magic_filter==2?PD_CATALOG_POWERS:magic_filter==1?PD_CATALOG_FEATURES:PD_CATALOG_SPELLS,power_query,ready_view?PD_CATALOG_READY:PD_CATALOG_ALL);
 }
 static int visible_power(unsigned row) {
-    return pd_catalog_index(&state,magic_filter==2?PD_CATALOG_POWERS:magic_filter==1?PD_CATALOG_FEATURES:PD_CATALOG_SPELLS,power_query,row);
+    return pd_catalog_filtered_index(&state,magic_filter==2?PD_CATALOG_POWERS:magic_filter==1?PD_CATALOG_FEATURES:PD_CATALOG_SPELLS,power_query,ready_view?PD_CATALOG_READY:PD_CATALOG_ALL,row);
 }
 static void choose_cost(void) {
     const pd_power *p=&state.magic.powers[power_index];
@@ -1910,7 +1919,7 @@ static void cost_text(char *text,size_t cap) {
 static void render_magic_list(void) {
     char text[160];unsigned count=visible_powers(),pages=count?(count+2)/3:1;
     if(magic_page>=pages)magic_page=pages-1;
-    if(power_query[0])snprintf(text,sizeof text,"%u voci %u/%u",count,magic_page+1,pages);else snprintf(text,sizeof text,"Magie e usi %u/%u",magic_page+1,pages);small_label(text,139,113,188,PD_TEXT);
+    if(power_query[0])snprintf(text,sizeof text,"%u voci %u/%u",count,magic_page+1,pages);else snprintf(text,sizeof text,"%s %u/%u",ready_view?"Pronte":"Magie e usi",magic_page+1,pages);small_label(text,139,113,188,PD_TEXT);
     button("<",83,99,48,44,805,magic_page>0);button(">",335,99,48,44,806,magic_page+1<pages);
     const char *tabs[]={"Magie","Capacita","Tutte"};for(unsigned i=0;i<3;i++) {
         lv_obj_t *b=button(tabs[i],83+i*104,149,92,44,802+i,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
@@ -1925,9 +1934,10 @@ static void render_magic_list(void) {
         lv_obj_set_style_pad_all(b,0,0);art(p->kind?&theme_crystal:&theme_magic,5,5,b);
         lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_width(l,236);lv_obj_set_height(l,lv_font_get_line_height(&lv_font_montserrat_20));lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_align(l,LV_ALIGN_LEFT_MID,45,0);
     }
-    lv_obj_t *uses=button("Usi",83,359,92,48,103,true);lv_obj_set_style_text_font(uses,&lv_font_montserrat_16,0);
-    search_button(power_query[0]?"Cerca*":"Cerca",187,359,92,state.magic.available&&(state.magic.count||power_query[0]),power_query[0]!=0);
-    lv_obj_t *resources=button("Risorse",291,359,92,48,836,state.magic.available);lv_obj_set_style_text_font(resources,&lv_font_montserrat_16,0);
+    lv_obj_t *uses=button("Usi",83,359,68,48,103,true);lv_obj_set_style_text_font(uses,&lv_font_montserrat_16,0);
+    search_button(power_query[0]?"Cerca*":"Cerca",159,359,112,state.magic.available&&(state.magic.count||power_query[0]),power_query[0]!=0);
+    lv_obj_t *ready=icon_button("Pronte",PD_UI_READY,279,359,48,48,4801,state.magic.available);if(ready_view)lv_obj_set_style_border_color(ready,lv_color_hex(PD_GOLD),0);
+    lv_obj_t *resources=icon_button("Risorse",PD_UI_USES,335,359,48,48,836,state.magic.available);lv_obj_set_style_text_font(resources,&lv_font_montserrat_16,0);
 }
 static void render_magic_detail(void) {
     char text[200];const pd_power *p=&state.magic.powers[power_index];choose_cost();
@@ -2933,6 +2943,7 @@ static void companion_event(companion_action selected,void *unused) {
         case COMPANION_SHEET:action=101;break;
         case COMPANION_APPEARANCE:action=50;break;
         case COMPANION_RESOURCES:action=103;break;
+        case COMPANION_SETTINGS:action=1600;break;
         case COMPANION_MINUS:if(page!=HOME_VITALS)return;action=1;break;
         case COMPANION_PLUS:if(page!=HOME_VITALS)return;action=2;break;
         case COMPANION_HEAL:if(page!=HOME_VITALS)return;action=3600;break;
@@ -3025,7 +3036,7 @@ static void render_content(void) {
     if(dice_timer) { lv_timer_delete(dice_timer);dice_timer=NULL; }
     if(avatar_timer) { lv_timer_delete(avatar_timer);avatar_timer=NULL; }
     if(feedback_timer){lv_timer_delete(feedback_timer);feedback_timer=NULL;}
-    storage_status_label=NULL;feedback_panel=NULL;memset(feedback_motes,0,sizeof feedback_motes);
+    pd_ui_hints_close();storage_status_label=NULL;feedback_panel=NULL;memset(feedback_motes,0,sizeof feedback_motes);
     pd_theme_close();
     companion_close();
     lv_obj_t *root=lv_screen_active();lv_obj_clean(root);
@@ -3214,9 +3225,23 @@ static void render_content(void) {
 static bool styled_pages[SYNC_FORGET+1];
 static void capture_styled_page(unsigned view);
 #endif
+/* Only page lists accept swipes. No gesture can confirm, spend or roll. */
+static void list_swipe(lv_event_t *event){
+    (void)event;lv_indev_t *input=lv_indev_active();if(!input)return;lv_dir_t direction=lv_indev_get_gesture_dir(input);
+    if(direction!=LV_DIR_NONE)lv_indev_wait_release(input);
+    if(import_pending||confirmation_open()||dice_animation.active||power_paused||display_screen.dimmed)return;
+    bool forward=direction==LV_DIR_LEFT;if(!forward&&direction!=LV_DIR_RIGHT)return;
+    unsigned action=0;
+    if(page==INVENTORY){unsigned count=pd_catalog_filtered_count(&state,PD_CATALOG_ITEMS,item_query,pouch_view?PD_CATALOG_POUCH:PD_CATALOG_ALL);if(forward?(inventory_page+1)*3<count:inventory_page>0)action=forward?83:82;}
+    else if(page==MAGIC_LIST){if(forward?(magic_page+1)*3<visible_powers():magic_page>0)action=forward?806:805;}
+    else if(page==SHEET&&sheet_tab==1){if(forward?skill_page<5:skill_page>0)action=forward?64:63;}
+    else if(page==HISTORY_HOME){if(forward?(history_page+1)*3<history.count+(history_pending?1u:0u):history_page>0)action=forward?2602:2601;}
+    if(action){lv_indev_wait_release(input);act(action);}
+}
 static void render(void){
     static int last_page=-1;
     render_content();
+    lv_obj_remove_event_cb(lv_screen_active(),list_swipe);lv_obj_add_event_cb(lv_screen_active(),list_swipe,LV_EVENT_GESTURE,NULL);
     pd_theme_finish(state.idle_animation&&!display_screen.dimmed&&!dice_animation.active,last_page!=(int)page);
     last_page=page;
 #ifdef PD_UI_TEST

@@ -215,3 +215,6 @@ footer { max-width:1200px;padding:22px 24px;font-size:8px; }
   .sprite { animation:none!important; }
   .screen,.quick-navigation button { scroll-behavior:auto; }
 }
+
+/* PC is a preparation station; secondary experiments remain explicitly folded. */
+.support-tools > details.tool-group{display:block;grid-column:1/-1;border-top:1px solid var(--line);padding-top:14px}.tool-group summary{cursor:pointer;color:var(--gold);font-size:13px;line-height:1.6}.tool-group details{margin-top:12px}.tool-group p{font-size:12px;line-height:1.7;color:#b2bea7}.support-tools > details.tool-group button{margin-right:22px}

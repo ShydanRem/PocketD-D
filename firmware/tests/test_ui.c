@@ -87,6 +87,7 @@ static lv_obj_t *button_label(lv_obj_t *button) {
     }
     return NULL; /* Avatar and icon-only controls have no visible text label. */
 }
+static const char *button_name(lv_obj_t *b){lv_obj_t *l=button_label(b);const char *text=l?lv_label_get_text(l):NULL;return text&&*text?text:lv_obj_get_user_data(b);}
 static void bounds(void) {
     lv_obj_t *root=lv_screen_active();lv_obj_update_layout(root);
     /* Text must not grow into another field/control for long imported names. */
@@ -144,7 +145,7 @@ static void click(const char *name) {
     lv_obj_t *root=lv_screen_active();lv_obj_update_layout(root);
     for(unsigned i=0;i<lv_obj_get_child_count(root);i++) {
         lv_obj_t *o=lv_obj_get_child(root,i);
-        if(lv_obj_check_type(o,&lv_button_class)&&button_label(o)&&!strcmp(lv_label_get_text(button_label(o)),name)) {
+        if(lv_obj_check_type(o,&lv_button_class)&&button_name(o)&&!strcmp(button_name(o),name)) {
             assert(!lv_obj_has_state(o,LV_STATE_DISABLED));lv_obj_send_event(o,LV_EVENT_CLICKED,NULL);bounds();return;
         }
     }
@@ -974,7 +975,7 @@ int main(void) {
     page=ITEM_CONFIRM;item_index=1;render();root=lv_screen_active();bool disabled_menu=false;
     for(unsigned i=0;i<lv_obj_get_child_count(root);i++){
         lv_obj_t *b=lv_obj_get_child(root,i);
-        if(lv_obj_check_type(b,&lv_button_class)&&button_label(b)&&!strcmp(lv_label_get_text(button_label(b)),"Menu")){
+        if(lv_obj_check_type(b,&lv_button_class)&&button_name(b)&&!strcmp(button_name(b),"Menu")){
             assert(lv_obj_has_state(b,LV_STATE_DISABLED));lv_obj_send_event(b,LV_EVENT_CLICKED,NULL);disabled_menu=true;break;
         }
     }
@@ -1672,6 +1673,30 @@ int main(void) {
     puts("Wi-Fi UI and reference/initiative: synthetic status only, no PG mutations, explicit forget guard, actual dice/history and current condition context passed; physical Wi-Fi still untested");
     pd_demo(&state);page=WIFI_HOME;wifi_mock=(pd_wifi_info){0};render();click("Ponte");assert(page==SYNC_HOME);bounds();screenshot("sync-offline.ppm");sync_mock=(pd_sync_info){.offer=true,.character_id="123456",.host="192.168.1.10",.fingerprint="0123456789abcdef0123456789abcdef"};page=SYNC_REVIEW;render();effects_before=state;bounds();screenshot("sync-review.ppm");for(unsigned i=0;i<3;i++)shortcut(i);assert(page==SYNC_REVIEW&&!stage_import(&imported_magic));sync_fail_save=true;click("Conferma");assert(page==SYNC_REVIEW&&sync_mock.offer&&!memcmp(&state,&effects_before,sizeof state)&&!strcmp(sync_notice,"Salvataggio non confermato"));bounds();screenshot("sync-save-error.ppm");sync_fail_save=false;click("Conferma");assert(page==SYNC_HOME&&!sync_mock.offer&&sync_mock.configured&&!memcmp(&state,&effects_before,sizeof state));sync_mock.state=PD_SYNC_CONFLICT;render();bounds();screenshot("sync-conflict.ppm");click("Rimuovi");assert(page==SYNC_FORGET);bounds();screenshot("sync-forget.ppm");click("Indietro");click("Rimuovi");click("Conferma");assert(page==SYNC_HOME&&!sync_mock.configured&&!memcmp(&state,&effects_before,sizeof state));
     puts("Sync UI: synthetic pairing/fingerprint, protected confirmation, failed-save retry, conflict, forget and unchanged character passed; no physical network or Beyond write tested");
+    /* v0.80: count real pointer taps, not helper auto-navigation. */
+    pd_demo(&state);display_screen=(pd_screen){0};power_paused=power_off_attempted=false;import_pending=false;fail_save=false;history_pending=false;
+    state.magic.available=true;state.magic.count=6;state.magic.concentration=0;memset(state.magic.slots,0,sizeof state.magic.slots);memset(state.magic.pact,0,sizeof state.magic.pact);state.magic.slots[0]=(pd_slot){2,3};
+    state.magic.powers[0]=(pd_power){.name="Scudo arcano",.flags=PD_PREPARED|PD_USES_SLOT,.level=1};state.magic.powers[1]=(pd_power){.name="Luce",.flags=PD_PREPARED};state.magic.powers[2]=(pd_power){.name="Passo velato",.flags=PD_PREPARED|PD_USES_SLOT,.level=2};state.magic.powers[3]=(pd_power){.name="Cura non preparata",.flags=PD_USES_SLOT,.level=1};state.magic.powers[4]=(pd_power){.name="Impulso eroico",.kind=1,.maximum=2,.remaining=1};state.magic.powers[5]=(pd_power){.name="Capacita esaurita",.kind=1,.maximum=1};
+    ready_view=pouch_view=false;item_query[0]=power_query[0]=0;magic_filter=2;magic_page=inventory_page=0;pd_dice_idle(&dice_animation,1);combat_roll=0;page=HERO;feedback.active=false;render();
+    effects_before=state;effects_saves=save_calls;effects_calls=random_calls;
+    lv_indev_t *ux=lv_indev_create();lv_indev_set_type(ux,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(ux,probe_touch);lv_indev_set_display(ux,d);
+    screenshot("practical-home.ppm");probe_click(ux,115,266);assert(page==COMBAT&&save_calls==effects_saves&&random_calls==effects_calls);act(100);probe_click(ux,350,266);assert(page==MAGIC_LIST);screenshot("practical-magic.ppm");probe_click(ux,320,49);assert(page==HERO&&save_calls==effects_saves&&random_calls==effects_calls);
+    act(100);probe_click(ux,200,104);assert(page==HOME_VITALS);screenshot("practical-vitals.ppm");probe_click(ux,155,229);assert(page==DAMAGE_HOME);assert(!memcmp(&state,&effects_before,sizeof state));
+    act(100);probe_click(ux,233,375);assert(page==HOME_MENU);screenshot("practical-menu.ppm");probe_click(ux,344,69);assert(page==DEVICE_SETTINGS);act(100);
+    /* Keep long-press help distinct from release/click, even on a ready die. */
+    act(14);effects_saves=save_calls;effects_calls=random_calls;probe_sample(ux,153,49,true,20);probe_sample(ux,153,49,true,650);screenshot("practical-hint.ppm");probe_sample(ux,153,49,false,20);assert(page==DICE&&save_calls==effects_saves&&random_calls==effects_calls);lv_tick_inc(2100);lv_timer_handler();bounds();
+    /* Search/filter intersections retain original IDs. Navigation never consumes. */
+    state=effects_before;state.item_count=8;state.equipped=0;for(unsigned i=2;i<8;i++){state.items[i]=(pd_item){.name="Ration",.kind=PD_CONSUMABLE,.quantity=1};}state.items[1].quantity=0;inventory_page=0;act(80);probe_click(ux,359,327);assert(pouch_view&&page==INVENTORY);screenshot("practical-pouch.ppm");
+    effects_before=state;effects_saves=save_calls;effects_calls=random_calls;
+    probe_sample(ux,292,224,true,20);for(int x=267;x>=142;x-=25)probe_sample(ux,x,224,true,20);probe_sample(ux,142,224,false,20);assert(page==INVENTORY&&inventory_page==1&&save_calls==effects_saves&&random_calls==effects_calls&&!memcmp(&state,&effects_before,sizeof state));screenshot("practical-swipe.ppm");
+    /* At the last page, a swipe must not become a tap on a row at release. */
+    probe_sample(ux,292,224,true,20);for(int x=267;x>=142;x-=25)probe_sample(ux,x,224,true,20);probe_sample(ux,142,224,false,20);assert(page==INVENTORY&&inventory_page==1);
+    probe_sample(ux,142,224,true,20);for(int x=167;x<=292;x+=25)probe_sample(ux,x,224,true,20);probe_sample(ux,292,224,false,20);assert(inventory_page==0&&page==INVENTORY);
+    click("Consumabili");assert(!pouch_view);act(800);click("Pronte");assert(ready_view&&page==MAGIC_LIST);screenshot("practical-ready.ppm");click("Pronte");assert(!ready_view);
+    /* Swiping inside an irreversible confirmation never commits it. */
+    state=effects_before;state.items[1].quantity=1;page=ITEM_CONFIRM;item_index=1;render();effects_saves=save_calls;effects_calls=random_calls;effects_before=state;
+    probe_sample(ux,350,383,true,20);probe_sample(ux,325,383,true,20);probe_sample(ux,300,383,true,20);probe_sample(ux,275,383,true,20);probe_sample(ux,275,383,false,20);assert(page==ITEM_CONFIRM&&!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves&&random_calls==effects_calls);
+    lv_indev_delete(ux);ready_view=pouch_view=false;act(91);puts("Practical device UX: one-tap attack/magic, primary damage/cure, shared icons/help, real pointer swipes/edges without row activation or confirmation, filters and unchanged state/RNG/storage passed; no physical touch claim.");
     unsigned covered=0;
     for(unsigned p=0;p<=SYNC_FORGET;p++){
         covered+=styled_pages[p];

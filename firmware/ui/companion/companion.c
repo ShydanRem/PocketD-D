@@ -1,6 +1,7 @@
 #include "companion.h"
 #include "../room_cache.h"
 #include "companion_assets.h"
+#include "../icons.h"
 #include <stdio.h>
 #include <string.h>
 
@@ -53,7 +54,7 @@ static lv_obj_t *control(const char *name,int x,int y,int w,int h,companion_acti
     lv_obj_set_style_border_color(b,lv_color_hex(IVORY),LV_STATE_PRESSED);
     lv_obj_set_style_opa(b,LV_OPA_40,LV_STATE_DISABLED);
     lv_obj_add_event_cb(b,dispatch,LV_EVENT_CLICKED,(void*)(uintptr_t)action);
-    if(name&&*name)text(b,name,3,h-24,w-6,&lv_font_montserrat_16,IVORY);
+    if(name&&*name){text(b,name,3,h-24,w-6,&lv_font_montserrat_16,IVORY);pd_ui_name(b,name);}
     if(target_count<sizeof targets/sizeof targets[0])targets[target_count++]=b;
     return b;
 }
@@ -109,6 +110,11 @@ static void home(void) {
     const lv_image_dsc_t *image=current.avatar?current.avatar:&companion_hero;
     hero_x=((int)avatar_width-(int)image->header.w)/2;hero_y=128-(int)image->header.h;
     hero=sprite(appearance,image,hero_x,hero_y);
+    /* Primary game actions flank the avatar without covering its silhouette. */
+    const pd_ui_icon_id quick_icons[]={PD_UI_ATTACK,PD_UI_MAGIC};
+    const char *quick_names[]={"Arma","Magie"};
+    const companion_action quick_actions[]={COMPANION_ATTACK,COMPANION_MAGIC};
+    for(unsigned i=0;i<2;i++){lv_obj_t *b=control(quick_names[i],82+236*i,232,66,72,quick_actions[i],i?0x493353:0x5b322c);sprite(b,pd_ui_icon(quick_icons[i]),17,6);}
     const lv_image_dsc_t *images[]={&companion_dock_dice,NULL,&companion_dock_pack};
     const char *names[]={"Dadi","Menu","Zaino"};
     companion_action actions[]={COMPANION_DICE,COMPANION_OPEN_MENU,COMPANION_PACK};
@@ -118,13 +124,12 @@ static void home(void) {
         else for(int row=0;row<2;row++)for(int col=0;col<2;col++)
             block(b,20+19*col,12+19*row,14,14,IVORY,255,2);
     }
-    if(!current.storage_error&&!current.paused&&current.feedback_age<2000&&(current.applied_hp||current.applied_temporary)) {
+    if(!current.storage_error&&!current.notice&&!current.paused&&current.feedback_age<2000&&(current.applied_hp||current.applied_temporary)) {
         char value[80];
-        if(current.applied_hp&&current.applied_temporary)snprintf(value,sizeof value,"PF %+d\nTemp %+d",current.applied_hp,current.applied_temporary);
+        if(current.applied_hp&&current.applied_temporary)snprintf(value,sizeof value,"PF %+d | Temp %+d",current.applied_hp,current.applied_temporary);
         else snprintf(value,sizeof value,current.applied_hp?"%+d PF":"Temp %+d",current.applied_hp?current.applied_hp:current.applied_temporary);
         unsigned color=current.applied_hp<0||(!current.applied_hp&&current.applied_temporary<0)?RED:MINT;
-        feedback_label=text(surface,value,290,226,120,&lv_font_montserrat_20,color);
-        if(current.applied_hp&&current.applied_temporary)lv_obj_set_height(feedback_label,50);
+        feedback_label=text(surface,value,98,173,270,&lv_font_montserrat_20,color);
         lv_obj_set_style_bg_color(feedback_label,lv_color_hex(INK),0);lv_obj_set_style_bg_opa(feedback_label,220,0);
         for(unsigned i=0;i<3;i++)motes[i]=block(surface,168+i*61,232+i*15,4,4,color,255,0);
     }
@@ -136,11 +141,13 @@ static void home(void) {
 static void menu(void) {
     block(surface,0,0,466,466,INK,210,0);
     if(current.storage_error||current.notice){
-        lv_obj_t *warning=text(surface,current.notice?current.notice:"Errore memoria: non salvato",104,49,258,&lv_font_montserrat_16,current.storage_error?RED:GOLD);
+        lv_obj_t *warning=text(surface,current.notice?current.notice:"Errore memoria: non salvato",104,49,204,&lv_font_montserrat_16,current.storage_error?RED:GOLD);
         lv_label_set_long_mode(warning,LV_LABEL_LONG_WRAP);lv_obj_set_height(warning,44);
-    }else text(surface,"AZIONI",133,56,200,&lv_font_montserrat_26,IVORY);
+    }else text(surface,"AZIONI",133,56,176,&lv_font_montserrat_26,IVORY);
+    {lv_obj_t *settings=control("",323,49,44,44,COMPANION_SETTINGS,INK);sprite(settings,pd_ui_icon(PD_UI_GEAR),6,6);pd_ui_name(settings,"Schermo e rete");}
+    text(surface,"Premi a lungo per il nome",98,94,270,&lv_font_montserrat_16,GOLD);
     const char *names[]={"Attacco","Dadi","Magie","Zaino","Riposo","Scheda"};
-    const lv_image_dsc_t *images[]={&companion_sword,&companion_dice,&companion_magic,&companion_pack,&companion_rest,&companion_sheet};
+    const lv_image_dsc_t *images[]={pd_ui_menu_icon(PD_UI_ATTACK),pd_ui_menu_icon(PD_UI_DICE),pd_ui_menu_icon(PD_UI_MAGIC),pd_ui_menu_icon(PD_UI_PACK),pd_ui_menu_icon(PD_UI_REST),pd_ui_menu_icon(PD_UI_SHEET)};
     const unsigned colors[]={0x5b322c,0x164553,0x493353,0x54412b,0x253b57,0x284d41};
     const companion_action actions[]={COMPANION_ATTACK,COMPANION_DICE,COMPANION_MAGIC,COMPANION_PACK,COMPANION_REST,COMPANION_SHEET};
     for(unsigned i=0;i<6;i++) {
@@ -159,14 +166,15 @@ static void vitals(void) {
     text(surface,value,108,112,250,&lv_font_montserrat_32,current.hp?MINT:RED);
     snprintf(value,sizeof value,"Temporanei: %u",current.temporary);
     text(surface,value,113,159,240,&lv_font_montserrat_20,IVORY);
-    text(surface,"+/-1: correzione manuale",98,184,270,&lv_font_montserrat_16,GOLD);
-    const char *names[]={"-1 PF","+1 PF","Cura","Temp.","Danni","Stato","Annulla","Eroe"};
-    const companion_action actions[]={COMPANION_MINUS,COMPANION_PLUS,COMPANION_HEAL,COMPANION_TEMPORARY,
-        COMPANION_DAMAGE,COMPANION_STATUS,COMPANION_UNDO,COMPANION_OPEN_HOME};
+    text(surface,"Colpi e cure, poi conferma",98,184,270,&lv_font_montserrat_16,GOLD);
+    const char *names[]={"Danni","Cura","Temp.","Stato","-1 PF","+1 PF","Annulla","Eroe"};
+    const companion_action actions[]={COMPANION_DAMAGE,COMPANION_HEAL,COMPANION_TEMPORARY,COMPANION_STATUS,
+        COMPANION_MINUS,COMPANION_PLUS,COMPANION_UNDO,COMPANION_OPEN_HOME};
     for(unsigned i=0;i<8;i++){
         lv_obj_t *b=control("",105+(i%2)*144,207+(i/2)*54,112,44,actions[i],i==0?0x4b3032:i==1||i==2?0x214c43:INK);
-        text(b,names[i],2,11,108,&lv_font_montserrat_20,IVORY);
-        if((i==0&&!current.can_hurt)||((i==1||i==2)&&!current.can_heal)||(i==6&&!current.can_undo))lv_obj_add_state(b,LV_STATE_DISABLED);
+        if(i<4){sprite(b,pd_ui_icon(i==0?PD_UI_SHIELD:i==1?PD_UI_HEART:i==2?PD_UI_USES:PD_UI_SHEET),4,6);text(b,names[i],38,13,72,&lv_font_montserrat_16,IVORY);}else text(b,names[i],2,11,108,&lv_font_montserrat_20,IVORY);
+        if(i==4||i==5)pd_ui_name(b,"Correzione manuale PF");
+        if((i==4&&!current.can_hurt)||((i==1||i==5)&&!current.can_heal)||(i==6&&!current.can_undo))lv_obj_add_state(b,LV_STATE_DISABLED);
     }
 }
 static void tick(lv_timer_t *unused) {
@@ -186,7 +194,7 @@ static void tick(lv_timer_t *unused) {
         if(receipt_age>=2000) {
             companion_clear_feedback();
         }else if(current.motion) {
-            lv_obj_set_y(feedback_label,226-(int)(receipt_age/160));
+            lv_obj_set_y(feedback_label,173-(int)(receipt_age/400));
             for(unsigned i=0;i<3;i++)lv_obj_set_y(motes[i],232+i*15-(receipt_age/80)%12);
         }
     }
@@ -198,7 +206,7 @@ void companion_close(void) {
     target_count=focused=0;receiver=NULL;receiver_context=NULL;
 }
 void companion_show(lv_obj_t *root,const companion_view *view,companion_handler handler,void *context) {
-    companion_close();lv_obj_clean(root);surface=root;current=*view;receiver=handler;receiver_context=context;
+    pd_ui_hints_close();companion_close();lv_obj_clean(root);surface=root;current=*view;receiver=handler;receiver_context=context;
     /* The panel supplies the circular aperture. Keep LVGL's display rectangular,
      * as in the production renderer, so repeated refreshes repaint every pixel. */
     lv_obj_set_style_bg_color(root,lv_color_hex(INK),0);lv_obj_set_style_radius(root,0,0);
