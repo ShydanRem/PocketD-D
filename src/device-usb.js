@@ -1,13 +1,14 @@
 import {serializeDevice} from './device-export.js';
 import {crc32,inspectDeviceBackup,DEVICE_BACKUP_MAX} from './device-backup.js';
 import {createUsbDiagnostics} from './device-usb-diagnostics.js';
+import {validateRuntimeDiagnostics} from './device-runtime-diagnostics.js';
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
 let active=false;
 export const deviceUsbSupported=()=>globalThis.isSecureContext===true&&globalThis.location?.protocol!=='file:'&&Boolean(globalThis.navigator?.serial?.requestPort);
 const uncertain=()=>new Error('Esito USB non confermato. Controlla il display prima di riprovare.');
 const aborted=()=>new Error('Collegamento interrotto. Controlla il display: una richiesta può essere ancora in attesa o già salvata.');
 const timedOut=()=>Object.assign(uncertain(),{code:'USB_TIMEOUT'});
-const phase=expected=>Array.isArray(expected)||String(expected).includes('READY')?'collegamento':expected==='PDD WAIT_CONFIRM'?'invio della copia':expected==='PDD IMPORTED'?'salvataggio della scheda':String(expected).includes('RESTORE')||expected==='PDD RESTORED'?'ripristino del backup':'trasferimento del backup';
+const phase=expected=>String(expected).startsWith('PDD DIAGNOSTICS')?'lettura diagnosi firmware':Array.isArray(expected)||String(expected).includes('READY')?'collegamento':expected==='PDD WAIT_CONFIRM'?'invio della copia':expected==='PDD IMPORTED'?'salvataggio della scheda':String(expected).includes('RESTORE')||expected==='PDD RESTORED'?'ripristino del backup':'trasferimento del backup';
 function unexpected(expected,line){
   const response=/^PDD (?:READY [0-9]+|BACKUP_READY [0-9]+|WAIT_CONFIRM|WAIT_BACKUP|WAIT_RESTORE|IMPORTED|RESTORED|BACKUP_DONE)$/.test(line)?line:'testo non riconosciuto';
   return new Error(`Risposta USB inattesa durante ${phase(expected)} (${response}). Controlla che PocketD-D sia avviato e che la porta scelta sia quella del dispositivo. Nessun salvataggio confermato.`);
@@ -37,17 +38,17 @@ class Channel{
     }
     if(this.error)throw this.error;if(this.signal?.aborted)throw aborted();
   }
-  async line(timeout){
+  async line(timeout,maxLine=256){
     const deadline=Date.now()+timeout,chars=this.lineBytes;
     for(;;){await this.available(deadline);const byte=this.chunks[0][this.offset++];this.bytes--;if(this.offset===this.chunks[0].length){this.chunks.shift();this.offset=0;}
       if(byte===10){
         const text=String.fromCharCode(...chars).replace(/\r$/,'');this.lineBytes=[];
         if(text==='waiting for download')throw new Error('Il dispositivo è nel bootloader. Rilascia BOOT, riavvia con RESET e attendi la schermata PocketD-D prima di riprovare. Nessun salvataggio confermato.');
         if(this.diagnostics.line(text))return '';
-        if(/[^\x20-\x7e]/.test(text)||text.length>256)throw new Error('Risposta USB non valida.');
+        if(/[^\x20-\x7e]/.test(text)||text.length>maxLine)throw new Error('Risposta USB non valida.');
         return text;
       }
-      if(byte<32&&byte!==13&&byte!==27||byte>126||chars.length>=512)throw new Error('Risposta USB non valida.');chars.push(byte);
+      if(byte<32&&byte!==13&&byte!==27||byte>126||chars.length>=Math.max(512,maxLine))throw new Error('Risposta USB non valida.');chars.push(byte);
     }
   }
   async exact(size,timeout){
@@ -59,11 +60,11 @@ class Channel{
     const bytes=encoder.encode(text),deadline=Date.now()+timeout;
     for(let at=0;at<bytes.length;at+=1024){if(this.signal?.aborted)throw aborted();await limited(this.writer.write(bytes.subarray(at,at+1024)),deadline-Date.now(),this.signal);}
   }
-  async wait(expected,timeout,{hello=false,prefix=false,duplicates=null}={}){
+  async wait(expected,timeout,{hello=false,prefix=false,duplicates=null,maxLine=256}={}){
     this.diagnostics.data.phase=phase(expected);
     const deadline=Date.now()+timeout;
     for(;;){let line;
-      try{line=await this.line(deadline-Date.now());}catch(error){if(error.code==='USB_TIMEOUT')error.message=`Nessuna conferma USB durante ${phase(expected)}. Controlla il display prima di riprovare: esito non confermato.`;throw error;}
+      try{line=await this.line(deadline-Date.now(),maxLine);}catch(error){if(error.code==='USB_TIMEOUT')error.message=`Nessuna conferma USB durante ${phase(expected)}. Controlla il display prima di riprovare: esito non confermato.`;throw error;}
       if(!line)continue;
       if(hello&&['PDD ERROR packet','PDD ERROR size'].includes(line))continue;
       if(duplicates?.remaining>0&&line===duplicates.line){duplicates.remaining--;continue;}
@@ -128,6 +129,17 @@ export async function checkDeviceConnection(options={}){
   return session({...options,operation:'check'},async(c,t)=>{
     options.onProgress?.('connect');const {ready}=await handshake(c,t,'PDD HELLO',Array.from({length:17},(_,i)=>`PDD READY ${i+1}`));
     options.onProgress?.('connection-checked');return {usbVersion:Number(ready.split(' ').at(-1))};
+  });
+}
+export async function readDeviceDiagnostics(options={}){
+  return session({...options,operation:'diagnostics'},async(c,t)=>{
+    options.onProgress?.('connect');
+    const {ready,duplicates}=await handshake(c,t,'PDD HELLO',Array.from({length:17},(_,i)=>`PDD READY ${i+1}`));
+    options.onProgress?.('diagnostics');await c.send('PDD DIAGNOSTICS GET 1\n',t.send);
+    const line=await c.wait('PDD DIAGNOSTICS ',t.hello,{prefix:true,duplicates,maxLine:2080});
+    let value;try{value=validateRuntimeDiagnostics(JSON.parse(line.slice('PDD DIAGNOSTICS '.length)));}catch{throw new Error('Diagnosi firmware non valida o non supportata. Nessun dato della scheda inviato.');}
+    if(value.formats.usb!==Number(ready.split(' ').at(-1)))throw new Error('Versioni USB discordanti nella diagnosi. Nessun dato della scheda inviato.');
+    c.diagnostics.data.runtime=value;options.onProgress?.('diagnostics-read');return value;
   });
 }
 export async function sendDeviceCopy(packet,options={}){

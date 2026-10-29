@@ -146,7 +146,7 @@ static void click(const char *name) {
     for(unsigned i=0;i<lv_obj_get_child_count(root);i++) {
         lv_obj_t *o=lv_obj_get_child(root,i);
         if(lv_obj_check_type(o,&lv_button_class)&&button_name(o)&&!strcmp(button_name(o),name)) {
-            assert(!lv_obj_has_state(o,LV_STATE_DISABLED));lv_obj_send_event(o,LV_EVENT_CLICKED,NULL);bounds();return;
+            if(lv_obj_has_state(o,LV_STATE_DISABLED))fprintf(stderr,"Disabled button: %s page=%u\n",name,page);assert(!lv_obj_has_state(o,LV_STATE_DISABLED));lv_obj_send_event(o,LV_EVENT_CLICKED,NULL);bounds();return;
         }
     }
     fprintf(stderr,"Button not found: %s (page=%u, import=%d, dice=%d)\n",name,page,import_pending,dice_animation.active);
@@ -474,10 +474,10 @@ int main(void) {
     click("Elenco");click("Luce sintetica");magic_saves=save_calls;click("Lancia");click("Conferma");assert(save_calls==magic_saves); /* A cantrip with no state changes does not wear flash. */
     click("Elenco");click("Scudo sintetico");click("Lancia");before_magic=state;fail_save=true;click("Conferma");assert(page==MAGIC_CONFIRM&&!memcmp(&state,&before_magic,sizeof state));fail_save=false;click("Indietro");
     click("Elenco");click("Usi");click("Eroe");click("Aspetto");click("Tasti");assert(page==KEY_SETTINGS);screenshot("keys.ppm");
-    click("BOOT breve: Dadi");assert(state.shortcuts[1]==4);calls=random_calls;shortcut(1);assert(page==INVENTORY&&random_calls==calls);
+    click("BOOT breve: Dadi");assert(page==KEY_PICKER&&state.shortcuts[1]==3);click("Zaino");assert(state.shortcuts[1]==4);calls=random_calls;shortcut(1);assert(page==INVENTORY&&random_calls==calls);
     shortcut(0);assert(page==HERO);state.shortcuts[1]=6;act(14);shortcut(1);assert(dice_animation.active);calls=random_calls;shortcut(0);assert(page==DICE&&dice_animation.active);shortcut(1);assert(!dice_animation.active&&random_calls==calls);
     static pd_state imported_magic;pd_demo(&imported_magic);assert(stage_import(&imported_magic)&&pending.shortcuts[1]==6);shortcut(0);assert(import_pending);click("Annulla");
-    act(100);click("Aspetto");click("Tasti");before_magic=state;fail_save=true;act(860);assert(!memcmp(&state,&before_magic,sizeof state));fail_save=false;
+    act(100);click("Aspetto");click("Tasti");before_magic=state;act(860);assert(page==KEY_PICKER);while(key_page)click("Pagina precedente");fail_save=true;click("Spento");assert(page==KEY_PICKER&&!memcmp(&state,&before_magic,sizeof state));fail_save=false;click("Indietro");assert(page==KEY_SETTINGS);
     pd_demo(&state);state.magic.count=PD_POWERS;for(unsigned i=0;i<PD_POWERS;i++)state.magic.powers[i]=(pd_power){.name="Magia sintetica lunga da consultare",.flags=PD_PREPARED};
     page=MAGIC_LIST;magic_filter=2;magic_page=39;render();bounds();screenshot("magic-last.ppm");
     memset(state.magic.powers[0].description,'W',500);state.magic.powers[0].description[500]=0;power_index=0;page=MAGIC_TEXT;text_page=3;render();bounds();
@@ -542,7 +542,7 @@ int main(void) {
     click("Lancia d20 base");random_values[0]=random_values[1]=0;click("Conferma");click("Accelera");assert(state.status.failures==3&&!state.hp);screenshot("death-three.ppm");click("Fine");
     before_status=state;status_saves=save_calls;act(2);assert(!memcmp(&state,&before_status,sizeof state)&&save_calls==status_saves);click("Usi");click("Riposi");act(903);assert(page==REST_HOME);click("Usi");click("Zaino");click("Pozione  x2");calls=random_calls;act(88);assert(page==ITEM_DETAIL&&random_calls==calls&&state.items[1].quantity==2);
     act(1501);click("Correggi / stabilizza");click("Fallita -");click("Conferma");assert(state.status.failures==2);click("Lancia d20 base");random_values[0]=random_values[1]=19;click("Conferma");click("Accelera");assert(state.hp==1&&!state.status.failures&&!state.status.successes);screenshot("death-twenty.ppm");
-    click("Eroe");click("Annulla");assert(!state.hp&&state.status.failures==2);state.shortcuts[0]=7;act(850);click("PWR breve: Riposi");assert(state.shortcuts[0]==8);shortcut(0);assert(page==STATUS_HOME);before_status=state;assert(stage_import(&imported_magic)&&pending.shortcuts[0]==8);click("Annulla");assert(!memcmp(&state,&before_status,sizeof state));
+    click("Eroe");click("Annulla");assert(!state.hp&&state.status.failures==2);state.shortcuts[0]=7;act(850);click("PWR breve: Riposi");click("Stato");assert(state.shortcuts[0]==8);shortcut(0);assert(page==STATUS_HOME);before_status=state;assert(stage_import(&imported_magic)&&pending.shortcuts[0]==8);click("Annulla");assert(!memcmp(&state,&before_status,sizeof state));
     state.status=(pd_status){0};page=DEATH_VIEW;render();bounds();screenshot("death-legacy.ppm");click("Avvia registro");before_status=state;click("Indietro");assert(!state.status.available&&!memcmp(&state,&before_status,sizeof state));click("Avvia registro");click("Conferma");assert(state.status.available&&!state.status.failures&&!state.status.successes);
     state.status.count=30;for(unsigned i=0;i<30;i++){memset(state.status.conditions[i].name,'W',60);state.status.conditions[i].name[60]=0;state.status.conditions[i].level=i%7;}
     page=CONDITION_LIST;condition_page=9;render();bounds();screenshot("condition-last.ppm");tap(210,302);assert(condition_index==29);screenshot("condition-long.ppm");
@@ -565,7 +565,7 @@ int main(void) {
     act(1504);assert(page==STATUS_CONFIRM);lv_tick_inc(60000);screen_service(-1,0);assert(!display_screen.dimmed);act(1506);
     page=DEVICE_SETTINGS;state.brightness=80;fail_brightness=true;screen_service(-1,0);assert(display_screen.failed&&display_screen.applied==70);screenshot("screen-error.ppm");
     unsigned attempts=brightness_calls;screen_service(-1,0);assert(brightness_calls==attempts);fail_brightness=false;lv_tick_inc(1000);screen_service(-1,0);assert(!display_screen.failed&&display_screen.applied==80);
-    state.shortcuts[0]=8;act(850);click("PWR breve: Stato");assert(state.shortcuts[0]==9);shortcut(0);assert(page==DEVICE_SETTINGS);screenshot("screen-configured.ppm");
+    state.shortcuts[0]=8;act(850);click("PWR breve: Stato");click("Schermo");assert(state.shortcuts[0]==9);shortcut(0);assert(page==DEVICE_SETTINGS);screenshot("screen-configured.ppm");
     /* Explicit local deltas: draft/cancel, atomic confirmation, HP cap, undo and import. */
     pd_demo(&state);page=STATUS_HOME;render();click("Effetti");assert(page==EFFECT_LIST);screenshot("effects-empty.ppm");
     static pd_state effects_before;effects_before=state;unsigned effects_calls=random_calls,effects_saves=save_calls;
@@ -586,7 +586,7 @@ int main(void) {
     for(unsigned i=state.effect_count;i<PD_EFFECTS;i++)assert(pd_effect_set(&state,i,(pd_effect){.target=PD_EFFECT_MAX_HP,.value=1,.active=true}));
     page=EFFECT_LIST;effect_page=2;render();bounds();screenshot("effects-last.ppm");click("8. PF max +1 | si");assert(effect_index==7);click("Elenco");
     assert(stage_import(&imported_magic)&&pending.effect_count==0);screenshot("effects-import.ppm");click("Annulla");assert(state.effect_count==8);
-    state.shortcuts[0]=9;act(850);click("PWR breve: Schermo");assert(state.shortcuts[0]==10);shortcut(0);assert(page==EFFECT_LIST);
+    state.shortcuts[0]=9;act(850);click("PWR breve: Schermo");click("Effetti");assert(state.shortcuts[0]==10);shortcut(0);assert(page==EFFECT_LIST);
     assert(stage_import(&imported_magic));click("Conferma");assert(!state.effect_count&&state.shortcuts[0]==10&&state.max_hp==32&&pd_max_hp(&state)==32);
     /* Explicit round durations: drafts, expiry preview, protected input and atomic undo. */
     pd_demo(&state);page=EFFECT_LIST;effect_page=0;render();click("Aggiungi");click("+1");click("+1");click("Durata");
@@ -604,7 +604,7 @@ int main(void) {
     effects_saves=save_calls;act(1742);assert(save_calls==effects_saves&&state.effects[0].rounds==1);screenshot("duration-expired.ppm");
     act(100);click("Annulla");assert(state.hp==41&&state.effects[0].rounds==2&&state.effects[1].rounds==1&&state.effects[1].active);
     /* Round is configurable and always opens a touch confirmation. */
-    state.shortcuts[0]=10;act(850);click("PWR breve: Effetti");assert(state.shortcuts[0]==11);effects_before=state;shortcut(0);assert(page==EFFECT_ROUND&&!memcmp(&state,&effects_before,sizeof state));
+    state.shortcuts[0]=10;act(850);click("PWR breve: Effetti");click("Round");assert(state.shortcuts[0]==11);effects_before=state;shortcut(0);assert(page==EFFECT_ROUND&&!memcmp(&state,&effects_before,sizeof state));
     shortcut(0);assert(page==EFFECT_ROUND);click("Conferma");assert(state.hp==32&&state.effects[0].rounds==1);shortcut(0);click("Conferma");assert(!state.effects[0].active&&pd_armor(&state)==16);screenshot("duration-all-expired.ppm");
     effects_saves=save_calls;shortcut(0);assert(page==EFFECT_LIST&&save_calls==effects_saves);
     /* An expired entry cannot be silently re-enabled with a zero timer. */
@@ -646,7 +646,7 @@ int main(void) {
     /* Last type, input limits, configurable key and import cancellation. */
     act(1800);click("Difese per tipo");defence_page=4;render();bounds();screenshot("defences-last.ppm");click("Tuono | da configurare");click("Immunita: no");click("Anteprima");click("Conferma");assert(pd_defence_flags(&state,12)==PD_IMMUNITY);click("Indietro");
     for(unsigned i=0;i<12;i++)act(1801);assert(damage_plan.type==12);damage_plan.amount=9999;render();bounds();screenshot("damage-maximum.ppm");
-    state.shortcuts[0]=11;act(850);click("PWR breve: Round");assert(state.shortcuts[0]==12);shortcut(0);assert(page==DAMAGE_HOME&&damage_plan.amount==1);effects_before=state;assert(stage_import(&imported_magic)&&!pending.defences.configured);screenshot("defences-import.ppm");click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));
+    state.shortcuts[0]=11;act(850);click("PWR breve: Round");click("Pagina successiva");click("Danni");assert(state.shortcuts[0]==12);shortcut(0);assert(page==DAMAGE_HOME&&damage_plan.amount==1);effects_before=state;assert(stage_import(&imported_magic)&&!pending.defences.configured);screenshot("defences-import.ppm");click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));
     /* Concentration rolls apply incoming damage atomically before dice animation. */
     pd_demo(&state);state.temp_hp=99;state.magic.count=1;state.magic.powers[0]=(pd_power){.name="Magia concentrata",.flags=PD_PREPARED|PD_CONCENTRATES};state.magic.concentration=1;state.training.saves=4;state.training.save_bonus[2]=1;
     assert(pd_defence_set(&state,0,true,0));act(1800);damage_plan.amount=25;render();click("Anteprima");effects_before=state;effects_calls=random_calls;effects_saves=save_calls;
@@ -1058,7 +1058,7 @@ int main(void) {
     journal_pool(PD_H_DAMAGE,"WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",&eighteen,"Danni tirati; PF bersaglio non modificati");act(2700);screenshot("history-eighteen.ppm");bounds();wrapped_fits();click(">");click(">");assert(history_dice_page==2);screenshot("history-last-dice.ppm");bounds();click("Elenco");
     for(unsigned i=0;i<25;i++)journal_d20(PD_H_FREE,"d20 libero",&(pd_roll){.dice={20},.count=1,.natural=20,.total=20},0,"Dado libero");render();assert(history.count==20);screenshot("history-full.ppm");
     while((history_page+1)*3<history.count)act(2602);screenshot("history-oldest.ppm");bounds();
-    act(850);state.shortcuts[0]=12;render();click("PWR breve: Danni");assert(state.shortcuts[0]==13);screenshot("history-key.ppm");shortcut(0);assert(page==HISTORY_HOME);effects_calls=random_calls;effects_saves=save_calls;shortcut(0);assert(page==HISTORY_HOME&&history_return!=HISTORY_HOME&&random_calls==effects_calls&&save_calls==effects_saves);
+    act(850);state.shortcuts[0]=12;render();click("PWR breve: Danni");click("Storico");assert(state.shortcuts[0]==13);screenshot("history-key.ppm");shortcut(0);assert(page==HISTORY_HOME);effects_calls=random_calls;effects_saves=save_calls;shortcut(0);assert(page==HISTORY_HOME&&history_return!=HISTORY_HOME&&random_calls==effects_calls&&save_calls==effects_saves);
     unsigned old_sequence=history.sequence;uint32_t old_epoch=state.history_epoch;pd_demo(&pending);pd_state history_import=pending;
     assert(stage_import(&history_import));click("Annulla");assert(history.sequence==old_sequence&&state.history_epoch==old_epoch);
     assert(stage_import(&history_import));fail_save=true;click("Conferma");assert(history.sequence==old_sequence&&state.history_epoch==old_epoch);fail_save=false;
@@ -1697,6 +1697,26 @@ int main(void) {
     state=effects_before;state.items[1].quantity=1;page=ITEM_CONFIRM;item_index=1;render();effects_saves=save_calls;effects_calls=random_calls;effects_before=state;
     probe_sample(ux,350,383,true,20);probe_sample(ux,325,383,true,20);probe_sample(ux,300,383,true,20);probe_sample(ux,275,383,true,20);probe_sample(ux,275,383,false,20);assert(page==ITEM_CONFIRM&&!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves&&random_calls==effects_calls);
     lv_indev_delete(ux);ready_view=pouch_view=false;act(91);puts("Practical device UX: one-tap attack/magic, primary damage/cure, shared icons/help, real pointer swipes/edges without row activation or confirmation, filters and unchanged state/RNG/storage passed; no physical touch claim.");
+    /* Direct key selection never changes the binding while paging/cancelling. */
+    pd_demo(&state);page=HERO;fail_save=false;history_pending=false;import_pending=false;
+    display_screen=(pd_screen){0};power_paused=power_off_attempted=false;
+    act(850);click("PWR breve: Eroe");assert(page==KEY_PICKER);effects_before=state;effects_saves=save_calls;effects_calls=random_calls;
+    screenshot("keys-direct-first.ppm");click("Pagina successiva");click("Pagina successiva");screenshot("keys-direct-last.ppm");
+    for(unsigned i=0;i<3;i++)shortcut(i);
+    assert(page==KEY_PICKER&&!stage_import(&imported_magic));click("Indietro");
+    assert(page==KEY_SETTINGS&&!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves&&random_calls==effects_calls);
+    click("PWR breve: Eroe");click("Pagina successiva");click("Pagina successiva");fail_save=true;click("Aspetto");
+    assert(page==KEY_PICKER&&!memcmp(&state,&effects_before,sizeof state));screenshot("keys-direct-error.ppm");fail_save=false;click("Aspetto");
+    assert(page==KEY_SETTINGS&&state.shortcuts[0]==14&&state.shortcuts[1]==3&&state.shortcuts[2]==5);
+    for(unsigned gesture=0;gesture<3;gesture++)for(unsigned choice=0;choice<15;choice++){
+        effects_before=state;unsigned old_binding=state.shortcuts[gesture];effects_saves=save_calls;act(860+gesture);assert(page==KEY_PICKER);
+        while(key_page>choice/6)click("Pagina precedente");while(key_page<choice/6)click("Pagina successiva");
+        click(shortcut_names[choice]);assert(page==KEY_SETTINGS&&state.shortcuts[gesture]==choice);
+        effects_before.shortcuts[gesture]=choice;assert(!memcmp(&state,&effects_before,sizeof state));
+        assert(save_calls==effects_saves+(choice!=old_binding));
+    }
+    assert(random_calls==effects_calls);
+    puts("Direct key picker: all 15 functions/three gestures, current-page selection, cancel/paging without writes, protected keys/import, save failure/retry and other fields preserved passed; synthetic input only");
     unsigned covered=0;
     for(unsigned p=0;p<=SYNC_FORGET;p++){
         covered+=styled_pages[p];

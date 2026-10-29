@@ -44,6 +44,8 @@ cc -std=c11 -Wall -Wextra -Werror -Wno-unused-parameter -Ifirmware/core -Ifirmwa
 firmware/tests/out/restore-storage
 firmware/tests/out/history-storage
 firmware/tests/out/storage
+cc -std=c11 -Wall -Wextra -Werror -Ifirmware/core -Ifirmware/tests/fake firmware/core/pocketdd.c firmware/core/magic.c firmware/core/checks.c firmware/core/combat.c firmware/core/damage.c firmware/core/dice_pool.c firmware/core/rest.c firmware/core/status.c firmware/tests/test_session.c -o firmware/tests/out/session
+firmware/tests/out/session
 cmake -S firmware/tests -B firmware/tests/out/ui-build -G Ninja
 cmake --build firmware/tests/out/ui-build --parallel 4
 (export PD_TEST_CLASS_PACK="$PWD/public/assets/classes.pdc"; cd firmware/tests/out/ui-build && ./dice && ./pool && ./avatar && ./room-cache && ./appearance && ./wallet && ./vitals && ./quantities && ./power && ./catalog && ./history && ./diagnostics diagnostics-codec.json && ./input-check && ./backup ../backup-fixture.json && ./checks && ./combat && ./magic && ./cannon && ./wifi-setup && ./wifi-service && ./reference && ./preparation && ./rest && ./status && ./death-roll && ./effects && ./durations && ./damage && ./death-damage && ./concentration && ./links && ./temporary-defences && ./mixed-damage && ./conditional-defences && ./multiple-defences && ./reductions && ./reduction-profiles && ./profile-costs && ./slot-costs && ./turns && ./external-turns && ./turn-names && ./time && ./charges && ./multi-costs && ./alternative-costs && ./recharge && ./roll-conditions && ./screen && ./buttons && ./alloc && ./ui)

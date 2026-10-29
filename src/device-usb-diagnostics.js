@@ -1,7 +1,8 @@
+import packageInfo from '../package.json' with {type:'json'};
 // Keep only transport metadata and recognized diagnostic fields, never raw lines,
 // packet bodies, character names, memory dumps or arbitrary firmware text.
 export function createUsbDiagnostics(operation){
-  const started=Date.now(),data={version:1,operation,phase:'apertura porta',outcome:'unconfirmed',usbVendorId:null,usbProductId:null,usbVersion:null,protocol:null,helloAttempts:0,logLines:0,logBytes:0,romBanners:0,resets:[],lastLogTag:null,fault:null,backtrace:[]};
+  const started=Date.now(),data={version:1,operation,phase:'apertura porta',outcome:'unconfirmed',usbVendorId:null,usbProductId:null,usbVersion:null,protocol:null,helloAttempts:0,logLines:0,logBytes:0,romBanners:0,resets:[],lastLogTag:null,fault:null,backtrace:[],runtime:null};
   return {
     data,
     port(info){for(const k of ['usbVendorId','usbProductId'])if(Number.isInteger(info?.[k])&&info[k]>=0&&info[k]<=65535)data[k]=info[k];},
@@ -31,7 +32,7 @@ export function createUsbDiagnostics(operation){
 }
 export function formatUsbDiagnostics(d){
   const hex=v=>v==null?'non disponibile':'0x'+v.toString(16).padStart(4,'0');
-  const operations={check:'verifica collegamento, nessun PG inviato',import:'invio personaggio',receive:'ricezione backup',restore:'ripristino backup'};
-  const result=d.outcome==='completed'?(d.operation==='check'?'collegamento verificato':'operazione confermata'):'non confermato';
-  return `Diagnosi USB v${d.version}\nOperazione: ${operations[d.operation]??'collegamento'}\nEsito: ${result}\nFase: ${d.phase}\nPorta: VID ${hex(d.usbVendorId)} / PID ${hex(d.usbProductId)}\nProtocollo PocketD-D: ${d.usbVersion==null?'nessuna risposta READY':(d.protocol==='backup'?'backup ':'USB')+d.usbVersion}\nSaluti inviati: ${d.helloAttempts}\nLog: ${d.logLines} righe / ${d.logBytes} byte\nAnnunci ROM osservati: ${d.romBanners} (possono essere accumulati)\nReset: ${d.resets.map(r=>r.code+' '+r.reason).join('; ')||'non osservato'}\nUltimo componente log: ${d.lastLogTag??'non disponibile'}\nErrore firmware: ${d.fault??'non riconosciuto'}\nBacktrace: ${d.backtrace.join(' ')||'non disponibile'}\nDurata: ${d.elapsedMs} ms\nNessun JSON del PG o log integrale incluso.`;
+  const operations={check:'verifica collegamento, nessun PG inviato',diagnostics:'lettura diagnosi firmware, nessun PG inviato',import:'invio personaggio',receive:'ricezione backup',restore:'ripristino backup'};
+  const result=d.outcome==='completed'?(d.operation==='check'?'collegamento verificato':d.operation==='diagnostics'?'diagnosi letta':'operazione confermata'):'non confermato';
+  return `Diagnosi USB v${d.version}\nApp PC: ${packageInfo.version}\nFirmware: ${d.runtime?.firmware??'non letto (READY indica il protocollo, non la versione firmware)'}\nOperazione: ${operations[d.operation]??'collegamento'}\nEsito: ${result}\nFase: ${d.phase}\nPorta: VID ${hex(d.usbVendorId)} / PID ${hex(d.usbProductId)}\nProtocollo PocketD-D: ${d.usbVersion==null?'nessuna risposta READY':(d.protocol==='backup'?'backup ':'USB')+d.usbVersion}\nSaluti inviati: ${d.helloAttempts}\nLog: ${d.logLines} righe / ${d.logBytes} byte\nAnnunci ROM osservati: ${d.romBanners} (possono essere accumulati)\nReset: ${d.resets.map(r=>r.code+' '+r.reason).join('; ')||'non osservato'}\nUltimo componente log: ${d.lastLogTag??'non disponibile'}\nErrore firmware: ${d.fault??'non riconosciuto'}\nBacktrace: ${d.backtrace.join(' ')||'non disponibile'}\nDurata: ${d.elapsedMs} ms\nNessun JSON del PG o log integrale incluso.${d.runtime?'\nDiagnosi runtime verificata:\n'+JSON.stringify(d.runtime,null,2):''}`;
 }

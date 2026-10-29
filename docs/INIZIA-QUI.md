@@ -1,4 +1,4 @@
-# Da zero al tuo eroe — PocketD-D v0.81
+# Da zero al tuo eroe — PocketD-D v0.82
 
 Su **Windows x64**, usa Chrome o Edge e il pacchetto PC completo. Node.js e
 firmware sono inclusi: non serve installare Node, Python, npm o compilare.
@@ -27,6 +27,10 @@ accettazione dei limiti e un pulsante esplicito; nella guida non aggiunge un
 ulteriore popup di conferma. HTTP e JSON validi non risolvono blocchi o regole
 non convertite: i problemi restano visibili e la conferma viene disabilitata.
 
+Prima dell’invio puoi aprire **Controlla dati e regole del PG**: mostra i valori
+attuali e porta direttamente agli editor. Le omissioni Beyond restano
+consultabili anche dopo una correzione locale. [Dettagli e prove](SESSIONE-V082.md).
+
 ## Aspetto e uso
 
 Nell’importazione scegli specie, silhouette e look della classe. In Al tavolo,
@@ -36,7 +40,7 @@ la scheda. Dopo una modifica occorre inviare di nuovo la copia al dispositivo.
 
 Sul Pocket: Arma e Magie dalla home; tocca i PF per Danni e Cura; swipe nelle
 liste; pressione lunga sulle icone per l’aiuto. Tocca l’avatar per aspetto e
-sfondi. Menu → ingranaggio → Tasti configura le scorciatoie. I look delle classi
+sfondi. Menu → ingranaggio → Tasti configura le scorciatoie: tocca il tasto e scegli direttamente la funzione. I look delle classi
 usano la SD opzionale: scarica i look dalla guida e copia `pocketdd` nella radice
 della scheda FAT32, usando un lettore PC. Il gioco offline non richiede Wi-Fi,
 ponte, account Beyond collegato o Foundry.
@@ -49,6 +53,9 @@ ponte, account Beyond collegato o Foundry.
 - Un errore, un file scaricato o il solo controllo della porta non equivalgono
   a un PG salvato sul dispositivo. Non ritentare alla cieca: controlla il display
   e apri i dettagli USB nella schermata di invio.
+- Se l’invio fallisce, dalla stessa finestra puoi usare **Leggi diagnosi firmware**
+  e **Scarica report USB** (in Altre opzioni nella guida). Il report conserva le
+  fasi e gli esiti, non il JSON del PG. La lettura diagnostica non invia la scheda.
 - La raccolta è nel browser: usa lo stesso browser e indirizzo. Non cancellare
   i dati del sito e conserva i backup. Avviare due volte la stessa versione
   riutilizza il servizio già aperto; versioni diverse richiedono chiudere la

@@ -2,3 +2,5 @@
 .extended-summary{max-width:850px;margin:8px auto;padding:8px 20px;font-size:13px;color:#c5cda9;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}.extended-summary button{min-height:44px;padding:9px 14px;background:#233b28;color:#e4e6cf;border:1px solid #687a52;border-radius:4px}.beyond-import textarea{width:100%;box-sizing:border-box}.beyond-import form{display:grid;gap:12px}.beyond-import .inventory-form-grid{min-width:0}.beyond-import input[type=number]{min-width:0;width:100%;box-sizing:border-box}
 
 [data-appearance-sprite] .device-avatar-sprite{width:144px;height:180px;image-rendering:pixelated;background:radial-gradient(ellipse at bottom,#31584d,transparent 70%)}
+
+.import-review .review-card{padding:1rem 0;border-bottom:1px solid #496b57}.import-review h3{margin:.2rem 0}.import-review .review-card button{margin:.25rem .5rem .25rem 0}.import-review button{max-width:100%;white-space:normal}.import-review p,.import-review li{overflow-wrap:anywhere}

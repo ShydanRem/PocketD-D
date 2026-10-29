@@ -2,6 +2,8 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
+**Stato v0.82:** [Sessione e preparazione del collaudo](docs/SESSIONE-V082.md): verifica continua delle regole e dei salvataggi, scelta diretta delle scorciatoie, controllo della scheda con editor mirati e report USB scaricabile con diagnosi firmware di sola lettura. 293 test JS e 127 viste native; nuove prove sintetiche, USB fisico ancora aperto.
+
 **Stato v0.81:** [Da zero al tuo eroe](docs/INIZIA-QUI.md): un pacchetto Windows x64 con runtime ufficiale incluso, guida Pocket → Personaggio → Al tavolo, installer nella stessa app, importazione e aspetto guidati, invio concluso soltanto dopo ACK del Pocket. Raccolta e origine locale conservate; USB fisico ancora aperto. Per ricostruire il pacchetto: `python3 scripts/fetch-windows-runtime.py`, poi `npm run installer:build`.
 
 **Stato v0.80:** [uso pratico sul dispositivo](docs/USO-PRATICO.md): attacco e magie diretti dalla home, Danni/Cura in prima riga, icone e aiuto coerenti, filtri per consumabili e magie pronte, swipe nelle liste. Tasti configurabili e conferme conservati. PC organizzato per importare, verificare e trasferire. Formati del PG invariati; prove USB/hardware ancora aperte.

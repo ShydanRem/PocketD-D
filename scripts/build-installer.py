@@ -150,3 +150,6 @@ page.write_text(page.read_text().replace('</main>', '<section class="after"><h2>
 shutil.copyfile(ROOT/'docs/INIZIA-QUI.md',out/'downloads/PocketDD-INIZIA-QUI.md')
 
 shutil.copyfile(ROOT/'docs/previews/v081-setup-flow.png',out/'downloads/previews/v081-setup-flow.png')
+
+shutil.copyfile(ROOT/'docs/SESSIONE-V082.md',out/'downloads/SESSIONE-V082.md')
+shutil.copyfile(ROOT/'docs/previews/v082-key-picker.png',out/'downloads/previews/v082-key-picker.png')

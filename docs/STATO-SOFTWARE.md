@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **29 ottobre 2026 — v0.81**. Il dispositivo è il prodotto;
+Aggiornamento del **29 ottobre 2026 — v0.82**. Il dispositivo è il prodotto;
 il PC serve per importare, configurare e conservare i backup.
 
 Il software copre una prima sessione individuale offline. Il passaggio ancora
@@ -29,6 +29,26 @@ La conversione resta **parziale**. HTTP 200 prova l'accesso; JSON valido prova
 il formato. Per dichiarare un dato convertito servono il controllo delle sue
 origini/regole e il confronto del risultato. Una descrizione importata non
 significa che il suo effetto sia automatizzato.
+
+### Nuovo nella v0.82
+
+[Sessione e preparazione del collaudo](SESSIONE-V082.md): una sequenza continua
+con attacco, magia/concentrazione, danni, pozione, consumabile/capacità e riposi
+ricarica tutti i campi a ogni salvataggio. Due interruzioni NVS simulate conservano
+la copia precedente; la riprova della pozione non tira di nuovo.
+
+Tasti configurabili con scelta diretta, icone e annullamento; identificativi
+esistenti conservati. Controllo PC della scheda attuale con collegamenti agli
+editor e resoconto Beyond originale conservato. Diagnosi firmware dal browser,
+solo su richiesta, e report locale degli ultimi quattro tentativi senza JSON
+PG/log integrali/seriali/credenziali. READY non viene confuso con la versione
+firmware; diagnosi letta non equivale a importazione salvata.
+
+293 test JS, suite nativa completa/127 viste, UI e sessione con ASan/UBSan
+(leak detection non supportata), browser di editor/quota/limiti/report e build
+ESP32. Nuove prove esclusivamente sintetiche: nessuna rilettura Beyond reale,
+nessuna raccolta personale modificata. USB fisico, avvio Windows e ponte
+Beyond autenticato restano aperti. Formati e partizioni invariati.
 
 ### Nuovo nella v0.81
 

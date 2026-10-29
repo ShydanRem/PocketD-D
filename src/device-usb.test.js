@@ -6,11 +6,12 @@ import {beyondCannonFixture} from './beyond-fixtures.js';
 import {convertBeyond} from './beyond-conversion.js';
 import {projectDevice} from './device-export.js';
 import {crc32} from './device-backup.js';
-import {sendDeviceCopy,receiveDeviceBackup,restoreDeviceBackup,checkDeviceConnection} from './device-usb.js';
+import {sendDeviceCopy,receiveDeviceBackup,restoreDeviceBackup,checkDeviceConnection,readDeviceDiagnostics} from './device-usb.js';
 import {createUsbDiagnostics,formatUsbDiagnostics} from './device-usb-diagnostics.js';
 const raw=readFileSync(new URL('../firmware/tests/fixtures/device-backup-v1.synthetic.json',import.meta.url),'utf8');
+const runtime=readFileSync(new URL('../firmware/tests/fixtures/diagnostics-v1.synthetic.json',import.meta.url),'utf8');
 const packet=()=>projectDevice(initialState()).packet,encode=x=>new TextEncoder().encode(x);
-function fake({version=9,fragment=23,backup=raw,header='',error='',cancel=false,noAck=false,eof=false,unexpected='',openError=false,confirm=null,writeError=false,startup='',missHello=0,lateReady=false,partialReady=false}={}){
+function fake({version=9,fragment=23,backup=raw,header='',error='',cancel=false,noAck=false,eof=false,unexpected='',openError=false,confirm=null,writeError=false,startup='',missHello=0,lateReady=false,partialReady=false,diagnosticResponse=JSON.stringify(JSON.parse(runtime))}={}){
  const log=[],sent=[],writes=[],signals=[];let controller,frame='',chooser=0,closed=0,cancelled=0,aborted=0,opened=false,hellos=0,lateLeft=missHello,partialLeft=partialReady;
  const push=text=>{const bytes=typeof text==='string'?encode(text):text;for(let i=0;i<bytes.length;i+=fragment)controller.enqueue(bytes.subarray(i,i+fragment));};
  const ack=text=>{if(error)push('PDD ERROR '+error+'\n');else if(cancel)push('PDD CANCELLED user\n');else if(!noAck)push(unexpected||text);if(eof)controller.close();};
@@ -23,6 +24,7 @@ function fake({version=9,fragment=23,backup=raw,header='',error='',cancel=false,
     if(partialLeft){push(`ADY ${version}\n`);partialLeft=false;}
     push(ready+'\r\n');if(lateReady){for(let n=0;n<lateLeft;n++)push(ready+'\n');lateLeft=0;}
    }
+   else if(line==='PDD DIAGNOSTICS GET 1'){ack('PDD DIAGNOSTICS '+diagnosticResponse+'\n');}
    else if(line==='PDD BACKUP GET 1'){
     push('PDD WAIT_BACKUP\n');confirm?.();
     if(cancel||error||noAck||unexpected)ack('');else{push(header||`PDD BACKUP_DATA ${encode(backup).length} ${crc32(encode(backup)).toString(16).padStart(8,'0')}\n`);push(backup);push('\nPDD BACKUP_DONE\n');if(eof)controller.close();}
@@ -171,4 +173,29 @@ test('USB16 cannon: older firmware receives HELLO only; current firmware receive
  const p=projectDevice(convertBeyond(beyondCannonFixture(),'123456').draft).packet;assert.equal(p.version,16);
  const old=fake({version:15});await assert.rejects(sendDeviceCopy(p,options(old)),/USB16/);assert.deepEqual(old.sent,['','PDD HELLO']);released(old);
  const current=fake({version:16});await sendDeviceCopy(p,options(current));assert.equal(JSON.parse(current.sent[2]).magic.powers.find(v=>v.effect===3).kind,1);released(current);
+});
+
+
+test('Browser runtime diagnosis: exact read-only commands, fragmented bounded payload, actual firmware version and no PG mutation',async()=>{
+ for(const fragment of [1,23,4096]){
+  const f=fake({version:17,fragment}),states=[];let report;
+  const d=await readDeviceDiagnostics({...options(f,p=>states.push(p)),onDiagnostic:v=>report=v});
+  assert.equal(d.firmware,'0.82.0-synthetic');assert.deepEqual(f.sent,['','PDD HELLO','PDD DIAGNOSTICS GET 1']);
+  assert.deepEqual(states,['connect','diagnostics','diagnostics-read']);assert.equal(report.outcome,'completed');assert.equal(report.runtime.firmware,d.firmware);
+  assert.match(formatUsbDiagnostics(report),/Firmware: 0.82.0-synthetic/);assert.match(formatUsbDiagnostics(report),/nessun PG inviato/);released(f);
+ }
+});
+test('Browser runtime diagnosis rejects private/unknown/malformed fields, oversized reply and discordant protocols without exporting payloads',async()=>{
+ const value=JSON.parse(runtime),extra={...value,name:'private-sheet-marker'};
+ for(const diagnosticResponse of [JSON.stringify(extra),'{bad private-sheet-marker',JSON.stringify({...value,firmware:'<private-sheet-marker>'}),'x'.repeat(2081),JSON.stringify({...value,storage:{...value.storage,state_valid:1}})]){
+  const f=fake({version:17,diagnosticResponse});let report;
+  await assert.rejects(readDeviceDiagnostics({...options(f),onDiagnostic:v=>report=v}));assert.equal(report.runtime,null);assert.equal(report.outcome,'unconfirmed');assert.doesNotMatch(formatUsbDiagnostics(report),/private-sheet-marker/);released(f);
+ }
+ const f=fake({version:16});await assert.rejects(readDeviceDiagnostics(options(f)),/discordanti/);assert.ok(f.sent.every(v=>!v.startsWith('{')));released(f);
+});
+test('Browser runtime diagnosis unsupported command, cancellation and no ACK remain unconfirmed; no save success is emitted',async()=>{
+ for(const settings of [{error:'packet'},{cancel:true},{noAck:true}]){
+  const f=fake({...settings,version:17}),states=[];let report;
+  await assert.rejects(readDeviceDiagnostics({...options(f,p=>states.push(p)),onDiagnostic:v=>report=v}));assert.ok(!states.includes('diagnostics-read'));assert.equal(report.outcome,'unconfirmed');released(f);
+ }
 });

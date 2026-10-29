@@ -1,5 +1,7 @@
 # PocketD-D v0.80 — uso pratico sul dispositivo
 
+Aggiornamento v0.82: [sessione continua, scelta diretta dei tasti e diagnosi USB](SESSIONE-V082.md). Le assegnazioni ora si scelgono da un elenco, senza scorrere una funzione per tocco.
+
 29 ottobre 2026. Questa revisione mantiene l’avatar, gli ambienti e lo stile
 approvati. Le schermate qui mostrate sono catture del firmware eseguito su PC
 con dati sintetici, non fotografie né prove del touch fisico.

@@ -1,0 +1,56 @@
+{
+  "format": "pocketdd-diagnostics",
+  "version": 1,
+  "board_target": "ESP32-S3-Touch-AMOLED-1.75",
+  "firmware": "0.82.0-synthetic",
+  "idf": "v5.5.5",
+  "uptime_ms": 0,
+  "reset_reason": 0,
+  "formats": {
+    "usb": 17,
+    "state": 36,
+    "history": 2,
+    "backup": 1
+  },
+  "memory": {
+    "internal": {
+      "free": 0,
+      "minimum_free": 0,
+      "largest_block": 0
+    },
+    "psram": {
+      "total": 0,
+      "free": 0,
+      "minimum_free": 0,
+      "largest_block": 0
+    }
+  },
+  "stack": {
+    "ui_min_bytes": 0,
+    "usb_min_bytes": 0
+  },
+  "io": {
+    "lvgl_ticks": 0,
+    "lvgl_max_us": 0,
+    "flushes_submitted": 0,
+    "touch_samples": 0,
+    "touch_errors": 0,
+    "touch_contacts": 0,
+    "pwr_read_errors": 0,
+    "pwr_presses": 0,
+    "boot_presses": 0,
+    "pwr_available": false
+  },
+  "storage": {
+    "state_writable": true,
+    "history_available": true,
+    "history_pending": false,
+    "history_matches": true,
+    "state_valid": true
+  },
+  "screen": {
+    "dimmed": false,
+    "failed": false,
+    "busy": false
+  }
+}
