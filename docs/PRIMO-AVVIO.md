@@ -1,3 +1,7 @@
+> Percorso consigliato dalla v0.81: [Inizia qui](INIZIA-QUI.md).
+> Il pacchetto Windows include runtime e installer; i comandi da terminale
+> sotto rimangono per collaudo tecnico e recupero, non sono il primo percorso.
+
 # Primo avvio e sessione di collaudo — v0.65
 
 Questa versione prepara il **blocco 3, prodotto fisico**. L'hardware è in

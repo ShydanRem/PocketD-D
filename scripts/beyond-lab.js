@@ -1,5 +1,5 @@
 import {createServer} from 'node:http';
-import {readFile} from 'node:fs/promises';
+import {readFile,access} from 'node:fs/promises';
 import {pathToFileURL} from 'node:url';
 import {probeBeyond} from './beyond-client.js';
 import {beyondCharacterId} from '../src/beyond.js';
@@ -15,8 +15,19 @@ export function createBeyondLabServer({probe=probeBeyond, appRoot=null}={}){
     if(!hosts.includes(req.headers.host)){reply(res,403,{error:{code:'HOST_DENIED',message:'Usa l’indirizzo locale indicato all’avvio'}});return}
     const origin=req.headers.origin;
     if(origin&&!hosts.some(host=>origin===`http://${host}`)){reply(res,403,{error:{code:'ORIGIN_DENIED',message:'Richiesta da un’altra origine rifiutata'}});return}
-    if(appRoot && req.method==='GET' && (req.url==='/' || /^\/assets\/[a-zA-Z0-9_.-]+$/.test(req.url))){
-      const path=req.url==='/'?'index.html':req.url.slice(1);
+    let pathname;try{pathname=new URL(req.url,'http://127.0.0.1').pathname}catch{reply(res,400,{error:{code:'INVALID_PATH',message:'Percorso non valido'}});return;}
+    if(appRoot&&req.method==='GET'&&pathname==='/api/setup'){
+      let installer=false;try{await access(new URL('install/manifest.json',appRoot));installer=true}catch{}
+      const pkg=JSON.parse(await readFile(new URL('../package.json',import.meta.url),'utf8'));
+      reply(res,200,{kind:'pocketdd-setup',version:1,appVersion:pkg.version,installer});return;
+    }
+    if(appRoot&&req.method==='GET'&&pathname.startsWith('/install/')){
+      const name=pathname==='/install/'?'index.html':pathname.slice('/install/'.length);
+      if(!/^(?:index\.html|manifest\.json|assets\/[\w.-]+\.(?:js|css|png)|firmware\/(?:bootloader|partitions|app)\.bin|licenses\/[\w.-]+\.txt)$/.test(name)){reply(res,404,{error:{code:'NOT_FOUND',message:'Percorso non disponibile'}});return;}
+      try{const data=await readFile(new URL('install/'+name,appRoot)),ext=name.split('.').at(-1);const mime={html:'text/html; charset=utf-8',js:'text/javascript; charset=utf-8',css:'text/css; charset=utf-8',json:'application/json',png:'image/png',bin:'application/octet-stream',txt:'text/plain; charset=utf-8'}[ext];res.setHeader('Content-Security-Policy',"default-src 'self'; connect-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors 'self'");res.writeHead(200,{'Content-Type':mime});res.end(data);}catch{reply(res,404,{error:{code:'INSTALLER_MISSING',message:'Installer assente. Usa il pacchetto PC completo.'}});}return;
+    }
+    if(appRoot && req.method==='GET' && (pathname==='/' || /^\/assets\/[a-zA-Z0-9_.-]+$/.test(pathname))){
+      const path=pathname==='/'?'index.html':pathname.slice(1);
       const mime=path.endsWith('.html')?'text/html':path.endsWith('.js')?'text/javascript':path.endsWith('.css')?'text/css':'application/octet-stream';
       try{const data=await readFile(new URL(path,appRoot));res.writeHead(200,{'Content-Type':`${mime}; charset=utf-8`});res.end(data)}
       catch{reply(res,404,{error:{code:'ASSET_ERROR',message:'Build assente: esegui npm run build'}})}return;

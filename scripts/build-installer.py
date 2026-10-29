@@ -146,3 +146,7 @@ for name in ('ux080-home','ux080-vitals','ux080-magic','ux080-ready'):
  shutil.copyfile(source,out/'assets'/f'{name}.png')
 page=out/'index.html'
 page.write_text(page.read_text().replace('</main>', '<section class="after"><h2>Più gioco, meno passaggi · v0.80</h2><p>Arma e magie direttamente dalla home; Danni e Cura in prima riga. Icone coerenti con aiuto su pressione lunga, filtri Consumabili e Pronte, swipe nelle liste. I tasti configurabili e le conferme restano disponibili. Il PC segue tre passaggi: importa, verifica e trasferisci, conserva le copie.</p><p><a href="downloads/PocketDD-USO-PRATICO.md">Guida rapida al dispositivo</a>. Catture del firmware su PC con dati sintetici: non fotografie o prove fisiche. Il problema USB e il collaudo del ponte reale restano aperti.</p><div class="import-captures"><img src="assets/ux080-home.png" width="466" height="466" alt="Home con arma e magie dirette"><img src="assets/ux080-vitals.png" width="466" height="466" alt="Danni e cura prima delle correzioni manuali"><img src="assets/ux080-magic.png" width="466" height="466" alt="Lista magie con ricerca e filtri"><img src="assets/ux080-ready.png" width="466" height="466" alt="Filtro delle magie e capacità con risorse disponibili"></div></section></main>'))
+
+shutil.copyfile(ROOT/'docs/INIZIA-QUI.md',out/'downloads/PocketDD-INIZIA-QUI.md')
+
+shutil.copyfile(ROOT/'docs/previews/v081-setup-flow.png',out/'downloads/previews/v081-setup-flow.png')

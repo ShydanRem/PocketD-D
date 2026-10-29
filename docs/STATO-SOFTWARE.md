@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **29 ottobre 2026 — v0.80**. Il dispositivo è il prodotto;
+Aggiornamento del **29 ottobre 2026 — v0.81**. Il dispositivo è il prodotto;
 il PC serve per importare, configurare e conservare i backup.
 
 Il software copre una prima sessione individuale offline. Il passaggio ancora
@@ -29,6 +29,27 @@ La conversione resta **parziale**. HTTP 200 prova l'accesso; JSON valido prova
 il formato. Per dichiarare un dato convertito servono il controllo delle sue
 origini/regole e il confronto del risultato. Una descrizione importata non
 significa che il suo effetto sia automatizzato.
+
+### Nuovo nella v0.81
+
+[Guida dall’installazione al tavolo](INIZIA-QUI.md) nella stessa app locale:
+Pocket → Personaggio → Al tavolo. Il pacchetto Windows x64 include runtime
+Node ufficiale non modificato, licenza, app compilata e installer/firmware.
+Niente installazione separata di Node o Python. Lo stesso indirizzo/origine
+conserva la raccolta; un secondo avvio riutilizza soltanto la stessa versione.
+
+Chi ha già il Pocket pronto salta il firmware; chi non ha il dispositivo può
+preparare il PG e rimandare. Nella guida: anteprima Beyond sintetizzata, resoconti
+richiudibili, scelte estetiche, consenso ai limiti e singolo pulsante di creazione,
+poi invio USB e conferma sul display. Nessun completamento dopo il solo flash,
+un file scaricato o un controllo porta. L’editor del solo aspetto conserva gli
+altri campi. Errori di memoria non creano duplicati o avanzamenti fittizi.
+
+285 test JS, prove browser guidate e regressioni della UI/USB simulate,
+pacchetto estratto, identità/architettura SHA256 del runtime Windows e build
+ESP32 verificati. La shell/esecuzione Windows non è eseguita nell’host Linux;
+USB fisico e ponte Beyond autenticato restano aperti. Nessuna lettura o scrittura
+Beyond reale in queste prove. Formati USB17/PC20/PDDa e partizioni invariati.
 
 ### Nuovo nella v0.80
 

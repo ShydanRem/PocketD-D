@@ -1,3 +1,4 @@
+import {openPocketSetup} from './setup-ui.js';
 import {damageNames,defenceFlags,defenceLabel} from './defences.js';
 import {avatarClasses,avatarOutfit} from './avatar-classes.js';
 import {loadClassLooks,classLooksAvailable} from './class-looks.js';
@@ -49,7 +50,7 @@ function navigatePage(next,source='screen'){
   document.querySelector(selector)?.focus({preventScroll:true});
 }
 function quickNavigation(){return `<div class="quick-navigation" role="group" aria-label="Navigazione rapida">${sections.map(([id,label])=>`<button data-go-page="${id}" aria-current="${page===id?'page':'false'}" ${rolling?'disabled':''}>${navIcon(id)}<span>${label}</span></button>`).join('')}</div>`}
-function supportTools(){return `<section class="support-tools" aria-label="Supporto al dispositivo"><div class="tools-heading"><span class="eyebrow">PREPARA IL TUO POCKET</span><h2>Importa. Controlla. Porta con te.</h2><p>Il gioco è sul dispositivo. Qui prepari il personaggio e conservi le copie.</p></div><div class="tool-group"><h3>1 · Importa e personalizza</h3><button data-action="beyond-import">Importa da D&D Beyond</button><button data-action="edit">Personalizza eroe</button><button data-action="new">Nuovo eroe +</button></div><div class="tool-group"><h3>2 · Verifica e trasferisci</h3><button data-action="manage-inventory">Gestisci inventario e armi</button><button data-action="manage-powers">Gestisci magie e capacità</button><button data-action="device-export">Prepara per dispositivo (USB)</button><p>Controlla l’anteprima sul PC e conferma la sostituzione della copia attiva sul display. Le altre schede PC restano conservate.</p></div><div class="tool-group"><h3>3 · Conserva e collega</h3><button data-action="device-backup">Backup del dispositivo</button><button data-action="export">Esporta scheda</button><button data-action="import">Aggiungi da backup</button><details><summary>Ponte Beyond sperimentale</summary><p>Avvia <code>Avvia-Ponte.cmd</code>, poi <a href="http://127.0.0.1:8787/" target="_blank" rel="noopener">apri il ponte Beyond</a>. Tieni aperti ponte e scheda Beyond; serve un abbinamento separato. Non è necessario per il gioco offline.</p></details></div><details class="tool-group"><summary>Altri strumenti e prototipi PC</summary><button data-action="party">Party locale simulato</button><button data-action="manage-encounter">Prepara combattimento</button><button data-action="manage-map">Prepara mappa</button><button data-action="reset">Ripristina eroe dimostrativo</button></details></section><footer><span>FATTO DI PIXEL. MOSSO DALL’IMMAGINAZIONE.</span><span>SUPPORTO PC 0.80 <b>✦</b> IMPORTAZIONE E CONFIGURAZIONE</span><input type="file" id="backup-file" accept=".json,application/json" hidden><input type="file" id="library-file" accept=".json,application/json" hidden></footer>`}
+function supportTools(){return `<section class="support-tools" aria-label="Supporto al dispositivo"><div class="tools-heading"><span class="eyebrow">PREPARA IL TUO POCKET</span><h2>Importa. Controlla. Porta con te.</h2><button class="setup-launch" data-action="setup">Avvia la guida Pocket →</button><p>Il gioco è sul dispositivo. Qui prepari il personaggio e conservi le copie.</p></div><div class="tool-group"><h3>1 · Importa e personalizza</h3><button data-action="beyond-import">Importa da D&D Beyond</button><button data-action="edit">Personalizza eroe</button><button data-action="new">Nuovo eroe +</button></div><div class="tool-group"><h3>2 · Verifica e trasferisci</h3><button data-action="manage-inventory">Gestisci inventario e armi</button><button data-action="manage-powers">Gestisci magie e capacità</button><button data-action="device-export">Prepara per dispositivo (USB)</button><p>Controlla l’anteprima sul PC e conferma la sostituzione della copia attiva sul display. Le altre schede PC restano conservate.</p></div><div class="tool-group"><h3>3 · Conserva e collega</h3><button data-action="device-backup">Backup del dispositivo</button><button data-action="export">Esporta scheda</button><button data-action="import">Aggiungi da backup</button><details><summary>Ponte Beyond sperimentale</summary><p>Avvia <code>Avvia-Ponte.cmd</code>, poi <a href="http://127.0.0.1:8787/" target="_blank" rel="noopener">apri il ponte Beyond</a>. Tieni aperti ponte e scheda Beyond; serve un abbinamento separato. Non è necessario per il gioco offline.</p></details></div><details class="tool-group"><summary>Altri strumenti e prototipi PC</summary><button data-action="party">Party locale simulato</button><button data-action="manage-encounter">Prepara combattimento</button><button data-action="manage-map">Prepara mappa</button><button data-action="reset">Ripristina eroe dimostrativo</button></details></section><footer><span>FATTO DI PIXEL. MOSSO DALL’IMMAGINAZIONE.</span><span>SUPPORTO PC 0.81 <b>✦</b> IMPORTAZIONE E CONFIGURAZIONE</span><input type="file" id="backup-file" accept=".json,application/json" hidden><input type="file" id="library-file" accept=".json,application/json" hidden></footer>`}
 
 function rememberUndo(restoreHistory=false){undo=structuredClone(state);undoRestoresHistory=restoreHistory}
 function persistLibrary(){
@@ -107,6 +108,7 @@ async function roll(){if(rolling)return;const info=describeRoll(state,rollContex
 document.addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;if(rolling)return;
 if(b.dataset.page){navigatePage(b.dataset.page,'tabs');return}
 if(b.dataset.goPage){navigatePage(b.dataset.goPage,'quick');return}
+if(b.dataset.action==='setup'){startSetup();return}
 if(b.dataset.action==='focus-view'){focusMode=!focusMode;render();document.querySelector('[data-action="focus-view"]').focus({preventScroll:true});return}
 if(b.dataset.hp){rememberUndo();state=changeHp(state,Number(b.dataset.hp));save();if(Number(b.dataset.hp)<0&&state.concentration)notice='Danno subito: verifica con il DM il tiro di concentrazione. Nessun esito automatico.'}
 if(b.dataset.sheetTab){sheetTab=b.dataset.sheetTab;render();document.querySelector(`[data-sheet-tab="${sheetTab}"]`).focus({preventScroll:true});return}
@@ -219,6 +221,8 @@ document.addEventListener('pointerup',e=>{
   const index=sections.findIndex(([id])=>id===page);navigatePage(sections[(index+(dx<0?1:-1)+sections.length)%sections.length][0]);
 });
 if(storedRaw===null&&!storageBlocked)persistLibrary();render();
+function startSetup(){openPocketSetup({getState:()=>state,getId:()=>library.activeId,getCharacters:()=>library.characters.map(c=>({id:c.id,name:c.state.name})),selectCharacter:id=>{useLibrary(selectCharacter(updateCharacter(library,state),id));render();},getStatus:()=>({blocked:storageBlocked,warning:storageWarning}),openImport:done=>openBeyondImport({commit:commitBeyond,guided:true,onCreated:done}),openAppearance:done=>openEditor(false,{appearanceOnly:true,onClosed:done}),openExport:done=>openDeviceExport({guided:true,onImported:done}),openNew:done=>openEditor(true,{onClosed:saved=>{if(saved)done()}})});}
+if(new URLSearchParams(location.search).get('setup')==='1')startSetup();
 
 document.addEventListener('change',async e=>{
   if(e.target.id==='active-weapon'){try{commitInventory(equipWeapon(state,e.target.value||null))}catch(error){notice=error.message;render()}return}
@@ -252,7 +256,8 @@ document.addEventListener('change',async e=>{
   render();
 });
 
-function openEditor(fresh=false){
+function openEditor(fresh=false,{appearanceOnly=false,onClosed}={}){
+  let editorSaved=false;
   if(fresh&&library.characters.length>=MAX_CHARACTERS){notice=`La raccolta contiene già ${MAX_CHARACTERS} personaggi`;render();return}
   const sourceId=library.activeId;
   const draft=structuredClone(fresh?initialState():state),originalAvatar=structuredClone(draft.avatar);
@@ -267,7 +272,8 @@ function openEditor(fresh=false){
   dialog.innerHTML=`<form id="hero-editor"><div class="editor-heading"><div><div class="eyebrow">IL TUO PROSSIMO CAPITOLO</div><h2>${fresh?'Crea il tuo eroe':'Personalizza il tuo eroe'}</h2></div><button type="button" data-close aria-label="Chiudi editor">×</button></div><p class="editor-intro">Inserimento manuale · verifica i valori con il DM. Modificare Costituzione o livello non ricalcola i PF massimi.</p><div class="editor-body"><div class="editor-preview"><div class="avatar-stage">${sprite(draft.avatar,Boolean(equippedWeapon(draft)))}</div><strong class="avatar-caption">${escapeHtml(draft.name)}</strong><span>UN EROE, LA TUA STORIA</span><p>Le scelte si applicano quando salvi.</p></div><div class="editor-fields"><label>Nome<input name="name" value="${escapeHtml(draft.name)}" maxlength="24" required></label><label>Titolo<input name="title" value="${escapeHtml(draft.title)}" maxlength="40"></label><div class="editor-numbers">${number('Livello','level',draft.level,1,20)}${number('PF massimi','maxHp',draft.maxHp,1,999)}${number('Classe armatura','armorClass',draft.armorClass,1,30)}</div><fieldset class="appearance-editor"><legend>Il tuo aspetto</legend><div class="avatar-presets" role="group" aria-label="Stili avatar">${avatarPresets.map((preset,index)=>`<button type="button" data-avatar-preset="${index}">${preset.name}</button>`).join('')}<button type="button" data-avatar-reset>Ripristina aspetto</button></div>${identitySelect('Specie · famiglia visiva','lineage',avatarSpecies.map(s=>s.name))}${identitySelect('Silhouette','body',avatarBodies)}${identitySelect('Look classe · solo estetica','outfit',avatarClasses.map(c=>c.name))}<p data-class-status></p><p><a href="assets/PocketDD-SD.zip" download>Scarica il pacchetto SD</a> · Estrai la cartella pocketdd nella radice della SD.</p><p>Scelte estetiche indipendenti dalle regole e dal genere del personaggio.</p><div class="editor-appearance">${appearanceChoices()}</div></fieldset><fieldset><legend>Caratteristiche · punteggi 1–30</legend><div class="editor-stats">${abilityKeys.map(key=>number(key,key,draft.abilities[key],1,30)).join('')}</div></fieldset>${training}</div></div><p class="editor-error" role="alert"></p><div class="editor-controls"><button type="button" data-close>Annulla</button><button type="submit" class="roll-button">${fresh?'CREA PERSONAGGIO':'SALVA PERSONAGGIO'}</button></div></form>`;
   document.body.append(dialog);paintAvatar();
   dialog.querySelectorAll('[data-close]').forEach(button=>button.addEventListener('click',()=>dialog.close()));
-  dialog.addEventListener('close',()=>dialog.remove());
+  dialog.addEventListener('close',()=>{dialog.remove();onClosed?.(editorSaved);});
+  if(appearanceOnly){dialog.classList.add('appearance-only');dialog.querySelector('h2').textContent='Personalizza il tuo avatar';dialog.querySelector('.editor-intro').textContent='Solo aspetto: i valori e le regole del personaggio restano conservati.';dialog.querySelector('[type=submit]').textContent='SALVA ASPETTO';for(const node of dialog.querySelectorAll('.editor-fields>label,.editor-numbers,.editor-stats,.save-training,.skill-training')){const fieldset=node.closest('fieldset');const hidden=fieldset&&!fieldset.classList.contains('appearance-editor')?fieldset:node;hidden.hidden=true;if(hidden.matches('input,select,textarea'))hidden.disabled=true;for(const input of hidden.querySelectorAll('input,select,textarea'))input.disabled=true;}}
   function paintAvatar(){
     dialog.querySelector('.editor-preview .sprite').outerHTML=sprite(draft.avatar,Boolean(equippedWeapon(draft)));
     dialog.querySelector('[data-class-status]').textContent=draft.avatar.outfit?(classLooksAvailable()?'Preset con colori e taglio propri; le scelte originali sono conservate. Sul dispositivo serve il pacchetto SD.':'Asset classi assenti: anteprima originale. La scelta del preset viene conservata; installa il pacchetto SD sul dispositivo.'):'Stile originale: colori e capelli personalizzabili.';
@@ -299,13 +305,13 @@ function openEditor(fresh=false){
       const skillAbilities=Object.fromEntries(skills.map(skill=>[skill.id,String(data.get(`skill-ability-${skill.id}`))]).filter(([,value])=>value));
       let extended=draft.extended?{...draft.extended}:undefined;
       if(Object.keys(skillAbilities).length)extended={...(extended??emptyExtended()),skillAbilities};else if(extended)delete extended.skillAbilities;
-      const next=parseBackup(serialize({...draft,...(extended?{extended}:{}),name:data.get('name').trim(),title:data.get('title').trim(),level:Number(data.get('level')),maxHp:Number(data.get('maxHp')),hp:fresh?Number(data.get('maxHp')):Math.min(draft.hp,Number(data.get('maxHp'))),armorClass:Number(data.get('armorClass')),abilities:Object.fromEntries(abilityKeys.map(key=>[key,Number(data.get(key))])),skillRanks:Object.fromEntries(skills.map(skill=>[skill.id,Number(data.get(`skill-${skill.id}`))])),saveProficiencies:Object.fromEntries(abilityKeys.map(key=>[key,data.has(`save-${key}`)]))}));
+      const next=parseBackup(serialize(appearanceOnly?{...state,avatar:structuredClone(draft.avatar)}:{...draft,...(extended?{extended}:{}),name:data.get('name').trim(),title:data.get('title').trim(),level:Number(data.get('level')),maxHp:Number(data.get('maxHp')),hp:fresh?Number(data.get('maxHp')):Math.min(draft.hp,Number(data.get('maxHp'))),armorClass:Number(data.get('armorClass')),abilities:Object.fromEntries(abilityKeys.map(key=>[key,Number(data.get(key))])),skillRanks:Object.fromEntries(skills.map(skill=>[skill.id,Number(data.get(`skill-${skill.id}`))])),saveProficiencies:Object.fromEntries(abilityKeys.map(key=>[key,data.has(`save-${key}`)]))}));
       if(sourceId!==library.activeId)throw new Error('Il personaggio attivo è cambiato. Riapri l’editor.');
       if(storageBlocked)throw new Error('Risolvi prima il recupero dei dati salvati');
       const nextLibrary=fresh?addCharacter(updateCharacter(library,state),next,newId()):updateCharacter(library,next);
       const raw=storeLibrary(localStorage,nextLibrary,storedRaw);
       if(!fresh)rememberUndo();library=nextLibrary;storedRaw=raw;state=activeCharacter(library);storageWarning='';
-      if(fresh)resetCharacterView();else resetCombatAfterEdit();notice='Scheda salvata';
+      editorSaved=true;if(fresh)resetCharacterView();else resetCombatAfterEdit();notice=appearanceOnly?'Aspetto salvato':'Scheda salvata';
       dialog.close();render();
     }catch(error){dialog.querySelector('.editor-error').textContent=error.message}
   });
@@ -501,7 +507,8 @@ function deviceWalletPreview(packet){
   const x=packet.wallet,units={cp:'Rame (MR)',sp:'Argento (MA)',ep:'Electrum (ME)',gp:'Oro (MO)',pp:'Platino (MP)'};
   return `<details data-device-wallet><summary>Monete · ${x.available?'saldo verificato':'non disponibili'}</summary><p>${x.available?'Cinque saldi separati, modificabili sul dispositivo con anteprima e conferma.':'Saldo non verificato: nessuna ricchezza inventata. Configuralo sul dispositivo o verifica le monete in Stato e risorse.'}</p>${x.available?`<ul>${Object.entries(units).map(([k,name])=>`<li>${name}: ${x[k]}</li>`).join('')}</ul>`:''}<p>Richiede USB9 / firmware v0.51. Nessun cambio o acquisto automatico.</p></details>`;
 }
-function openDeviceExport(){
+function openDeviceExport({guided=false,onImported,onClosed}={}){
+  const sourceId=library.activeId;let imported=false;
   const dialog=document.createElement('dialog');dialog.className='editor';
   try{
     const {packet,warnings}=projectDevice(state);
@@ -509,11 +516,12 @@ function openDeviceExport(){
     const configure=dialog.querySelector('[data-device-configure-defences]');
     if(configure){configure.hidden=!state.extended;configure.onclick=()=>{dialog.close();openExtendedState({getState:()=>state,commit:commitExtended,escapeHtml,focusDefences:true});};}
     const usb=bindUsbDialog(dialog);dialog.querySelector('[data-device-send]').disabled=!usb.supported;
-    dialog.querySelector('[data-device-send]').onclick=()=>usb.run(options=>sendDeviceCopy(packet,options));
+    dialog.querySelector('[data-device-send]').onclick=()=>usb.run(options=>sendDeviceCopy(packet,options),()=>{if(guided){imported=true;dialog.close();onImported?.({id:sourceId,name:packet.name,stamp:serializeDevice(packet)});}});
+    if(guided){dialog.classList.add('guided-export');const send=dialog.querySelector('[data-device-send]');dialog.querySelector('[data-device-avatar]').after(send);send.after(dialog.querySelector('[data-usb-status]'),dialog.querySelector('[data-usb-abort]'));const download=dialog.querySelector('[data-device-download]'),check=dialog.querySelector('[data-usb-check]');const advanced=document.createElement('details');const summary=document.createElement('summary');summary.textContent='Altre opzioni USB e file';const explanation=check.nextElementSibling,diagnostic=dialog.querySelector('[data-usb-diagnostic]');advanced.append(summary,download,check);if(explanation?.tagName==='P'&&explanation!==dialog.querySelector('[data-usb-status]'))advanced.append(explanation);if(diagnostic)advanced.append(diagnostic);dialog.append(advanced);}
     dialog.querySelector('[data-device-download]').onclick=()=>{downloadJson(serializeDevice(packet),'pocketdd-device.json');notice='Copia per dispositivo esportata. Raccolta PC conservata.';dialog.close();render()};
   }catch(error){dialog.innerHTML=`<h2>Esportazione non disponibile</h2><p>${escapeHtml(error.message)}</p><button data-device-close>Chiudi</button>`}
   dialog.querySelector('[data-device-close]').onclick=()=>dialog.close();
-  dialog.addEventListener('close',()=>dialog.remove(),{once:true});document.body.append(dialog);dialog.showModal();
+  dialog.addEventListener('close',()=>{dialog.remove();onClosed?.(imported);},{once:true});document.body.append(dialog);dialog.showModal();
 }
 
 function deviceDefencesPreview(packet){return `<details data-device-defences><summary>Difese ai danni · ${packet.defences?damageNames.filter((_,i)=>defenceFlags(packet.defences,i)!==null).length:0}/13 tipi verificati</summary><p>Applicate nel calcolo Danni del dispositivo. Tipi non verificati da configurare; effetti temporanei, condizioni e variazioni dell’equipaggiamento richiedono un controllo.</p><ul>${damageNames.map((name,i)=>`<li>${name}: ${defenceLabel(packet.defences?defenceFlags(packet.defences,i):null)}</li>`).join('')}</ul><button type="button" data-device-configure-defences>Configura difese sul PC</button></details>`;}

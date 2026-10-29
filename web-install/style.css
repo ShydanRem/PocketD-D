@@ -3,3 +3,7 @@
 .pc-download{margin:0 0 28px;padding:24px;border:1px solid #466561;background:#10272c}.download-button{display:block;padding:14px 20px;min-height:54px;background:#f1cb79;color:#10272c;text-decoration:none;font-weight:750;text-align:center;box-shadow:3px 3px #061116}.pc-download p{color:#c1d2cf}.pc-download .note{font-size:14px}
 
 .import-captures{display:flex;flex-wrap:wrap;gap:16px}.import-captures img{display:block;max-width:100%;height:auto;min-width:0}
+
+.guided-install main{padding:12px;max-width:none}.guided-install header,.guided-install .intro,.guided-install .pc-download,.guided-install .after,.guided-install footer,.guided-install .sd-choice,.guided-install .release-gallery{display:none}.guided-install .card{padding:18px;box-shadow:none}.guided-install .card-top h2{font-size:20px}.guided-install .steps{display:none}.guided-install #status{min-height:2em}
+
+.direct-install,.sd-choice,.release-history{margin:26px 0;border-top:1px solid #365756;padding-top:14px}.direct-install>summary,.sd-choice>summary,.release-history>summary{font-weight:700;color:var(--gold);cursor:pointer;min-height:38px}.direct-install[open]>.card{margin-top:18px}.guided-install .release-history{display:none}

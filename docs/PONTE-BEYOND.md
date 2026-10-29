@@ -1,3 +1,7 @@
+> Dalla v0.81 il pacchetto Windows x64 include Node.js. Avvia-Ponte.cmd
+> usa il runtime incluso; non serve installarlo separatamente. Il ponte rimane
+> opzionale e sperimentale. Per il primo utilizzo segui [Inizia qui](INIZIA-QUI.md).
+
 # Ponte Beyond sperimentale — v0.79
 
 Prima implementazione del percorso Pocket → Wi-Fi → PC → pagina Beyond. Non

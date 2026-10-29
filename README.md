@@ -2,6 +2,8 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
+**Stato v0.81:** [Da zero al tuo eroe](docs/INIZIA-QUI.md): un pacchetto Windows x64 con runtime ufficiale incluso, guida Pocket → Personaggio → Al tavolo, installer nella stessa app, importazione e aspetto guidati, invio concluso soltanto dopo ACK del Pocket. Raccolta e origine locale conservate; USB fisico ancora aperto. Per ricostruire il pacchetto: `python3 scripts/fetch-windows-runtime.py`, poi `npm run installer:build`.
+
 **Stato v0.80:** [uso pratico sul dispositivo](docs/USO-PRATICO.md): attacco e magie diretti dalla home, Danni/Cura in prima riga, icone e aiuto coerenti, filtri per consumabili e magie pronte, swipe nelle liste. Tasti configurabili e conferme conservati. PC organizzato per importare, verificare e trasferire. Formati del PG invariati; prove USB/hardware ancora aperte.
 
 **Stato v0.79:** [Ponte Beyond sperimentale](docs/PONTE-BEYOND.md): tiri salvati e PF attuali/temporanei dal Pocket via HTTPS al PC e all’estensione Chrome/Edge. Abbinamento e conferma sul dispositivo, coda persistente, conflitti e ricevute senza reinvio automatico. Stesse facce e totale; nessun secondo lancio. Prove software sintetiche, non collaudo con account Beyond o radio reale. Formati PG invariati; nessuna dipendenza da Foundry. [Report generale](docs/STATO-SOFTWARE.md).

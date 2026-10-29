@@ -1,16 +1,15 @@
 @echo off
 cd /d "%~dp0"
+if exist "%~dp0runtime\node.exe" (
+  "%~dp0runtime\node.exe" --use-env-proxy scripts/start-pc.js
+  if errorlevel 1 pause
+  exit /b
+)
 where node >nul 2>nul
 if errorlevel 1 (
-  echo Installa Node.js 24 da https://nodejs.org/ e poi riapri questo file.
-  pause
-  exit /b 1
-)
-node --use-env-proxy -v >nul 2>nul
-if errorlevel 1 (
-  echo Aggiorna Node.js alla versione 24 attuale da https://nodejs.org/.
+  echo Pacchetto incompleto. Estrai tutto PocketDD-PC.zip, inclusa la cartella runtime.
   pause
   exit /b 1
 )
 node --use-env-proxy scripts/start-pc.js
-pause
+if errorlevel 1 pause

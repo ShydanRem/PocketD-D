@@ -2,7 +2,7 @@ import {avatarClasses,avatarOutfit} from './avatar-classes.js';
 import {classLooksAvailable} from './class-looks.js';
 import {avatarSpecies,avatarBodies,avatarIdentity} from './avatar-species.js';
 import {deviceAvatarSvg} from './device-avatar.js';
-export function openBeyondImport({commit}) {
+export function openBeyondImport({commit,guided=false,onCreated}) {
   const dialog=document.createElement('dialog');
   dialog.className='editor-dialog beyond-import';
   dialog.setAttribute('aria-label','Importa da D&D Beyond');
@@ -20,6 +20,16 @@ export function openBeyondImport({commit}) {
       <label class="checkbox-label"><input type="checkbox" data-accept>Ho letto le omissioni e accetto di creare una scheda parziale.</label>
       <button type="button" data-create disabled>Crea nuovo personaggio</button>
     </section>`;
+  if(guided){
+    dialog.classList.add('guided-beyond');
+    dialog.querySelectorAll(':scope > p')[1].hidden=true;
+    const details=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Calcoli, dati importati e inventario';details.append(summary);
+    for(const selector of ['[data-evidence]','[data-reference]','[data-coverage]','[data-training]','[data-attacks]','[data-powers]','[data-manual-resources]','[data-defence-preview]','[data-items]']){const node=dialog.querySelector(selector);if(node.previousElementSibling?.tagName==='H4')details.append(node.previousElementSibling);details.append(node);}
+    dialog.querySelector('[data-weapon-label]').before(details);
+    const omissions=document.createElement('details'),title=document.createElement('summary');title.textContent='Tutti i limiti e i dati da completare';const omissionList=dialog.querySelector('[data-omissions]'),omissionHeading=omissionList.previousElementSibling;omissions.append(title,omissionList);
+    const brief=document.createElement('ul');brief.dataset.guidedLimits='';dialog.querySelector('[data-blockers]').after(omissionHeading,brief,omissions);
+    dialog.querySelector('[data-create]').textContent='Crea PG e continua →';
+  }
   document.body.append(dialog);
   const $=s=>dialog.querySelector(s);
   let report=null, request=null, generation=0, creating=false;
@@ -38,15 +48,15 @@ export function openBeyondImport({commit}) {
     event.preventDefault();clear();const token=generation;
     request=new AbortController();$('[data-read] button').disabled=true;$('[data-status]').textContent='Lettura e verifica in corso…';
     try{
-      if(!['http:','https:'].includes(location.protocol))throw new Error('La lettura Beyond richiede l’app PC: esegui npm run build e npm start, poi apri l’indirizzo indicato.');
+      if(!['http:','https:'].includes(location.protocol))throw new Error('La lettura Beyond richiede l’app PC: apri Avvia-PocketDD.cmd e usa l’indirizzo indicato.');
       const response=await fetch('/api/probe',{method:'POST',credentials:'omit',signal:request.signal,headers:{'Content-Type':'application/json'},body:JSON.stringify({character:$('[name=character]').value})});
-      if(!response.headers.get('content-type')?.includes('application/json'))throw new Error('Connettore PC non disponibile. Avvia l’app con npm start.');
+      if(!response.headers.get('content-type')?.includes('application/json'))throw new Error('Connettore PC non disponibile. Riapri Avvia-PocketDD.cmd dal pacchetto estratto.');
       const body=await response.json();
       if(token!==generation || !dialog.open)return;
       if(!response.ok || !body.ok)throw new Error(`${body.error?.code??'ERROR'} · ${body.error?.message??'Lettura non riuscita'}`);
       report=body.report;
       $('[data-name]').textContent=`${report.character.name} · livello ${report.character.level}`;
-      $('[data-checks]').textContent=`${report.testFixture?'DATI SINTETICI DI TEST · ':''}HTTP ${report.transport.status} · formato valido · ${report.canImport?'dati convertiti; verifica il resoconto per questo PG':'conversione bloccata'}`;
+      $('[data-checks]').textContent=`${report.testFixture?'DATI SINTETICI DI TEST · ':''}${guided?(report.canImport?'Dati letti e convertiti: verifica valori, aspetto e limiti.':'Conversione bloccata: nessun personaggio creato.'):`HTTP ${report.transport.status} · formato valido · ${report.canImport?'dati convertiti; verifica il resoconto per questo PG':'conversione bloccata'}`}`;
       const values=$('[data-values]');values.replaceChildren();
       for(const [label,value] of [...Object.entries(report.abilities).map(([k,v])=>[k,v.preview]),['PF',report.hp?`${report.hp.previewCurrent}/${report.hp.previewMax}`:'non risolti'],['CA',report.armorClass??'non risolta']]){
         const dt=document.createElement('dt'),dd=document.createElement('dd');dt.textContent=label;dd.textContent=String(value);values.append(dt,dd);
@@ -70,6 +80,7 @@ export function openBeyondImport({commit}) {
       list('[data-defences]',(report.details?.defences??[]).map(d=>`${d.name}: ${d.label}`));
       list('[data-items]',report.inventory.items.map((i,index)=>{const item=report.draft?.inventory[index];return `${i.name} ×${i.quantity??'?'} · ${i.equipped===true?'equipaggiato':i.equipped===false?'non equipaggiato':'equipaggiamento non disponibile'}${item?.type==='healing'?` · cura ${item.diceCount}d${item.dieSides}+${item.healingModifier}`:item?.type==='consumable'?' · consumo quantità':''}${item?.charges?` · cariche ${item.charges.current}/${item.charges.max}, recupero ${item.charges.recovery==='short'?'breve':item.charges.recovery==='long'?'lungo':'manuale'}`:''}`;}));
       list('[data-omissions]',report.conversion?.omissions??report.warnings);
+      if(guided)list('[data-guided-limits]',(report.readiness?.unresolved?.length?report.readiness.unresolved:report.conversion?.omissions??report.warnings??[]).slice(0,4));
       list('[data-blockers]',report.conversion?.blockers??['Questa versione del connettore non supporta la creazione.']);
       $('[data-blocker-title]').hidden=!(report.conversion?.blockers?.length);
       $('[data-preview]').hidden=false;
@@ -82,9 +93,9 @@ export function openBeyondImport({commit}) {
   $('[data-accept]').onchange=()=>{$('[data-create]').disabled=!report?.canImport || !$('[data-accept]').checked;};
   $('[data-create]').onclick=()=>{
     if(creating || !report?.canImport || !report.draft || !$('[data-accept]').checked)return;
-    if(!confirm(`Creare ${report.character.name} come nuovo personaggio parziale? Le schede esistenti restano conservate.`))return;
+    if(!guided&&!confirm(`Creare ${report.character.name} come nuovo personaggio parziale? Le schede esistenti restano conservate.`))return;
     creating=true;$('[data-create]').disabled=true;
-    try{commit(report.draft);close();}
+    try{commit(report.draft);close();onCreated?.();}
     catch(error){$('[data-status]').textContent=`Importazione non salvata: ${error.message}. La raccolta precedente resta conservata.`;creating=false;$('[data-create]').disabled=false;}
   };
   dialog.showModal();
