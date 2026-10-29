@@ -133,7 +133,10 @@ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as out:
         out.write(image,folder+'firmware-host-preview/'+name)
 # Package the actual production-renderer species captures alongside existing UI evidence.
 with zipfile.ZipFile(args.output,'a',compression=zipfile.ZIP_DEFLATED) as species_archive:
-    for image in sorted([*preview.glob('species-*.png'),*preview.glob('class-*.png'),*preview.glob('beyond-defences-*.png'),*preview.glob('skill-ability-*.png'),*preview.glob('defence-setup-*.png'),*preview.glob('manual-counter-*.png'),*preview.glob('cannon-*.png'),*preview.glob('sync-*.png'),*preview.glob('practical-*.png')]):species_archive.write(image,folder+'firmware-host-preview/'+image.name)
+    for image in sorted([*preview.glob('species-*.png'),*preview.glob('class-*.png'),*preview.glob('beyond-defences-*.png'),*preview.glob('skill-ability-*.png'),*preview.glob('defence-setup-*.png'),*preview.glob('manual-counter-*.png'),*preview.glob('cannon-*.png'),*preview.glob('sync-*.png'),*preview.glob('ux080-*.png')]):species_archive.write(image,folder+'firmware-host-preview/'+image.name)
+with zipfile.ZipFile(args.output) as verify:
+    names=verify.namelist()
+    if len(names)!=len(set(names)):raise SystemExit('Duplicate release paths: fix capture naming before distribution')
 digest=hashlib.sha256(args.output.read_bytes()).hexdigest()
 args.output.with_suffix(args.output.suffix+'.sha256').write_text(f'{digest}  {args.output.name}\n')
 print(f'{args.output}: {args.output.stat().st_size} bytes\nSHA256 {digest}')

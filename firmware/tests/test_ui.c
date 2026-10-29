@@ -1680,19 +1680,19 @@ int main(void) {
     ready_view=pouch_view=false;item_query[0]=power_query[0]=0;magic_filter=2;magic_page=inventory_page=0;pd_dice_idle(&dice_animation,1);combat_roll=0;page=HERO;feedback.active=false;render();
     effects_before=state;effects_saves=save_calls;effects_calls=random_calls;
     lv_indev_t *ux=lv_indev_create();lv_indev_set_type(ux,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(ux,probe_touch);lv_indev_set_display(ux,d);
-    screenshot("practical-home.ppm");probe_click(ux,115,266);assert(page==COMBAT&&save_calls==effects_saves&&random_calls==effects_calls);act(100);probe_click(ux,350,266);assert(page==MAGIC_LIST);screenshot("practical-magic.ppm");probe_click(ux,320,49);assert(page==HERO&&save_calls==effects_saves&&random_calls==effects_calls);
-    act(100);probe_click(ux,200,104);assert(page==HOME_VITALS);screenshot("practical-vitals.ppm");probe_click(ux,155,229);assert(page==DAMAGE_HOME);assert(!memcmp(&state,&effects_before,sizeof state));
-    act(100);probe_click(ux,233,375);assert(page==HOME_MENU);screenshot("practical-menu.ppm");probe_click(ux,344,69);assert(page==DEVICE_SETTINGS);act(100);
+    screenshot("ux080-home.ppm");probe_click(ux,115,266);assert(page==COMBAT&&save_calls==effects_saves&&random_calls==effects_calls);act(100);probe_click(ux,350,266);assert(page==MAGIC_LIST);screenshot("ux080-magic.ppm");probe_click(ux,320,49);assert(page==HERO&&save_calls==effects_saves&&random_calls==effects_calls);
+    act(100);probe_click(ux,200,104);assert(page==HOME_VITALS);screenshot("ux080-vitals.ppm");probe_click(ux,155,229);assert(page==DAMAGE_HOME);assert(!memcmp(&state,&effects_before,sizeof state));
+    act(100);probe_click(ux,233,375);assert(page==HOME_MENU);screenshot("ux080-menu.ppm");probe_click(ux,344,69);assert(page==DEVICE_SETTINGS);act(100);
     /* Keep long-press help distinct from release/click, even on a ready die. */
-    act(14);effects_saves=save_calls;effects_calls=random_calls;probe_sample(ux,153,49,true,20);probe_sample(ux,153,49,true,650);screenshot("practical-hint.ppm");probe_sample(ux,153,49,false,20);assert(page==DICE&&save_calls==effects_saves&&random_calls==effects_calls);lv_tick_inc(2100);lv_timer_handler();bounds();
+    act(14);effects_saves=save_calls;effects_calls=random_calls;probe_sample(ux,153,49,true,20);probe_sample(ux,153,49,true,650);screenshot("ux080-hint.ppm");probe_sample(ux,153,49,false,20);assert(page==DICE&&save_calls==effects_saves&&random_calls==effects_calls);lv_tick_inc(2100);lv_timer_handler();bounds();
     /* Search/filter intersections retain original IDs. Navigation never consumes. */
-    state=effects_before;state.item_count=8;state.equipped=0;for(unsigned i=2;i<8;i++){state.items[i]=(pd_item){.name="Ration",.kind=PD_CONSUMABLE,.quantity=1};}state.items[1].quantity=0;inventory_page=0;act(80);probe_click(ux,359,327);assert(pouch_view&&page==INVENTORY);screenshot("practical-pouch.ppm");
+    state=effects_before;state.item_count=8;state.equipped=0;for(unsigned i=2;i<8;i++){state.items[i]=(pd_item){.name="Ration",.kind=PD_CONSUMABLE,.quantity=1};}state.items[1].quantity=0;inventory_page=0;act(80);probe_click(ux,359,327);assert(pouch_view&&page==INVENTORY);screenshot("ux080-pouch.ppm");
     effects_before=state;effects_saves=save_calls;effects_calls=random_calls;
-    probe_sample(ux,292,224,true,20);for(int x=267;x>=142;x-=25)probe_sample(ux,x,224,true,20);probe_sample(ux,142,224,false,20);assert(page==INVENTORY&&inventory_page==1&&save_calls==effects_saves&&random_calls==effects_calls&&!memcmp(&state,&effects_before,sizeof state));screenshot("practical-swipe.ppm");
+    probe_sample(ux,292,224,true,20);for(int x=267;x>=142;x-=25)probe_sample(ux,x,224,true,20);probe_sample(ux,142,224,false,20);assert(page==INVENTORY&&inventory_page==1&&save_calls==effects_saves&&random_calls==effects_calls&&!memcmp(&state,&effects_before,sizeof state));screenshot("ux080-swipe.ppm");
     /* At the last page, a swipe must not become a tap on a row at release. */
     probe_sample(ux,292,224,true,20);for(int x=267;x>=142;x-=25)probe_sample(ux,x,224,true,20);probe_sample(ux,142,224,false,20);assert(page==INVENTORY&&inventory_page==1);
     probe_sample(ux,142,224,true,20);for(int x=167;x<=292;x+=25)probe_sample(ux,x,224,true,20);probe_sample(ux,292,224,false,20);assert(inventory_page==0&&page==INVENTORY);
-    click("Consumabili");assert(!pouch_view);act(800);click("Pronte");assert(ready_view&&page==MAGIC_LIST);screenshot("practical-ready.ppm");click("Pronte");assert(!ready_view);
+    click("Consumabili");assert(!pouch_view);act(800);click("Pronte");assert(ready_view&&page==MAGIC_LIST);screenshot("ux080-ready.ppm");click("Pronte");assert(!ready_view);
     /* Swiping inside an irreversible confirmation never commits it. */
     state=effects_before;state.items[1].quantity=1;page=ITEM_CONFIRM;item_index=1;render();effects_saves=save_calls;effects_calls=random_calls;effects_before=state;
     probe_sample(ux,350,383,true,20);probe_sample(ux,325,383,true,20);probe_sample(ux,300,383,true,20);probe_sample(ux,275,383,true,20);probe_sample(ux,275,383,false,20);assert(page==ITEM_CONFIRM&&!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves&&random_calls==effects_calls);
