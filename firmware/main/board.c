@@ -7,6 +7,8 @@
  * See THIRD_PARTY.md and docs/ALIMENTAZIONE.md. */
 #include "board.h"
 #include "class_looks.h"
+#include "mbedtls/sha256.h"
+#include <stdio.h>
 #include "esp_vfs_fat.h"
 #include "driver/sdmmc_host.h"
 #include "sdmmc_cmd.h"
@@ -86,13 +88,32 @@ static void read_touch(lv_indev_t *indev,lv_indev_data_t *data) {
 
 }
 static sdmmc_card_t *asset_card;
+bool pd_board_assets_available(void){return asset_card!=NULL;}
+bool pd_board_assets_space(uint64_t *available){uint64_t total;return asset_card&&esp_vfs_fat_info("/sdcard",&total,available)==ESP_OK;}
+static void asset_yield(void *unused){(void)unused;vTaskDelay(pdMS_TO_TICKS(1));}
+bool pd_board_assets_verify(const char *path,const char *sha){
+    if(!asset_card)return false;
+    if(sha){
+        FILE *f=fopen(path,"rb");if(!f)return false;
+        mbedtls_sha256_context hash;mbedtls_sha256_init(&hash);bool ok=mbedtls_sha256_starts(&hash,0)==0;
+        unsigned char block[1024],digest[32];unsigned blocks=0;size_t n;
+        while(ok&&(n=fread(block,1,sizeof block,f))){ok=mbedtls_sha256_update(&hash,block,n)==0;if(++blocks%64==0)asset_yield(NULL);}
+        if(ferror(f))ok=false;
+        fclose(f);if(ok)ok=mbedtls_sha256_finish(&hash,digest)==0;mbedtls_sha256_free(&hash);
+        const char *hex="0123456789abcdef";
+        if(ok)for(unsigned i=0;i<32;i++)if(sha[2*i]!=hex[digest[i]>>4]||sha[2*i+1]!=hex[digest[i]&15])ok=false;
+        if(!ok)return false;
+    }
+    return pd_looks_verify_file(path,asset_yield,NULL);
+}
+void pd_board_assets_activate(void){pd_looks_set_file(asset_card?"/sdcard/pocketdd/classes.pdc":NULL);if(asset_card)pd_looks_set_backup("/sdcard/pocketdd/classes.bak");}
 void pd_board_assets_refresh(void){
     pd_looks_set_file(NULL);
     if(asset_card){esp_vfs_fat_sdcard_unmount("/sdcard",asset_card);asset_card=NULL;}
     const sdmmc_host_t host=SDMMC_HOST_DEFAULT();
     const sdmmc_slot_config_t slot={.clk=2,.cmd=1,.d0=3,.d1=GPIO_NUM_NC,.d2=GPIO_NUM_NC,.d3=GPIO_NUM_NC,.d4=GPIO_NUM_NC,.d5=GPIO_NUM_NC,.d6=GPIO_NUM_NC,.d7=GPIO_NUM_NC,.cd=SDMMC_SLOT_NO_CD,.wp=SDMMC_SLOT_NO_WP,.width=1,.flags=0};
     const esp_vfs_fat_sdmmc_mount_config_t config={.format_if_mount_failed=false,.max_files=2,.allocation_unit_size=16*1024};
-    if(esp_vfs_fat_sdmmc_mount("/sdcard",&host,&slot,&config,&asset_card)==ESP_OK)pd_looks_set_file("/sdcard/pocketdd/classes.pdc");
+    if(esp_vfs_fat_sdmmc_mount("/sdcard",&host,&slot,&config,&asset_card)==ESP_OK)pd_board_assets_activate();
     else asset_card=NULL;
 }
 void pd_board_init(void) {

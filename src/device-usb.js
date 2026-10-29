@@ -8,7 +8,7 @@ export const deviceUsbSupported=()=>globalThis.isSecureContext===true&&globalThi
 const uncertain=()=>new Error('Esito USB non confermato. Controlla il display prima di riprovare.');
 const aborted=()=>new Error('Collegamento interrotto. Controlla il display: una richiesta può essere ancora in attesa o già salvata.');
 const timedOut=()=>Object.assign(uncertain(),{code:'USB_TIMEOUT'});
-const phase=expected=>String(expected).startsWith('PDD DIAGNOSTICS')?'lettura diagnosi firmware':Array.isArray(expected)||String(expected).includes('READY')?'collegamento':expected==='PDD WAIT_CONFIRM'?'invio della copia':expected==='PDD IMPORTED'?'salvataggio della scheda':String(expected).includes('RESTORE')||expected==='PDD RESTORED'?'ripristino del backup':'trasferimento del backup';
+const phase=expected=>String(expected).startsWith('PDD ASSET')?'installazione look sulla SD':String(expected).startsWith('PDD DIAGNOSTICS')?'lettura diagnosi firmware':Array.isArray(expected)||String(expected).includes('READY')?'collegamento':expected==='PDD WAIT_CONFIRM'?'invio della copia':expected==='PDD IMPORTED'?'salvataggio della scheda':String(expected).includes('RESTORE')||expected==='PDD RESTORED'?'ripristino del backup':'trasferimento del backup';
 function unexpected(expected,line){
   const response=/^PDD (?:READY [0-9]+|BACKUP_READY [0-9]+|WAIT_CONFIRM|WAIT_BACKUP|WAIT_RESTORE|IMPORTED|RESTORED|BACKUP_DONE)$/.test(line)?line:'testo non riconosciuto';
   return new Error(`Risposta USB inattesa durante ${phase(expected)} (${response}). Controlla che PocketD-D sia avviato e che la porta scelta sia quella del dispositivo. Nessun salvataggio confermato.`);
@@ -60,12 +60,17 @@ class Channel{
     const bytes=encoder.encode(text),deadline=Date.now()+timeout;
     for(let at=0;at<bytes.length;at+=1024){if(this.signal?.aborted)throw aborted();await limited(this.writer.write(bytes.subarray(at,at+1024)),deadline-Date.now(),this.signal);}
   }
+  async cancelCommand(text){await limited(this.writer.write(encoder.encode(text)),500);}
   async wait(expected,timeout,{hello=false,prefix=false,duplicates=null,maxLine=256}={}){
     this.diagnostics.data.phase=phase(expected);
     const deadline=Date.now()+timeout;
     for(;;){let line;
       try{line=await this.line(deadline-Date.now(),maxLine);}catch(error){if(error.code==='USB_TIMEOUT')error.message=`Nessuna conferma USB durante ${phase(expected)}. Controlla il display prima di riprovare: esito non confermato.`;throw error;}
       if(!line)continue;
+      if(line.startsWith('PDD ASSET ERROR ')){
+        const code=line.slice('PDD ASSET ERROR '.length),messages={sd:'MicroSD non disponibile: inserisci una scheda FAT32 nel Pocket e riprova.',space:'Spazio insufficiente sulla microSD per il pacchetto e la copia di recupero.',storage:'Scrittura SD non riuscita. Controlla la scheda prima di riprovare.',integrity:'Verifica dei file SD non riuscita. Aggiornamento non confermato.',chunk:'Blocco SD incompleto o discordante. Riprova l’installazione.',incomplete:'Pacchetto SD incompleto. Aggiornamento non confermato.',busy:'Pocket occupato: termina la richiesta sul display e riprova.',cancelled:'Installazione SD interrotta.',timeout:'Installazione SD scaduta; controlla il display.',metadata:'Pacchetto SD non compatibile con questo firmware.'};
+        throw Object.assign(new Error(messages[code]??'Installazione SD non confermata. Controlla il display.'),{assetCode:Object.hasOwn(messages,code)?code:'unknown'});
+      }
       if(hello&&['PDD ERROR packet','PDD ERROR size'].includes(line))continue;
       if(duplicates?.remaining>0&&line===duplicates.line){duplicates.remaining--;continue;}
       if(line.startsWith('PDD CANCELLED'))throw new Error('Richiesta annullata o scaduta sul dispositivo. Nessuna conferma ricevuta.');
@@ -125,6 +130,8 @@ async function handshake(c,t,command,expected){
     }catch(error){if(error.code!=='USB_TIMEOUT')throw error;}
   }
 }
+// One port lock for character, backup, diagnostics and SD operations.
+export {session as usbSession,handshake as usbHandshake};
 export async function checkDeviceConnection(options={}){
   return session({...options,operation:'check'},async(c,t)=>{
     options.onProgress?.('connect');const {ready}=await handshake(c,t,'PDD HELLO',Array.from({length:17},(_,i)=>`PDD READY ${i+1}`));

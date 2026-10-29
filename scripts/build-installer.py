@@ -154,3 +154,7 @@ shutil.copyfile(ROOT/'docs/previews/v081-setup-flow.png',out/'downloads/previews
 shutil.copyfile(ROOT/'docs/SESSIONE-V082.md',out/'downloads/SESSIONE-V082.md')
 shutil.copyfile(ROOT/'docs/previews/v082-key-picker.png',out/'downloads/previews/v082-key-picker.png')
 shutil.copyfile(ROOT/'docs/BEYOND-CONSENSO-V0821.md',out/'downloads/BEYOND-CONSENSO-V0821.md')
+shutil.copyfile(ROOT/'public/assets/classes.pdc',out/'assets/classes.pdc')
+
+shutil.copyfile(ROOT/'docs/SD-WEB-USB.md',out/'downloads/PocketDD-SD-WEB-USB.md')
+shutil.copyfile(ROOT/'docs/previews/v083-sd-install.png',out/'downloads/previews/v083-sd-install.png')

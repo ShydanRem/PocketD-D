@@ -1,4 +1,4 @@
-# Preset di classe — v0.70
+# Preset di classe — v0.83
 
 Dodici look selezionabili sul dispositivo e nell’app PC: **Barbaro, Bardo,
 Chierico, Druido, Guerriero, Monaco, Paladino, Ranger, Ladro, Stregone, Warlock,
@@ -10,10 +10,11 @@ incorporata e utilizzabile senza scheda. Artificiere e sottoclassi sono successi
 
 ## Installazione e scelta
 
-1. Aggiornare a firmware 0.70 e usare l’app PC aggiornata per USB13.
-2. Scaricare `PocketDD-SD.zip` dall’installer o dall’editor PC. Estrarre la
-   cartella `pocketdd` nella radice di una SD FAT32 con un lettore PC.
-3. Inserire la scheda a dispositivo spento e avviare PocketD-D.
+1. Aggiornare a firmware 0.83 conservando i dati.
+2. Inserire una SD FAT32 a dispositivo spento e riavviare.
+3. Dall’installer o dall’editor PC: **Installa look sulla SD via USB**, scegliere
+   la porta e attendere **Look verificati**. [Procedura e limiti](SD-WEB-USB.md).
+   Il pacchetto ZIP con lettore PC resta un’alternativa manuale.
 4. Aprire **Aspetto → Modifica → Classe**. `Altre` scorre i gruppi;
    **Anteprima → Conferma** salva la scelta. Annulla conserva l’aspetto precedente.
 5. `Rileggi` rimonta la SD e invalida la cache dopo un cambio di scheda/file.
@@ -22,8 +23,8 @@ incorporata e utilizzabile senza scheda. Artificiere e sottoclassi sono successi
 
 Senza SD, file mancante, formato incompatibile o CRC errato, viene mostrato lo
 stile originale della specie e silhouette scelte. Il preset richiesto resta
-salvato. Aspetto/Classe segnala l’assenza degli asset. Nessuna formattazione,
-scrittura sulla SD o modifica della scheda personale per usare il ripiego.
+salvato. Aspetto/Classe segnala l’assenza degli asset. Il ripiego non richiede formattazione, scrittura sulla SD o modifica della
+scheda personale. La scrittura USB del catalogo è un’azione separata ed esplicita.
 
 ## Capelli, copricapi e personalizzazione
 

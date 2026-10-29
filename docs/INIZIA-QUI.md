@@ -1,4 +1,4 @@
-# Da zero al tuo eroe — PocketD-D v0.82.1
+# Da zero al tuo eroe — PocketD-D v0.83
 
 Su **Windows x64**, usa Chrome o Edge e il pacchetto PC completo. Node.js e
 firmware sono inclusi: non serve installare Node, Python, npm o compilare.
@@ -46,8 +46,10 @@ la scheda. Dopo una modifica occorre inviare di nuovo la copia al dispositivo.
 Sul Pocket: Arma e Magie dalla home; tocca i PF per Danni e Cura; swipe nelle
 liste; pressione lunga sulle icone per l’aiuto. Tocca l’avatar per aspetto e
 sfondi. Menu → ingranaggio → Tasti configura le scorciatoie: tocca il tasto e scegli direttamente la funzione. I look delle classi
-usano la SD opzionale: scarica i look dalla guida e copia `pocketdd` nella radice
-della scheda FAT32, usando un lettore PC. Il gioco offline non richiede Wi-Fi,
+usano la SD opzionale: con firmware 0.83 e scheda FAT32 nel Pocket, premi
+**Installa look sulla SD via USB** nella guida/installer o nell’editor avatar.
+Attendi la verifica finale e scegli Classe → Anteprima → Conferma sul Pocket.
+[Procedura SD e limiti](SD-WEB-USB.md). Il gioco offline non richiede Wi-Fi,
 ponte, account Beyond collegato o Foundry.
 
 ## Se qualcosa non va

@@ -1,19 +1,22 @@
-# Asset esterni sulla SD — v0.70
+# Asset esterni sulla SD — v0.83
 
 Il caricatore SD ospita i [504 look delle classi](PRESET-CLASSI.md). Sfondi e
 grafica originale restano incorporati; NVS conserva PG, progressi e preferenze.
 
 ## Uso
 
-Scaricare `PocketDD-SD.zip`, estrarre la cartella `pocketdd` nella radice di una
-SD FAT32 con un lettore PC. Percorso richiesto: `/pocketdd/classes.pdc`, senza
-cartelle intermedie. Inserire la scheda a dispositivo spento; scegliere il look
-in Aspetto → Modifica → Classe. `Rileggi` rimonta e invalida la cache.
-Sostituire un pacchetto compatibile non richiede riflashare il firmware.
+Il percorso consigliato è [Installa look sulla SD via USB](SD-WEB-USB.md),
+dall’installer o dall’app PC, con SD FAT32 nel Pocket e firmware 0.83.
+Il browser prepara il pacchetto e il dispositivo lo scrive/verifica, senza lettore.
 
-PocketD-D non formatta e non scrive sulla SD. Copiare il pacchetto non richiede
-cancellare file personali. Salvataggi NVS e backup USB restano distinti.
-Senza asset viene mostrato l'originale, conservando preset, specie e silhouette.
+Alternativa: scaricare `PocketDD-SD.zip` ed estrarre `pocketdd` nella radice della
+SD FAT32 con un lettore PC. Percorso `/pocketdd/classes.pdc`, senza cartelle
+intermedie. Inserire la scheda a dispositivo spento; scegliere il look in
+Aspetto → Modifica → Classe. `Rileggi` rimonta e invalida la cache.
+
+PocketD-D non formatta la SD. La nuova scrittura USB riguarda soltanto il catalogo
+look e i suoi file temporaneo/recupero; PG, NVS e file personali restano separati.
+Senza asset viene mostrato l’originale, conservando preset, specie e silhouette.
 
 ## Hardware e limiti
 

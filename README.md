@@ -2,6 +2,8 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
+**Nuovo v0.83:** [installa i look sulla SD dal browser via USB](docs/SD-WEB-USB.md), con SD nel Pocket: pacchetto verificato, avanzamento e conferma dopo rilettura. Flusso studiato sul TamaPoke pubblico; 504 look, nessuna formattazione o modifica del PG. Richiede aggiornamento firmware; prove software superate, trasferimento SD fisico ancora da collaudare.
+
 **Correzione v0.82.1:** [conferma Beyond e armi personalizzate](docs/BEYOND-CONSENSO-V0821.md). La caratteristica dell’arma non altera il punteggio del PG; personalizzazioni note restano oggetti da configurare. Blocchi visibili e consenso accessibile. Lettura reale con valori confermati dall’utente, 297 test JS; per questa correzione basta aggiornare il PC.
 
 **Stato v0.82:** [Sessione e preparazione del collaudo](docs/SESSIONE-V082.md): verifica continua delle regole e dei salvataggi, scelta diretta delle scorciatoie, controllo della scheda con editor mirati e report USB scaricabile con diagnosi firmware di sola lettura. 293 test JS e 127 viste native; nuove prove sintetiche, USB fisico ancora aperto.

@@ -9,15 +9,15 @@
     <a class="download-button" href="#app-pc" download="PocketDD-PC.zip">Scarica app PC per Windows ↓</a>
     <p class="note"><strong>Windows x64 · Chrome o Edge.</strong> App, firmware e Node.js sono inclusi. Non servono installazioni separate di strumenti.</p>
     <p class="note">Se il Pocket è già pronto, salti il firmware. Puoi preparare il PG anche senza dispositivo e inviarlo più tardi.</p>
-    <p class="note"><a href="./downloads/PocketDD-INIZIA-QUI.md">Guida rapida</a> · <a href="./downloads/PocketDD-Stato.md" download>Funzioni e prove ancora aperte</a>. Il problema USB fisico segnalato resta da verificare.</p>
+    <p class="note"><a href="./downloads/PocketDD-INIZIA-QUI.md">Guida rapida</a> · <a href="./downloads/PocketDD-Stato.md" download>Funzioni e prove ancora aperte</a>. Prima importazione PG riferita riuscita; SD via USB, riavvio e backup fisici ancora da verificare.</p>
     <p id="pc-download-status" role="status"></p>
   </section>
   <section class="pc-download" id="look-sd" aria-labelledby="sd-title">
     <h2 id="sd-title">Dodici classi, 21 specie, due silhouette</h2>
-    <p>504 look con abiti e armi distinti. Richiedono firmware 0.70 e una SD: il personaggio e i progressi rimangono nella memoria del dispositivo.</p>
-    <a class="download-button" href="./downloads/PocketDD-SD.zip" download="PocketDD-SD.zip">Scarica look per SD ↓</a>
-    <p class="note">Estrai la cartella <strong>pocketdd</strong> nella radice della SD FAT32 usando un lettore PC. Inseriscila a dispositivo spento; poi <strong>Aspetto → Modifica → Classe → Anteprima → Conferma</strong>. Non serve formattare la scheda per copiare il pacchetto.</p>
-    <p class="note">Senza pacchetto compare lo stile originale e la scelta resta salvata. Colori e taglio dei preset sono fissi; quelli dello stile originale rimangono conservati. Artificiere, sottoclassi e fotogrammi espressivi dei nuovi look sono successivi. Lettura SD fisica ancora da collaudare.</p>
+    <p>504 look con abiti e armi distinti. Lascia la microSD FAT32 nel Pocket: il browser copia e verifica i file via USB.</p>
+    <div data-sd-root><button class="download-button" data-sd-install disabled>Installa look sulla SD</button><p data-sd-status role="status"></p><progress data-sd-progress max="100" value="0" hidden></progress><button data-sd-abort hidden>Interrompi installazione SD</button><details data-sd-diagnostic hidden><summary>Dettagli USB della SD</summary><pre style="white-space:pre-wrap;overflow-wrap:anywhere"></pre></details></div>
+    <p class="note">Richiede firmware 0.83. PG, progressi e altri file della SD restano conservati. Dopo l’installazione scegli la Classe sul Pocket. <a href="./downloads/PocketDD-SD-WEB-USB.md">Guida SD via USB</a>.</p>
+    <details><summary>Installazione manuale con lettore PC</summary><a href="./downloads/PocketDD-SD.zip" download="PocketDD-SD.zip">Scarica il pacchetto SD</a><p>Copia pocketdd nella radice di una SD FAT32 e inseriscila a dispositivo spento.</p></details>
     <a href="./personalizzazione.html#classi">Guarda le catture del firmware e i look →</a>
   </section>
   <section class="card" aria-labelledby="install-title">

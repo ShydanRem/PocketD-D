@@ -1,13 +1,26 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **29 ottobre 2026 — v0.82.1**. Il dispositivo è il prodotto;
+Aggiornamento del **29 ottobre 2026 — v0.83**. Il dispositivo è il prodotto;
 il PC serve per importare, configurare e conservare i backup.
 
-Il software copre una prima sessione individuale offline. Il passaggio ancora
-non verificato sul tuo hardware è **portare il PG personale sul dispositivo e
-ritrovarlo dopo il riavvio**. L'avvio del firmware è già stato osservato da te;
-non equivale al collaudo dell'importazione, della batteria o dei salvataggi.
-I test USB rimandati restano aperti, senza essere considerati superati.
+Il software copre una prima sessione individuale offline. L’utente ha osservato
+l’avvio e riferito riuscito l’import del PG 167361077. Restano da verificare
+persistenza dopo riavvio, backup/ripristino e gli altri controlli fisici; questa
+segnalazione non equivale al collaudo completo di USB, batteria o salvataggi.
+
+## Nuovo nella v0.83
+
+[Look SD via web e USB](SD-WEB-USB.md): la scheda resta nel Pocket; installer,
+editor avatar e guida PC offrono un comando per trasferire tutti i 504 look.
+CRC dei blocchi, SHA256 e verifica integrale dopo rilettura prima della conferma,
+file temporaneo e copia di recupero del catalogo precedente. Nessuna formattazione
+o modifica di PG/NVS; formati e partizioni invariati. Richiede firmware 0.83.
+Ricerca sul TamaPoke pubblico documentata, implementazione indipendente.
+
+Compilazione ESP32, writer/parser su filesystem host con errori iniettati,
+128 viste UI native, 303 test JS e browser con USB simulata. Trasferimento e lettura
+su SD fisica ancora aperti. Il pulsante Attacchi senza un’arma configurata apre
+lo zaino: per le armi speciali mantenute come oggetti non vengono inventati tiri.
 
 ## Importazione da Beyond
 

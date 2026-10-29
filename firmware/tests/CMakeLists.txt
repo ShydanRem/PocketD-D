@@ -6,7 +6,7 @@ set(CONFIG_LV_USE_THORVG_INTERNAL OFF CACHE BOOL "" FORCE)
 set(LV_BUILD_CONF_PATH "${CMAKE_CURRENT_LIST_DIR}/lv_conf.h" CACHE PATH "" FORCE)
 add_subdirectory(../.deps/lvgl lvgl)
 add_executable(ui ../core/catalog.c ../core/power.c ../core/input_check.c ../core/diagnostics.c ../core/backup.c ../core/history.c ../core/recharge.c ../core/damage.c ../core/screen.c ../core/status.c ../core/rest.c test_ui.c ../core/buttons.c ../core/pocketdd.c ../core/magic.c ../core/checks.c ../core/combat.c ../core/dice_animation.c ../core/dice_pool.c ../core/class_looks.c ../core/avatar.c)
-target_sources(ui PRIVATE ../ui/icons.c ../ui/room_cache.c ../ui/scenes/scenes.c ../ui/scenes/scene_assets.c ../ui/theme/theme.c ../ui/theme/theme_assets.c ../ui/companion/companion.c ../ui/companion/companion_assets.c)
+target_sources(ui PRIVATE ../core/asset_transfer.c ../ui/icons.c ../ui/room_cache.c ../ui/scenes/scenes.c ../ui/scenes/scene_assets.c ../ui/theme/theme.c ../ui/theme/theme_assets.c ../ui/companion/companion.c ../ui/companion/companion_assets.c)
 target_include_directories(ui PRIVATE ../core ../ui/companion ../ui/theme)
 target_link_libraries(ui lvgl m)
 
@@ -198,3 +198,9 @@ add_executable(sync-service test_sync_service.c ../core/sync_config.c ../core/sy
 target_include_directories(sync-service PRIVATE ../core ../main . "$ENV{IDF_PATH}/components/json/cJSON")
 target_compile_options(sync-service PRIVATE -Wall -Wextra -Werror -Wno-unused-function -Wno-unused-parameter)
 target_link_libraries(sync-service m OpenSSL::Crypto)
+
+add_executable(asset-transfer test_asset_transfer.c ../core/asset_transfer.c ../core/class_looks.c ../core/pocketdd.c ../core/magic.c ../core/checks.c)
+target_include_directories(asset-transfer PRIVATE ../core)
+target_compile_options(asset-transfer PRIVATE -Wall -Wextra -Werror)
+target_link_libraries(asset-transfer m OpenSSL::Crypto)
+target_link_options(asset-transfer PRIVATE -Wl,--wrap=fwrite -Wl,--wrap=fsync -Wl,--wrap=rename)

@@ -20,6 +20,7 @@ try:
   assert page.evaluate('localStorage.getItem("pocketdd-library-v1")')==seed
   for width in [1440,390,320]:page.set_viewport_size({'width':width,'height':1050});assert dialog.evaluate('(e)=>e.scrollWidth<=e.clientWidth+2')
   page.set_viewport_size({'width':1440,'height':1050});page.screenshot(path='/workspace/PocketD-D-class-editor.png',full_page=True)
+  dialog.get_by_text('Copia manuale alternativa',exact=True).click()
   with page.expect_download() as sd:dialog.get_by_role('link',name='Scarica il pacchetto SD').click()
   assert Path(sd.value.path()).read_bytes()==(ROOT/'public/assets/PocketDD-SD.zip').read_bytes()
   dialog.get_by_role('button',name='Annulla',exact=True).click();assert page.evaluate('localStorage.getItem("pocketdd-library-v1")')==seed

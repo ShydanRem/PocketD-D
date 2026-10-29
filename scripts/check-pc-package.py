@@ -18,6 +18,8 @@ with zipfile.ZipFile(archive) as z:
   assert json.loads((app/'package-info.json').read_text())['firmware_included'] is True
   assert (app/'dist/install/firmware/app.bin').read_bytes()==(ROOT/'firmware/build/pocketdd.bin').read_bytes()
   assert (app/'docs/INIZIA-QUI.md').exists()
+  assert (app/'docs/SD-WEB-USB.md').read_bytes()==(ROOT/'docs/SD-WEB-USB.md').read_bytes()
+  assert (app/'dist/install/assets/classes.pdc').read_bytes()==(ROOT/'public/assets/classes.pdc').read_bytes()
   assert not (app/'dist/install/downloads/PocketDD-PC.zip').exists()
   # Exercise the extracted bridge without checkout dependencies, user profile or a remote service.
   bridge=subprocess.Popen(['node','--input-type=module','-e',"import {createBridge} from './scripts/bridge-server.js';const b=createBridge({directory:process.argv[1],ip:'127.0.0.1',test:true,devicePort:0,adminPort:0});await b.listen();console.log('http://127.0.0.1:'+b.admin.address().port);process.on('SIGTERM',async()=>{await b.close();process.exit(0)});",str(Path(tmp)/'private-bridge')],cwd=app,stdout=subprocess.PIPE,stderr=subprocess.PIPE,text=True)

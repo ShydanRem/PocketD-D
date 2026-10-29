@@ -53,6 +53,7 @@ firmware/tests/out/ui-build/avatar --hashes > firmware/tests/out/avatar-hashes.t
 rm -f firmware/tests/out/species-hashes.txt
 firmware/tests/out/ui-build/avatar --species-hashes > firmware/tests/out/species-hashes.txt
 firmware/tests/out/ui-build/class-looks "$PWD/public/assets/classes.pdc"
+firmware/tests/out/ui-build/asset-transfer "$PWD/public/assets/classes.pdc"
 node scripts/check-class-art.js
 node scripts/check-avatar.js
 python3 scripts/check-device.py

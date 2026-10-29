@@ -7,6 +7,11 @@ static void *ui_malloc(size_t size);
 #undef lv_malloc
 #include <stdlib.h>
 #include <math.h>
+static bool sd_present,sd_verified;
+bool pd_board_assets_available(void){return sd_present;}
+bool pd_board_assets_space(uint64_t *available){*available=PD_ASSET_BYTES+4096;return sd_present;}
+bool pd_board_assets_verify(const char *path,const char *sha){(void)path;(void)sha;return sd_verified;}
+void pd_board_assets_activate(void){pd_looks_set_file(getenv("PD_TEST_CLASS_PACK"));}
 static pd_wifi_info wifi_mock;
 static unsigned wifi_requested;
 void pd_wifi_boot(void){}
@@ -1717,6 +1722,18 @@ int main(void) {
     }
     assert(random_calls==effects_calls);
     puts("Direct key picker: all 15 functions/three gestures, current-page selection, cancel/paging without writes, protected keys/import, save failure/retry and other fields preserved passed; synthetic input only");
+    /* SD upload is presentation/asset work, never a PG or RNG transaction. */
+    pd_demo(&state);page=HERO;import_pending=false;history_pending=false;power_paused=power_off_attempted=false;display_screen=(pd_screen){0};fail_save=false;
+    effects_before=state;effects_saves=save_calls;effects_calls=random_calls;
+    pd_asset_request sd_request={.kind=PD_ASSET_BEGIN,.size=PD_ASSET_BYTES};memset(sd_request.sha,'0',64);
+    sd_present=false;asset_request(&sd_request);assert(!asset_running&&page==HERO&&strstr(last_reply,"ERROR sd"));
+    sd_present=true;sd_verified=true;asset_request(&sd_request);assert(!asset_running&&page==AVATAR_EDIT&&appearance_field==6&&strstr(last_reply,"ASSET DONE"));click("Annulla");
+    asset_return=HERO;page=ASSET_INSTALL;asset_running=true;asset_verifying=false;asset_progress=50;render();bounds();screenshot("sd-install-progress.ppm");
+    for(unsigned i=0;i<3;i++)shortcut(i);assert(page==ASSET_INSTALL&&!stage_import(&imported_magic));
+    click("Interrompi");assert(!asset_running&&page==HERO&&strstr(last_reply,"ERROR cancelled"));
+    asset_running=true;page=ASSET_INSTALL;asset_activity=lv_tick_get();lv_tick_inc(45000);asset_service();assert(!asset_running&&page==HERO&&strstr(last_reply,"ERROR timeout"));
+    assert(!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves&&random_calls==effects_calls);
+    puts("SD installer UI: absent SD, verified already-installed result, direct class choice without save, progress, protected keys/import, cancel/timeout and unchanged PG/RNG/NVS passed; no physical SD claim");
     unsigned covered=0;
     for(unsigned p=0;p<=SYNC_FORGET;p++){
         covered+=styled_pages[p];
