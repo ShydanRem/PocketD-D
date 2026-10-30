@@ -1,11 +1,11 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **30 ottobre 2026 — v0.87**. Il dispositivo è il prodotto;
+Aggiornamento del **30 ottobre 2026 — v0.88**. Il dispositivo è il prodotto;
 il PC serve per importare, configurare e conservare i backup.
 
 Il software copre una prima sessione individuale offline. L'utente riferisce
 risolti USB, installer e SD e conferma visibile il sito GitHub Pages. Il collaudo
-completo di batteria, interruzioni di alimentazione e delle nuove funzioni 0.85–0.87
+completo di batteria, interruzioni di alimentazione e delle nuove funzioni 0.85–0.88
 resta distinto da questa conferma.
 
 ## Pagina web di installazione
@@ -15,6 +15,19 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale serve ancora al connettore Beyond.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Nuovo nella v0.88
+
+[Hex e Marchio 2024 sul colpo](EFFETTI-SUL-COLPO.md): lancio contestuale con costo
+ordinario/patto, concentrazione e conferma del bersaglio dopo un colpo riuscito.
+Extra base necrotico/forza, critici, compatibilità con True Strike, totale comune
+e storico atomico fino a tre parti. Profili per i PG già importati, icone comuni
+e nessun attacco/CD fittizio. Identificativi Beyond 2024 verificati con fonti
+ufficiali, automatismi rifiutati per origini sconosciute. Durate, azioni,
+potenziamenti, bersagli e altri effetti restano espliciti/manuali.
+PC23/USB20 per i nuovi profili; PDDd39 alle stesse dimensioni, vecchi salvataggi letti.
+Nuova lettura reale HTTP/JSON riuscita su un PG senza questi incantesimi: i nuovi
+comportamenti sono verificati con dati sintetici, non dichiarati provati da quel PG.
 
 ## Nuovo nella v0.87
 
@@ -85,10 +98,10 @@ lo zaino: per le armi speciali mantenute come oggetti non vengono inventati tiri
 | Accesso | Lettura pubblica diretta tramite connettore PocketD-D su PC | Personaggi privati/autenticazione, lettura autonoma dal dispositivo; nessuna scrittura verso Beyond |
 | Creazione | Anteprima, problemi bloccanti distinti dai limiti, consenso e nuovo PG | Nessun aggiornamento automatico di una vecchia scheda con conservazione dei progressi |
 | Caratteristiche | Base, modificatori/scelte riconciliati, bonus personalizzati, massimi espliciti, valori fissati e override supportati | Origini/capacità sostitutive, altre restrizioni/formule e override numerici non riconosciuti |
-| PF e CA | Calcolati con le caratteristiche finali e gli effetti supportati; PF correnti e temporanei distinti | Sono fotografie all'importazione: cambiare equipaggiamento o salire di livello non ricalcola tutto |
+| PF e CA | Calcolati con le caratteristiche finali e gli effetti supportati; PF correnti e temporanei distinti | Profili di equipaggiamento supportati aggiornano i valori; livello e proprietà non rappresentate richiedono riconciliazione |
 | Abilità e salvezze | Competenze, maestrie, mezza competenza supportata, bonus, associazioni a caratteristiche e tiri da verificare; personalizzazioni standard | Abilità non standard, mezza competenza/maestria alle salvezze, bonus condizionali e formule |
 | Armi | Configurazioni riconosciute: caratteristica, competenza, dadi, bonus, portata e alcune proprietà | Armi versatili/due armi, maestrie, munizioni e danni aggiuntivi speciali; arma attiva da scegliere se più armi sono equipaggiate |
-| Inventario | Fino a 60 voci, quantità, custom, consumabili, cariche e cure esplicite; stati/peso/contenitore sorgente consultabili | Dotazioni come fotografie; niente gestione automatica di peso, contenitori o sintonia. Pile con saldi individuali e proprietà arbitrarie restano manuali |
+| Inventario | Fino a 60 voci, quantità, custom, consumabili, cariche e cure esplicite; stati/peso/contenitore sorgente consultabili | Dotazioni come fotografie; peso e contenitori non gestiti; sintonia supportata per i profili riconciliati. Pile con saldi individuali e proprietà arbitrarie restano manuali |
 | Magie e capacità | Fino a 120 voci, descrizioni, slot ordinari/patto, preparazione e contatori riconosciuti | Contatori manuali separati dagli utilizzi. Non tutti i recuperi o costi condivisi; magie/azioni da oggetto con usi restano note per evitare di duplicare le cariche; nessuna esecuzione generale degli effetti |
 | Stato del PG | PF temporanei, annotazioni delle condizioni, dadi vita e contatori morte supportati | Le annotazioni non attivano automaticamente tutti gli effetti; concentrazione in corso e altri stati speciali da impostare/verificare |
 | Difese ai danni | Concessioni incondizionate riconciliate, configurabili e trasferibili | Difese condizionali e immunità alle condizioni non sono ricostruite automaticamente; un tipo assente resta sconosciuto, non Normale |
