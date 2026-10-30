@@ -1,11 +1,11 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **30 ottobre 2026 — v0.86**. Il dispositivo è il prodotto;
+Aggiornamento del **30 ottobre 2026 — v0.87**. Il dispositivo è il prodotto;
 il PC serve per importare, configurare e conservare i backup.
 
 Il software copre una prima sessione individuale offline. L'utente riferisce
 risolti USB, installer e SD e conferma visibile il sito GitHub Pages. Il collaudo
-completo di batteria, interruzioni di alimentazione e delle nuove funzioni 0.85
+completo di batteria, interruzioni di alimentazione e delle nuove funzioni 0.85–0.87
 resta distinto da questa conferma.
 
 ## Pagina web di installazione
@@ -15,6 +15,16 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale serve ancora al connettore Beyond.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Nuovo nella v0.87
+
+[Attacchi contestuali](ATTACCHI-CONTESTUALI.md): scelta normale/magia direttamente
+da Attacca, valori confrontabili, preparazione senza cambiare sezione, blocchi
+visibili, icone comuni e tasti fisici locali. Nessun menu aggiuntivo se non ci sono
+varianti. Cambiare modalità invalida il tiro precedente. Logica senza eccezioni
+per un PG; True Strike 2024 supportato per tutte le caratteristiche da incantatore.
+Altre magie con arma o attivazioni sul colpo richiedono ancora modelli espliciti.
+Nessuna nuova lettura Beyond, nessuna modifica ai formati o ai dati personali.
 
 ## Nuovo nella v0.86
 

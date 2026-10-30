@@ -1,5 +1,7 @@
 # Equipaggiamento, magie e attacchi sul Pocket — v0.85
 
+> Aggiornamento v0.87: [scelta diretta delle varianti da Attacca](ATTACCHI-CONTESTUALI.md).
+>
 > Aggiornamento v0.86: [bonus permanenti e sintonia per tutti i PG](OGGETTI-SINTONIA.md).
 
 30 ottobre 2026. Il dispositivo resta il prodotto principale. Questo aggiornamento
@@ -75,7 +77,7 @@ Le nuove importazioni riconoscono la definizione Beyond 2619204 e il manuale
 la caratteristica della classe che lo concede. Una semplice omonimia o la
 versione 2014 non abilita questo comportamento.
 
-**Attacchi → Magie → True Strike** oppure **Magie → True Strike → Attacca**.
+**Attacca → True Strike** (oppure **Varianti → True Strike** dalla schermata arma) oppure **Magie → True Strike → Attacca**.
 Se manca l'arma, si apre la scelta/configurazione. Puoi scegliere il tipo normale
 dell'arma o radiante. Il tiro usa la caratteristica da incantatore, mantiene
 competenza e bonus dell'arma e aggiunge ai danni 1d6 radiante dal livello totale 5,
