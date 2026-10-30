@@ -1,5 +1,7 @@
 # Beyond: prima versione offline
 
+> Aggiornamento v0.86: [bonus permanenti e sintonia per tutti i PG](OGGETTI-SINTONIA.md).
+
 Aggiornamento v0.85: [equipaggiamento e True Strike 2024 operativi sul Pocket](EQUIPAGGIAMENTO-MAGIE.md).
 USB/installer/SD riferiti risolti dall’utente; nuove interazioni da provare sul dispositivo.
 Il contratto offline e i limiti descritti sotto restano applicabili, con i profili

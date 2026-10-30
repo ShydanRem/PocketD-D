@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **30 ottobre 2026 — v0.85**. Il dispositivo è il prodotto;
+Aggiornamento del **30 ottobre 2026 — v0.86**. Il dispositivo è il prodotto;
 il PC serve per importare, configurare e conservare i backup.
 
 Il software copre una prima sessione individuale offline. L'utente riferisce
@@ -15,6 +15,18 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale serve ancora al connettore Beyond.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Nuovo nella v0.86
+
+[Oggetti e sintonia per tutti i personaggi](OGGETTI-SINTONIA.md): importazione dei
+bonus permanenti riconciliati anche senza armatura; sintonia separata dallo stato
+equipaggiato, anteprima e comandi sul Pocket. Bonus a CA, caratteristiche, PF,
+armi, magie e tiri aggiornati insieme; niente cura automatica. 37 icone semantiche.
+Logica condivisa, verificata su tutte le caratteristiche e i livelli 1–20 con
+dati sintetici, senza eccezioni per un particolare PG. Nuove proprietà PC22/USB19,
+stato PDDc38 a dimensioni e partizioni invariate; vecchi salvataggi conservati.
+Resistenze da oggetti, effetti condizionali, valori fissati/cap e regole speciali
+non rappresentate restano manuali. Requisiti e tempi di sintonia confermati al tavolo.
 
 ## Nuovo nella v0.85
 

@@ -1,5 +1,7 @@
 # Equipaggiamento, magie e attacchi sul Pocket — v0.85
 
+> Aggiornamento v0.86: [bonus permanenti e sintonia per tutti i PG](OGGETTI-SINTONIA.md).
+
 30 ottobre 2026. Il dispositivo resta il prodotto principale. Questo aggiornamento
 aggiunge comandi utilizzabili anche sulle schede già presenti: non serve cancellare
 il PG o la SD. I testi estesi restano negli estratti concordati.
