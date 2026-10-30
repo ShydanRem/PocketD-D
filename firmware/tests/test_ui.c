@@ -411,7 +411,7 @@ int main(void) {
     /* Device inventory: atomic consumables, attack -> critical -> one damage roll. */
     pd_demo(&state);combat_roll=0;has_roll=false;page=RESOURCES;inventory_page=0;render();bounds();
     click("Zaino");assert(page==INVENTORY);screenshot("inventory.ppm");
-    click("Spada *  x1");assert(page==ITEM_DETAIL);screenshot("weapon.ppm");click("Riponi");assert(state.equipped==PD_NO_WEAPON);click("Scegli");assert(state.equipped==0);click("Attacco");
+    click("Spada [E]  x1");assert(page==ITEM_DETAIL);screenshot("weapon.ppm");click("Riponi");click("Conferma");assert(state.equipped==PD_NO_WEAPON);click("Equipaggia");click("Conferma");assert(state.equipped==0);click("Attacco");
     assert(page==COMBAT);screenshot("combat.ppm");click("Attacco +4 >");screenshot("combat-detail.ppm");click("Indietro");
     random_values[0]=random_values[1]=19;calls=random_calls;unsigned combat_saves=save_calls;
     click("Lancia");assert(strike.critical&&strike.hits&&random_calls==calls+1);
@@ -424,7 +424,7 @@ int main(void) {
         if(lv_obj_check_type(b,&lv_button_class)&&!strcmp(lv_label_get_text(button_label(b)),"Danni"))lv_obj_send_event(b,LV_EVENT_CLICKED,NULL);
     }
     assert(random_calls==calls);click("Nuovo");click("Lancia");assert(!strike.hits&&strike.roll.natural==1);
-    click("Accelera");screenshot("attack-miss.ppm");click("Arma");click("Zaino");
+    click("Accelera");screenshot("attack-miss.ppm");click("Arma");click("Arma");click("Zaino");
     click("Pozione  x2");assert(page==ITEM_DETAIL);calls=random_calls;click("Usa");assert(page==ITEM_CONFIRM&&random_calls==calls);
     screenshot("item-confirm.ppm");click("Indietro");assert(state.items[1].quantity==2&&state.hp==24);
     click("Usa");state.temp_hp=4;click("Conferma");assert(combat_roll==3&&state.hp==28&&state.temp_hp==4&&state.items[1].quantity==1&&random_calls==calls+2);
@@ -991,13 +991,8 @@ int main(void) {
     state.equipped=PD_NO_WEAPON;
     const page_t missing_weapon[]={COMBAT,COMBAT_DETAIL};
     for(unsigned i=0;i<2;i++){
-        page=missing_weapon[i];render();assert(page==INVENTORY);bool pack_title=false;
-        root=lv_screen_active();lv_obj_update_layout(root);
-        for(unsigned j=0;j<lv_obj_get_child_count(root);j++){
-            lv_obj_t *o=lv_obj_get_child(root,j);
-            if(lv_obj_check_type(o,&lv_label_class)&&!strcmp(lv_label_get_text(o),"Zaino"))pack_title=true;
-        }
-        assert(pack_title&&save_calls==effects_saves&&random_calls==effects_calls);
+        page=missing_weapon[i];render();assert(page==WEAPON_PICKER);bounds();
+        assert(save_calls==effects_saves&&random_calls==effects_calls);
     }
     /* Transitions finish, cancel on redraw/sleep, and never consume game state. */
     pd_demo(&state);feedback.active=false;page=HERO;render();click("Menu");click("Zaino");
@@ -1542,7 +1537,7 @@ int main(void) {
     state.magic.slots[0]=(pd_slot){2,3};state.magic.pact[0]=(pd_slot){1,1};assert(pd_valid(&state));
     power_info=fake_power=(pd_power_info){0};history_pending=false;pd_history_reset(&history,state.history_epoch);persisted_history=history;item_query[0]=power_query[0]=0;magic_filter=2;magic_page=0;
     act(100);click("Menu");click("Magie");click("Scudo sintetico");effects_before=state;effects_saves=save_calls;effects_calls=random_calls;practical_history=history_save_calls;
-    act(831);assert(page==MAGIC_DETAIL&&!memcmp(&state,&effects_before,sizeof state));click("Gestisci");assert(page==MAGIC_MANAGE);screenshot("prepare-manage-unprepared.ppm");click("Preparazione >");assert(page==MAGIC_PREPARATION&&preparation_target&&confirmation_open());screenshot("prepare-preview.ppm");
+    act(831);assert(page==MAGIC_PREPARATION&&!memcmp(&state,&effects_before,sizeof state));click("Indietro");click("Gestisci");assert(page==MAGIC_MANAGE);screenshot("prepare-manage-unprepared.ppm");click("Preparazione >");assert(page==MAGIC_PREPARATION&&preparation_target&&confirmation_open());screenshot("prepare-preview.ppm");
     for(unsigned gesture=0;gesture<3;gesture++)shortcut(gesture);act(100);act(839);assert(page==MAGIC_PREPARATION&&!stage_import(&snapshot.state)&&!stage_backup(NULL));
     assert(save_calls==effects_saves&&random_calls==effects_calls&&history_save_calls==practical_history&&!memcmp(&state,&effects_before,sizeof state));click("Indietro");assert(page==MAGIC_MANAGE&&!memcmp(&state,&effects_before,sizeof state));
     click("Preparazione >");fail_save=true;click("Conferma");assert(page==MAGIC_PREPARATION&&preparation_target&&!memcmp(&state,&effects_before,sizeof state));screenshot("prepare-save-error.ppm");fail_save=false;click("Conferma");
@@ -1554,7 +1549,7 @@ int main(void) {
     state.defences.temporary[0]=(pd_defence_temporary){.flags=1,.active=true,.concentration=1};state.reductions[0]=(pd_reduction_profile){.value=3,.types=8191,.active=true,.stage=1,.concentration=1};assert(pd_valid(&state));effects_before=state;
     click("Gestisci");click("Preparazione >");assert(!preparation_target);screenshot("prepare-remove-preview.ppm");click("Conferma");effects_before.magic.powers[0].flags&=~PD_PREPARED;assert(!memcmp(&state,&effects_before,sizeof state)&&state.hp==41&&pd_armor(&state)==18&&state.magic.concentration==1);screenshot("prepare-concentration-kept.ppm");
     pd_history_reset(&history,state.history_epoch);persisted_history=history;char *prepared_json=pd_backup_encode(&state,&history,&external_size);assert(prepared_json&&pd_backup_decode(prepared_json,external_size,&snapshot)&&!memcmp(&snapshot.state,&state,sizeof state));free(prepared_json);
-    click("Indietro");effects_saves=save_calls;act(831);assert(page==MAGIC_DETAIL&&save_calls==effects_saves&&state.magic.slots[0].current==1);click("Menu");click("Eroe");click("Annulla");effects_before.magic.powers[0].flags|=PD_PREPARED;assert(!memcmp(&state,&effects_before,sizeof state));
+    click("Indietro");effects_saves=save_calls;act(831);assert(page==MAGIC_PREPARATION&&save_calls==effects_saves&&state.magic.slots[0].current==1);click("Indietro");click("Menu");click("Eroe");click("Annulla");effects_before.magic.powers[0].flags|=PD_PREPARED;assert(!memcmp(&state,&effects_before,sizeof state));
     /* Innate manual uses remain reachable; preparation never refills them. */
     act(1001);click("Gestisci");screenshot("prepare-innate-manage.ppm");click("Preparazione >");click("Conferma");assert(!(state.magic.powers[1].flags&PD_PREPARED)&&state.magic.powers[1].remaining==1&&state.magic.concentration==1);click("Utilizzi manuali");click("+1");assert(state.magic.powers[1].remaining==2&&!(state.magic.powers[1].flags&PD_PREPARED));click("Indietro");click("Gestisci");click("Preparazione >");click("Conferma");assert(state.magic.powers[1].remaining==2&&(state.magic.powers[1].flags&PD_PREPARED));
     act(1002);click("Gestisci");click("Preparazione >");screenshot("prepare-cantrip.ppm");click("Conferma");assert(!(state.magic.powers[2].flags&PD_PREPARED)&&state.magic.slots[0].current==1&&state.magic.concentration==1);
@@ -1584,7 +1579,7 @@ int main(void) {
     assert(random_calls==effects_calls&&history_save_calls==practical_history);click("Menu");click("Eroe");click("Annulla");assert(!state.items[1].quantity&&state.items[1].charges.current==1);
     /* Zero on the selected weapon atomically clears equipment and thrown mode. */
     act(500);click("Quantita 1 >");click("0");click("Anteprima");screenshot("quantity-weapon-preview.ppm");click("Conferma");assert(state.equipped==PD_NO_WEAPON&&!state.combat.thrown&&!state.items[0].quantity&&!strike_ready);screenshot("quantity-weapon-zero.ppm");
-    click("Quantita 0 >");click("1");click("Anteprima");click("Conferma");assert(state.items[0].quantity==1&&state.equipped==PD_NO_WEAPON&&!state.combat.thrown);screenshot("quantity-weapon-returned.ppm");click("Scegli");assert(state.equipped==0);
+    click("Quantita 0 >");click("1");click("Anteprima");click("Conferma");assert(state.items[0].quantity==1&&state.equipped==PD_NO_WEAPON&&!state.combat.thrown);screenshot("quantity-weapon-returned.ppm");click("Equipaggia");click("Conferma");assert(state.equipped==0);
     /* The filtered last row retains its original identity and bounded long name. */
     state.item_count=60;for(unsigned i=3;i<60;i++)state.items[i]=(pd_item){.name="Other item",.quantity=3};memset(state.items[59].name,'W',40);state.items[59].name[40]=0;state.items[59].quantity=0;state.items[59].charges=(pd_charges){1,5,2};assert(pd_valid(&state));
     strcpy(item_query,"WWW");inventory_page=0;act(80);tap(233,177);assert(item_index==59);wrapped_fits();screenshot("quantity-last-name.ppm");click("Quantita 0 >");click("9");click("9");click("9");click("Anteprima");wrapped_fits();screenshot("quantity-long-preview.ppm");click("Conferma");assert(state.items[59].quantity==999&&state.items[59].charges.current==1&&state.items[2].quantity==3);click("Zaino");assert(!strcmp(item_query,"WWW"));screenshot("quantity-search-kept.ppm");
@@ -1755,6 +1750,36 @@ int main(void) {
     asset_running=true;page=ASSET_INSTALL;asset_activity=lv_tick_get();lv_tick_inc(45000);asset_service();assert(!asset_running&&page==HERO&&strstr(last_reply,"ERROR timeout"));
     assert(!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves&&random_calls==effects_calls);
     puts("SD installer UI: absent SD, verified already-installed result, direct class choice without save, progress, protected keys/import, cancel/timeout and unchanged PG/RNG/NVS passed; no physical SD claim");
+    /* v0.85: synthetic device session, explicit profiles, no real character JSON. */
+    pd_demo(&state);state.level=6;state.hp=35;state.max_hp=53;state.armor=16;memcpy(state.abilities,(uint8_t[]){15,10,16,8,8,17},6);
+    state.items[0]=(pd_item){.name="Claymore sintetica",.kind=PD_GEAR,.quantity=1};state.items[1]=(pd_item){.name="Chain Mail sintetica",.kind=PD_GEAR,.quantity=1};state.items[2]=(pd_item){.name="Anello sintetico",.kind=PD_GEAR,.quantity=1};state.equipped=PD_NO_WEAPON;
+    state.unarmored_rule=1;state.gear[1]=(pd_gear){.kind=PD_WEAR_HEAVY,.armor=16,.equipped=true};
+    state.magic.count=2;state.magic.powers[0]=(pd_power){.name="True Strike",.description="Synthetic weapon cantrip",.effect=PD_TRUE_STRIKE_2024,.ability=5,.flags=PD_PREPARED};state.magic.powers[1]=(pd_power){.name="Healing Word",.level=1,.flags=PD_USES_SLOT};state.magic.slots[0]=(pd_slot){1,2};
+    history_pending=history_pair_pending=false;pd_history_reset(&history,state.history_epoch);persisted_history=history;item_query[0]=power_query[0]=0;ready_view=pouch_view=false;magic_filter=2;magic_page=inventory_page=0;display_screen=(pd_screen){0};physical_keys=(pd_buttons){0};wifi_keyboard=false;pd_dice_idle(&dice_animation,1);page=HERO;combat_roll=0;fail_save=false;render();
+    assert(pd_valid(&state));effects_before=state;effects_calls=random_calls;effects_saves=save_calls;
+    act(800);screenshot("ux085-spell-list.ppm");act(80);screenshot("ux085-inventory.ppm");act(100);
+    act(81);assert(page==WEAPON_PICKER);screenshot("ux085-weapon-picker.ppm");click("Claymore sintetica");assert(page==WEAPON_SETUP);screenshot("ux085-weapon-profile.ppm");
+    click("Spada: 1d8 >");click("Competenza: no");click("Att +");click("Dan +");click("Anteprima");assert(page==PLAY_CONFIRM&&scratch.items[0].count==2&&scratch.items[0].sides==6&&scratch.equipped==0);screenshot("ux085-weapon-confirm.ppm");
+    for(unsigned i=0;i<3;i++)shortcut(i);act(100);assert(page==PLAY_CONFIRM&&!stage_import(&imported_magic)&&!memcmp(&state,&effects_before,sizeof state)&&random_calls==effects_calls&&save_calls==effects_saves);
+    fail_save=true;click("Conferma");assert(page==PLAY_CONFIRM&&!memcmp(&state,&effects_before,sizeof state));fail_save=false;click("Conferma");assert(page==COMBAT&&state.equipped==0&&state.items[0].attack_modifier==1&&state.items[0].damage_modifier==1);
+    click("Magie");assert(page==ATTACK_MODE);screenshot("ux085-attack-mode.ppm");click("True Strike");pd_weapon_info ts;assert(attack_weapon_info(&ts)&&ts.attack_bonus==7&&ts.damage_bonus==4&&ts.radiant_dice==1);screenshot("ux085-true-strike.ppm");
+    random_values[0]=random_values[1]=19;click("Lancia");assert(strike.weapon.true_strike&&strike.critical&&strike.roll.bonus==7);click("Accelera");random_values[0]=random_values[1]=0;effects_calls=random_calls;unsigned pair_saves=history_save_calls;fail_history=true;click("Danni");assert(random_calls==effects_calls+6&&damage_parts.weapon.count==4&&damage_parts.radiant.count==2&&damage_parts.total==10&&history_pending&&history_pair_pending&&history_save_calls==pair_saves+1);click("Accelera");screenshot("ux085-true-strike-damage.ppm");
+    effects_calls=random_calls;click("Radianti");click("Accelera");assert(random_calls==effects_calls&&damage_view_radiant&&damage_parts.total==10);screenshot("ux085-radiant-dice.ppm");click("Storico");click("Riprova");assert(history_pending&&history_pair_pending&&random_calls==effects_calls);act(2609);assert(page==HISTORY_DETAIL);click("Radiante");screenshot("ux085-pending-radiant.ppm");assert(history_index==PD_HISTORY_LIMIT+1);fail_history=false;click("Riprova");assert(!history_pending&&!history_pair_pending&&history.count==3&&history.entries[0].sides==6&&history.entries[0].count==2&&history.entries[1].count==4&&random_calls==effects_calls);
+    /* Direct prepare: cancel and save retry, without slot consumption. */
+    act(1001);click("Prepara");assert(page==MAGIC_PREPARATION&&preparation_return==MAGIC_DETAIL);click("Conferma");assert(page==MAGIC_DETAIL&&(state.magic.powers[1].flags&PD_PREPARED)&&state.magic.slots[0].current==1);
+    /* Existing source armor moves through real equip -> preview -> confirm. */
+    act(501);click("Riponi");assert(page==PLAY_CONFIRM&&scratch.armor==10&&state.armor==16);screenshot("ux085-armor-off.ppm");click("Conferma");assert(state.armor==10&&state.hp==35);click("Equipaggia");click("Conferma");assert(state.armor==16);
+    click("Configura");assert(page==ITEM_CONFIG_MENU);screenshot("ux085-item-menu.ppm");click("Armatura e bonus");assert(page==GEAR_SETUP);screenshot("ux085-gear-setup.ppm");
+    for(unsigned f=0;f<19;f++){gear_field=f;render();bounds();wrapped_fits();}click("Indietro");click("Indietro");
+    /* New item bonuses: explicit 'not already included', CON propagates max HP. */
+    act(502);click("Configura");click("Armatura e bonus");gear_field=3;render();click("+ / Si");assert(gear_adopt==1);click("- / No");assert(gear_adopt==2);gear_field=7;render();click("+ / Si");click("+ / Si");click("Anteprima");assert(scratch.abilities[2]==18&&scratch.max_hp==59&&scratch.hp==35);screenshot("ux085-gear-bonus-preview.ppm");click("Conferma");assert(state.abilities[2]==18&&state.max_hp==59&&state.hp==35);click("Riponi");click("Conferma");assert(state.abilities[2]==16&&state.max_hp==53&&state.hp==35);
+    /* Old imported note is only a proposal: the user explicitly chooses 2024. */
+    state.magic.powers[0]=(pd_power){.name="True Strike",.kind=1,.flags=PD_PASSIVE,.description="Use your spellcasting ability for a weapon attack"};assert(pd_valid(&state));act(1000);click("Regole");assert(page==MAGIC_PROFILE);screenshot("ux085-magic-profile.ppm");click("Effetti manuali >");while(profile_ability!=5)act(6302);click("Anteprima");assert(scratch.magic.powers[0].effect==PD_TRUE_STRIKE_2024&&state.magic.powers[0].effect==0);click("Conferma");assert(state.magic.powers[0].effect==PD_TRUE_STRIKE_2024&&!state.magic.powers[0].kind);click("Attacca");assert(page==COMBAT&&attack_spell==0);
+    /* Physical setup navigation is local and preserves configured shortcuts. */
+    click("True Strike");effects_before=state;wifi_keyboard=false;physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};screen_service(0,0);lv_tick_inc(40);screen_service(0,0);screen_service(1,0);lv_tick_inc(40);screen_service(1,0);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);assert(wifi_keyboard&&page==ATTACK_MODE&&!memcmp(&state,&effects_before,sizeof state));act(6099);
+    char *session_backup=pd_backup_encode(&state,&history,&external_size);assert(session_backup);free(session_backup);
+    puts("Device session 0.85: weapon setup/save retry, direct prepare, armor/CON deltas, explicit old-note profile, True Strike casting ability/critical mixed dice, atomic journal pair/frozen retries, local physical focus and all seven new views passed (synthetic LVGL, no hardware claim)");
+
     unsigned covered=0;
     for(unsigned p=0;p<=SYNC_FORGET;p++){
         covered+=styled_pages[p];

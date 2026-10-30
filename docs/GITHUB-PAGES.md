@@ -11,32 +11,14 @@ ospita file statici, non esegue il server del connettore. Se il pacchetto è gi�
 presente sul PC non occorre riscaricarlo per aggiornare firmware o look SD.
 La pagina non legge la raccolta del browser usata dall’app PC locale.
 
-## Attivazione iniziale su GitHub
+## Stato della pubblicazione
 
-Il repository `ShydanRem/PocketD-D` è privato. Il ramo **gh-pages** contiene
-l’output distribuibile, separato dal codice firmware e dalla cronologia di main.
-Il sito espone i file compilati, i look e il pacchetto PC opzionale (che include
-il codice JS necessario all’esecuzione locale), mai raccolte o credenziali.
-
-Una volta pubblicato il ramo, il proprietario apre:
-
-**Repository → Settings → Pages → Build and deployment**
-
-- Source: **Deploy from a branch**.
-- Branch: **gh-pages**, cartella **/ (root)**.
-- **Save**.
-
-GitHub mostra poi il link del sito; il percorso previsto è
-`https://shydanrem.github.io/PocketD-D/`. La sola esistenza del ramo non dimostra
-che Pages sia attivo: verificare il completamento della distribuzione GitHub.
-Il connettore di questa sessione consente il push ma non espone la modifica
-delle impostazioni Pages; questa prima impostazione può richiedere l’intervento
-del proprietario. Nessun token va incollato in chat o nella pagina.
-
-Pages da repository privato dipende dal piano GitHub. Se GitHub richiede un piano
-diverso, non rendere pubblico automaticamente il progetto: il repository rimane
-privato. Un repository pubblico separato contenente solo il sito è un’alternativa
-da concordare. L’installer precedente resta utilizzabile durante l’attivazione.
+Sito attivo: **https://shydanrem.github.io/PocketD-D/**, confermato visibile dal
+proprietario. Il repository è ora **pubblico**, per scelta del proprietario;
+la pubblicazione non ne cambia la visibilità. Impostazioni Pages:
+**Deploy from a branch → gh-pages → / (root)**. Ogni aggiornamento del ramo
+attiva la distribuzione GitHub; verificarne il completamento nelle Actions.
+Il sito contiene solo i file previsti dal publisher, mai raccolte o credenziali.
 
 ## Pubblicare gli aggiornamenti successivi
 
@@ -70,4 +52,5 @@ Pagina verificata localmente sotto **/PocketD-D/**, con firmware/SD visibili,
 modalità aggiornamento, SHA256, porta USB simulata, PC opzionale e scaricamento
 verificato, percorsi delle immagini e ritorno dalla galleria, 1100/390/320 px.
 La pubblicazione Git e l’attivazione/distribuzione di Pages sono stati distinti.
-Nessun nuovo flash fisico, accesso Beyond o modifica della raccolta personale.
+Questa verifica del sito non attesta un nuovo flash o Wi-Fi fisico. Le letture
+Beyond e le prove firmware sono documentate separatamente.

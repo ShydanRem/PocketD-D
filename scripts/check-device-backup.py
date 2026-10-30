@@ -30,6 +30,14 @@ def frame(raw=RAW):
 
 
 class BackupTests(unittest.TestCase):
+    def test_current_loadout_record_exact_envelope(self):
+        path=Path(__file__).resolve().parents[1]/'firmware/tests/out/loadout-backup.synthetic.json'
+        raw=path.read_bytes();obj,preview=backup.validate(raw)
+        self.assertEqual(obj,json.loads(raw));self.assertEqual(preview['rolls'],0)
+        data=bytearray(base64.b64decode(obj['state']));self.assertEqual(data[:4],b'PDDb')
+        data[-1085]=4;data[-4:]=zlib.crc32(data[:-4]).to_bytes(4,'little');obj['state']=base64.b64encode(data).decode('ascii')
+        with self.assertRaises(ValueError):backup.validate(json.dumps(obj).encode('ascii'))
+
     def test_acquisition_exact_bytes_fragmented_and_partial_writes(self):
         for fragments in [1, 7, 4096]:
             port = Port(frame(), fragments, partial_write=True)

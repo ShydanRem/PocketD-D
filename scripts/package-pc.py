@@ -7,7 +7,7 @@ p=argparse.ArgumentParser();p.add_argument('output',type=Path,nargs='?',default=
 if not (ROOT/'dist/index.html').is_file():raise SystemExit('Run npm run build first')
 subprocess.run(['python3',str(ROOT/'scripts/fetch-windows-runtime.py'),'--verify'],check=True)
 runtime_info=json.loads((ROOT/'scripts/windows-runtime.json').read_text());runtime=ROOT/'.pocketdd-runtime'/f'node-{runtime_info["version"]}-{runtime_info["platform"]}'
-files=[ROOT/'docs/GITHUB-PAGES.md',ROOT/'docs/previews/v084-wifi-direct.png',ROOT/'docs/previews/v083-sd-install.png',ROOT/'docs/SD-WEB-USB.md',ROOT/'package.json',ROOT/'Avvia-PocketDD.cmd',ROOT/'Avvia-Ponte.cmd',ROOT/'docs/PONTE-BEYOND.md',ROOT/'docs/PONTE-BEYOND-PROVE.md',ROOT/'docs/STATO-SOFTWARE.md',ROOT/'docs/USO-PRATICO.md',ROOT/'docs/INIZIA-QUI.md',ROOT/'docs/SESSIONE-V082.md',ROOT/'docs/BEYOND-CONSENSO-V0821.md',ROOT/'docs/previews/v082-key-picker.png',ROOT/'docs/previews/v081-setup-flow.png',ROOT/'docs/previews/v080-practical-device.png',ROOT/'docs/BEYOND-PERSONALIZZAZIONI-TIRI.md',ROOT/'docs/ABILITA-CARATTERISTICHE.md',ROOT/'docs/DIFESE-VERIFICA-RAPIDA.md',ROOT/'docs/BEYOND-CONTATORI-MANUALI.md',ROOT/'docs/BEYOND-CANNONE.md',ROOT/'docs/BEYOND-V1.md',ROOT/'docs/WIFI.md',ROOT/'docs/BEYOND-TEMPO-REALE.md',ROOT/'docs/previews/v078-reference-wifi.png',ROOT/'docs/previews/v079-bridge.png']
+files=[ROOT/'docs/EQUIPAGGIAMENTO-MAGIE.md',ROOT/'docs/previews/v085-device-session.png',ROOT/'docs/GITHUB-PAGES.md',ROOT/'docs/previews/v084-wifi-direct.png',ROOT/'docs/previews/v083-sd-install.png',ROOT/'docs/SD-WEB-USB.md',ROOT/'package.json',ROOT/'Avvia-PocketDD.cmd',ROOT/'Avvia-Ponte.cmd',ROOT/'docs/PONTE-BEYOND.md',ROOT/'docs/PONTE-BEYOND-PROVE.md',ROOT/'docs/STATO-SOFTWARE.md',ROOT/'docs/USO-PRATICO.md',ROOT/'docs/INIZIA-QUI.md',ROOT/'docs/SESSIONE-V082.md',ROOT/'docs/BEYOND-CONSENSO-V0821.md',ROOT/'docs/previews/v082-key-picker.png',ROOT/'docs/previews/v081-setup-flow.png',ROOT/'docs/previews/v080-practical-device.png',ROOT/'docs/BEYOND-PERSONALIZZAZIONI-TIRI.md',ROOT/'docs/ABILITA-CARATTERISTICHE.md',ROOT/'docs/DIFESE-VERIFICA-RAPIDA.md',ROOT/'docs/BEYOND-CONTATORI-MANUALI.md',ROOT/'docs/BEYOND-CANNONE.md',ROOT/'docs/BEYOND-V1.md',ROOT/'docs/WIFI.md',ROOT/'docs/BEYOND-TEMPO-REALE.md',ROOT/'docs/previews/v078-reference-wifi.png',ROOT/'docs/previews/v079-bridge.png']
 for directory in ('src','scripts'):
  files += [f for f in (ROOT/directory).glob('*') if f.is_file() and f.suffix in ('.js','.json') and not f.name.endswith('.test.js')]
 files += [f for folder in ('extension','tools/bridge') for f in (ROOT/folder).rglob('*') if f.is_file()]
@@ -40,7 +40,8 @@ Uso pratico sul dispositivo, filtri e icone: docs/USO-PRATICO.md.
 Profilo PG, iniziativa e dotazioni: nuova importazione v20, firmware 0.78 / USB17.
 Wi-Fi: Menu > ingranaggio > Wi-Fi > Cerca reti; password sul display; vedi docs/WIFI.md.
 Ponte Beyond sperimentale: Avvia-Ponte.cmd e cartella extension. Guida docs/PONTE-BEYOND.md.
-Nessuna prova reale autenticata o fisica implicita; l’importazione USB resta da collaudare.
+USB/installer/SD riferiti risolti dall utente; le nuove funzioni e il ponte richiedono collaudo separato.
+Magie ed equipaggiamento operativi: docs/EQUIPAGGIAMENTO-MAGIE.md. Firmware 0.85 / USB18, PC21, backup PDDb37; legge i precedenti.
 L'app e gia compilata: non servono npm install o una compilazione del firmware.
 Caratteristica personalizzata delle abilita: da Beyond tipo 27 o Personalizza eroe.
 Per trasferirla serve firmware 0.74 / USB15; nuovi backup nativi PDD34 letti da questa app.

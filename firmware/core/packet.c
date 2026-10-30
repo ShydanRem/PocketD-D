@@ -139,7 +139,7 @@ static bool magic(cJSON *o,pd_magic *m,int version) {
         cJSON *description=cJSON_GetObjectItemCaseSensitive(o,"description");
         if(!cJSON_IsString(description)||strlen(description->valuestring)>=sizeof v->description)return false;
         strcpy(v->description,description->valuestring);
-        const int maxima[]={1,9,63,5,99,99,2,version>=17?5:version>=16?3:2,30,30};int values[10];
+        const int maxima[]={1,9,63,5,99,99,2,version>=18?6:version>=17?5:version>=16?3:2,30,30};int values[10];
         for(int j=0;j<10;j++) {
             cJSON *n=cJSON_GetObjectItemCaseSensitive(o,power_keys[j+2]);int lo=j>=8?-15:0;
             if(!cJSON_IsNumber(n)||!isfinite(n->valuedouble)||n->valuedouble<lo||n->valuedouble>maxima[j]||floor(n->valuedouble)!=n->valuedouble)return false;
@@ -198,13 +198,13 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
     #define candidate (*allocated)
     candidate.brightness=50;candidate.idle_animation=true;candidate.equipped=PD_NO_WEAPON;
     candidate.shortcuts[0]=1;candidate.shortcuts[1]=3;candidate.shortcuts[2]=5;
-    const char *const fields[]={"format","version","name","level","hp","maxHp","tempHp","armorClass","abilities","resources","avatar","training","inventory","magic","recovery","status","wallet","defences"};
+    const char *const fields[]={"format","version","name","level","hp","maxHp","tempHp","armorClass","abilities","resources","avatar","training","inventory","magic","recovery","status","wallet","defences","equipment"};
     const char *const abilities[]={"FOR","DES","COS","INT","SAG","CAR"};
     const char *const resource_keys[]={"name","current","maximum"};
     const char *const avatar_keys[]={"skin","hair","cloak","style","lineage","body","outfit"};
-    int version=number(root,"version",1,17);
+    int version=number(root,"version",1,18);
     cJSON *fmt=cJSON_GetObjectItemCaseSensitive(root,"format");
-    if (version<0 || end!=json+size || !keys(root,fields,version==1?10:version==2?11:version==3?12:version==4?13:version==5?14:version==6?15:version<9?16:version<14?17:18) || !cJSON_IsString(fmt) ||
+    if (version<0 || end!=json+size || !keys(root,fields,version==1?10:version==2?11:version==3?12:version==4?13:version==5?14:version==6?15:version<9?16:version<14?17:version<18?18:19) || !cJSON_IsString(fmt) ||
         strcmp(fmt->valuestring,"pocketdd-device") ||
         !copy(root,"name",candidate.name,sizeof candidate.name)) goto done;
     int level=number(root,"level",1,20),hp=number(root,"hp",0,999),max=number(root,"maxHp",1,999),
@@ -243,6 +243,21 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
         int known=number(defences,"configured",0,8191),r=number(defences,"resistance",0,8191),v=number(defences,"vulnerability",0,8191),i=number(defences,"immunity",0,8191);
         if(known<0||r<0||v<0||i<0||((r|v|i)&~known))goto done;
         candidate.defences.configured=known;candidate.defences.resistance=r;candidate.defences.vulnerability=v;candidate.defences.immunity=i;
+    }
+    if(version>=18){
+        const char *const fields[]={"unarmored","items"},*const names[]={"kind","equipped","armor","ability","ac","attack","damage","spellAttack","spellDc","saves","checks","maxHp"};
+        cJSON *o=cJSON_GetObjectItemCaseSensitive(root,"equipment"),*items=cJSON_GetObjectItemCaseSensitive(o,"items");int rule=number(o,"unarmored",0,3);
+        if(!keys(o,fields,2)||rule<0||!cJSON_IsArray(items)||cJSON_GetArraySize(items)!=candidate.item_count)goto done;
+        candidate.unarmored_rule=rule;
+        for(unsigned i=0;i<candidate.item_count;i++){
+            cJSON *item=cJSON_GetArrayItem(items,i),*active=cJSON_GetObjectItemCaseSensitive(item,"equipped"),*ability=cJSON_GetObjectItemCaseSensitive(item,"ability");pd_gear *g=&candidate.gear[i];
+            int kind=number(item,"kind",0,5),armor=number(item,"armor",0,30);cJSON *hp=cJSON_GetObjectItemCaseSensitive(item,"maxHp");
+            if(!keys(item,names,12)||kind<0||armor<0||!cJSON_IsNumber(hp)||hp->valuedouble< -999||hp->valuedouble>999||floor(hp->valuedouble)!=hp->valuedouble||!cJSON_IsBool(active)||!cJSON_IsArray(ability)||cJSON_GetArraySize(ability)!=6)goto done;
+            g->kind=kind;g->armor=armor;g->max_hp=hp->valueint;g->equipped=cJSON_IsTrue(active);
+            for(unsigned j=0;j<6;j++){cJSON *n=cJSON_GetArrayItem(ability,j);if(!cJSON_IsNumber(n)||n->valuedouble< -10||n->valuedouble>10||floor(n->valuedouble)!=n->valuedouble)goto done;g->ability[j]=n->valueint;}
+            int8_t *targets[]={&g->ac,&g->attack,&g->damage,&g->spell_attack,&g->spell_dc,&g->saves,&g->checks};
+            for(unsigned j=0;j<7;j++){cJSON *n=cJSON_GetObjectItemCaseSensitive(item,names[j+4]);if(!cJSON_IsNumber(n)||n->valuedouble< -10||n->valuedouble>10||floor(n->valuedouble)!=n->valuedouble)goto done;*targets[j]=n->valueint;}
+        }
     }
     cJSON *a=cJSON_GetObjectItemCaseSensitive(root,"abilities");
     if (!keys(a,abilities,6)) goto done;

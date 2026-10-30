@@ -8,8 +8,9 @@
 #define PD_RESOURCES 8
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
-#define PD_RECORD_SIZE 75204
-#define PD_RECORD_MAGIC "PDDa"
+#define PD_EQUIPMENT_BYTES (1u+18u*60u)
+#define PD_RECORD_SIZE (75204u+PD_EQUIPMENT_BYTES)
+#define PD_RECORD_MAGIC "PDDb"
 #define PD_SCENES 3
 #define PD_TURN_NAME_BYTES 21
 #define PD_COINS 5
@@ -43,6 +44,14 @@ typedef struct {
     uint8_t kind,ability,count,sides,flags,reach,thrown_range;
     int8_t attack_modifier,damage_modifier,healing_modifier;
 } pd_item;
+enum { PD_WEAR_NONE,PD_WEAR_ITEM,PD_WEAR_LIGHT,PD_WEAR_MEDIUM,PD_WEAR_HEAVY,PD_WEAR_SHIELD };
+/* Numeric properties are explicit, never inferred from an item's name. The
+   stored character values already include active gear; toggling applies deltas. */
+typedef struct {
+    uint8_t kind,armor;bool equipped;
+    int8_t ability[6],ac,attack,damage,spell_attack,spell_dc,saves,checks;
+    int16_t max_hp;
+} pd_gear;
 typedef struct { uint8_t rage_bonus,critical_dice; bool raging,power_attack,thrown; } pd_combat;
 enum { PD_CONCENTRATES=1,PD_PREPARED=2,PD_USES_SLOT=4,PD_LIMITED=8,PD_PASSIVE=16,PD_EXCERPT=32 };
 typedef struct {
@@ -104,6 +113,8 @@ typedef struct {
     uint8_t item_count,equipped;
     pd_combat combat;
     pd_item items[PD_ITEMS];
+    uint8_t unarmored_rule; /* 0 manual, 1 10+DEX, 2 +CON, 3 +WIS (no shield). */
+    pd_gear gear[PD_ITEMS];
     pd_magic magic;
     pd_recovery recovery;
     pd_status status;
@@ -127,6 +138,14 @@ bool pd_outfit_set(pd_state *state,unsigned outfit);
 bool pd_identity_set(pd_state *state,unsigned lineage,unsigned body);
 bool pd_appearance_set(pd_state *state,const pd_avatar *avatar,unsigned scene);
 bool pd_valid(const pd_state *state);
+bool pd_gear_valid(const pd_state *state);
+bool pd_gear_unconfigured(const pd_state *state,unsigned index);
+void pd_gear_weapon_bonus(const pd_state *state,int *attack,int *damage);
+/* Configure explicitly; adopt is only for a previously unconfigured item whose
+   effects are already included in imported values. Atomic on failure. */
+bool pd_gear_configure(pd_state *state,unsigned index,pd_gear gear,unsigned unarmored_rule,bool adopt);
+bool pd_gear_equip(pd_state *state,unsigned index,bool equipped);
+
 bool pd_wallet_set(pd_state *state,const pd_wallet *wallet);
 bool pd_wallet_change(pd_state *state,unsigned coin,int32_t delta);
 uint64_t pd_wallet_copper(const pd_wallet *wallet);

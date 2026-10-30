@@ -7,7 +7,7 @@ const raw=readFileSync('firmware/tests/out/backup-fixture.json','utf8'),p=inspec
 assert.equal(p.scene,1);assert.equal(p.name,'Elian');assert.equal(p.hp,17);assert.equal(p.maxHp,42);assert.equal(p.tempHp,7);assert.equal(p.armor,18);assert.equal(p.effects,2);assert.equal(p.powers,60);assert.equal(p.rolls.length,20);assert.equal(p.rolls[0].number,20);assert.equal(p.rolls[19].total,1);assert.equal(p.wallet.pp,999999999);assert.deepEqual(p.keys,[14,3,5]);assert.equal(p.brightness,80);assert.deepEqual(p.packet,JSON.parse(raw));assert.equal(p.nativeValidation,false);assert.equal(p.skillAbilities.intimidation,'COS');assert.equal(p.skillAbilities.acrobatics,'COS');
 console.log('Native C -> PC: PDD34 mappings, all three scenes and 13 outfit IDs and key binding 14, exact records retained, HP/CA with local effects, wallet, settings, 60 powers and all 20 rolls preview passed; full semantic validation remains on device');
 const inputs=[raw],expected=[true];
-function mutate(key,fn){const copy=JSON.parse(raw),bytes=Uint8Array.from(atob(copy[key]),c=>c.charCodeAt(0));fn(bytes,new DataView(bytes.buffer));new DataView(bytes.buffer).setUint32(bytes.length-4,crc32(bytes.subarray(0,-4)),true);copy[key]=btoa(String.fromCharCode(...bytes));return JSON.stringify(copy)}
+function mutate(key,fn){const copy=JSON.parse(raw),original=Uint8Array.from(atob(copy[key]),c=>c.charCodeAt(0)),modern=key==='state'&&original[3]===98;let bytes=modern?new Uint8Array([...original.subarray(0,-1085),...original.subarray(-4)]):original;fn(bytes,new DataView(bytes.buffer));if(modern)bytes=new Uint8Array([...bytes.subarray(0,-4),...original.subarray(-1085,-4),...bytes.subarray(-4)]);new DataView(bytes.buffer).setUint32(bytes.length-4,crc32(bytes.subarray(0,-4)),true);copy[key]=btoa(String.fromCharCode(...bytes));return JSON.stringify(copy)}
 for(let scene=0;scene<3;scene++){const q=mutate('state',b=>b[b.length-26]=scene);assert.equal(inspectDeviceBackup(q).scene,scene);inputs.push(q);expected.push(true);}
 for(let lineage=0;lineage<21;lineage++)for(let body=0;body<2;body++){
  const q=mutate('state',b=>{b[b.length-25]=lineage;b[b.length-24]=body;});const preview=inspectDeviceBackup(q);assert.equal(preview.lineage,lineage);assert.equal(preview.body,body);inputs.push(q);expected.push(true);
@@ -27,5 +27,5 @@ console.log(`PC -> native C restore: ${rows.length} integrity/semantic/epoch/dup
 
 // Corrupt the actual appended PDD34 values; retain valid CRC and exact envelope.
 for(let i=0;i<18;i++){
- const packet=JSON.parse(raw),b=Uint8Array.from(atob(packet.state),c=>c.charCodeAt(0));b[b.length-22+i]=7;new DataView(b.buffer).setUint32(b.length-4,crc32(b.subarray(0,-4)),true);packet.state=btoa(String.fromCharCode(...b));assert.throws(()=>inspectDeviceBackup(JSON.stringify(packet)));
+ const packet=JSON.parse(raw),b=Uint8Array.from(atob(packet.state),c=>c.charCodeAt(0));b[b.length-22-(b[3]===98?1081:0)+i]=7;new DataView(b.buffer).setUint32(b.length-4,crc32(b.subarray(0,-4)),true);packet.state=btoa(String.fromCharCode(...b));assert.throws(()=>inspectDeviceBackup(JSON.stringify(packet)));
 }

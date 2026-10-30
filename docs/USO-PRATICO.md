@@ -1,4 +1,7 @@
-# PocketD-D v0.80 — uso pratico sul dispositivo
+# PocketD-D — uso pratico sul dispositivo
+
+Aggiornamento v0.85: [preparazione diretta, equipaggiamento con calcoli collegati,
+True Strike e icone riconoscibili](EQUIPAGGIAMENTO-MAGIE.md).
 
 Aggiornamento v0.82: [sessione continua, scelta diretta dei tasti e diagnosi USB](SESSIONE-V082.md). Le assegnazioni ora si scelgono da un elenco, senza scorrere una funzione per tocco.
 

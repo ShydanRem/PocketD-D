@@ -1,3 +1,7 @@
+> Aggiornamento 30 ottobre, v0.85: [lettura reale di Soren, profili armatura e True Strike](EQUIPAGGIAMENTO-MAGIE.md).
+> HTTP, schema e conversione sono distinti; nessuna raccolta modificata o JSON completo pubblicato.
+> L'utente riferisce risolti USB/installer/SD. Le vecchie segnalazioni sotto sono storiche.
+
 > Stato corrente v0.78: [contratto della prima versione, lettura reale e limiti](BEYOND-V1.md).
 > Profilo sul dispositivo e resoconto specifico; USB fisico ancora aperto.
 > Le prove storiche sotto non attestano automaticamente nuove funzioni.

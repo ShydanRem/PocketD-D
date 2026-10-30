@@ -1,6 +1,7 @@
 #ifndef PD_MAGIC_H
 #define PD_MAGIC_H
 #include "pocketdd.h"
+enum {PD_TRUE_STRIKE_2024=6};
 bool pd_magic_valid(const pd_state *s);
 bool pd_magic_stats(const pd_state *s,unsigned index,int *attack,int *dc);
 /* Validate all costs before changing anything. Effects are limited to recognized identities. */

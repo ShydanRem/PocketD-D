@@ -1,3 +1,4 @@
+import {gearTotals} from './equipment.js';
 import {recoverItemCharges} from './inventory.js';
 // Local resources and explicit effects; no bundled external catalogue.
 const integer=(n,min,max)=>Number.isInteger(n)&&n>=min&&n<=max;
@@ -20,6 +21,7 @@ export function validatePower(power,extended=false){
       Object.assign(base,{castingAbility:power.castingAbility,attackModifier:power.attackModifier,saveModifier:power.saveModifier,prepared:power.prepared,usesSpellSlot:power.usesSpellSlot});
     }
     if(extended&&power.limited!==undefined)base.limited=resource(power.limited);
+    if(power.effect!==undefined){if(!extended||power.effect!=='true-strike-2024'||power.level!==0||power.concentration||power.limited||!keys.includes(power.castingAbility)||power.usesSpellSlot!==false)throw Error('Profilo True Strike 2024 non valido');base.effect=power.effect;}
   }else if(extended&&power.passive===true){
     Object.assign(base,{maxUses:0,remaining:0,recovery:'manual',passive:true},power.reference!==undefined?{reference:power.reference,...(power.reference===6?{attackModifier:power.attackModifier}:{})}:{});
   }else{
@@ -56,8 +58,9 @@ export function availableSlots(state,power){
   return entries;
 }
 export function upsertPower(state,input){
-  const power=validatePower(input,Boolean(state.extended)),exists=state.powers.some(p=>p.id===power.id),max=state.extended?120:40;
+  let power=validatePower(input,Boolean(state.extended));const exists=state.powers.some(p=>p.id===power.id),max=state.extended?120:40;
   if(!exists&&state.powers.length>=max)throw new Error(`Massimo ${max} voci`);
+  if(!exists&&power.type==='spell'&&power.effect!=='true-strike-2024'&&state.extended?.loadout){const t=gearTotals(state);power=validatePower({...power,attackModifier:(power.attackModifier??0)+t.spellAttack,saveModifier:(power.saveModifier??0)+t.spellDc},true);}
   return {...state,powers:exists?state.powers.map(p=>p.id===power.id?power:p):[...state.powers,power],concentration:state.concentration===power.id&&(power.type!=='spell'||!power.concentration)?null:state.concentration};
 }
 export function deletePower(state,id){return {...state,powers:state.powers.filter(p=>p.id!==id),concentration:state.concentration===id?null:state.concentration}}
@@ -87,6 +90,8 @@ export function usePower(state,id,slotLevel=0){
     if(power.effect==='relentless-endurance')next={...next,hp:1,extended:{...state.extended,deathSaves:{successes:0,failures:0,stabilized:false}}};
     return next;
   }
+  if(power.effect==='true-strike-2024')throw new Error('True Strike si usa con un attacco con arma sul Pocket');
+  if(state.hp===0)throw new Error('Magia non disponibile a zero PF');
   if(state.extended?.combat.raging)throw new Error('Termina Ira prima di lanciare una magia');
   if(power.prepared===false)throw new Error('Magia non preparata: verifica la preparazione');
   if(power.concentration&&state.hp===0)throw new Error('Non puoi concentrarti a zero PF');

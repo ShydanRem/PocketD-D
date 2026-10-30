@@ -1,3 +1,4 @@
+import {beyondEquipment,beyondTrueStrike2024} from './beyond-equipment.js';
 import {applyBeyondTraining} from './beyond-training.js';
 import {BeyondError} from './beyond.js';
 import {beyondCannon} from './beyond-cannon.js';
@@ -136,6 +137,7 @@ export function extendBeyond(report,c,customTraining=[]){
     return weapon;
   });
   const itemImport=beyondItems(c.inventory,state.inventory,{warn,evidence});state.inventory=itemImport.items;
+  beyondEquipment(c,state,{warn,evidence,modifiers:mods});
   const defenceImport=beyondDefences(c,{warn,fact,evidence});if(defenceImport.profile)ext.defences=defenceImport.profile;
   const equipped=state.inventory.filter((item,index)=>item.type==='weapon'&&item.quantity>0&&c.inventory[index].equipped);
   state.equippedWeaponId=equipped.length===1?equipped[0].id:null;
@@ -262,15 +264,15 @@ export function extendBeyond(report,c,customTraining=[]){
     if(!integer(d.level,0,9)||!validCaster||(s.limitedUse&&!resource)||(usesSlot&&(!slots||!pact))){
       addPower({id:`ddb-spell-note-${powers.length+1}`,type:'feature',name:d.name,description:text(d.description,d.name),passive:true});continue;
     }
-    const ability=abilityKeys[stat-1];casters.push(ability);
+    const ability=abilityKeys[stat-1],trueStrike=beyondTrueStrike2024(d)&&!resource;casters.push(ability);
     let attackModifier=0,saveModifier=0,unresolved=false;
     for(const m of mods){
-      if(!['spell-attacks','spell-save-dc'].includes(m.subType))continue;
+      if(trueStrike||!['spell-attacks','spell-save-dc'].includes(m.subType))continue;
       if(m.restriction||m.type!=='bonus'||m.statId!=null||!integer(m.value,-15,30)){unresolved=true;continue;}
       if(m.subType==='spell-attacks')attackModifier+=m.value;else saveModifier+=m.value;
     }
     if(unresolved){warn(`${d.name}: bonus di lancio non risolto, magia conservata come nota.`);addPower({id:`ddb-spell-note-${powers.length+1}`,type:'feature',name:d.name,description:text(d.description,d.name),passive:true});continue;}
-    addPower({id:`ddb-spell-${powers.length+1}`,type:'spell',name:d.name,description:text(d.description,d.name),level:d.level,concentration:d.concentration===true,castingAbility:ability,attackModifier,saveModifier,prepared:s.alwaysPrepared===true||s.prepared!==false&&s.isPrepared!==false,usesSpellSlot:usesSlot,...(resource?{limited:resource}:{})});
+    addPower({id:`ddb-spell-${powers.length+1}`,type:'spell',name:d.name,description:text(d.description,d.name),level:d.level,concentration:d.concentration===true,castingAbility:ability,attackModifier,saveModifier,prepared:d.level===0||s.alwaysPrepared===true||s.prepared!==false&&s.isPrepared!==false,usesSpellSlot:usesSlot,...(trueStrike?{effect:'true-strike-2024'}:{}),...(resource?{limited:resource}:{})});
   }
   if(casters.length)state.spellcastingAbility=casters[0];
   if(powers.length>120)throw new Error('Oltre 120 magie/capacità: conversione non rappresentabile');

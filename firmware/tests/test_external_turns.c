@@ -65,7 +65,7 @@ int main(int argc,char **argv){
     }
     n=pd_encode(&s,98,record);record[timer_at]=8|PD_TICK_MINUTES;crc(n);assert(!pd_decode(record,n,&out,&generation));
     /* Old P tag rejects packed owners instead of silently dropping them. */
-    n=pd_encode(&s,98,record);record[3]='P';n-=85;crc(n);assert(!pd_decode(record,n,&out,&generation));
+    n=pd_encode(&s,98,record);record[3]='P';n-=PD_EQUIPMENT_BYTES+85;crc(n);assert(!pd_decode(record,n,&out,&generation));
     for(unsigned i=0;i<50;i++){record[timer_at+i]&=7;}crc(n);assert(pd_decode(record,n,&out,&generation));
     assert(!out.effects[1].owner&&!out.reductions[2].owner&&!out.defences.additional[12][1].owner);
     setup();n=pd_encode(&s,98,record);record[8375+552*s.magic.count]=9;crc(n);assert(!pd_decode(record,n,&out,&generation)); /* Unused numeric position. */

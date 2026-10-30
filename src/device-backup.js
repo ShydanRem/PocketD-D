@@ -21,7 +21,14 @@ function record(text,magic,max){
 }
 function text(bytes,start,capacity,empty=false){let end=start;while(end<start+capacity&&bytes[end]){if(bytes[end]<32||bytes[end]>126)fail();end++}if(end===start+capacity||(!empty&&end===start))fail();return String.fromCharCode(...bytes.subarray(start,end))}
 export function inspectDeviceBackup(raw){
-  const packet=envelope(raw),s=record(packet.state,['PDDP','PDDQ','PDDR','PDDS','PDDT','PDDU','PDDV','PDDW','PDDX','PDDY','PDDZ','PDDa'],75204),h=record(packet.history,'PDH1',2481),mapped=s.bytes[3]===89||s.bytes[3]===90||s.bytes[3]===97;
+  const packet=envelope(raw),s=record(packet.state,['PDDP','PDDQ','PDDR','PDDS','PDDT','PDDU','PDDV','PDDW','PDDX','PDDY','PDDZ','PDDa','PDDb'],76285),h=record(packet.history,'PDH1',2481);
+  let loadout=null;
+  if(s.bytes[3]===98){
+    const size=1081,start=s.bytes.length-4-size;if(start<8960)fail();const tail=s.bytes.subarray(start,-4);if(tail[0]>3)fail();
+    const items=[];for(let i=0;i<60;i++){const at=1+i*18,g=tail.subarray(at,at+18);if(g.length!==18||g[0]>5||g[1]>1||g[2]>30||g.subarray(3,16).some(n=>n>20)||(g[16]|g[17]<<8)>1998)fail();if(g[0])items.push({index:i,kind:g[0],equipped:Boolean(g[1])});}
+    loadout={unarmored:tail[0],items};s.bytes=new Uint8Array([...s.bytes.subarray(0,start),...s.bytes.subarray(-4)]);s.bytes[3]=97;s.view=new DataView(s.bytes.buffer);
+  }
+  const mapped=s.bytes[3]===89||s.bytes[3]===90||s.bytes[3]===97;
   const custom=mapped?s.bytes.subarray(s.bytes.length-22,s.bytes.length-4):new Uint8Array(18);
   if(custom.length!==18||custom.some(v=>v>6))fail();
   // CRC was checked on the complete record. Normalize offsets for preview only;
@@ -58,5 +65,5 @@ export function inspectDeviceBackup(raw){
   }
   // This is an integrity check and a bounded preview. The device runs the full
   // native validators for all remaining rules before offering Restore.
-  return {nativeValidation:false,packet,skillAbilities,scene,lineage,body,outfit,name,level,hp,maxHp,baseHp,tempHp,armor,baseArmor,effects,items:b[435],powers:b[5123],resources:b[71],wallet,keys,brightness,dim,turnSubjects,turnNames,payments,rolls};
+  return {nativeValidation:false,packet,...(loadout?{loadout}:{}),skillAbilities,scene,lineage,body,outfit,name,level,hp,maxHp,baseHp,tempHp,armor,baseArmor,effects,items:b[435],powers:b[5123],resources:b[71],wallet,keys,brightness,dim,turnSubjects,turnNames,payments,rolls};
 }

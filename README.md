@@ -2,7 +2,27 @@
 
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
-**Pagina web:** firmware e look SD direttamente dal browser; nessun installer da scaricare a ogni aggiornamento. [GitHub Pages: pubblicazione e prima attivazione](docs/GITHUB-PAGES.md). Il pacchetto PC resta opzionale per Beyond. Firmware invariato v0.84.
+**Pagina web attiva:** [installa e aggiorna PocketD-D](https://shydanrem.github.io/PocketD-D/).
+Firmware e look SD dal browser; app PC opzionale per importare da Beyond.
+[Come pubblicare gli aggiornamenti](docs/GITHUB-PAGES.md).
+
+**v0.85 — [equipaggiamento e magie sul dispositivo](docs/EQUIPAGGIAMENTO-MAGIE.md):**
+
+- Preparazione diretta delle magie, con disponibilità visibile nelle liste.
+- Equipaggia/riponi e profili arma/armatura/bonus locali: anteprima dei cambi a CA,
+  caratteristiche, PF massimi e tiri collegati. Configurabili anche i PG già importati.
+- True Strike 2024 usa la caratteristica da incantatore con l'arma, scala i danni
+  radianti e gestisce il critico; risultati congelati e storico atomico delle parti.
+- 32 icone semantiche condivise PC/firmware. Proprietà speciali non rappresentate
+  esplicite/manuali, nessuna regola dedotta dal nome o dall'icona.
+
+309 test JS, confronto JS/USB/C, 138 viste LVGL, controlli ASAN/UBSAN e build ESP32.
+Lettura Beyond reale verificata separatamente; nessun JSON completo pubblicato.
+L'utente riferisce risolti USB, installer e SD: le nuove interazioni 0.85 richiedono
+riscontro sul Pocket. [Stato generale e limiti](docs/STATO-SOFTWARE.md).
+
+<details>
+<summary>Cronologia v0.70–0.84 (prove e segnalazioni dell'epoca)</summary>
 
 **Nuovo v0.84:** [Wi-Fi dal display](docs/WIFI.md): ricerca reti, segnale, tastiera per la password e conferma del collegamento/salvataggio. Hotspot opzionale, tasti fisici e credenziali separati dal PG. Compilato e provato con radio simulata; router reale ancora da verificare.
 
@@ -30,9 +50,11 @@ Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixe
 
 **Stato v0.70:** [dodici preset di classe su SD](docs/PRESET-CLASSI.md), per tutte le 21 specie e le due silhouette (504 look). Cappucci corretti, scelta sul dispositivo/PC, proposta Beyond per classe singola riconosciuta, anteprima e conferma. Senza SD rimane lo stile originale. Colori e tagli dei preset sono fissi; espressioni aggiuntive, Artificiere e sottoclassi sono successivi. Collaudo SD fisico e diagnosi USB dei riavvii ancora aperti.
 
-Il firmware comprende borsello, storico, scheda, inventario, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Scheda PDD34 con lettura dei formati precedenti, registri NVS PDH2 con lettura di PDH1, copia scheda USB9/USB10/USB11/USB12/USB13/USB14/USB15 e backup PC v11/v12/v13/v14/v15/v16/v17. Il backup nativo è un archivio distinto dal backup della raccolta PC. Regole speciali, altri effetti e prodotto fisico restano aperti.
+</details>
 
-Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; alimentazione, touch, USB e prestazioni fisiche ancora da provare.
+Il firmware comprende borsello, storico, scheda, inventario, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Scheda PDDb/37 con lettura dei formati precedenti, registri NVS PDH2 con lettura di PDH1, USB fino a 18 e backup PC fino a v21. Il backup nativo è un archivio distinto dal backup della raccolta PC. Regole speciali, altri effetti e prodotto fisico restano aperti.
+
+Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; avvio/import USB e SD riferiti funzionanti dall utente. Batteria, interruzioni di alimentazione, radio e collaudo fisico completo restano da verificare.
 
 - [SD: caricatore e pacchetto dei look classe, istruzioni e limiti](docs/ASSET-SD.md)
 - [Avatar e sfondi: editor sul dispositivo v0.66](docs/PERSONALIZZAZIONE.md)

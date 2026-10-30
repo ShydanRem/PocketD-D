@@ -33,9 +33,9 @@ int main(int argc,char **argv){
     for(unsigned powers=0;powers<=120;powers+=powers?119:1){
         s.magic.count=powers;for(unsigned i=0;i<powers;i++)s.magic.powers[i]=(pd_power){.name="Synthetic spell",.flags=PD_PREPARED};
         size_t n=pd_encode(&s,56,record);uint32_t generation=0;
-        assert(n==8964+552*powers&&!memcmp(record,PD_RECORD_MAGIC,4)&&pd_record_known(record,n)&&pd_decode(record,n,&out,&generation)&&generation==56&&!memcmp(&out,&s,sizeof s));
+        assert(n==8964+PD_EQUIPMENT_BYTES+552*powers&&!memcmp(record,PD_RECORD_MAGIC,4)&&pd_record_known(record,n)&&pd_decode(record,n,&out,&generation)&&generation==56&&!memcmp(&out,&s,sizeof s));
         /* Pre-name formats retain clocks/references and default names to empty. */
-        record[3]='Q';size_t old=n-85;crc(old);expected=s;memset(expected.turn_names,0,sizeof expected.turn_names);
+        record[3]='Q';size_t old=n-PD_EQUIPMENT_BYTES-85;crc(old);expected=s;memset(expected.turn_names,0,sizeof expected.turn_names);
         assert(pd_decode(record,old,&out,&generation)&&!memcmp(&out,&expected,sizeof out));
         record[3]='P';for(unsigned i=0;i<50;i++)record[8375+552*powers+i]&=7;crc(old);
         for(unsigned i=0;i<8;i++)expected.effects[i].owner=0;
@@ -44,11 +44,11 @@ int main(int argc,char **argv){
         assert(pd_decode(record,old,&out,&generation)&&!memcmp(&out,&expected,sizeof out));
         /* Reject noncanonical/truncated/control/non-ASCII name fields atomically. */
         for(unsigned field=0;field<3;field++)for(unsigned position=0;position<21;position++){
-            pd_encode(&s,56,record);record[n-89+field*21+position]=31;crc(n);before=out;generation=55;
+            pd_encode(&s,56,record);record[n-PD_EQUIPMENT_BYTES-89+field*21+position]=31;crc(n);before=out;generation=55;
             assert(!pd_decode(record,n,&out,&generation)&&generation==55&&!memcmp(&out,&before,sizeof out));
         }
-        pd_encode(&s,56,record);record[n-89+6]=0;record[n-89+7]='x';crc(n);assert(!pd_decode(record,n,&out,&generation));
-        pd_encode(&s,56,record);record[n-89]=' ';crc(n);assert(!pd_decode(record,n,&out,&generation));
+        pd_encode(&s,56,record);record[n-PD_EQUIPMENT_BYTES-89+6]=0;record[n-PD_EQUIPMENT_BYTES-89+7]='x';crc(n);assert(!pd_decode(record,n,&out,&generation));
+        pd_encode(&s,56,record);record[n-PD_EQUIPMENT_BYTES-89]=' ';crc(n);assert(!pd_decode(record,n,&out,&generation));
         pd_encode(&s,56,record);record[3]='[';crc(n);assert(!pd_record_known(record,n));
         if(powers==120)break;
     }

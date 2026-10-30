@@ -9,7 +9,8 @@ export function finalizeBeyondReport(report){
  const manual=[];
  const notePowers=s.powers.filter(p=>p.reference===undefined&&p.type==='feature'&&p.passive);
  if(notePowers.length)manual.push(`${notePowers.length} capacità/azioni conservate come note: gli effetti si risolvono al tavolo.`);
- const spells=s.powers.filter(p=>p.type==='spell');if(spells.length)manual.push(`${spells.length} magie: preparazione, slot e utilizzi gestiti; danni, bersagli ed effetti non eseguiti automaticamente.`);
+ const weaponSpells=s.powers.filter(p=>p.effect==='true-strike-2024');if(weaponSpells.length)manual.push('True Strike 2024 operativo con arma e caratteristica da incantatore; altre proprietà speciali dell arma da verificare.');
+ const spells=s.powers.filter(p=>p.type==='spell'&&p.effect!=='true-strike-2024');if(spells.length)manual.push(`${spells.length} magie: preparazione, slot e utilizzi gestiti; danni, bersagli ed effetti non eseguiti automaticamente.`);
  if(x.manualResources?.length)manual.push(`${x.manualResources.length} contatori manuali distinti dagli utilizzi: nessun collegamento o recupero dedotto.`);
  const unknownDefences=(report.details?.defences??[]).filter(d=>d.flags===null).map(d=>d.name);
  if(unknownDefences.length)manual.push(`Difese ai danni: verificare ${unknownDefences.join(', ')}. Non sono dichiarate Normali.`);
@@ -18,7 +19,7 @@ export function finalizeBeyondReport(report){
  if(s.inventory.some(i=>i.type==='weapon'))manual.push('Attacchi: versatilità, due armi, maestrie, munizioni e danni aggiuntivi speciali da gestire al tavolo.');
  if(s.inventory.some(i=>i.charges))manual.push('Cariche per voce: recuperi giornalieri/variabili e spese condivise non riconciliate restano manuali.');
  if(s.powers.some(p=>p.effect==='eldritch-cannon'))manual.push('Cannone: creazione gratuita/slot riconciliata; scelta, PF, durata e modalità del cannone restano manuali.');
- const snapshots=['CA e PF massimi: ricontrollare dopo modifiche di caratteristiche, livello o equipaggiamento.','Profilo, movimento base, sensi/passivi, iniziativa e dotazioni: fotografia del sorgente. Non applicano automaticamente carico, terreno, nuove condizioni o cambi di oggetti.'];
+ const snapshots=[x.loadout?'CA e PF massimi: i profili espliciti aggiornano i valori collegati sul Pocket; effetti non rappresentati e cambi di livello richiedono ricontrollo.':'CA e PF massimi: fotografia sorgente; configura i profili degli oggetti sul Pocket per collegare bonus e formule.','Profilo, movimento base, sensi/passivi, iniziativa e dotazioni: fotografia del sorgente. Non applicano automaticamente carico, terreno, nuove condizioni o cambi di oggetti.'];
  const policy=['Testi conservati in estratto secondo i limiti concordati.','Gioco offline: nessuna scrittura o sincronizzazione con Beyond; nessuna dipendenza da Foundry.'];
  const omissions=[...unresolved,...manual,...snapshots,...excerpts,...policy];
  s.importInfo.limitations=omissions.length<=30?omissions:omissions.slice(0,29).concat(`Altre ${omissions.length-29} eccezioni nel resoconto dell’importazione.`);

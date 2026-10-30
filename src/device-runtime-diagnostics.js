@@ -9,7 +9,7 @@ export function validateRuntimeDiagnostics(input){
   for(const key of ['firmware','idf'])if(typeof d[key]!=='string'||!/^[A-Za-z0-9._+\-]{1,48}$/.test(d[key]))fail();
   counts(d,'uptime_ms',Number.MAX_SAFE_INTEGER);counts(d,'reset_reason');
   fields(d.formats,'usb state history backup');counts(d.formats,'usb state history backup');
-  if(d.formats.history!==2||d.formats.backup!==1||![[9,25],[10,30],[11,31],[12,32],[13,33],[14,33],[15,34],[16,35],[17,36]].some(([u,s])=>d.formats.usb===u&&d.formats.state===s))fail();
+  if(d.formats.history!==2||d.formats.backup!==1||![[9,25],[10,30],[11,31],[12,32],[13,33],[14,33],[15,34],[16,35],[17,36],[18,37]].some(([u,s])=>d.formats.usb===u&&d.formats.state===s))fail();
   fields(d.memory,'internal psram');fields(d.memory.internal,'free minimum_free largest_block');counts(d.memory.internal,'free minimum_free largest_block');
   fields(d.memory.psram,'total free minimum_free largest_block');counts(d.memory.psram,'total free minimum_free largest_block');
   fields(d.stack,'ui_min_bytes usb_min_bytes');counts(d.stack,'ui_min_bytes usb_min_bytes');

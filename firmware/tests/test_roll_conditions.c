@@ -53,6 +53,6 @@ int main(void){
  /* One-byte PDD23 extension: every mask, CRC-valid invalid flags, all legacy data stable. */
  pd_demo(&s);s.magic.count=120;for(unsigned i=0;i<120;i++)s.magic.powers[i]=(pd_power){.name="Magia",.flags=PD_PREPARED};static uint8_t data[PD_RECORD_SIZE];uint32_t generation;
  for(unsigned flags=0;flags<16;flags++){s.roll_conditions=flags;size_t n=pd_encode(&s,230,data);assert(n==PD_RECORD_SIZE&&!memcmp(data,PD_RECORD_MAGIC,4)&&pd_decode(data,n,&out,&generation)&&generation==230&&out.roll_conditions==flags);}
- for(unsigned flags=16;flags<256;flags++){size_t n=pd_encode(&s,230,data);data[n-115]=flags;crc(data,n);before=out;generation=9;assert(!pd_decode(data,n,&out,&generation)&&generation==9&&!memcmp(&out,&before,sizeof out));}
+ for(unsigned flags=16;flags<256;flags++){size_t n=pd_encode(&s,230,data);data[n-PD_EQUIPMENT_BYTES-115]=flags;crc(data,n);before=out;generation=9;assert(!pd_decode(data,n,&out,&generation)&&generation==9&&!memcmp(&out,&before,sizeof out));}
  printf("Roll conditions: %u independent flags/scope/ability/mode/poison/rage/exclusion/partial-context cases, complete-context oracle, exact RNG guards, note separation and strict PDD24 passed\n",cases);
 }

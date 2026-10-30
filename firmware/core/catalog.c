@@ -36,7 +36,7 @@ static unsigned scan(const pd_state *s,unsigned catalog,const char *text,unsigne
     if((items?(!s->inventory_available||count>PD_ITEMS):(!s->magic.available||count>PD_POWERS)))return 0;
     unsigned found=0;
     for(unsigned i=0;i<count;i++){
-        if(!items&&s->magic.powers[i].effect>=4)continue;
+        if(!items&&(s->magic.powers[i].effect==4||s->magic.powers[i].effect==5))continue;
         if(!items&&catalog!=PD_CATALOG_POWERS&&s->magic.powers[i].kind!=(catalog==PD_CATALOG_FEATURES))continue;
         if(!matches_filter(s,items,i,filter))continue;
         if(!contains(items?s->items[i].name:s->magic.powers[i].name,query))continue;

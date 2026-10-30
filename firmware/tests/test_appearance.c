@@ -10,33 +10,33 @@ int main(void){
     for(unsigned lineage=0;lineage<PD_SPECIES_COUNT;lineage++)for(unsigned body=0;body<2;body++)for(unsigned scene=0;scene<PD_SCENES;scene++){
         s=expected=base;pd_avatar avatar={lineage%3,body,lineage%3,(lineage+body)%3};assert(pd_appearance_set(&s,&avatar,scene));assert(pd_identity_set(&s,lineage,body));expected.avatar=avatar;expected.scene=scene;expected.lineage=lineage;expected.body=body;
         assert(!memcmp(&s,&expected,sizeof s));size_t n=pd_encode(&s,67,record);
-        assert(n==8964&&!memcmp(record,PD_RECORD_MAGIC,4)&&pd_decode(record,n,&out,&generation)&&generation==67&&!memcmp(&s,&out,sizeof s));
+        assert(n==8964+PD_EQUIPMENT_BYTES&&!memcmp(record,PD_RECORD_MAGIC,4)&&pd_decode(record,n,&out,&generation)&&generation==67&&!memcmp(&s,&out,sizeof s));
         for(unsigned v=0;v<3;v++){
-            size_t old=n-19;memcpy(legacy,record,old-4);memcpy(legacy,(const char *const[]){"PDDU","PDDV","PDDW"}[v],4);crc(legacy,old);
+            size_t old=n-PD_EQUIPMENT_BYTES-19;memcpy(legacy,record,old-4);memcpy(legacy,(const char *const[]){"PDDU","PDDV","PDDW"}[v],4);crc(legacy,old);
             if(lineage<(const unsigned[]){12,16,21}[v])assert(pd_decode(legacy,old,&out,&generation)&&!memcmp(&out,&expected,sizeof out));
             else assert(!pd_decode(legacy,old,&out,&generation));
         }
         /* PDD29 retains its scene and defaults only the two new appearance bytes. */
-        memcpy(legacy,record,n-25);memcpy(legacy,"PDDT",4);crc(legacy,n-21);expected.lineage=expected.body=0;
-        assert(pd_decode(legacy,n-21,&out,&generation)&&!memcmp(&out,&expected,sizeof out));
+        memcpy(legacy,record,n-PD_EQUIPMENT_BYTES-25);memcpy(legacy,"PDDT",4);crc(legacy,n-PD_EQUIPMENT_BYTES-21);expected.lineage=expected.body=0;
+        assert(pd_decode(legacy,n-PD_EQUIPMENT_BYTES-21,&out,&generation)&&!memcmp(&out,&expected,sizeof out));
         /* PDD28 also defaults its missing scene. */
-        memcpy(legacy,record,n-26);memcpy(legacy,"PDDS",4);crc(legacy,n-22);expected.scene=0;
-        assert(pd_decode(legacy,n-22,&out,&generation)&&!memcmp(&out,&expected,sizeof out));
-        for(unsigned field=0;field<4;field++){pd_encode(&s,67,record);record[n-26+field]=(const unsigned[]){3,PD_SPECIES_COUNT,2,PD_OUTFITS}[field];crc(record,n);out=base;assert(!pd_decode(record,n,&out,&generation)&&!memcmp(&out,&base,sizeof out));}
+        memcpy(legacy,record,n-PD_EQUIPMENT_BYTES-26);memcpy(legacy,"PDDS",4);crc(legacy,n-PD_EQUIPMENT_BYTES-22);expected.scene=0;
+        assert(pd_decode(legacy,n-PD_EQUIPMENT_BYTES-22,&out,&generation)&&!memcmp(&out,&expected,sizeof out));
+        for(unsigned field=0;field<4;field++){pd_encode(&s,67,record);record[n-PD_EQUIPMENT_BYTES-26+field]=(const unsigned[]){3,PD_SPECIES_COUNT,2,PD_OUTFITS}[field];crc(record,n);out=base;assert(!pd_decode(record,n,&out,&generation)&&!memcmp(&out,&base,sizeof out));}
     }
     s=base;const pd_avatar invalid={3,0,0,0};assert(!pd_appearance_set(&s,&invalid,0)&&!memcmp(&s,&base,sizeof s));assert(!pd_appearance_set(&s,&base.avatar,PD_SCENES));assert(!pd_appearance_set(NULL,&base.avatar,0));assert(!pd_appearance_set(&s,NULL,0));
     assert(!pd_identity_set(&s,PD_SPECIES_COUNT,0)&&!pd_identity_set(&s,0,2)&&!pd_identity_set(NULL,0,0)&&!memcmp(&s,&base,sizeof s));
     s=base;s.shortcuts[0]=14;s.scene=2;size_t n=pd_encode(&s,1,record);assert(pd_decode(record,n,&out,&generation)&&out.shortcuts[0]==14&&out.scene==2);
-    memcpy(legacy,record,n-26);memcpy(legacy,"PDDS",4);crc(legacy,n-22);assert(!pd_decode(legacy,n-22,&out,&generation));
+    memcpy(legacy,record,n-PD_EQUIPMENT_BYTES-26);memcpy(legacy,"PDDS",4);crc(legacy,n-PD_EQUIPMENT_BYTES-22);assert(!pd_decode(legacy,n-PD_EQUIPMENT_BYTES-22,&out,&generation));
     assert(!strcmp(pd_scene_name(0),"Accampamento")&&strcmp(pd_scene_name(1),pd_scene_name(2)));
     for(unsigned outfit=0;outfit<PD_OUTFITS;outfit++){s=base;assert(pd_outfit_set(&s,outfit));expected=base;expected.outfit=outfit;assert(!memcmp(&s,&expected,sizeof s));n=pd_encode(&s,70,record);assert(pd_decode(record,n,&out,&generation)&&!memcmp(&s,&out,sizeof s));}
     /* PDD33 migration defaults only the new skill mappings, preserving its payload. */
     for(unsigned powers=0;powers<=120;powers+=60){
         pd_demo(&s);s.magic.count=powers;for(unsigned i=0;i<powers;i++)s.magic.powers[i]=(pd_power){.name="Note",.flags=PD_PREPARED};
         for(unsigned i=0;i<PD_SKILLS;i++)s.training.skill_abilities[i]=i%6+1;
-        size_t current=pd_encode(&s,74,record),old=current-PD_SKILLS;memcpy(legacy,record,old-4);memcpy(legacy,"PDDX",4);crc(legacy,old);
+        size_t current=pd_encode(&s,74,record),old=current-PD_EQUIPMENT_BYTES-PD_SKILLS;memcpy(legacy,record,old-4);memcpy(legacy,"PDDX",4);crc(legacy,old);
         expected=s;memset(expected.training.skill_abilities,0,PD_SKILLS);assert(pd_decode(legacy,old,&out,&generation)&&generation==74&&!memcmp(&expected,&out,sizeof out));
-        for(unsigned i=0;i<PD_SKILLS;i++){pd_encode(&s,74,record);record[current-4-PD_SKILLS+i]=7;crc(record,current);expected=out;generation=73;assert(!pd_decode(record,current,&out,&generation)&&generation==73&&!memcmp(&out,&expected,sizeof out));}
+        for(unsigned i=0;i<PD_SKILLS;i++){pd_encode(&s,74,record);record[current-4-PD_EQUIPMENT_BYTES-PD_SKILLS+i]=7;crc(record,current);expected=out;generation=73;assert(!pd_decode(record,current,&out,&generation)&&generation==73&&!memcmp(&out,&expected,sizeof out));}
     }
     assert(!pd_outfit_set(&s,PD_OUTFITS)&&!pd_outfit_set(NULL,0));
     puts("Appearance: 21 species x 2 bodies x 3 scenes, cosmetic-only changes, PDD33 class persistence and PDD32 migration, PDD30/PDD29/PDD28 migrations, invalid fields and old destination preservation passed");

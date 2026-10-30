@@ -1,3 +1,4 @@
+import {equipGear,gearTotals} from './equipment.js';
 export const MAX_ITEMS = 60;
 export const DIE_SIDES = [4,6,8,10,12];
 const integer = (n,min,max) => Number.isInteger(n) && n>=min && n<=max;
@@ -63,13 +64,19 @@ function changed(state,inventory,equippedWeaponId=state.equippedWeaponId) {
 }
 
 export function upsertItem(state,input) {
-  const item=validateItem(input,Boolean(state.extended)),exists=state.inventory.some(other=>other.id===item.id);
+  let item=validateItem(input,Boolean(state.extended));const exists=state.inventory.some(other=>other.id===item.id);
   if(!exists && state.inventory.length>=MAX_ITEMS) throw new Error(`Massimo ${MAX_ITEMS} oggetti`);
+  if(item.type!=='gear'&&state.extended?.loadout?.items.some(g=>g.id===item.id)){
+    const current=state.extended.loadout.items.find(g=>g.id===item.id);if(current.equipped)state=equipGear(state,item.id,false);
+    state={...state,extended:{...state.extended,loadout:{...state.extended.loadout,items:state.extended.loadout.items.filter(g=>g.id!==item.id)}}};
+  }
+  if(item.type==='weapon'&&(!exists||state.inventory.find(i=>i.id===item.id)?.type!=='weapon')&&state.extended?.loadout){const t=gearTotals(state);item=validateItem({...item,attackModifier:item.attackModifier+t.attack,damageModifier:item.damageModifier+t.damage},true);}
   return changed(state,exists?state.inventory.map(other=>other.id===item.id?item:other):[...state.inventory,item]);
 }
 
 export function removeItem(state,id) {
   if(!state.inventory.some(item=>item.id===id)) throw new Error('Oggetto non trovato');
+  if(state.extended?.loadout?.items.some(g=>g.id===id)){if(state.extended.loadout.items.find(g=>g.id===id).equipped)state=equipGear(state,id,false);state={...state,extended:{...state.extended,loadout:{...state.extended.loadout,items:state.extended.loadout.items.filter(g=>g.id!==id)}}};}
   return changed(state,state.inventory.filter(item=>item.id!==id));
 }
 
@@ -81,6 +88,7 @@ export function equipWeapon(state,id) {
 export function adjustQuantity(state,id,delta) {
   const item=state.inventory.find(item=>item.id===id);
   if(!item || !integer(delta,-999,999) || !integer(item.quantity+delta,0,999)) throw new Error('Quantità non valida');
+  if(item.quantity+delta===0&&state.extended?.loadout?.items.some(g=>g.id===id&&g.equipped))state=equipGear(state,id,false);
   return changed(state,state.inventory.map(other=>other.id===id?{...other,quantity:item.quantity+delta}:other));
 }
 

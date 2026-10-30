@@ -1,21 +1,33 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **29 ottobre 2026 — v0.84**. Il dispositivo è il prodotto;
+Aggiornamento del **30 ottobre 2026 — v0.85**. Il dispositivo è il prodotto;
 il PC serve per importare, configurare e conservare i backup.
 
-Il software copre una prima sessione individuale offline. L’utente ha osservato
-l’avvio e riferito riuscito l’import del PG 167361077. Restano da verificare
-persistenza dopo riavvio, backup/ripristino e gli altri controlli fisici; questa
-segnalazione non equivale al collaudo completo di USB, batteria o salvataggi.
+Il software copre una prima sessione individuale offline. L'utente riferisce
+risolti USB, installer e SD e conferma visibile il sito GitHub Pages. Il collaudo
+completo di batteria, interruzioni di alimentazione e delle nuove funzioni 0.85
+resta distinto da questa conferma.
 
 ## Pagina web di installazione
 
-[Pubblicazione GitHub Pages](GITHUB-PAGES.md): firmware e SD visibili subito,
-aggiornamento predefinito e pacchetto PC opzionale. Sito compilato nel ramo
-gh-pages, separato da main privato; publisher con verifica dei file e provenienza.
-L’attivazione Pages del proprietario resta distinta dal push del ramo.
-Il connettore Beyond richiede ancora l’app locale; firmware e SD non richiedono
-riscaricare il pacchetto. Firmware, formati del PG e partizioni invariati.
+[GitHub Pages](https://shydanrem.github.io/PocketD-D/) è attivo sul repository
+ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
+compilato e si aggiorna con il publisher verificato. Firmware e look SD si
+aggiornano dal browser; il pacchetto locale serve ancora al connettore Beyond.
+Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Nuovo nella v0.85
+
+[Equipaggiamento, magie e attacchi sul Pocket](EQUIPAGGIAMENTO-MAGIE.md):
+preparazione diretta, equipaggia/riponi con anteprima, editor locale delle armi
+e dei bonus degli oggetti. I profili collegano caratteristiche, CA, PF massimi,
+armi, magie, prove, TS e iniziativa. Le armature standard importate adottano lo
+stato sorgente senza raddoppiare la CA; effetti speciali restano espliciti/manuali.
+True Strike 2024 usa la caratteristica da incantatore con un attacco dell'arma,
+scala i dadi radianti e gestisce i due gruppi anche su critico. Storico atomico,
+risultati congelati nelle riprove e icone semantiche condivise PC/firmware.
+I PG già importati possono essere configurati sul Pocket senza reimportazione.
+Nuovi formati PC21/USB18/PDDb37; lettura dei formati vecchi e partizioni conservate.
 
 ## Nuovo nella v0.84
 
@@ -270,7 +282,7 @@ modificata, nessun invio USB; il JSON completo non è pubblicato né negli archi
 | Scheda e tiri | Caratteristiche, 18 abilità, sei salvezze, bonus e modalità | Le regole non rappresentate richiedono verifica o dado libero |
 | PF, cure e temporanei | Inserimento importi, anteprima/conferma, salvataggio e annullamento | Per un colpo con difese e concentrazione usare Danni, non la correzione diretta dei PF |
 | Danni, effetti e turni | Difese/configurazione locale, durate, riduzioni e costi espliciti | Non è un motore completo D&D; contesto, fonti e regole speciali possono richiedere decisioni del giocatore/DM |
-| Inventario e risorse | Ricerca, quantità, arma attiva, consumi, cariche e ricariche | Nuove voci/configurazioni strutturali si preparano dal PC; i testi degli oggetti non diventano effetti |
+| Inventario e risorse | Ricerca, quantità, arma attiva, consumi, cariche e ricariche | Nuove voci dal PC; profili arma/armatura/bonus configurabili sul Pocket. Proprietà speciali manuali |
 | Magie, concentrazione e riposi | Slot ordinari/patto, preparazione, utilizzi, dadi vita e recuperi supportati | Effetti, danni delle magie, eccezioni e recuperi speciali restano da gestire |
 | Condizioni e morte | Annotazioni, effetti espliciti sui tiri, contatori e regole base | I nomi delle condizioni non attivano automaticamente tutti gli effetti |
 | Tasti | PWR breve, BOOT breve/lungo configurabili; protezione delle conferme | Debounce e comportamento fisico da provare; le preferenze locali sono conservate all'importazione |

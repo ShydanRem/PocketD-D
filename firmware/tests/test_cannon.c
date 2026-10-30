@@ -25,8 +25,8 @@ int main(void){
  for(unsigned count=1;count<=120;count+=119){
   setup(0);s.magic.count=count;for(unsigned i=1;i<count;i++)s.magic.powers[i]=(pd_power){.name="Other spell",.flags=PD_PREPARED};
   size_t n=pd_encode(&s,77,record);uint32_t gen=0;assert(n&&pd_decode(record,n,&decoded,&gen)&&gen==77&&!memcmp(&s,&decoded,sizeof s));
-  record[3]='Y';crc(n);before=decoded;gen=55;assert(!pd_decode(record,n,&decoded,&gen)&&gen==55&&!memcmp(&decoded,&before,sizeof before));
-  s.magic.powers[0].effect=0;pd_encode(&s,77,record);record[3]='Y';crc(n);assert(pd_decode(record,n,&decoded,&gen)&&!memcmp(&s,&decoded,sizeof s));
+  size_t old=n-PD_EQUIPMENT_BYTES;record[3]='Y';crc(old);before=decoded;gen=55;assert(!pd_decode(record,old,&decoded,&gen)&&gen==55&&!memcmp(&decoded,&before,sizeof before));
+  s.magic.powers[0].effect=0;pd_encode(&s,77,record);record[3]='Y';crc(old);assert(pd_decode(record,old,&decoded,&gen)&&!memcmp(&s,&decoded,sizeof s));
  }
  puts("Cannon: free/paid ordinary/pact/zero HP/rage/empty-slot boundaries, exact state preservation, retained concentration, PDD35 roundtrip and PDD34 migration/no smuggled effect passed");printf("Cannon independent states: %u\n",cases);
 }

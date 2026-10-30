@@ -1,3 +1,4 @@
+import {validateEquippedState} from './equipment.js';
 import {validateExtended,adjustHeroHp} from './extended.js';
 import {startingInventory,validateInventory,equippedWeapon,adjustQuantity,DIE_SIDES} from './inventory.js';
 import {emptyEncounter,validateEncounter} from './encounter.js';
@@ -135,7 +136,9 @@ function validInteger(value, min, max) {
 }
 export function parseBackup(raw) {
   const s = JSON.parse(raw);
-  if (!s || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20].includes(s.version)) throw new Error('Versione backup non supportata');
+  if (!s || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21].includes(s.version)) throw new Error('Versione backup non supportata');
+  const modern=s.extended?.loadout!==undefined||s.powers?.some(p=>p?.effect==='true-strike-2024');
+  if((s.version<21&&modern)||(s.version===21&&!modern))throw new Error('Equipaggiamento e attacchi magici richiedono il formato v21');
   const reference=Array.isArray(s.powers)&&s.powers.some(p=>p?.reference!==undefined);
   if((s.version<20&&reference)||(s.version===20&&!reference))throw new Error('I dati della scheda richiedono il formato v20');
   const cannon=Array.isArray(s.powers)&&s.powers.some(p=>p?.effect==='eldritch-cannon');
@@ -146,7 +149,7 @@ export function parseBackup(raw) {
   if((s.version<17&&s.extended?.skillAbilities!==undefined)||(s.version===17&&s.extended?.skillAbilities===undefined))throw new Error('Le caratteristiche delle abilità richiedono il formato v17');
   const base = initialState();
   if (s.version >= 3) {
-    if (typeof s.name !== 'string' || !s.name.trim() || s.name.length > 24 || typeof s.title !== 'string' || s.title.length > 40 || !validInteger(s.level, 1, 20) || !validInteger(s.maxHp, 1, 999) || !validInteger(s.armorClass, 1, 30)) throw new Error('Profilo non valido');
+    if (typeof s.name !== 'string' || !s.name.trim() || s.name.length > 24 || typeof s.title !== 'string' || s.title.length > 40 || !validInteger(s.level, 1, 20) || !validInteger(s.maxHp, 1, 999) || !validInteger(s.armorClass, 1, s.version>=21?40:30)) throw new Error('Profilo non valido');
     if (!s.abilities || !abilityKeys.every(key => validInteger(s.abilities[key], 1, 30))) throw new Error('Caratteristiche non valide');
     if (!s.avatar || !['skin','hair','cloak','style'].every(key => validInteger(s.avatar[key], 0, 2))) throw new Error('Avatar non valido');
     const identity=avatarIdentity(s.avatar),outfit=avatarOutfit(s.avatar);
@@ -183,11 +186,11 @@ export function parseBackup(raw) {
     if(!info || info.provider!=='dndbeyond' || typeof info.characterId!=='string' || !/^[1-9]\d{0,14}$/.test(info.characterId) || !['core-v1',...(s.version>=10?['extended-v1']:[])].includes(info.scope) || !Array.isArray(info.limitations) || info.limitations.length>30 || info.limitations.some(text=>typeof text!=='string'||text.length>500))throw new Error('Provenienza importazione non valida');
     base.importInfo={provider:info.provider,characterId:info.characterId,scope:info.scope,limitations:[...info.limitations]};
   }
-  return {...base,...core,resolve:s.resolve};
+  const result={...base,...core,resolve:s.resolve};validateEquippedState(result);return result;
 }
 export function serialize(state) {
-  const identity=avatarIdentity(state.avatar),outfit=avatarOutfit(state.avatar),defences=state.extended?.defences!==undefined,mapped=state.extended?.skillAbilities!==undefined,manual=state.extended?.manualResources!==undefined,cannon=state.powers.some(p=>p.effect==='eldritch-cannon'),reference=state.powers.some(p=>p.reference!==undefined),variant=Boolean(reference||cannon||manual||mapped||defences||outfit||identity.lineage||identity.body);
-  return JSON.stringify({...state,...(variant?{avatar:{...state.avatar,...identity,...((reference||cannon||manual||mapped||defences)?{outfit}:{})}}:{}),version:reference?20:cannon?19:manual?18:mapped?17:defences?16:outfit?15:identity.lineage>=16?14:identity.lineage>=12?13:variant?12:11},null,2);
+  const identity=avatarIdentity(state.avatar),outfit=avatarOutfit(state.avatar),defences=state.extended?.defences!==undefined,mapped=state.extended?.skillAbilities!==undefined,manual=state.extended?.manualResources!==undefined,cannon=state.powers.some(p=>p.effect==='eldritch-cannon'),reference=state.powers.some(p=>p.reference!==undefined),modern=state.extended?.loadout!==undefined||state.powers.some(p=>p.effect==='true-strike-2024'),variant=Boolean(modern||reference||cannon||manual||mapped||defences||outfit||identity.lineage||identity.body);
+  return JSON.stringify({...state,...(variant?{avatar:{...state.avatar,...identity,...((modern||reference||cannon||manual||mapped||defences)?{outfit}:{})}}:{}),version:modern?21:reference?20:cannon?19:manual?18:mapped?17:defences?16:outfit?15:identity.lineage>=16?14:identity.lineage>=12?13:variant?12:11},null,2);
 }
 export function restore(raw) {
   try { return parseBackup(raw); } catch { return initialState(); }

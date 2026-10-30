@@ -36,16 +36,16 @@ export function projectDevice(input){
   warnings.push('Zaino: nomi, quantità, armi e cure riconosciute dal PC. Note e proprietà descrittive restano sul PC; gli oggetti generici non acquisiscono effetti automatici.');
   warnings.push('Cariche: un saldo esplicito per voce inventario, distinto dalla quantità. Configurazione manuale sul PC, correzione e spesa sul dispositivo; recupero manuale o pieno da riposo breve/lungo. Da Beyond sono trasferiti solo saldi espliciti riconciliati; nessuna carica dedotta dalle note. Recuperi giornalieri o variabili manuali.');
   warnings.push('Attacchi: bonus e danni secondo il modello PC, avvelenato, Ira, attacco potente e critico extra fotografati al trasferimento. CA bersaglio manuale. Nessun consumo automatico di munizioni, resistenze, danni aggiuntivi o regole speciali dalle note.');
-  warnings.push('Cambiare arma non ricalcola CA o avatar. Cure e consumabili richiedono conferma; Annulla sull’Eroe ripristina PF e quantità insieme. I progressi possono essere conservati come backup nativo USB; la raccolta PC non viene sincronizzata automaticamente.');
+  warnings.push('L arma attiva e l avatar sono scelte distinte. I profili armatura/bonus collegano i valori supportati; effetti speciali non configurati restano manuali. Cure e consumabili richiedono conferma; Annulla sull’Eroe ripristina PF e quantità insieme. I progressi possono essere conservati come backup nativo USB; la raccolta PC non viene sincronizzata automaticamente.');
   const magic={powers:s.powers.map(p=>{
     const description=String(p.description).normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/\s+/g,' ').replace(/[^\x20-\x7e]/g,'?').trim();
     const excerpt=description.length>500;
     if(excerpt)warnings.push(`Descrizione in estratto (500 caratteri): ${p.name}. Testo completo conservato sul PC.`);
     const uses=p.type==='feature'?p:p.limited;
     return {name:ascii(p.name,40),description:description.slice(0,500),kind:p.type==='feature'?1:0,level:p.reference??p.level??0,
-      flags:(p.concentration?1:0)|(p.prepared!==false?2:0)|(p.reference===undefined&&p.effect!=='eldritch-cannon'&&p.usesSpellSlot!==false?4:0)|(p.limited?8:0)|(p.passive?16:0)|(excerpt?32:0),
+      flags:(p.concentration?1:0)|(p.prepared!==false?2:0)|(p.reference===undefined&&p.effect!=='eldritch-cannon'&&p.effect!=='true-strike-2024'&&p.usesSpellSlot!==false?4:0)|(p.limited?8:0)|(p.passive?16:0)|(excerpt?32:0),
       ability:abilityKeys.indexOf(p.castingAbility??s.spellcastingAbility),maximum:uses?.maxUses??0,remaining:uses?.remaining??0,
-      recovery:['manual','short','long'].indexOf(uses?.recovery??'manual'),effect:p.reference!==undefined?p.reference===6?5:4:p.effect==='rage'?1:p.effect==='relentless-endurance'?2:p.effect==='eldritch-cannon'?3:0,
+      recovery:['manual','short','long'].indexOf(uses?.recovery??'manual'),effect:p.reference!==undefined?p.reference===6?5:4:p.effect==='rage'?1:p.effect==='relentless-endurance'?2:p.effect==='eldritch-cannon'?3:p.effect==='true-strike-2024'?6:0,
       attackModifier:p.attackModifier??0,saveModifier:p.saveModifier??0};
   }),slots:s.slots.map(v=>({current:v.current,maximum:v.max})),pact:(s.extended?.pactSlots??Array.from({length:9},()=>({current:0,max:0}))).map(v=>({current:v.current,maximum:v.max})),
     concentration:s.concentration?s.powers.findIndex(p=>p.id===s.concentration)+1:0};
@@ -59,14 +59,19 @@ export function projectDevice(input){
   warnings.push('Morte: contatori trasferiti esattamente; d20 base senza bonus, vantaggi o talenti, con conferma e correzioni DM. Tre fallimenti a zero PF bloccano cure ordinarie e riposo lungo fino a correzione esplicita. Nessuna morte istantanea o gestione automatica dei danni a zero PF.');
   const wallet={available:s.extended?.currenciesAvailable??false,...Object.fromEntries(['cp','sp','ep','gp','pp'].map(k=>[k,s.extended?.currenciesAvailable?integer(s.extended.currencies[k],0,999999999,k):0]))};
   warnings.push(wallet.available?'Monete: cinque saldi verificati, separati e modificabili con conferma sul dispositivo. Nessun cambio o acquisto automatico.':'Monete: saldo non verificato, nessuna ricchezza inventata. Verificalo in Stato e risorse sul PC oppure configura il borsello sul dispositivo.');
-  const identity=avatarIdentity(s.avatar),outfit=avatarOutfit(s.avatar),defences=s.extended?.defences,mapped=s.extended?.skillAbilities!==undefined,cannon=s.powers.some(p=>p.effect==='eldritch-cannon'),reference=s.powers.some(p=>p.reference!==undefined),variant=reference||cannon||mapped||defences!==undefined||outfit||identity.lineage||identity.body;
-  const packet={format:'pocketdd-device',version:reference?17:cannon?16:mapped?15:defences!==undefined?14:outfit?13:identity.lineage>=16?12:identity.lineage>=12?11:variant?10:9,name:ascii(s.name,48),level:integer(s.level,1,20,'Livello'),hp:integer(s.hp,0,999,'PF'),
+  const identity=avatarIdentity(s.avatar),outfit=avatarOutfit(s.avatar),defences=s.extended?.defences,mapped=s.extended?.skillAbilities!==undefined,cannon=s.powers.some(p=>p.effect==='eldritch-cannon'),reference=s.powers.some(p=>p.reference!==undefined),modern=s.extended?.loadout!==undefined||s.powers.some(p=>p.effect==='true-strike-2024'),variant=modern||reference||cannon||mapped||defences!==undefined||outfit||identity.lineage||identity.body;
+  const packet={format:'pocketdd-device',version:modern?18:reference?17:cannon?16:mapped?15:defences!==undefined?14:outfit?13:identity.lineage>=16?12:identity.lineage>=12?11:variant?10:9,name:ascii(s.name,48),level:integer(s.level,1,20,'Livello'),hp:integer(s.hp,0,999,'PF'),
     maxHp:integer(s.maxHp,1,999,'PF massimi'),tempHp:integer(s.extended?.tempHp??0,0,999,'PF temporanei'),armorClass:integer(s.armorClass,1,40,'CA'),
     avatar:Object.fromEntries(['skin','hair','cloak','style'].map(k=>[k,integer(s.avatar[k],0,2,k)])),
     training,inventory,magic,recovery,status,wallet,
     abilities:Object.fromEntries(abilityKeys.map(k=>[k,integer(s.abilities[k],1,30,k)])),
     resources:counters.map(r=>({name:ascii(r.name,32),current:integer(r.current,0,999,r.name),maximum:integer(r.maximum,1,999,r.name)}))};
-  if(mapped||cannon||reference){training.skillAbilities=Object.fromEntries(skills.map(v=>[v.id,s.extended.skillAbilities?.[v.id]?abilityKeys.indexOf(s.extended.skillAbilities?.[v.id])+1:0]));Object.assign(packet.avatar,identity,{outfit});packet.defences={configured:0,resistance:0,vulnerability:0,immunity:0};if(mapped)warnings.push('Caratteristiche delle abilità personalizzate: richiede firmware 0.74 / USB15; competenze, bonus ed effetti usano la caratteristica effettiva.');}
+  if(modern||mapped||cannon||reference){training.skillAbilities=Object.fromEntries(skills.map(v=>[v.id,s.extended.skillAbilities?.[v.id]?abilityKeys.indexOf(s.extended.skillAbilities?.[v.id])+1:0]));Object.assign(packet.avatar,identity,{outfit});packet.defences={configured:0,resistance:0,vulnerability:0,immunity:0};if(mapped)warnings.push('Caratteristiche delle abilità personalizzate: richiede firmware 0.74 / USB15; competenze, bonus ed effetti usano la caratteristica effettiva.');}
+  if(modern){
+    const empty=()=>({kind:0,equipped:false,armor:0,ability:[0,0,0,0,0,0],ac:0,attack:0,damage:0,spellAttack:0,spellDc:0,saves:0,checks:0,maxHp:0});
+    packet.equipment={unarmored:s.extended.loadout?.unarmored??0,items:s.inventory.map(item=>{const g=s.extended.loadout?.items.find(g=>g.id===item.id);if(!g)return empty();const {id,...fields}=g;return fields;})};
+    warnings.push('Equipaggiamento operativo e True Strike 2024: richiede firmware 0.85 / USB18. Proprietà esplicite, anteprima prima del salvataggio; gli effetti speciali non rappresentati restano manuali.');
+  }
   if(reference)warnings.push('Profilo, movimento, sensi/passivi, lingue, strumenti, equipaggiamento e iniziativa: firmware 0.78 / USB17. Valori fotografati all importazione; ricontrollare dopo modifiche.');
   if(cannon)warnings.push('Creazione cannone: firmware 0.77 / USB16; prima un utilizzo gratuito per riposo lungo, poi uno slot scelto. Non crea o aggiorna automaticamente un cannone, i suoi PF o la durata.');
   if(defences!==undefined){packet.defences=validateDefences(defences);Object.assign(packet.avatar,identity,{outfit});warnings.push('Profilo difese: richiede USB14 / firmware 0.71. Solo i tipi verificati si applicano nel calcolo Danni; gli altri richiedono configurazione. Effetti temporanei e condizioni non vengono dedotti.');}

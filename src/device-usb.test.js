@@ -1,3 +1,5 @@
+import {emptyExtended} from './extended.js';
+import {emptyGear} from './equipment.js';
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -45,7 +47,7 @@ test('USB browser: fragmented real streams negotiate USB9, send the frozen copy 
  }
 });
 test('USB browser: old/future protocol, malformed copy, chooser cancellation and occupied port do not send a candidate',async()=>{
- for(const version of [1,8,18]){const f=fake({version});await assert.rejects(sendDeviceCopy(packet(),options(f)));assert.deepEqual(f.sent,['','PDD HELLO']);released(f);}
+ for(const version of [1,8,19]){const f=fake({version});await assert.rejects(sendDeviceCopy(packet(),options(f)));assert.deepEqual(f.sent,['','PDD HELLO']);released(f);}
  for(const p of [{},null,{format:'pocketdd-device',version:true},{format:'pocketdd-device',version:9,name:'é'},{format:'pocketdd-device',version:9,name:'x'.repeat(262144)}]){const f=fake();await assert.rejects(sendDeviceCopy(p,options(f)));assert.equal(f.chooser,0);}
  await assert.rejects(sendDeviceCopy(packet(),{serial:{requestPort:async()=>{throw new DOMException('No port','NotFoundError')}}}),/annullata/);
  const busy=fake({openError:true});await assert.rejects(sendDeviceCopy(packet(),options(busy)),/busy/);assert.equal(busy.writes.length,0);
@@ -78,7 +80,7 @@ test('USB browser: one task at a time, explicit abort releases the port, and a n
  await sendDeviceCopy(packet(),options(g));released(g);
 });
 test('USB browser: bounded line/buffer, stale ACK and corrupt negotiation are rejected',async()=>{
- for(const text of ['x'.repeat(257)+'\n','PDD IMPORTED\n','\u0000\n','PDD READY 18\n','x'.repeat(112000)]){
+ for(const text of ['x'.repeat(257)+'\n','PDD IMPORTED\n','\u0000\n','PDD READY 19\n','x'.repeat(112000)]){
   const f=fake();f.serial.requestPort=async()=>{f.push(text);return f.port;};await assert.rejects(sendDeviceCopy(packet(),options(f)));assert.ok(!f.sent.some(x=>x.startsWith('{')));
  }
 });
@@ -101,7 +103,7 @@ test('USB browser: bounded ESP32 startup lines and one lost HELLO recover withou
  const partial=fake({missHello:1,partialReady:true});await sendDeviceCopy(packet(),{...options(partial),timeouts:{...times,helloAttempt:10}});assert.equal(partial.sent.filter(s=>s.startsWith('{')).length,1);released(partial);
 });
 test('USB browser: bootloader, unrecognized text, excess logs and unknown READY remain errors with no character data exposed',async()=>{
- for(const [startup,pattern] of [['ESP-ROM:esp32s3-20210327\nwaiting for download\n',/bootloader/],['ESP-ROM:esp32s3-20210327\n'.repeat(513),/Limite dei log/],['{"name":"private-sheet-marker"}\n',/testo non riconosciuto/],['PDD READY 18\n',/PDD READY 18/]]){
+ for(const [startup,pattern] of [['ESP-ROM:esp32s3-20210327\nwaiting for download\n',/bootloader/],['ESP-ROM:esp32s3-20210327\n'.repeat(513),/Limite dei log/],['{"name":"private-sheet-marker"}\n',/testo non riconosciuto/],['PDD READY 19\n',/PDD READY 19/]]){
   const f=fake({startup});let message='';await assert.rejects(sendDeviceCopy(packet(),options(f)),e=>{message=e.message;return pattern.test(message);});assert.doesNotMatch(message,/private-sheet-marker/);assert.ok(!f.sent.some(s=>s.startsWith('{')));released(f);
  }
  const f=fake({startup:'I (24) boot: starting\n',unexpected:'PDD RESTORED\n'});
@@ -198,4 +200,10 @@ test('Browser runtime diagnosis unsupported command, cancellation and no ACK rem
   const f=fake({...settings,version:17}),states=[];let report;
   await assert.rejects(readDeviceDiagnostics({...options(f,p=>states.push(p)),onDiagnostic:v=>report=v}));assert.ok(!states.includes('diagnostics-read'));assert.equal(report.outcome,'unconfirmed');released(f);
  }
+});
+
+test('USB18: explicit equipment requires new firmware and the exact frozen copy/final ACK',async()=>{
+ const state=initialState();state.extended=emptyExtended();state.inventory.push({id:'armor',name:'Chain Mail',notes:'',quantity:1,type:'gear'});state.extended.loadout={unarmored:1,items:[{...emptyGear('armor'),kind:4,armor:16,equipped:true}]};const p=projectDevice(state).packet;assert.equal(p.version,18);
+ const old=fake({version:17});await assert.rejects(sendDeviceCopy(p,options(old)));assert.deepEqual(old.sent,['','PDD HELLO']);
+ const current=fake({version:18,fragment:1});await sendDeviceCopy(p,options(current));assert.equal(current.sent[2],JSON.stringify(p));assert.equal(JSON.parse(current.sent[2]).equipment.items.at(-1).armor,16);released(current);
 });
