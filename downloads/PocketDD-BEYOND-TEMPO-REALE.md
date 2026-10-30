@@ -1,3 +1,6 @@
+> 30 ottobre, v0.89.1: [obiettivo Pocket autonomo e verifica account](POCKET-AUTONOMO.md).
+> La verifica browser è separata dall’importazione ESP32 e dalla sincronizzazione.
+
 > Aggiornamento v0.79: la proposta sotto è stata seguita da una prima
 > [implementazione sperimentale del ponte](PONTE-BEYOND.md). HTTPS, coda,
 > estensione e conversione verificati con dati sintetici. La ricezione e
