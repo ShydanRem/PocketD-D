@@ -15,7 +15,7 @@ static void numbers(const pd_state *s){
  printf("],\"saves\":[");for(unsigned i=0;i<6;i++)printf("%s%d",i?",":"",s->training.save_bonus[i]);
  printf("],\"skills\":[");for(unsigned i=0;i<18;i++)printf("%s%d",i?",":"",s->training.skill_bonus[i]);
  printf("],\"equipped\":[");for(unsigned i=0;i<s->item_count;i++)printf("%s%d",i?",":"",s->gear[i].equipped);printf("],\"attunement\":[");for(unsigned i=0;i<s->item_count;i++)printf("%s%u",i?",":"",s->gear[i].attunement);printf("]}");
- uint32_t generation;static uint8_t data[PD_RECORD_SIZE];assert(pd_encode(s,1,data));assert(!memcmp(data,"PDDc",4));assert(pd_decode(data,pd_encoded_size(s),&decoded,&generation));assert(!memcmp(s,&decoded,sizeof *s));
+ uint32_t generation;static uint8_t data[PD_RECORD_SIZE];assert(pd_encode(s,1,data));assert(!memcmp(data,"PDDd",4));assert(pd_decode(data,pd_encoded_size(s),&decoded,&generation));assert(!memcmp(s,&decoded,sizeof *s));
 }
 int main(int argc,char **argv){
  assert(argc==3);FILE *f=fopen(argv[1],"r");assert(f);static char line[PD_PACKET_MAX+2];unsigned count=0;

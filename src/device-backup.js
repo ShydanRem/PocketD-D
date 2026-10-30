@@ -21,11 +21,12 @@ function record(text,magic,max){
 }
 function text(bytes,start,capacity,empty=false){let end=start;while(end<start+capacity&&bytes[end]){if(bytes[end]<32||bytes[end]>126)fail();end++}if(end===start+capacity||(!empty&&end===start))fail();return String.fromCharCode(...bytes.subarray(start,end))}
 export function inspectDeviceBackup(raw){
-  const packet=envelope(raw),s=record(packet.state,['PDDP','PDDQ','PDDR','PDDS','PDDT','PDDU','PDDV','PDDW','PDDX','PDDY','PDDZ','PDDa','PDDb','PDDc'],76285),h=record(packet.history,'PDH1',2481);
+  const packet=envelope(raw),s=record(packet.state,['PDDP','PDDQ','PDDR','PDDS','PDDT','PDDU','PDDV','PDDW','PDDX','PDDY','PDDZ','PDDa','PDDb','PDDc','PDDd'],76285),h=record(packet.history,'PDH1',2481);
+  const tag=s.bytes[3];for(let i=0;i<s.bytes[5123];i++)if(s.bytes[5124+i*552+549]>(tag===100?8:tag>=98?6:tag===97?5:tag===90?3:2))fail();
   let loadout=null;
-  if(s.bytes[3]===98||s.bytes[3]===99){
+  if(s.bytes[3]>=98&&s.bytes[3]<=100){
     const size=1081,start=s.bytes.length-4-size;if(start<8960)fail();const tail=s.bytes.subarray(start,-4);if(tail[0]>3)fail();
-    const items=[];for(let i=0;i<60;i++){const at=1+i*18,g=tail.subarray(at,at+18);if(g.length!==18||g[0]>5||g[1]>(s.bytes[3]===99?5:1)||g[2]>30||g.subarray(3,16).some(n=>n>20)||(g[16]|g[17]<<8)>1998)fail();if(g[0])items.push({index:i,kind:g[0],equipped:Boolean(g[1]&1),...(s.bytes[3]===99?{attunement:g[1]>>1}:{})});}
+    const items=[];for(let i=0;i<60;i++){const at=1+i*18,g=tail.subarray(at,at+18);if(g.length!==18||g[0]>5||g[1]>(s.bytes[3]>=99?5:1)||g[2]>30||g.subarray(3,16).some(n=>n>20)||(g[16]|g[17]<<8)>1998)fail();if(g[0])items.push({index:i,kind:g[0],equipped:Boolean(g[1]&1),...(s.bytes[3]>=99?{attunement:g[1]>>1}:{})});}
     loadout={unarmored:tail[0],items};s.bytes=new Uint8Array([...s.bytes.subarray(0,start),...s.bytes.subarray(-4)]);s.bytes[3]=97;s.view=new DataView(s.bytes.buffer);
   }
   const mapped=s.bytes[3]===89||s.bytes[3]===90||s.bytes[3]===97;

@@ -13,8 +13,10 @@ bool pd_weapon_stats(const pd_state *s,unsigned index,pd_weapon_info *out);
    and weapon bonuses remain; spell-attack bonuses do not become weapon bonuses. */
 bool pd_true_strike_stats(const pd_state *s,unsigned power,bool radiant,pd_weapon_info *out);
 bool pd_true_strike_attack(const pd_state *s,unsigned power,bool radiant,unsigned armor,int mode,pd_roll_context context,bool ignore,pd_random random,void *random_context,pd_strike *out);
-typedef struct {pd_pool weapon,radiant;int total;} pd_weapon_damage_parts;
+typedef struct {pd_pool weapon,radiant,extra;uint8_t extra_effect;int total;} pd_weapon_damage_parts;
 bool pd_weapon_damage_roll(const pd_strike *strike,pd_random random,void *context,pd_weapon_damage_parts *out);
+/* Explicit confirmation that THIS hit targets the concentrated spell's target. */
+bool pd_weapon_damage_with_effect(const pd_state *s,const pd_strike *strike,bool target,pd_random random,void *context,pd_weapon_damage_parts *out);
 typedef struct { int mode; bool allowed; uint8_t needed; } pd_attack_resolution;
 bool pd_attack_resolve(const pd_state *s,int requested,pd_roll_context context,bool ignore,pd_attack_resolution *out);
 bool pd_attack_with_context(const pd_state *s,unsigned armor,int mode,pd_roll_context context,bool ignore,pd_random random,void *random_context,pd_strike *out);

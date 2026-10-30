@@ -68,6 +68,17 @@ bool pd_equip(pd_state *s,unsigned index) {
     pd_weapon_info w;if(index!=PD_NO_WEAPON&&!pd_weapon_stats(s,index,&w))return false;
     s->equipped=index;s->combat.thrown=false;return true;
 }
+bool pd_weapon_damage_with_effect(const pd_state *s,const pd_strike *hit,bool target,pd_random random,void *context,pd_weapon_damage_parts *out){
+    if(!s||!hit||!random||!out||!pd_valid(s))return false;
+    int power=target?pd_on_hit_spell(s):-1;if(target&&power<0)return false;
+    pd_weapon_damage_parts result;
+    if(!pd_weapon_damage_roll(hit,random,context,&result))return false;
+    if(target){
+        if(!pd_roll_pool(6,hit->critical?2:1,0,true,random,context,&result.extra))return false;
+        result.extra_effect=s->magic.powers[power].effect;result.total+=result.extra.total;
+    }
+    *out=result;return true;
+}
 bool pd_use_item(const pd_state *s,unsigned index,pd_random random,void *context,pd_state *next,pd_pool *roll,unsigned *gained) {
     if(!s||!next||!roll||!gained||!s->inventory_available||index>=s->item_count)return false;
     const pd_item *v=&s->items[index];if(!v->quantity||(v->kind!=PD_CONSUMABLE&&v->kind!=PD_HEALING))return false;

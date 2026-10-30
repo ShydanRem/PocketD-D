@@ -10,6 +10,6 @@ const lv_image_dsc_t *pd_item_icon(const pd_state *s,unsigned index){
  const pd_item *v=&s->items[index];if(v->kind==PD_HEALING)return &sem_heal;if(s->gear[index].kind==PD_WEAR_SHIELD)return &sem_shield;if(s->gear[index].kind>=PD_WEAR_LIGHT)return &sem_armor;
  const lv_image_dsc_t *im=find(0,v->name);return im?im:v->kind==PD_WEAPON?&sem_sword:v->kind==PD_CONSUMABLE?&sem_bottle:&sem_gear;
 }
-const lv_image_dsc_t *pd_power_icon(const pd_power *p){if(!p)return &sem_scroll;if(p->effect==PD_TRUE_STRIKE_2024)return &sem_strike;if(p->effect==1)return &sem_rage;if(p->effect==2)return &sem_heal;const lv_image_dsc_t *im=find(p->kind?2:1,p->name);return im?im:p->kind?&sem_feature:&sem_scroll;}
+const lv_image_dsc_t *pd_power_icon(const pd_power *p){if(!p)return &sem_scroll;if(p->effect==PD_HEX_2024)return &sem_skull;if(p->effect==PD_HUNTERS_MARK_2024)return &sem_eye;if(p->effect==PD_TRUE_STRIKE_2024)return &sem_strike;if(p->effect==1)return &sem_rage;if(p->effect==2)return &sem_heal;const lv_image_dsc_t *im=find(p->kind?2:1,p->name);return im?im:p->kind?&sem_feature:&sem_scroll;}
 
 unsigned pd_item_setup_hint(const pd_state *s,unsigned index){if(!s||index>=s->item_count)return 0;const lv_image_dsc_t *im=find(0,s->items[index].name);return im==&sem_sword||im==&sem_axe||im==&sem_bow||im==&sem_hammer||im==&sem_staff?1:im==&sem_armor||im==&sem_shield?2:0;}

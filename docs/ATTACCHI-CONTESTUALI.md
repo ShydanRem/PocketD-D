@@ -1,5 +1,7 @@
 # Attacco normale o con magia — v0.87
 
+> Aggiornamento v0.88: [Hex e Marchio 2024 sul colpo](EFFETTI-SUL-COLPO.md).
+
 30 ottobre 2026. Funzione del Pocket, comune a tutti i personaggi e a tutte le
 caratteristiche da incantatore. Non occorre reimportare il PG, cancellare salvataggi
 o modificare la SD: basta aggiornare il firmware dalla pagina GitHub Pages.
@@ -53,7 +55,7 @@ competenza e i bonus dell'arma, scala i dadi radianti ai livelli 5/11/17 e raddo
 i dadi pertinenti sul critico. I bonus agli attacchi magici non diventano bonus
 agli attacchi con arma. Le regole restano nel motore di combattimento già condiviso.
 
-Altre magie (Smite, Hex, Bless, Booming Blade, ecc.) non ricevono regole automatiche
+Nella v0.87 altre magie (Smite, Hex, Bless, Booming Blade, ecc.) non ricevono regole automatiche
 da un nome, un'icona o una descrizione. Richiedono modelli espliciti per tempi,
 bersaglio, concentrazione, slot e danni; per ora si gestiscono manualmente tramite
 le funzioni disponibili. Non vengono offerte come varianti automatiche riuscite.

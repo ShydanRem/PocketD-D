@@ -11,16 +11,22 @@ bool pd_magic_valid(const pd_state *s) {
     for(int i=0;i<9;i++)if(m->slots[i].maximum>9||m->slots[i].current>m->slots[i].maximum||m->pact[i].maximum>9||m->pact[i].current>m->pact[i].maximum)return false;
     for(int i=0;i<m->count;i++) {
         const pd_power *v=&m->powers[i];
-        if(!printable(v->name,sizeof v->name,false)||!printable(v->description,sizeof v->description,true)||v->kind>1||v->level>9||v->flags>63||v->ability>5||v->maximum>99||v->remaining>v->maximum||v->recovery>2||v->effect>PD_TRUE_STRIKE_2024||v->attack_modifier< -15||v->attack_modifier>30||v->save_modifier< -15||v->save_modifier>30)return false;
+        if(!printable(v->name,sizeof v->name,false)||!printable(v->description,sizeof v->description,true)||v->kind>1||v->level>9||v->flags>63||v->ability>5||v->maximum>99||v->remaining>v->maximum||v->recovery>2||v->effect>PD_HUNTERS_MARK_2024||v->attack_modifier< -15||v->attack_modifier>30||v->save_modifier< -15||v->save_modifier>30)return false;
         if((v->effect==4||v->effect==5)&&(v->kind!=1||!(v->flags&PD_PASSIVE)||(v->flags&(PD_USES_SLOT|PD_CONCENTRATES|PD_LIMITED))||v->maximum||v->remaining||v->recovery||v->save_modifier||(v->effect==4?(v->level>5||v->attack_modifier):v->level!=6)))return false;
         if(v->effect==PD_TRUE_STRIKE_2024&&(v->kind||v->level||v->maximum||v->remaining||v->recovery||(v->flags&~(PD_PREPARED|PD_EXCERPT))))return false;
+        if(v->effect>=PD_HEX_2024&&(v->kind||v->level!=1||!(v->flags&PD_CONCENTRATES)))return false;
         if(v->effect==3&&(v->kind!=1||v->maximum!=1||v->recovery!=2||v->level||(v->flags&(PD_PASSIVE|PD_CONCENTRATES|PD_USES_SLOT|PD_LIMITED))))return false;
-        if(v->kind==0&&((v->effect&&v->effect!=PD_TRUE_STRIKE_2024)||(v->flags&PD_PASSIVE)))return false;
+        if(v->kind==0&&((v->effect&&v->effect<PD_TRUE_STRIKE_2024)||(v->flags&PD_PASSIVE)))return false;
         if(v->kind==1&&((v->flags&PD_PASSIVE)?(v->maximum||v->remaining||(v->effect&&v->effect<4)):!v->maximum))return false;
         if(v->kind==0&&(v->flags&PD_LIMITED)&&!v->maximum)return false;
     }
     if(m->concentration&&(!(m->powers[m->concentration-1].flags&PD_CONCENTRATES)||m->powers[m->concentration-1].kind||!s->hp||s->combat.raging))return false;
     return true;
+}
+int pd_on_hit_spell(const pd_state *s){
+    if(!s||!pd_valid(s)||!s->magic.available||!s->magic.concentration||!s->hp||s->combat.raging)return -1;
+    unsigned i=s->magic.concentration-1;
+    return s->magic.powers[i].effect>=PD_HEX_2024?(int)i:-1;
 }
 bool pd_magic_stats(const pd_state *s,unsigned index,int *attack,int *dc) {
     if(!s||!attack||!dc||!s->magic.available||index>=s->magic.count||s->magic.powers[index].kind)return false;

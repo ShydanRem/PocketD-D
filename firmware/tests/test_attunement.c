@@ -19,7 +19,8 @@ int main(void){
   assert(s.abilities[ability]==base.abilities[ability]+(worn?2:0));assert(s.max_hp==200+(worn?3+(ability==2?level:0):0));assert(s.armor==13+(worn?1+(ability==1?1:0):0));
   pd_weapon_info a,b;assert(pd_weapon_stats(&base,0,&a)&&pd_weapon_stats(&s,0,&b));assert(b.attack_bonus==a.attack_bonus+(worn?2:0));assert(b.damage_bonus==a.damage_bonus+(worn?3:0));
   int attack,dc;assert(pd_magic_stats(&s,0,&attack,&dc));assert(attack==pd_modifier(base.abilities[ability])+pd_proficiency(level)+(worn?3:0));
-  size_t n=pd_encode(&s,86,record);assert(!memcmp(record,"PDDc",4)&&pd_decode(record,n,&out,&gen)&&gen==86&&!memcmp(&s,&out,sizeof s));
+  size_t n=pd_encode(&s,86,record);assert(!memcmp(record,"PDDd",4)&&pd_decode(record,n,&out,&gen)&&gen==86&&!memcmp(&s,&out,sizeof s));
+  record[3]='c';crc(n);assert(pd_decode(record,n,&out,&gen)&&!memcmp(&s,&out,sizeof s));
   record[3]='b';crc(n);out=base;assert(!pd_decode(record,n,&out,&gen)&&!memcmp(&out,&base,sizeof out));
   assert(pd_gear_attune(&s,3,false));assert(!memcmp(&s,&off,sizeof s));
   s=on;assert(pd_item_quantity_set(&s,3,0)&&s.gear[3].attunement==1&&!s.gear[3].equipped&&s.max_hp==200&&s.hp==100);assert(!pd_gear_attune(&s,3,true));

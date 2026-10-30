@@ -21,7 +21,11 @@ export function validatePower(power,extended=false){
       Object.assign(base,{castingAbility:power.castingAbility,attackModifier:power.attackModifier,saveModifier:power.saveModifier,prepared:power.prepared,usesSpellSlot:power.usesSpellSlot});
     }
     if(extended&&power.limited!==undefined)base.limited=resource(power.limited);
-    if(power.effect!==undefined){if(!extended||power.effect!=='true-strike-2024'||power.level!==0||power.concentration||power.limited||!keys.includes(power.castingAbility)||power.usesSpellSlot!==false)throw Error('Profilo True Strike 2024 non valido');base.effect=power.effect;}
+    if(power.effect!==undefined){
+      const strike=power.effect==='true-strike-2024',onHit=['hex-2024','hunters-mark-2024'].includes(power.effect);
+      if(!extended||!keys.includes(power.castingAbility)||!(strike||onHit)||strike&&(power.level!==0||power.concentration||power.limited||power.usesSpellSlot!==false)||onHit&&(power.level!==1||!power.concentration))throw Error('Profilo magia con arma non valido');
+      base.effect=power.effect;
+    }
   }else if(extended&&power.passive===true){
     Object.assign(base,{maxUses:0,remaining:0,recovery:'manual',passive:true},power.reference!==undefined?{reference:power.reference,...(power.reference===6?{attackModifier:power.attackModifier}:{})}:{});
   }else{
@@ -60,7 +64,7 @@ export function availableSlots(state,power){
 export function upsertPower(state,input){
   let power=validatePower(input,Boolean(state.extended));const exists=state.powers.some(p=>p.id===power.id),max=state.extended?120:40;
   if(!exists&&state.powers.length>=max)throw new Error(`Massimo ${max} voci`);
-  if(!exists&&power.type==='spell'&&power.effect!=='true-strike-2024'&&state.extended?.loadout){const t=gearTotals(state);power=validatePower({...power,attackModifier:(power.attackModifier??0)+t.spellAttack,saveModifier:(power.saveModifier??0)+t.spellDc},true);}
+  if(!exists&&power.type==='spell'&&!['true-strike-2024','hex-2024','hunters-mark-2024'].includes(power.effect)&&state.extended?.loadout){const t=gearTotals(state);power=validatePower({...power,attackModifier:(power.attackModifier??0)+t.spellAttack,saveModifier:(power.saveModifier??0)+t.spellDc},true);}
   return {...state,powers:exists?state.powers.map(p=>p.id===power.id?power:p):[...state.powers,power],concentration:state.concentration===power.id&&(power.type!=='spell'||!power.concentration)?null:state.concentration};
 }
 export function deletePower(state,id){return {...state,powers:state.powers.filter(p=>p.id!==id),concentration:state.concentration===id?null:state.concentration}}

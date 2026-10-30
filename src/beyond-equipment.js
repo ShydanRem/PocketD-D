@@ -58,3 +58,9 @@ export function beyondEquipment(source,state,{warn,evidence,modifiers=[],report}
 export function beyondTrueStrike2024(definition){
  return definition?.id===2619204&&definition.level===0&&definition.concentration!==true&&Array.isArray(definition.sources)&&definition.sources.some(s=>s?.sourceId===145&&s.sourceType===1);
 }
+
+// Exact 2024 identities and source, never a name/description match.
+export function beyondOnHit2024(definition){
+ if(definition?.isHomebrew||definition?.level!==1||definition.concentration!==true||!Array.isArray(definition.sources)||!definition.sources.some(s=>s?.sourceId===145&&s.sourceType===1))return undefined;
+ return definition.id===2618988?'hex-2024':definition.id===2619166?'hunters-mark-2024':undefined;
+}

@@ -817,7 +817,10 @@
         "eye",
         [
           "faerie fire",
-          "luminescenza"
+          "luminescenza",
+          "hunter's mark",
+          "hunters mark",
+          "marchio del cacciatore"
         ]
       ],
       [
@@ -831,7 +834,9 @@
         "skull",
         [
           "chill touch",
-          "tocco gelido"
+          "tocco gelido",
+          "hex",
+          "sortilegio"
         ]
       ],
       [
@@ -925,7 +930,9 @@
           "morte",
           "toll",
           "chill touch",
-          "blight"
+          "blight",
+          "hex",
+          "sortilegio"
         ]
       ],
       [
@@ -936,7 +943,10 @@
           "detect",
           "individu",
           "disguise",
-          "travest"
+          "travest",
+          "hunter's mark",
+          "hunters mark",
+          "marchio del cacciatore"
         ]
       ],
       [

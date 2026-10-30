@@ -47,7 +47,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, KEY_PICKER, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM, POWER_HOME, POWER_OFF, ITEM_SEARCH, POWER_SEARCH, MAGIC_MANAGE, MAGIC_PREPARATION, ITEM_QUANTITY_CONFIRM, AVATAR_EDIT, SCENE_EDIT, APPEARANCE_CONFIRM, DEFENCE_SETUP, WIFI_HOME, WIFI_FORGET, REFERENCE_HOME, REFERENCE_TEXT, WIFI_LIST, WIFI_PASSWORD, WIFI_JOIN_REVIEW, WEAPON_PICKER, ITEM_CONFIG_MENU, WEAPON_SETUP, GEAR_SETUP, MAGIC_PROFILE, PLAY_CONFIRM, ATTACK_MODE, ASSET_INSTALL, SYNC_HOME, SYNC_REVIEW, SYNC_FORGET } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, KEY_PICKER, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM, POWER_HOME, POWER_OFF, ITEM_SEARCH, POWER_SEARCH, MAGIC_MANAGE, MAGIC_PREPARATION, ITEM_QUANTITY_CONFIRM, AVATAR_EDIT, SCENE_EDIT, APPEARANCE_CONFIRM, DEFENCE_SETUP, WIFI_HOME, WIFI_FORGET, REFERENCE_HOME, REFERENCE_TEXT, WIFI_LIST, WIFI_PASSWORD, WIFI_JOIN_REVIEW, WEAPON_PICKER, ITEM_CONFIG_MENU, WEAPON_SETUP, GEAR_SETUP, MAGIC_PROFILE, PLAY_CONFIRM, ATTACK_MODE, HIT_EFFECTS, ASSET_INSTALL, SYNC_HOME, SYNC_REVIEW, SYNC_FORGET } page_t;
 static const pd_theme_kind page_themes[]={
     [HERO]=PD_THEME_NONE,
     [SHEET]=PD_THEME_SHEET,
@@ -96,7 +96,7 @@ static const pd_theme_kind page_themes[]={
     [DEFENCE_LIST]=PD_THEME_DAMAGE,
     [DEFENCE_SETUP]=PD_THEME_DAMAGE,
     [ASSET_INSTALL]=PD_THEME_APPEARANCE,
-    [WEAPON_PICKER]=PD_THEME_PACK,[ITEM_CONFIG_MENU]=PD_THEME_PACK,[WEAPON_SETUP]=PD_THEME_PACK,[GEAR_SETUP]=PD_THEME_PACK,[MAGIC_PROFILE]=PD_THEME_MAGIC,[PLAY_CONFIRM]=PD_THEME_PACK,[ATTACK_MODE]=PD_THEME_COMBAT,
+    [WEAPON_PICKER]=PD_THEME_PACK,[ITEM_CONFIG_MENU]=PD_THEME_PACK,[WEAPON_SETUP]=PD_THEME_PACK,[GEAR_SETUP]=PD_THEME_PACK,[MAGIC_PROFILE]=PD_THEME_MAGIC,[PLAY_CONFIRM]=PD_THEME_PACK,[ATTACK_MODE]=PD_THEME_COMBAT,[HIT_EFFECTS]=PD_THEME_COMBAT,
     [SYNC_HOME]=PD_THEME_KEYS,[SYNC_REVIEW]=PD_THEME_KEYS,[SYNC_FORGET]=PD_THEME_KEYS,
     [WIFI_HOME]=PD_THEME_KEYS,[WIFI_FORGET]=PD_THEME_KEYS,
     [WIFI_LIST]=PD_THEME_KEYS,[WIFI_PASSWORD]=PD_THEME_KEYS,[WIFI_JOIN_REVIEW]=PD_THEME_KEYS,
@@ -246,7 +246,7 @@ static pd_strike strike;
 static bool strike_ready,damage_used;
 static pd_pool damage_result;
 static pd_weapon_damage_parts damage_parts;
-static bool damage_view_radiant;
+static bool damage_view_radiant,damage_view_extra;
 static pd_asset_writer asset_writer;
 static bool asset_running,asset_verifying;
 static unsigned asset_progress;
@@ -492,7 +492,8 @@ static const char *backup_notice="Richiedi la copia dal PC via USB";
 static bool stage_backup(const pd_backup *snapshot); /* NULL requests read-only export. */
 
 static pd_history history;
-static pd_history_entry history_unsaved,history_unsaved_extra;
+static pd_history_entry history_unsaved,history_unsaved_extra,history_unsaved_third;
+static bool history_third_pending;
 static bool history_pair_pending;
 static bool history_pending;
 static bool power_storage_ready(void){return !history_pending&&pd_storage_writable()&&pd_history_store_available()&&history.epoch==state.history_epoch&&pd_history_valid(&history)&&pd_valid(&state);}
@@ -525,13 +526,13 @@ static page_t history_return=HERO;
 static bool journal_flush(void){
     if(!history_pending)return true;
     pd_history candidate=history;
-    if(!pd_history_append(&candidate,&history_unsaved)||(history_pair_pending&&!pd_history_append(&candidate,&history_unsaved_extra))||!pd_history_store_save(&candidate))return false;
-    history=candidate;history_pending=false;history_pair_pending=false;return true;
+    if(!pd_history_append(&candidate,&history_unsaved)||(history_pair_pending&&!pd_history_append(&candidate,&history_unsaved_extra))||(history_third_pending&&!pd_history_append(&candidate,&history_unsaved_third))||!pd_history_store_save(&candidate))return false;
+    history=candidate;history_pending=false;history_pair_pending=history_third_pending=false;return true;
 }
 static void journal_record(const pd_history_entry *entry){
     assert(!history_pending&&pd_history_entry_valid(entry));
     if(history.epoch!=state.history_epoch)pd_history_store_load(state.history_epoch,&history);
-    history_unsaved=*entry;history_pair_pending=false;history_pending=true;journal_flush();
+    history_unsaved=*entry;history_pair_pending=history_third_pending=false;history_pending=true;journal_flush();
 }
 static void journal_d20(unsigned kind,const char *name,const pd_roll *r,int effective,const char *note){
     pd_history_entry e={.kind=kind,.count=r->count,.sides=20,.mode=effective,.bonus=r->bonus,.total=r->total};
@@ -541,22 +542,27 @@ static void journal_pool(unsigned kind,const char *name,const pd_pool *r,const c
     pd_history_entry e={.kind=kind,.count=r->count,.sides=r->sides,.bonus=r->bonus,.total=r->total,.floor_zero=r->damage};
     memcpy(e.dice,r->dice,r->count);snprintf(e.label,sizeof e.label,"%s",name);snprintf(e.note,sizeof e.note,"%s",note);journal_record(&e);
 }
-/* Both components belong to one damage roll: retry stores the frozen pair
-   together, never a partial history save or a second random draw. */
+/* All parts of one damage roll commit together; retry never draws again. */
 static void journal_weapon_damage(const char *name,const pd_weapon_damage_parts *parts,bool radiant_weapon){
-    if(!parts->radiant.count){journal_pool(PD_H_DAMAGE,name,&parts->weapon,radiant_weapon?"Tipo arma radiante; PF bersaglio invariati":"Danni arma; PF bersaglio invariati");return;}
+    if(!parts->radiant.count&&!parts->extra.count){journal_pool(PD_H_DAMAGE,name,&parts->weapon,radiant_weapon?"Tipo arma radiante; PF bersaglio invariati":"Danni arma; PF bersaglio invariati");return;}
     assert(!history_pending);
     if(history.epoch!=state.history_epoch)pd_history_store_load(state.history_epoch,&history);
-    const pd_pool *r=&parts->weapon;
-    history_unsaved=(pd_history_entry){.kind=PD_H_DAMAGE,.count=r->count,.sides=r->sides,.bonus=r->bonus,.total=r->total,.floor_zero=true};
-    memcpy(history_unsaved.dice,r->dice,r->count);snprintf(history_unsaved.label,sizeof history_unsaved.label,"%s",name);
-    snprintf(history_unsaved.note,sizeof history_unsaved.note,"Arma %s; totale con extra %d",radiant_weapon?"radiante":"tipo normale",parts->total);
-    r=&parts->radiant;
-    history_unsaved_extra=(pd_history_entry){.kind=PD_H_DAMAGE,.count=r->count,.sides=6,.total=r->total,.floor_zero=true};
-    memcpy(history_unsaved_extra.dice,r->dice,r->count);strcpy(history_unsaved_extra.label,"True Strike: extra radiante");
-    snprintf(history_unsaved_extra.note,sizeof history_unsaved_extra.note,"Extra %d + arma %d = %d; PF invariati",r->total,parts->weapon.total,parts->total);
-    assert(pd_history_entry_valid(&history_unsaved)&&pd_history_entry_valid(&history_unsaved_extra));
-    history_pending=history_pair_pending=true;journal_flush();
+    const pd_pool *pools[]={&parts->weapon,&parts->radiant,&parts->extra};unsigned at=0;
+    const char *names[]={name,"True Strike: extra radiante",parts->extra_effect==PD_HEX_2024?"Hex: extra necrotico":"Marchio: extra forza"};
+    const char *types[]={radiant_weapon?"Arma radiante":"Arma","Radiante",parts->extra_effect==PD_HEX_2024?"Necrotico":"Forza"};
+    for(unsigned i=0;i<3;i++)if(pools[i]->count){
+        const pd_pool *r=pools[i];pd_history_entry e={.kind=PD_H_DAMAGE,.count=r->count,.sides=r->sides,.bonus=r->bonus,.total=r->total,.floor_zero=true};
+        memcpy(e.dice,r->dice,r->count);snprintf(e.label,sizeof e.label,"%s",names[i]);snprintf(e.note,sizeof e.note,"%s %d; totale %d; PF invariati",types[i],r->total,parts->total);assert(pd_history_entry_valid(&e));
+        if(!at)history_unsaved=e;else if(at==1)history_unsaved_extra=e;else history_unsaved_third=e;at++;
+    }
+    history_pending=true;history_pair_pending=at>1;history_third_pending=at>2;journal_flush();
+}
+static bool attack_damage_finish(bool target){
+    if(!strike_ready||!strike.hits||damage_used||history_pending||!pd_weapon_damage_with_effect(&state,&strike,target,pd_board_random,NULL,&damage_parts))return false;
+    damage_result=damage_parts.weapon;damage_view_radiant=damage_view_extra=false;
+    journal_weapon_damage(state.items[state.equipped].name,&damage_parts,strike.weapon.radiant_weapon);
+    damage_used=true;combat_roll=2;pool_view=true;has_roll=false;page=DICE;
+    pd_dice_pool_start(&dice_animation,&damage_result,lv_tick_get());return true;
 }
 static const char *ui_storage_status(void){
     const char *status=pd_storage_status();
@@ -770,6 +776,7 @@ static void wifi_clear_draft(void){memset(&wifi_draft,0,sizeof wifi_draft);wifi_
 static const char *sync_notice="";
 #include "play_setup.inc"
 static void act(intptr_t action) {
+    if(page!=MAGIC_DETAIL&&page!=MAGIC_CONFIRM&&page!=MAGIC_PREPARATION&&page!=MAGIC_TEXT&&page!=MAGIC_MANAGE)attack_cast_power=-1;
     if(action>=2900&&action<2913){input_check_action(action);return;}
     if(input_check_open())return;
     if(power_paused||power_off_attempted)return;
@@ -987,7 +994,7 @@ static void act(intptr_t action) {
     else if(action==2803&&page==BACKUP_RESTORE_CONFIRM){
         if(!pd_history_store_prepare_restore(&backup_history)){backup_notice="Errore storico: riprova";reply("PDD ERROR backup-history\n");}
         else if(!pd_storage_save(&pending)){pd_history_store_uncertain_restore();backup_notice="Errore scheda: riavvia";reply("PDD ERROR storage\n");}
-        else {pd_history_store_finish_restore();history=backup_history;adopt_pending_state();history_pending=false;history_pair_pending=false;backup_notice="Copia ripristinata";reply("PDD RESTORED\n");}
+        else {pd_history_store_finish_restore();history=backup_history;adopt_pending_state();history_pending=false;history_pair_pending=history_third_pending=false;backup_notice="Copia ripristinata";reply("PDD RESTORED\n");}
     }
     else if(action==2600){if(page!=HISTORY_HOME&&page!=HISTORY_DETAIL)history_return=page;history_page=0;page=HISTORY_HOME;}
     else if(action==2601&&page==HISTORY_HOME&&history_page)history_page--;
@@ -997,8 +1004,8 @@ static void act(intptr_t action) {
     else if(action==2605&&page==HISTORY_DETAIL)page=HISTORY_HOME;
     else if(action==2606&&(page==HISTORY_HOME||page==HISTORY_DETAIL)&&history_pending)page=HISTORY_DISCARD;
     else if(action==2607&&page==HISTORY_DISCARD)page=HISTORY_HOME;
-    else if(action==2608&&page==HISTORY_DISCARD){history_pending=false;history_pair_pending=false;page=HISTORY_HOME;}
-    else if(action==6423&&page==HISTORY_DETAIL&&history_pending&&history_pair_pending){history_index=history_index==PD_HISTORY_LIMIT?PD_HISTORY_LIMIT+1:PD_HISTORY_LIMIT;history_dice_page=0;}
+    else if(action==2608&&page==HISTORY_DISCARD){history_pending=false;history_pair_pending=history_third_pending=false;page=HISTORY_HOME;}
+    else if(action==6423&&page==HISTORY_DETAIL&&history_pending&&history_pair_pending){history_index=history_index==PD_HISTORY_LIMIT?PD_HISTORY_LIMIT+1:history_index==PD_HISTORY_LIMIT+1&&history_third_pending?PD_HISTORY_LIMIT+2:PD_HISTORY_LIMIT;history_dice_page=0;}
     else if(action==2609&&page==HISTORY_HOME&&history_pending){history_index=PD_HISTORY_LIMIT;history_dice_page=0;page=HISTORY_DETAIL;}
     else if((action==2610||action==2611)&&page==HISTORY_DETAIL){if(action==2610&&history_dice_page)history_dice_page--;if(action==2611&&history_dice_page<2)history_dice_page++;}
     else if(action>=2700&&action<2700+PD_HISTORY_LIMIT&&page==HISTORY_HOME&&action-2700<history.count){history_index=action-2700;history_dice_page=0;page=HISTORY_DETAIL;}
@@ -1149,7 +1156,7 @@ static void act(intptr_t action) {
     else if(action==832&&page==MAGIC_CONFIRM) {
         if(!pd_magic_use(&next,power_index,cast_level,cast_pact))return;
         if(!memcmp(&next,&state,sizeof state)){page=MAGIC_DETAIL;}
-        else if(pd_storage_save(&next)){previous=state;undo_available=true;state=next;invalidate_strike();page=MAGIC_DETAIL;}
+        else if(pd_storage_save(&next)){previous=state;undo_available=true;state=next;invalidate_strike();page=MAGIC_DETAIL;if(attack_cast_power==(int)power_index&&state.magic.powers[power_index].effect>=PD_HEX_2024){attack_cast_power=-1;attack_select(attack_spell);}}
     }
     else if(action==833)page=MAGIC_DETAIL;
     else if(action==834){ /* Costs are cycled in the renderer, without consuming. */
@@ -1659,16 +1666,14 @@ static void act(intptr_t action) {
             } else page=ITEM_DETAIL;
         }
     }
-    else if(action==6422&&page==DICE&&combat_roll==2&&damage_parts.radiant.count&&!dice_animation.active){
-        damage_view_radiant=!damage_view_radiant;has_roll=false;
-        pd_dice_pool_start(&dice_animation,damage_view_radiant?&damage_parts.radiant:&damage_parts.weapon,lv_tick_get());
+    else if(action==6422&&page==DICE&&combat_roll==2&&(damage_parts.radiant.count||damage_parts.extra.count)&&!dice_animation.active){
+        if(damage_view_extra){damage_view_extra=damage_view_radiant=false;}
+        else if(damage_view_radiant){damage_view_radiant=false;damage_view_extra=damage_parts.extra.count>0;}
+        else if(damage_parts.radiant.count)damage_view_radiant=true;else damage_view_extra=true;
+        has_roll=false;pd_dice_pool_start(&dice_animation,damage_view_extra?&damage_parts.extra:damage_view_radiant?&damage_parts.radiant:&damage_parts.weapon,lv_tick_get());
     }
     else if(action==90&&combat_roll==1&&has_roll&&strike_ready&&strike.hits&&!damage_used) {
-        if(!pd_weapon_damage_roll(&strike,pd_board_random,NULL,&damage_parts))return;
-        damage_result=damage_parts.weapon;damage_view_radiant=false;
-        journal_weapon_damage(state.items[state.equipped].name,&damage_parts,strike.weapon.radiant_weapon);
-        damage_used=true;combat_roll=2;pool_view=true;has_roll=false;page=DICE;
-        pd_dice_pool_start(&dice_animation,&damage_result,lv_tick_get());
+        if(pd_on_hit_spell(&state)>=0){page=HIT_EFFECTS;wifi_focus=0;}else attack_damage_finish(false);
     }
     else if(action==91)page=ITEM_DETAIL;
     else if(action==93)page=COMBAT_DETAIL;
@@ -1907,7 +1912,7 @@ static void render_history(void){
             lv_obj_t *b=button(text,83,155+row*49,300,44,unsaved?2609:2700+saved,true);
             lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_width(l,288);lv_obj_set_height(l,lv_font_get_line_height(&lv_font_montserrat_16));lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_center(l);
         }
-        snprintf(text,sizeof text,"%u salvati%s",history.count,history_pending?(history_pair_pending?" | 1 tiro (2 parti) in attesa":" | 1 non registrato"):" | ultimi 20 tiri");small_label(text,83,308,300,history_pending?PD_GOLD:PD_MUTED);
+        snprintf(text,sizeof text,"%u salvati%s",history.count,history_pending?(history_third_pending?" | 1 tiro (3 parti) in attesa":history_pair_pending?" | 1 tiro (2 parti) in attesa":" | 1 non registrato"):" | ultimi 20 tiri");small_label(text,83,308,300,history_pending?PD_GOLD:PD_MUTED);
         if(history_pending){
             small_label("Da salvare prima di spegnere",83,332,300,PD_GOLD);
             const char *names[]={"Riprova","Scarta","Indietro"};const unsigned actions[]={2603,2606,2604};
@@ -1916,8 +1921,8 @@ static void render_history(void){
         return;
     }
     bool unsaved=history_index>=PD_HISTORY_LIMIT;
-    if((unsaved&&(!history_pending||(history_index>PD_HISTORY_LIMIT&&!history_pair_pending)))||(!unsaved&&history_index>=history.count)){page=HISTORY_HOME;render_history();return;}
-    const pd_history_entry *e=unsaved?(history_index==PD_HISTORY_LIMIT?&history_unsaved:&history_unsaved_extra):&history.entries[history_index];
+    if((unsaved&&(!history_pending||(history_index>PD_HISTORY_LIMIT+(history_third_pending?2:history_pair_pending?1:0))))||(!unsaved&&history_index>=history.count)){page=HISTORY_HOME;render_history();return;}
+    const pd_history_entry *e=unsaved?(history_index==PD_HISTORY_LIMIT?&history_unsaved:history_index==PD_HISTORY_LIMIT+1?&history_unsaved_extra:&history_unsaved_third):&history.entries[history_index];
     unsigned pages=(e->count+5)/6;if(history_dice_page>=pages)history_dice_page=pages-1;
     snprintf(text,sizeof text,unsaved?"Non registrato":"Tiro #%u",(unsigned)e->sequence);label(text,139,111,188,false);
     button("<",83,99,48,44,2610,history_dice_page>0);button(">",335,99,48,44,2611,history_dice_page+1<pages);
@@ -1930,7 +1935,7 @@ static void render_history(void){
         snprintf(text,sizeof text,"D%u: %u",i+1,e->dice[i]);small_label(text,83+(row%3)*104,258+(row/3)*23,92,PD_TEXT);
     }
     lv_obj_t *note=small_label(e->note,83,300,300,PD_MUTED);lv_label_set_long_mode(note,LV_LABEL_LONG_WRAP);lv_obj_set_height(note,57);
-    if(unsaved&&history_pair_pending){button("Elenco",83,359,92,48,2605,true);button(history_index==PD_HISTORY_LIMIT?"Radiante":"Arma",187,359,92,48,6423,true);button("Riprova",291,359,92,48,2603,true);}
+    if(unsaved&&history_pair_pending){button("Elenco",83,359,92,48,2605,true);button(history_third_pending?"Parte >":history_index==PD_HISTORY_LIMIT?(strstr(history_unsaved_extra.label,"True Strike")?"Radiante":"Extra"):"Arma",187,359,92,48,6423,true);button("Riprova",291,359,92,48,2603,true);}
     else{button("Elenco",83,359,144,48,2605,true);button(unsaved?"Riprova":"Dadi",239,359,144,48,unsaved?2603:14,true);}
 }
 static void render_wallet(void){
@@ -2047,7 +2052,8 @@ static void render_magic_detail(void) {
     lv_obj_t *name=small_label(p->name,83,99,300,PD_TEXT);lv_label_set_long_mode(name,LV_LABEL_LONG_WRAP);lv_obj_set_height(name,58);
     snprintf(text,sizeof text,p->kind?(p->flags&PD_PASSIVE?"Capacita informativa":"Capacita con utilizzi"):"Magia livello %u%s",p->level,p->flags&PD_CONCENTRATES?" / conc.":"");label(text,83,164,300,false);
     int attack,dc;
-    if(p->effect==PD_TRUE_STRIKE_2024){pd_weapon_info w;if(pd_true_strike_stats(&state,power_index,false,&w))snprintf(text,sizeof text,"%s | arma %+d | extra %ud6 rad",pd_abilities[p->ability],w.attack_bonus,w.radiant_dice);else snprintf(text,sizeof text,"%s | richiede arma e preparazione",pd_abilities[p->ability]);}
+    if(p->effect>=PD_HEX_2024)snprintf(text,sizeof text,"1d6 %s sul bersaglio colpito",p->effect==PD_HEX_2024?"necrotici":"forza");
+    else if(p->effect==PD_TRUE_STRIKE_2024){pd_weapon_info w;if(pd_true_strike_stats(&state,power_index,false,&w))snprintf(text,sizeof text,"%s | arma %+d | extra %ud6 rad",pd_abilities[p->ability],w.attack_bonus,w.radiant_dice);else snprintf(text,sizeof text,"%s | richiede arma e preparazione",pd_abilities[p->ability]);}
     else if(pd_magic_stats(&state,power_index,&attack,&dc))snprintf(text,sizeof text,"%s | attacco %+d | CD %d%s",pd_abilities[p->ability],attack,dc,p->flags&PD_PREPARED?"":" | non preparata");
     else snprintf(text,sizeof text,"%s | recupero %s",p->effect==1?"Effetto: Ira":p->effect==2?"Effetto a zero PF":"Effetto da gestire con il DM",(const char *const[]){"manuale","breve","lungo"}[p->recovery]);
     small_label(text,83,198,300,PD_GOLD);
@@ -3308,7 +3314,7 @@ static void render_content(void) {
             pd_weapon_info w={0};attack_weapon_info(&w);
             snprintf(text,sizeof text,"Attacco %+d",strike_ready?strike.roll.bonus:w.attack_bonus);
         }
-        else if(combat_roll==2&&strike.weapon.true_strike)snprintf(text,sizeof text,"%s: %ud%u %+d",damage_view_radiant?"Radianti":"Arma",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
+        else if(combat_roll==2&&(strike.weapon.true_strike||damage_parts.extra.count))snprintf(text,sizeof text,"%s: %ud%u %+d",damage_view_extra?(damage_parts.extra_effect==PD_HEX_2024?"Necrotici":"Forza"):damage_view_radiant?"Radianti":"Arma",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
         else if(combat_roll==3||combat_roll==4)snprintf(text,sizeof text,"Cura %ud%u %+d",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
         else if(combat_roll==8)snprintf(text,sizeof text,"Iniziativa %+d",result.bonus);
         else if(combat_roll==7)snprintf(text,sizeof text,"Ricarica %ud%u %+d",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
@@ -3340,7 +3346,8 @@ static void render_content(void) {
             pd_dice_finish(&dice_animation);has_roll=true;
         }
         if(has_roll) {
-            if(combat_roll==2&&strike.weapon.true_strike)snprintf(text,sizeof text,"Arma %d + rad %d = %d",damage_parts.weapon.total,damage_parts.radiant.total,damage_parts.total);
+            if(combat_roll==2&&damage_parts.extra.count)snprintf(text,sizeof text,"Danni totali %d",damage_parts.total);
+            else if(combat_roll==2&&strike.weapon.true_strike)snprintf(text,sizeof text,"Arma %d + rad %d = %d",damage_parts.weapon.total,damage_parts.radiant.total,damage_parts.total);
             else if(combat_roll==1)snprintf(text,sizeof text,"%s %d / CA %u",strike.critical?"Critico!":strike.hits?"Colpito":"Mancato",strike.roll.total,strike.armor);
             else if(combat_roll==3||combat_roll==4)snprintf(text,sizeof text,"Cura %d | PF +%u -> %u/%u",dice_animation.pool.total,healing_gained,state.hp,pd_max_hp(&state));
             else if(combat_roll==7)snprintf(text,sizeof text,"Cariche +%u | %u/%u",recharge_gained,recharge_after,recharge_maximum);
@@ -3365,9 +3372,9 @@ static void render_content(void) {
             button("Stato",83,296,76,44,1500,!dice_animation.active);
             button(dice_animation.active?"Accelera":"Riepilogo",167,296,132,44,dice_animation.active?16:1809,true);
             button("Fine",307,296,76,44,100,!dice_animation.active);
-        } else if(combat_roll==2&&strike.weapon.true_strike){
+        } else if(combat_roll==2&&(strike.weapon.true_strike||damage_parts.extra.count)){
             button("Arma",83,296,76,44,85,!dice_animation.active);
-            button(dice_animation.active?"Accelera":damage_view_radiant?"Dadi arma":"Radianti",167,296,132,44,dice_animation.active?16:6422,dice_animation.active||damage_parts.radiant.count);
+            button(dice_animation.active?"Accelera":damage_view_extra?"Dadi arma":damage_view_radiant?(damage_parts.extra.count?"Extra":"Dadi arma"):damage_parts.radiant.count?"Radianti":"Extra",167,296,132,44,dice_animation.active?16:6422,dice_animation.active||damage_parts.radiant.count||damage_parts.extra.count);
             button("Fine",307,296,76,44,100,!dice_animation.active);
         } else if(combat_roll) {
             button(combat_roll==5?"Stato":combat_roll==4?"Riposo":combat_roll==3?"Zaino":"Arma",83,296,76,44,combat_roll==5?1501:combat_roll==4?911:combat_roll==3?80:85,!dice_animation.active);
@@ -3603,7 +3610,7 @@ static void usb_task(void *unused) {
             if(c=='\n') {
                 if(!overflow && used) {
                     line[used]=0;
-                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 19\n");
+                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 20\n");
                     else if(!strcmp(line,"PDD ASSET HELLO 1"))reply("PDD ASSET READY 1\n");
                     else if(!strncmp(line,"PDD ASSET ",10)){
                         pd_asset_request *request=malloc(sizeof *request);

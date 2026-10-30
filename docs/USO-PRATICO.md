@@ -1,5 +1,7 @@
 # PocketD-D — uso pratico sul dispositivo
 
+> Aggiornamento v0.88: [Hex e Marchio 2024, bersaglio e danni collegati](EFFETTI-SUL-COLPO.md).
+>
 > Aggiornamento v0.87: [attacco normale o magia nel flusso di Attacca](ATTACCHI-CONTESTUALI.md).
 >
 > Aggiornamento v0.86: [bonus permanenti e sintonia per tutti i PG](OGGETTI-SINTONIA.md).

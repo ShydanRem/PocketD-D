@@ -2,6 +2,7 @@ import catalog from './semantic-icons.json' with {type:'json'};
 // The same explicit, ordered aliases build the native firmware sprites.
 export function semanticGlyph(family,name,{kind,effect,healing=false}={}){
  if(family==='item'){if(healing)return 'heal';if(kind===5)return 'shield';if(kind>=2)return 'armor';}
+ if(effect==='hex-2024')return 'skull';if(effect==='hunters-mark-2024')return 'eye';
  if(effect==='true-strike-2024')return 'strike';if(effect==='rage')return 'rage';if(effect==='relentless-endurance')return 'heal';
  const value=String(name).toLowerCase();return catalog.aliases[family]?.find(([,names])=>names.some(n=>value.includes(n)))?.[0]??(family==='item'?'gear':family==='feature'?'feature':'scroll');
 }

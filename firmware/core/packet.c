@@ -139,7 +139,7 @@ static bool magic(cJSON *o,pd_magic *m,int version) {
         cJSON *description=cJSON_GetObjectItemCaseSensitive(o,"description");
         if(!cJSON_IsString(description)||strlen(description->valuestring)>=sizeof v->description)return false;
         strcpy(v->description,description->valuestring);
-        const int maxima[]={1,9,63,5,99,99,2,version>=18?6:version>=17?5:version>=16?3:2,30,30};int values[10];
+        const int maxima[]={1,9,63,5,99,99,2,version>=20?8:version>=18?6:version>=17?5:version>=16?3:2,30,30};int values[10];
         for(int j=0;j<10;j++) {
             cJSON *n=cJSON_GetObjectItemCaseSensitive(o,power_keys[j+2]);int lo=j>=8?-15:0;
             if(!cJSON_IsNumber(n)||!isfinite(n->valuedouble)||n->valuedouble<lo||n->valuedouble>maxima[j]||floor(n->valuedouble)!=n->valuedouble)return false;
@@ -202,7 +202,7 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
     const char *const abilities[]={"FOR","DES","COS","INT","SAG","CAR"};
     const char *const resource_keys[]={"name","current","maximum"};
     const char *const avatar_keys[]={"skin","hair","cloak","style","lineage","body","outfit"};
-    int version=number(root,"version",1,19);
+    int version=number(root,"version",1,20);
     cJSON *fmt=cJSON_GetObjectItemCaseSensitive(root,"format");
     if (version<0 || end!=json+size || !keys(root,fields,version==1?10:version==2?11:version==3?12:version==4?13:version==5?14:version==6?15:version<9?16:version<14?17:version<18?18:19) || !cJSON_IsString(fmt) ||
         strcmp(fmt->valuestring,"pocketdd-device") ||

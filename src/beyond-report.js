@@ -9,6 +9,7 @@ export function finalizeBeyondReport(report){
  const manual=[];
  const notePowers=s.powers.filter(p=>p.reference===undefined&&p.type==='feature'&&p.passive);
  if(notePowers.length)manual.push(`${notePowers.length} capacità/azioni conservate come note: gli effetti si risolvono al tavolo.`);
+ if(s.powers.some(p=>['hex-2024','hunters-mark-2024'].includes(p.effect)))manual.push('Hex/Marchio 2024: danni base su bersaglio confermato e concentrazione attiva; durata, azioni, capacità che potenziano il dado e altri effetti sul bersaglio restano manuali.');
  const weaponSpells=s.powers.filter(p=>p.effect==='true-strike-2024');if(weaponSpells.length)manual.push('True Strike 2024 operativo con arma e caratteristica da incantatore; altre proprietà speciali dell arma da verificare.');
  const spells=s.powers.filter(p=>p.type==='spell'&&p.effect!=='true-strike-2024');if(spells.length)manual.push(`${spells.length} magie: preparazione, slot e utilizzi gestiti; danni, bersagli ed effetti non eseguiti automaticamente.`);
  if(x.manualResources?.length)manual.push(`${x.manualResources.length} contatori manuali distinti dagli utilizzi: nessun collegamento o recupero dedotto.`);

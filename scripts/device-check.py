@@ -45,7 +45,7 @@ def validate(raw):
             raise ValueError('Versione firmware/SDK non valida')
     counts(data, 'uptime_ms', 2**64-1);counts(data, 'reset_reason')
     fields(data['formats'], 'usb state history backup');counts(data['formats'], 'usb state history backup')
-    if data['formats'] not in ({'usb': u, 'state': s, 'history': 2, 'backup': 1} for u,s in [(9,25),(10,30),(11,31),(12,32),(13,33),(14,33),(15,34),(16,35),(17,36),(18,37),(19,38)]):
+    if data['formats'] not in ({'usb': u, 'state': s, 'history': 2, 'backup': 1} for u,s in [(9,25),(10,30),(11,31),(12,32),(13,33),(14,33),(15,34),(16,35),(17,36),(18,37),(19,38),(20,39)]):
         raise ValueError('Formati firmware non supportati da questo strumento')
     fields(data['memory'], 'internal psram')
     fields(data['memory']['internal'], 'free minimum_free largest_block')

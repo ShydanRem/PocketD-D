@@ -31,7 +31,7 @@ def validate(raw):
             or obj['format'] != 'pocketdd-device-backup' or type(obj['version']) is not int or obj['version'] != 1):
         raise ValueError('Usa un backup nativo del dispositivo v1')
     records = []
-    for key, magic, maximum in [('state', (b'PDDP', b'PDDQ', b'PDDR', b'PDDS', b'PDDT', b'PDDU', b'PDDV', b'PDDW', b'PDDX', b'PDDY', b'PDDZ', b'PDDa', b'PDDb', b'PDDc'), 76285), ('history', (b'PDH1',), 2481)]:
+    for key, magic, maximum in [('state', (b'PDDP', b'PDDQ', b'PDDR', b'PDDS', b'PDDT', b'PDDU', b'PDDV', b'PDDW', b'PDDX', b'PDDY', b'PDDZ', b'PDDa', b'PDDb', b'PDDc', b'PDDd'), 76285), ('history', (b'PDH1',), 2481)]:
         text = obj[key]
         if not isinstance(text, str) or not text or len(text) > 4*((maximum+2)//3):
             raise ValueError('Record nativo fuori limite')
@@ -41,7 +41,10 @@ def validate(raw):
             raise ValueError('Record nativo corrotto o non supportato')
         records.append(data)
     state, history = records
-    if state[:4] in (b'PDDb', b'PDDc'):
+    if len(state)<5124 or state[5123]>120 or 5124+552*state[5123]>len(state)-4: raise ValueError('Invalid native power size')
+    limit = 8 if state[:4] == b'PDDd' else 6 if state[:4] in (b'PDDb', b'PDDc') else 5 if state[:4] == b'PDDa' else 3 if state[:4] == b'PDDZ' else 2
+    if any(state[5124+i*552+549] > limit for i in range(state[5123])): raise ValueError('Unsupported spell effect for state version')
+    if state[:4] in (b'PDDb', b'PDDc', b'PDDd'):
         if len(state) < 10045:
             raise ValueError('Record equipaggiamento incompleto')
         tail = state[-1085:-4]
@@ -49,7 +52,7 @@ def validate(raw):
             raise ValueError('Formula armatura non valida')
         for i in range(60):
             g = tail[1+i*18:1+(i+1)*18]
-            if g[0] > 5 or g[1] > (5 if state[:4] == b'PDDc' else 1) or g[2] > 30 or any(v > 20 for v in g[3:16]) or int.from_bytes(g[16:18], 'little') > 1998:
+            if g[0] > 5 or g[1] > (5 if state[:4] in (b'PDDc', b'PDDd') else 1) or g[2] > 30 or any(v > 20 for v in g[3:16]) or int.from_bytes(g[16:18], 'little') > 1998:
                 raise ValueError('Proprieta equipaggiamento non valide')
         # Normalize this local preview only. Return the exact original envelope.
         state = b'PDDa' + state[4:-1085] + state[-4:]

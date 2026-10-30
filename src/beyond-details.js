@@ -1,4 +1,4 @@
-import {beyondEquipment,beyondTrueStrike2024} from './beyond-equipment.js';
+import {beyondEquipment,beyondTrueStrike2024,beyondOnHit2024} from './beyond-equipment.js';
 import {applyBeyondTraining} from './beyond-training.js';
 import {BeyondError} from './beyond.js';
 import {beyondCannon} from './beyond-cannon.js';
@@ -263,15 +263,15 @@ export function extendBeyond(report,c,customTraining=[]){
     if(!integer(d.level,0,9)||!validCaster||(s.limitedUse&&!resource)||(usesSlot&&(!slots||!pact))){
       addPower({id:`ddb-spell-note-${powers.length+1}`,type:'feature',name:d.name,description:text(d.description,d.name),passive:true});continue;
     }
-    const ability=abilityKeys[stat-1],trueStrike=beyondTrueStrike2024(d)&&!resource;casters.push(ability);
+    const ability=abilityKeys[stat-1],trueStrike=beyondTrueStrike2024(d)&&!resource;let onHit=beyondOnHit2024(d);if(onHit==='hunters-mark-2024'&&state.level===20){warn('Marchio al livello 20: verificare potenziamenti del dado; profilo automatico non applicato.');onHit=undefined;}casters.push(ability);
     let attackModifier=0,saveModifier=0,unresolved=false;
     for(const m of mods){
-      if(trueStrike||!['spell-attacks','spell-save-dc'].includes(m.subType))continue;
+      if(trueStrike||onHit||!['spell-attacks','spell-save-dc'].includes(m.subType))continue;
       if(m.restriction||m.type!=='bonus'||m.statId!=null||!integer(m.value,-15,30)){unresolved=true;continue;}
       if(m.subType==='spell-attacks')attackModifier+=m.value;else saveModifier+=m.value;
     }
     if(unresolved){warn(`${d.name}: bonus di lancio non risolto, magia conservata come nota.`);addPower({id:`ddb-spell-note-${powers.length+1}`,type:'feature',name:d.name,description:text(d.description,d.name),passive:true});continue;}
-    addPower({id:`ddb-spell-${powers.length+1}`,type:'spell',name:d.name,description:text(d.description,d.name),level:d.level,concentration:d.concentration===true,castingAbility:ability,attackModifier,saveModifier,prepared:d.level===0||s.alwaysPrepared===true||s.prepared!==false&&s.isPrepared!==false,usesSpellSlot:usesSlot,...(trueStrike?{effect:'true-strike-2024'}:{}),...(resource?{limited:resource}:{})});
+    addPower({id:`ddb-spell-${powers.length+1}`,type:'spell',name:d.name,description:text(d.description,d.name),level:d.level,concentration:d.concentration===true,castingAbility:ability,attackModifier,saveModifier,prepared:d.level===0||s.alwaysPrepared===true||s.prepared!==false&&s.isPrepared!==false,usesSpellSlot:usesSlot,...(trueStrike?{effect:'true-strike-2024'}:onHit?{effect:onHit}:{}),...(resource?{limited:resource}:{})});
   }
   if(casters.length)state.spellcastingAbility=casters[0];
   if(powers.length>120)throw new Error('Oltre 120 magie/capacità: conversione non rappresentabile');

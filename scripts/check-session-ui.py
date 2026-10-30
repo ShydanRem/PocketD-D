@@ -7,6 +7,7 @@ ROOT=Path(__file__).resolve().parents[1]
 raw=subprocess.check_output(['node','--input-type=module','-e',"""
 import {initialState} from './src/model.js';import {emptyExtended} from './src/extended.js';import {emptyGear} from './src/equipment.js';import {createLibrary,addCharacter,selectCharacter,serializeLibrary} from './src/library.js';
 const s=initialState();s.name='Synthetic session';s.extended=emptyExtended();s.level=6;s.hp=20;s.maxHp=40;s.armorClass=16;s.abilities.DES=10;s.inventory.push({id:'chain',name:'Chain Mail',notes:'',type:'gear',quantity:1});s.extended.loadout={unarmored:1,items:[{...emptyGear('chain'),kind:4,armor:16,equipped:true}]};s.inventory.push({id:'relic',name:'Anello di prova',notes:'',type:'gear',quantity:1});s.extended.loadout.items.push({...emptyGear('relic'),equipped:true,attunement:1,ac:1,saves:1});s.powers=[{id:'ts',name:'True Strike',description:'Synthetic note',type:'spell',level:0,concentration:false,castingAbility:'CAR',attackModifier:0,saveModifier:0,prepared:true,usesSpellSlot:false,effect:'true-strike-2024'}];
+s.powers.push({id:'hex',name:'Anonymous curse',description:'Synthetic note',type:'spell',level:1,concentration:true,castingAbility:'CAR',attackModifier:0,saveModifier:0,prepared:true,usesSpellSlot:true,effect:'hex-2024'});
 let l=createLibrary(s,'subject');l=addCharacter(l,{...initialState(),name:'Preserved synthetic'},'preserved');console.log(serializeLibrary(selectCharacter(l,'subject')));
 """],cwd=ROOT,text=True)
 with sync_playwright() as p:
@@ -20,7 +21,7 @@ with sync_playwright() as p:
  page.locator('[data-equip-gear=chain]').click();assert active()['armorClass']==10 and active()['hp']==20 and active()['maxHp']==40
  page.locator('[data-equip-gear=chain]').click();assert active()['armorClass']==16
  page.locator('[data-attune-gear=relic]').click();assert active()['armorClass']==17 and active()['hp']==20;expect(page.locator('[data-attune-gear=relic]')).to_have_text('Termina sintonia');page.locator('[data-attune-gear=relic]').click();assert active()['armorClass']==16
- page.locator('[data-go-page=actions]').click();page.locator('[data-action-tab=powers]').click();expect(page.locator('[data-use-power=ts]')).to_be_disabled();expect(page.locator('.power-card')).to_contain_text('Attacco con arma e CAR');assert page.locator('.power-card .semantic-icon').count()==1
+ page.locator('[data-go-page=actions]').click();page.locator('[data-action-tab=powers]').click();expect(page.locator('[data-use-power=ts]')).to_be_disabled();expect(page.locator('.power-card').filter(has_text='Anonymous curse')).to_contain_text('Extra 1d6 necrotici sul bersaglio');assert 'CD ' not in page.locator('.power-card').filter(has_text='Anonymous curse').inner_text();expect(page.locator('.power-card').filter(has_text='True Strike')).to_contain_text('Attacco con arma e CAR');assert page.locator('.power-card .semantic-icon').count()==2
  for width in [1440,390,320]:
   page.set_viewport_size({'width':width,'height':1050});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
  page.reload();assert active()['armorClass']==16;assert next(c for c in library()['characters'] if c['id']=='preserved')==other;assert not errors,errors
