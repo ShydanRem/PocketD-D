@@ -1,1 +1,36 @@
-{"manifest_version":3,"name":"PocketD-D · Ponte Beyond","version":"0.79.0","description":"Collega il tuo Pocket al ponte locale. Nessuna password Beyond sul dispositivo.","permissions":["storage","scripting"],"host_permissions":["http://127.0.0.1/*","https://www.dndbeyond.com/*"],"background":{"service_worker":"background.js","type":"module"},"action":{"default_popup":"popup.html"},"content_scripts":[{"matches":["https://www.dndbeyond.com/characters/*","https://www.dndbeyond.com/profile/*/characters/*"],"js":["content.js"]}]}
+{
+  "manifest_version": 3,
+  "name": "PocketD-D · Ponte Beyond",
+  "version": "0.89.1",
+  "description": "Ponte locale e verifica sperimentale dell’account Beyond, senza esportare credenziali.",
+  "permissions": [
+    "storage",
+    "scripting"
+  ],
+  "host_permissions": [
+    "http://127.0.0.1/*",
+    "https://www.dndbeyond.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.dndbeyond.com/characters/*",
+        "https://www.dndbeyond.com/profile/*/characters/*"
+      ],
+      "js": [
+        "content.js"
+      ]
+    }
+  ],
+  "optional_host_permissions": [
+    "https://auth-service.dndbeyond.com/*",
+    "https://character-service.dndbeyond.com/*"
+  ]
+}

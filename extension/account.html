@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="it">
+<meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<title>PocketD-D · Verifica account Beyond</title><link rel="stylesheet" href="account.css">
+<main>
+  <p class="eyebrow">POCKETD-D · VERSO IL POCKET AUTONOMO</p>
+  <h1>Ritrova i tuoi eroi</h1>
+  <p>Verifica sperimentale del login e dell’elenco Beyond. Non associa ancora il dispositivo e non importa o modifica personaggi.</p>
+  <ol><li><a href="https://www.dndbeyond.com/my-characters" target="_blank" rel="noreferrer">Apri Beyond e accedi</a> in questo browser.</li>
+  <li>Premi <strong>Verifica accesso</strong> e consenti l’accesso ai due servizi Beyond, se richiesto dal browser.</li></ol>
+  <p>La sessione resta gestita dal browser. Il token temporaneo viene usato solo durante questa verifica, senza salvarlo, esportarlo o inviarlo al ponte PC o al Pocket.</p>
+  <div class="actions"><button id="check">Verifica accesso</button><button id="clear" class="secondary">Cancella risultato</button></div>
+  <p id="status" role="status" aria-live="polite">Pronto per la verifica. Nessun accesso eseguito.</p>
+  <dl id="checks" aria-label="Controlli separati"></dl>
+  <section id="catalog" hidden><h2>Personaggi letti dall’account</h2><p id="completeness"></p><ul id="characters"></ul></section>
+  <p class="note">Un HTTP riuscito non prova il formato, la completezza dell’elenco o la conversione dei valori. Questa verifica non legge le schede complete e non prova l’importazione sul dispositivo.</p>
+  <button id="revoke" class="secondary">Rimuovi permessi di verifica</button>
+</main><script type="module" src="account.js"></script>
+</html>

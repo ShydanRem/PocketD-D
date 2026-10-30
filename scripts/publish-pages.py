@@ -4,11 +4,11 @@
 Without --push this prepares a reviewable directory. The first GitHub Pages
 activation is a repository setting; pushing a branch alone does not prove a live site.
 """
-import argparse,hashlib,json,re,shutil,subprocess,tempfile
+import argparse,hashlib,json,re,shutil,subprocess,tempfile,zipfile
 from pathlib import Path
 
 ROOT=Path(__file__).resolve().parents[1]
-ALLOWED=re.compile(r'(?:index\.html|personalizzazione\.html|manifest\.json|assets/[\w.-]+\.(?:js|css|png|pdc)|firmware/(?:bootloader|partitions|app)\.bin|licenses/[\w.-]+\.txt|downloads/[\w.-]+\.md|downloads/(?:PocketDD-(?:PC|SD)\.zip|PocketDD-PC\.zip\.sha256|pc-package\.json|PocketDD-PC\.part[0-7]\.bin)|downloads/previews/[\w.-]+\.png)')
+ALLOWED=re.compile(r'(?:index\.html|personalizzazione\.html|manifest\.json|assets/[\w.-]+\.(?:js|css|png|pdc)|firmware/(?:bootloader|partitions|app)\.bin|licenses/[\w.-]+\.txt|downloads/[\w.-]+\.md|downloads/(?:PocketDD-(?:PC|SD|Beyond-Check)\.zip|PocketDD-PC\.zip\.sha256|pc-package\.json|PocketDD-PC\.part[0-7]\.bin)|downloads/previews/[\w.-]+\.png)')
 def git(*args,cwd=ROOT):
     return subprocess.check_output(['git',*args],cwd=cwd,text=True).strip()
 def sha(path):return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -24,6 +24,14 @@ def validate(base,revision,version):
         path=base/part['path']
         if path.stat().st_size!=part['size'] or sha(path)!=part['sha256']:raise ValueError('Firmware integrity failed')
     if sha(base/'assets/classes.pdc')!=sha(ROOT/'public/assets/classes.pdc'):raise ValueError('SD catalog integrity failed')
+    extension_names=('manifest.json','background.js','content.js','protocol.js','page-adapter.js',
+                     'popup.html','popup.css','popup.js','account.html','account.css','account.js','account-check.js')
+    expected_extension={'extension/'+name:ROOT/'extension'/name for name in extension_names}
+    expected_extension['LEGGIMI.md']=ROOT/'docs/POCKET-AUTONOMO.md'
+    with zipfile.ZipFile(base/'downloads/PocketDD-Beyond-Check.zip') as archive:
+        if len(archive.namelist())!=len(expected_extension) or set(archive.namelist())!=set(expected_extension):raise ValueError('Unexpected extension archive contents')
+        for name,source in expected_extension.items():
+            if archive.read(name)!=source.read_bytes():raise ValueError('Extension archive integrity failed')
     package=json.loads((base/'downloads/pc-package.json').read_text());total=hashlib.sha256();size=0
     for i,part in enumerate(package['parts']):
         if part['path']!=f'PocketDD-PC.part{i}.bin':raise ValueError('Unexpected PC part path')

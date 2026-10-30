@@ -6,6 +6,11 @@ Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixe
 Firmware e look SD dal browser; app PC opzionale per importare da Beyond.
 [Come pubblicare gli aggiornamenti](docs/GITHUB-PAGES.md).
 
+**v0.89.1 — [Verso il Pocket autonomo](docs/POCKET-AUTONOMO.md):**
+verifica opzionale di login ed elenco account nell’estensione esistente, senza
+esportare credenziali o modificare PG. Non è ancora importazione Wi-Fi sul Pocket.
+Il dispositivo autonomo è il traguardo; il PC serve ancora per la conversione attuale.
+
 **v0.89 — [Punizione Divina 2024 dopo il colpo](docs/PUNIZIONE-DIVINA.md):**
 slot ordinari/patto o usi finiti, bersaglio, critici e combinazione con True Strike
 e Hex. Costo salvato una volta, riprove senza rilanci e storico atomico fino a

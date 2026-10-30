@@ -174,6 +174,20 @@ section='<section class="after"><h2>Magie e oggetti pronti sul Pocket · v0.85</
 page=out/'index.html'
 page.write_text(page.read_text().replace('<section class="after">',section+'<section class="after">',1))
 
+# Read-only account feasibility helper: explicit archive contents, no profile/session files.
+# This is separate from firmware and does not require a device update.
+import zipfile
+extension_names=('manifest.json','background.js','content.js','protocol.js','page-adapter.js',
+                 'popup.html','popup.css','popup.js','account.html','account.css','account.js','account-check.js')
+with zipfile.ZipFile(out/'downloads/PocketDD-Beyond-Check.zip','w',zipfile.ZIP_DEFLATED) as archive:
+ for name in extension_names:archive.write(ROOT/'extension'/name,'extension/'+name)
+ archive.write(ROOT/'docs/POCKET-AUTONOMO.md','LEGGIMI.md')
+for name in ('POCKET-AUTONOMO',):
+ shutil.copyfile(ROOT/'docs'/f'{name}.md',out/'downloads'/f'PocketDD-{name}.md')
+ shutil.copyfile(ROOT/'docs'/f'{name}.md',out/'downloads'/f'{name}.md')
+account_section='<details class="after"><summary>Verso il Pocket autonomo · verifica account Beyond</summary><p>Controllo sperimentale nell’estensione: login ed elenco dei PG, senza esportare credenziali o modificare schede. Non è ancora importazione Wi-Fi dal dispositivo; non serve aggiornare il firmware per questa prova.</p><p><a href="downloads/PocketDD-Beyond-Check.zip" download>Scarica solo l’estensione di verifica</a> · <a href="downloads/PocketDD-POCKET-AUTONOMO.md">Istruzioni e stato dei lavori</a>. Confronta l’elenco con quello del tuo account; un HTTP riuscito non prova la conversione.</p></details>'
+page.write_text(page.read_text().replace('<section class="after">',account_section+'<section class="after">',1))
+
 # Generic equipment/attunement UI, not a particular character build.
 for name in ('OGGETTI-SINTONIA','EQUIPAGGIAMENTO-MAGIE'):
  shutil.copyfile(ROOT/'docs'/f'{name}.md',out/'downloads'/f'PocketDD-{name}.md')

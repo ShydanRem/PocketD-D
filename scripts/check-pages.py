@@ -16,6 +16,11 @@ with tempfile.TemporaryDirectory(prefix='pdd-pages-bad-') as tmp:
  secret.unlink();part=clone/'firmware/app.bin';part.unlink();part.write_bytes(b'corrupt')
  try:publisher.validate(clone,m['commit'],m['version']);raise AssertionError('bad firmware accepted')
  except ValueError as e:assert 'integrity' in str(e)
+ # The new standalone helper must not allow arbitrary files inside a whitelisted ZIP.
+ publisher.shutil.copyfile(base/'firmware/app.bin',part)
+ with zipfile.ZipFile(clone/'downloads/PocketDD-Beyond-Check.zip','a') as z:z.writestr('profile/cookies.json','synthetic forbidden file')
+ try:publisher.validate(clone,m['commit'],m['version']);raise AssertionError('unexpected extension entry accepted')
+ except ValueError as e:assert 'archive contents' in str(e)
 assert not (site/'downloads/PocketDD-PC.zip').exists()
 assert (site/'.nojekyll').exists()
 receipt=json.loads((site/'deployment.json').read_text());assert receipt['source_commit']==m['commit']
@@ -49,8 +54,11 @@ try:
   with page.expect_download() as download:page.get_by_role('link',name='Scarica app PC per Windows').click()
   assert Path(download.value.path()).read_bytes()==(base/'downloads/PocketDD-PC.zip').read_bytes()
   page.locator('.pc-tools>summary').click();page.screenshot(path='/workspace/PocketDD-GitHub-Pages-preview.png',full_page=True)
+  page.get_by_text('Verso il Pocket autonomo · verifica account Beyond',exact=True).click()
+  with page.expect_download() as helper:page.get_by_role('link',name='Scarica solo l’estensione di verifica').click()
+  assert Path(helper.value.path()).read_bytes()==(base/'downloads/PocketDD-Beyond-Check.zip').read_bytes()
   page.goto(url+'personalizzazione.html');page.get_by_role('link',name='← PocketD-D',exact=True).click();assert page.url==url
   assert not errors,errors;assert all(u.startswith(url) or u.startswith('blob:'+url) for u in requests),requests
   browser.close()
- print('PASS Pages: fixed /PocketD-D/ prefix, firmware/SD without ZIP, safe update default, optional verified PC download, relative gallery back, mobile, simulated chooser, exact provenance/hashes and rejection of arbitrary JSON/corrupt firmware. Does not prove GitHub activation or physical USB.')
+ print('PASS Pages: fixed /PocketD-D/ prefix, firmware/SD without ZIP, safe update default, optional verified PC and account-helper downloads, relative gallery back, mobile, simulated chooser, exact provenance/hashes and rejection of arbitrary JSON/corrupt firmware/extra helper ZIP entries. Does not prove GitHub activation or physical USB.')
 finally:server.shutdown();server.server_close();thread.join()

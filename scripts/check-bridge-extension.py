@@ -27,7 +27,7 @@ try:
         worker=ctx.service_workers[0] if ctx.service_workers else ctx.wait_for_event('serviceworker')
         extension_id=worker.url.split('/')[2]
         page=ctx.new_page();page.goto(ready['url']);page.locator('#extension').click();expect(page.locator('#code')).to_contain_text(__import__('re').compile(r'\d{9}'));code=page.locator('#code').inner_text()
-        popup=ctx.new_page();popup.goto(f'chrome-extension://{extension_id}/popup.html');popup.locator('[name=url]').fill(ready['url']);popup.locator('[name=code]').fill(code);popup.locator('button').click();expect(popup.locator('#status')).to_contain_text('Estensione abbinata')
+        popup=ctx.new_page();popup.goto(f'chrome-extension://{extension_id}/popup.html');popup.locator('[name=url]').fill(ready['url']);popup.locator('[name=code]').fill(code);popup.locator('form button').click();expect(popup.locator('#status')).to_contain_text('Estensione abbinata')
         target='https://www.dndbeyond.com/characters/123456'
         html='''<html><div class=ct-health-manager><label>Current Hit Points<input aria-label="Current Hit Points" value=20></label><div class=ct-health-manager__hp-max>30</div><label>Temporary Hit Points<input aria-label="Temporary Hit Points" value=5></label></div><script>window.sent=[];window.callback=null;window[Symbol.for('@dndbeyond/message-broker-lib')]={userId:'7',gameId:'42',subscribe:f=>window.callback=f,dispatch:m=>{window.sent.push(m);setTimeout(()=>window.callback(m),10)}};</script></html>'''
         # Fulfil this origin entirely locally. Never contact Beyond or authenticate.

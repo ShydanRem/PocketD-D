@@ -1,7 +1,8 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **30 ottobre 2026 — v0.89**. Il dispositivo è il prodotto;
-il PC serve per importare, configurare e conservare i backup.
+Aggiornamento del **30 ottobre 2026 — v0.89.1**. Il dispositivo è il prodotto;
+l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Oggi il PC
+serve ancora per importare, oltre che per installazione, aggiornamenti e backup.
 
 Il software copre una prima sessione individuale offline. L'utente riferisce
 risolti USB, installer e SD e conferma visibile il sito GitHub Pages. Il collaudo
@@ -15,6 +16,15 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale serve ancora al connettore Beyond.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Nuovo nella v0.89.1
+
+[Pocket autonomo](POCKET-AUTONOMO.md): percorso concordato e verifica opzionale
+dell’account nell’estensione. Browser → token temporaneo → elenco minimo, con
+HTTP, JSON, sessione e catalogo distinti; nessuna estrazione cookie, credenziale
+esportata o PG modificato. Test sintetici separati dalla prova autenticata ancora
+da eseguire nel browser dell’utente. Non implementa conversione o importazione
+diretta ESP32, né libreria multipla su SD. Firmware operativo e formati invariati.
 
 ## Nuovo nella v0.89
 
@@ -366,22 +376,21 @@ SD non sostituisce il controllo di RAM, fluidità e salvataggi sul dispositivo.
 
 ## La roadmap in quattro blocchi
 
-| Blocco originale | Stato al 28 ottobre | Lavoro residuo |
+| Blocco originale | Stato al 30 ottobre | Lavoro residuo |
 | --- | --- | --- |
 | 1. Completare la scheda sul dispositivo | Coperto per il primo uso: magie/slot, utilizzi, concentrazione, riposi, dadi vita e morte sono presenti | Eccezioni, completezza dell'import e verifica dei percorsi con il PG reale |
 | 2. Gestire effetti e regole | Parziale: diversi effetti sono configurabili localmente; l'import sa ricostruirne solo un sottoinsieme | Regole condizionali, proprietà speciali, ricalcolo e collegamenti automatici alle fonti |
-| 3. Prodotto fisico | Funzioni implementate e compilate; avvio osservato dall'utente | Import USB/riavvii, touch/tasti/SD, batteria, prestazioni e tenuta dei salvataggi |
+| 3. Prodotto fisico | Avvio, import USB, installer e SD riferiti funzionanti dall'utente | Nuovi flussi 0.85–0.89, touch/tasti, batteria, prestazioni e tenuta dei salvataggi dopo interruzioni |
 | 4. Estetica | Base del compagno e selezione di specie/classi disponibili | Espressioni dei nuovi look, ulteriori sprite/scene e rifiniture dopo visione sul display |
 
-Non assegno una percentuale unica: conterebbe allo stesso modo una schermata
-compilata e un trasferimento fisico che oggi non è ancora confermato.
+Non assegno una percentuale unica: le funzioni riferite funzionanti sull'hardware
+sono distinte da quelle nuove ancora verificate solo tramite software.
 
 ## Ordine consigliato per arrivare a una prima sessione
 
-1. **Sbloccare/verificare USB sul dispositivo.** Aggiornare l'app PC, eseguire
-   prima la diagnostica in sola lettura; poi un invio con anteprima/conferma
-   e risposta finale. I precedenti messaggi di avvio e il ritorno a Elian non
-   sono una conferma di salvataggio. Quando avrai tempo ripartiremo da qui.
+1. **Conservare il percorso USB già funzionante.** Non ripartire dai vecchi
+   blocchi di installer/SD come se fossero ancora aperti. Fare un backup prima
+   di aggiornare o di sostituire una scheda con progressi importanti.
 2. **Confrontare il PG sul display:** caratteristiche, PF, CA, arma attiva,
    quantità, pozioni, slot e tiri principali; configurare difese e tasti.
 3. **Verificare i progressi:** modificare un saldo, riavviare, ritrovarlo,
@@ -392,10 +401,24 @@ compilata e un trasferimento fisico che oggi non è ancora confermato.
    consultabili sul dispositivo, poi continuare espressioni e rifiniture grafiche.
    I testi possono restare negli estratti attuali, come concordato.
 
+Direzione del prodotto confermata: [Pocket autonomo](POCKET-AUTONOMO.md).
+In parallelo al riscontro fisico: verifica account reale, raccolta locale su SD,
+conversione nativa, associazione protetta e infine galleria/importazione sul Pocket.
+La verifica browser 0.89.1 non completa questi blocchi.
+
 Non serve attendere tutte le regole D&D per questa prima sessione. Servono un
 trasferimento verificato, valori confrontati e progressi recuperabili.
 
-## Verifiche di questa versione e compatibilità
+## Verifiche v0.89.1
+
+339 test JS e pagina account a 900/390/320 px con permessi simulati e risposte
+sintetiche, compilazione ESP32-S3 riuscita. Il caricamento MV3 è bloccato dalla
+policy del browser gestito: permessi e sessione reali non verificati qui.
+Nessun accesso autenticato o modifica a PG personali; formati e logica firmware
+invariati, solo versione aggiornata. I test nativi della v0.89 non sono ripetuti
+come prova di questa nuova verifica browser. Dettagli in [Pocket autonomo](POCKET-AUTONOMO.md).
+
+## Verifiche delle fasi precedenti e compatibilità
 
 **258 test JS**, browser di produzione con profili isolati, **324 schede
 sintetiche** nel parser/codec C per le nuove associazioni, undici pacchetti

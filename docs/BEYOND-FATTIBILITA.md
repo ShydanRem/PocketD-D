@@ -1,3 +1,6 @@
+> 30 ottobre, v0.89.1: [obiettivo Pocket autonomo e verifica account](POCKET-AUTONOMO.md).
+> La verifica browser è separata dall’importazione ESP32 e dalla sincronizzazione.
+
 > Aggiornamento v0.78: [prima versione offline e verifica dei dati](BEYOND-V1.md),
 > [Wi-Fi](WIFI.md), [metodo proposto per il tempo reale](BEYOND-TEMPO-REALE.md).
 > Le verifiche di fattibilità storiche sotto non attestano scritture o sincronizzazione.
