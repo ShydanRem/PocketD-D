@@ -1,5 +1,7 @@
 # PocketD-D — uso pratico sul dispositivo
 
+> Aggiornamento v0.87: [attacco normale o magia nel flusso di Attacca](ATTACCHI-CONTESTUALI.md).
+>
 > Aggiornamento v0.86: [bonus permanenti e sintonia per tutti i PG](OGGETTI-SINTONIA.md).
 
 Aggiornamento v0.85: [preparazione diretta, equipaggiamento con calcoli collegati,
@@ -13,8 +15,10 @@ con dati sintetici, non fotografie né prove del touch fisico.
 
 ## Le azioni della home
 
-- **Spada / Arma:** apre l’attacco con l’arma attiva. Se non c’è un’arma valida,
-  apre lo zaino; non tira e non equipaggia automaticamente.
+- **Spada / Arma:** apre l’attacco con l’arma attiva. Se il PG ha varianti con arma,
+  propone attacco normale oppure magia, con bonus e dadi. Senza varianti va
+  direttamente all’attacco normale. Se manca l’arma, apre scelta/configurazione;
+  non tira e non equipaggia automaticamente.
 - **Libro / Magie:** apre magie e capacità. Dadi e zaino rimangono nel dock.
 - **Cuore e PF:** apre Danni, Cura, temporanei e stato. Danni e Cura sono nella
   prima riga. Le correzioni manuali −1/+1 sono più in basso: non applicano tutte
@@ -36,7 +40,9 @@ con dati sintetici, non fotografie né prove del touch fisico.
 | Tornare alla home da zaino o magie | Menu → Eroe: 2 tap | Icona Eroe: 1 tap |
 | Pagine successive delle liste | Freccia per ogni pagina | Freccia oppure swipe laterale |
 
-Questi conteggi terminano alla destinazione indicata. Aprire un attacco non
+Questi conteggi terminano alla destinazione indicata. Dalla v0.87 un PG con
+varianti con arma richiede un tap ulteriore per scegliere normale/magia; la scelta
+mostra i valori senza passare dalla lista generale degli incantesimi. Aprire un attacco non
 significa averlo tirato; aprire una magia non significa spenderne lo slot.
 Anteprima, scelta dei costi e conferma restano nei percorsi che modificano il PG.
 

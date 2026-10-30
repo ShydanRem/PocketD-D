@@ -16,10 +16,22 @@ static bool attack_radiant;
 static int pending_attack_spell=-1;
 static page_t picker_return=HERO;
 static unsigned attack_mode_page;
+static page_t attack_return=HERO;
 static bool weapon_spell_candidate(const pd_power *p){return p->effect==PD_TRUE_STRIKE_2024||((strstr(p->name,"True Strike")||strstr(p->name,"Colpo Accurato"))&&(strstr(p->description,"spellcasting ability")||strstr(p->description,"caratteristica da incantatore")));}
-static unsigned attack_power_at(unsigned at){for(unsigned i=0;i<state.magic.count;i++)if(weapon_spell_candidate(&state.magic.powers[i])){if(!at)return i;at--;}return PD_POWERS;}
-static unsigned attack_power_count(void){unsigned n=0;for(unsigned i=0;i<state.magic.count;i++)if(weapon_spell_candidate(&state.magic.powers[i]))n++;return n;}
+/* Ready, then unprepared, then explicit setup proposals. Never grant rules by name. */
+static unsigned attack_power_group(const pd_power *p){return p->effect!=PD_TRUE_STRIKE_2024?2:!(p->flags&PD_PREPARED);}
+static unsigned attack_power_at(unsigned at){if(state.magic.available)for(unsigned group=0;group<3;group++)for(unsigned i=0;i<state.magic.count;i++)if(weapon_spell_candidate(&state.magic.powers[i])&&attack_power_group(&state.magic.powers[i])==group){if(!at)return i;at--;}return PD_POWERS;}
+static unsigned attack_power_count(void){unsigned n=0;if(state.magic.available)for(unsigned i=0;i<state.magic.count;i++)if(weapon_spell_candidate(&state.magic.powers[i]))n++;return n;}
 static bool attack_weapon_info(pd_weapon_info *out){return attack_spell>=0?pd_true_strike_stats(&state,(unsigned)attack_spell,attack_radiant,out):pd_weapon_stats(&state,state.equipped,out);}
+static void attack_select(int power){
+ attack_spell=power;page=COMBAT;combat_roll=1;pool_view=false;has_roll=false;strike_ready=false;damage_used=false;wifi_focus=0;
+ pd_dice_idle(&dice_animation,pd_attack_mode(&state,mode)?2:1);
+}
+static void attack_choose(void){attack_mode_page=0;page=ATTACK_MODE;wifi_focus=0;}
+static void attack_start(int power,bool choose){
+ mode=0;roll_context=(pd_roll_context){0};ignore_effects=false;attack_select(power);
+ if(choose&&attack_power_count())attack_choose();
+}
 
 static const struct {const char *name,*damage;uint8_t count,sides,ability,flags,reach,thrown;} weapon_templates[]={
  {"Spada","Tagliente",1,8,0,2,1,0},{"Spadone","Tagliente",2,6,0,10,1,0},{"Stocco","Perforante",1,8,1,2,1,0},{"Pugnale","Perforante",1,4,1,2,1,4},{"Ascia bipenne","Tagliente",1,12,0,10,1,0},{"Arco corto","Perforante",1,6,1,6,16,0},{"Mazza","Contundente",1,6,0,2,1,0},{"Lancia","Perforante",1,6,0,2,1,4}
@@ -80,17 +92,24 @@ static unsigned play_changes(char lines[32][96]){
 }
 static bool play_action(intptr_t a){
  play_error="";
- if(a==6099){if(page==WEAPON_PICKER){page=picker_return;pending_attack_spell=-1;}else if(page==PLAY_CONFIRM)page=play_return;else if(page==MAGIC_PROFILE)page=MAGIC_DETAIL;else if(page==WEAPON_SETUP)page=weapon_from_attack?WEAPON_PICKER:ITEM_CONFIG_MENU;else if(page==GEAR_SETUP)page=ITEM_CONFIG_MENU;else if(page==ATTACK_MODE)page=COMBAT;else page=ITEM_DETAIL;wifi_focus=0;return true;}
+ if(a==6099){if(page==WEAPON_PICKER){page=picker_return;pending_attack_spell=-1;}else if(page==PLAY_CONFIRM)page=play_return;else if(page==MAGIC_PROFILE)page=MAGIC_DETAIL;else if(page==WEAPON_SETUP)page=weapon_from_attack?WEAPON_PICKER:ITEM_CONFIG_MENU;else if(page==GEAR_SETUP)page=ITEM_CONFIG_MENU;else if(page==ATTACK_MODE)page=attack_return;else page=ITEM_DETAIL;wifi_focus=0;return true;}
  if(a==6500&&page==ITEM_DETAIL&&state.gear[item_index].attunement){play_preview(4,ITEM_DETAIL);return true;}
  if(a==6090&&page==ITEM_DETAIL){page=ITEM_CONFIG_MENU;return true;}
  if(a==84&&page==ITEM_DETAIL){if(state.items[item_index].kind==PD_GEAR&&pd_gear_unconfigured(&state,item_index)&&pd_item_setup_hint(&state,item_index)){page=ITEM_CONFIG_MENU;return true;}play_preview(0,ITEM_DETAIL);return true;}
- if(a==6402&&page==COMBAT){attack_mode_page=0;page=ATTACK_MODE;return true;}
- if(a==6403&&page==COMBAT){picker_page=0;weapon_from_attack=true;pending_attack_spell=attack_spell;picker_return=COMBAT;page=WEAPON_PICKER;return true;}
+ if(a==6402&&page==COMBAT){attack_return=COMBAT;attack_choose();return true;}
+ if(a==6403&&page==COMBAT){attack_return=COMBAT;picker_page=0;weapon_from_attack=true;pending_attack_spell=attack_spell;picker_return=COMBAT;page=WEAPON_PICKER;return true;}
  if(page==ATTACK_MODE){
   if(a==6400&&attack_mode_page)attack_mode_page--;else if(a==6401&&(attack_mode_page+1)*2<attack_power_count())attack_mode_page++;
-  else if(a==6410){attack_spell=-1;page=COMBAT;}
-  else if(a==6420)attack_radiant=!attack_radiant;
-  else if(a==6411||a==6412){unsigned i=attack_power_at(attack_mode_page*2+a-6411);if(i<PD_POWERS){power_index=i;if(state.magic.powers[i].effect!=PD_TRUE_STRIKE_2024)profile_setup_begin();else if(!(state.magic.powers[i].flags&PD_PREPARED))page=MAGIC_DETAIL;else{attack_spell=i;page=COMBAT;}}}
+  else if(a==6410){pd_weapon_info w;if(pd_weapon_stats(&state,state.equipped,&w))attack_select(-1);}
+  else if(a==6420){attack_radiant=!attack_radiant;strike_ready=damage_used=has_roll=false;pd_dice_idle(&dice_animation,1);}
+  else if(a==6411||a==6412){unsigned i=attack_power_at(attack_mode_page*2+a-6411);if(i<PD_POWERS){
+   power_index=i;const pd_power *p=&state.magic.powers[i];
+   if(p->effect!=PD_TRUE_STRIKE_2024)profile_setup_begin();
+   else if(state.hp&&!state.combat.raging){pd_weapon_info w;
+    if(!(p->flags&PD_PREPARED)){preparation_return=ATTACK_MODE;preparation_target=true;page=MAGIC_PREPARATION;}
+    else if(pd_true_strike_stats(&state,i,attack_radiant,&w))attack_select(i);
+   }
+  }}
   return true;
  }
  if(page==WEAPON_PICKER){
@@ -138,7 +157,7 @@ static bool play_action(intptr_t a){
   if(a==6096&&play_preview_page)play_preview_page--;else if(a==6097)play_preview_page++;
   else if(a==6098&&play_candidate()){
    if(pd_storage_save(&scratch)){previous=state;undo_available=true;state=scratch;invalidate_strike();wifi_focus=0;
-    if(play_mode==3)page=MAGIC_DETAIL;else if((play_mode==1||play_return==WEAPON_PICKER)&&weapon_from_attack){page=COMBAT;combat_roll=1;pool_view=false;has_roll=false;mode=0;attack_spell=pending_attack_spell;pending_attack_spell=-1;strike_ready=false;damage_used=false;roll_context=(pd_roll_context){0};ignore_effects=false;}
+    if(play_mode==3)page=MAGIC_DETAIL;else if((play_mode==1||play_return==WEAPON_PICKER)&&weapon_from_attack){int selected=pending_attack_spell;pending_attack_spell=-1;attack_start(selected,selected<0);}
     else page=ITEM_DETAIL;
    }else play_error="Salvataggio non confermato: riprova";
   }return true;
@@ -146,6 +165,12 @@ static bool play_action(intptr_t a){
  return false;
 }
 static void setup_name(const char *name,int y){lv_obj_t *l=small_label(name,83,y,300,PD_GOLD);lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_set_height(l,24);}
+static void attack_card(const char *name,const char *detail,const lv_image_dsc_t *icon,int y,int action,bool enabled,bool selected){
+ lv_obj_t *b=wifi_button(name,83,y,300,48,action,enabled);art(icon,10,14,b);
+ lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_style_text_font(l,&lv_font_montserrat_16,0);lv_obj_set_size(l,244,20);lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_set_align(l,LV_ALIGN_TOP_LEFT);lv_obj_set_pos(l,45,4);
+ l=lv_label_create(b);lv_label_set_text(l,detail);lv_obj_set_style_text_font(l,&lv_font_montserrat_14,0);lv_obj_set_style_text_color(l,lv_color_hex(enabled?PD_GOLD:PD_MUTED),0);lv_obj_set_size(l,244,18);lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_set_pos(l,45,26);
+ if(selected)lv_obj_set_style_border_color(b,lv_color_hex(PD_GOLD),0);
+}
 static void render_play_setup(void){
  char text[160];wifi_target_count=0;
  if(page==WEAPON_PICKER){
@@ -157,11 +182,22 @@ static void render_play_setup(void){
   wifi_button("Indietro",83,359,144,48,6099,true);wifi_button("Zaino",239,359,144,48,6202,true);
  }else if(page==ATTACK_MODE){
   unsigned n=attack_power_count(),pages=(n+1)/2;if(!pages)pages=1;if(attack_mode_page>=pages)attack_mode_page=pages-1;
-  label("Tipo di attacco",139,111,188,false);wifi_button("<",83,99,48,44,6400,attack_mode_page>0);wifi_button(">",335,99,48,44,6401,attack_mode_page+1<pages);
-  wifi_button("Attacco normale",83,151,300,44,6410,true);
-  for(unsigned row=0;row<2;row++){unsigned i=attack_power_at(attack_mode_page*2+row);if(i>=PD_POWERS)break;snprintf(text,sizeof text,"%s%s",state.magic.powers[i].name,state.magic.powers[i].effect==PD_TRUE_STRIKE_2024?"":" · configura");lv_obj_t *b=wifi_button(text,83,203+row*52,300,44,6411+row,true);lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_width(l,278);lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_center(l);}
-  if(!n)small_label("Nessun trucco con arma configurato",83,227,300,PD_MUTED);
-  wifi_button(attack_radiant?"Danno arma: radiante":"Danno arma: tipo normale",83,307,300,44,6420,n>0);wifi_button("Indietro",83,359,300,48,6099,true);
+  label("Come attacchi?",139,111,188,false);wifi_button("<",83,99,48,44,6400,attack_mode_page>0);wifi_button(">",335,99,48,44,6401,attack_mode_page+1<pages);
+  pd_weapon_info w;bool weapon=pd_weapon_stats(&state,state.equipped,&w);
+  if(weapon)snprintf(text,sizeof text,"%s %+d | %ud%u%+d",pd_abilities[state.items[state.equipped].ability],w.attack_bonus,w.count,w.sides,w.damage_bonus);else snprintf(text,sizeof text,"Scegli prima un arma");
+  attack_card("Attacco normale",text,pd_item_icon(&state,state.equipped),147,6410,weapon,attack_spell<0);
+  bool supported=false;for(unsigned i=0;i<state.magic.count;i++)supported|=state.magic.available&&state.magic.powers[i].effect==PD_TRUE_STRIKE_2024;
+  for(unsigned row=0;row<2;row++){unsigned i=attack_power_at(attack_mode_page*2+row);if(i>=PD_POWERS)break;const pd_power *p=&state.magic.powers[i];bool enabled=true;
+   if(p->effect!=PD_TRUE_STRIKE_2024)snprintf(text,sizeof text,"Regole da configurare");
+   else if(!state.hp){snprintf(text,sizeof text,"Non disponibile a zero PF");enabled=false;}
+   else if(state.combat.raging){snprintf(text,sizeof text,"Non disponibile durante Ira");enabled=false;}
+   else if(!(p->flags&PD_PREPARED))snprintf(text,sizeof text,"Da preparare: tocca qui");
+   else if(pd_true_strike_stats(&state,i,attack_radiant,&w)){if(w.radiant_dice)snprintf(text,sizeof text,"%s %+d | %ud%u%+d +%ud6 rad",pd_abilities[p->ability],w.attack_bonus,w.count,w.sides,w.damage_bonus,w.radiant_dice);else snprintf(text,sizeof text,"%s %+d | %ud%u%+d",pd_abilities[p->ability],w.attack_bonus,w.count,w.sides,w.damage_bonus);}
+   else{snprintf(text,sizeof text,"Verifica il profilo dell arma");enabled=false;}
+   attack_card(p->name,text,pd_power_icon(p),201+row*54,6411+row,enabled,attack_spell==(int)i);
+  }
+  if(!n)small_label("Nessuna variante con arma configurata",83,225,300,PD_MUTED);
+  wifi_button(attack_radiant?"True Strike: arma radiante":"True Strike: tipo dell arma",83,307,300,44,6420,supported);wifi_button("Indietro",83,359,300,48,6099,true);
  }else if(page==ITEM_CONFIG_MENU){
   label("Configura oggetto",83,111,300,false);setup_name(state.items[item_index].name,153);
   wifi_button("Arma: dadi e tiri",83,203,300,44,6000,true);wifi_button("Armatura e bonus",83,255,300,44,6100,state.items[item_index].kind==PD_GEAR);

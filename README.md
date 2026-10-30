@@ -6,6 +6,12 @@ Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixe
 Firmware e look SD dal browser; app PC opzionale per importare da Beyond.
 [Come pubblicare gli aggiornamenti](docs/GITHUB-PAGES.md).
 
+**v0.87 — [attacchi contestuali sul Pocket](docs/ATTACCHI-CONTESTUALI.md):**
+«Attacca» propone subito attacco normale o variante con arma, con icone e valori.
+Preparazione nel flusso, motivi dei blocchi visibili e cambio sicuro della modalità.
+True Strike 2024 è rappresentato per tutte le origini; altre magie restano manuali.
+Aggiorna solo il firmware: salvataggi e SD conservati, formati invariati.
+
 **v0.86 — [oggetti e sintonia per tutti i PG](docs/OGGETTI-SINTONIA.md):** bonus permanenti
 riconciliati all'importazione, anche senza armatura. Equipaggiamento e sintonia
 separati sul Pocket, anteprima dei valori e nessun doppio bonus. 37 icone, 316 test

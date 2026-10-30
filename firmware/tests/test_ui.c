@@ -1761,8 +1761,8 @@ int main(void) {
     act(81);assert(page==WEAPON_PICKER);screenshot("ux085-weapon-picker.ppm");click("Claymore sintetica");assert(page==WEAPON_SETUP);screenshot("ux085-weapon-profile.ppm");
     click("Spada: 1d8 >");click("Competenza: no");click("Att +");click("Dan +");click("Anteprima");assert(page==PLAY_CONFIRM&&scratch.items[0].count==2&&scratch.items[0].sides==6&&scratch.equipped==0);screenshot("ux085-weapon-confirm.ppm");
     for(unsigned i=0;i<3;i++)shortcut(i);act(100);assert(page==PLAY_CONFIRM&&!stage_import(&imported_magic)&&!memcmp(&state,&effects_before,sizeof state)&&random_calls==effects_calls&&save_calls==effects_saves);
-    fail_save=true;click("Conferma");assert(page==PLAY_CONFIRM&&!memcmp(&state,&effects_before,sizeof state));fail_save=false;click("Conferma");assert(page==COMBAT&&state.equipped==0&&state.items[0].attack_modifier==1&&state.items[0].damage_modifier==1);
-    click("Magie");assert(page==ATTACK_MODE);screenshot("ux085-attack-mode.ppm");click("True Strike");pd_weapon_info ts;assert(attack_weapon_info(&ts)&&ts.attack_bonus==7&&ts.damage_bonus==4&&ts.radiant_dice==1);screenshot("ux085-true-strike.ppm");
+    fail_save=true;click("Conferma");assert(page==PLAY_CONFIRM&&!memcmp(&state,&effects_before,sizeof state));fail_save=false;click("Conferma");assert(page==ATTACK_MODE&&state.equipped==0&&state.items[0].attack_modifier==1&&state.items[0].damage_modifier==1);click("Attacco normale");
+    click("Varianti");assert(page==ATTACK_MODE);screenshot("ux085-attack-mode.ppm");click("True Strike");pd_weapon_info ts;assert(attack_weapon_info(&ts)&&ts.attack_bonus==7&&ts.damage_bonus==4&&ts.radiant_dice==1);screenshot("ux085-true-strike.ppm");
     random_values[0]=random_values[1]=19;click("Lancia");assert(strike.weapon.true_strike&&strike.critical&&strike.roll.bonus==7);click("Accelera");random_values[0]=random_values[1]=0;effects_calls=random_calls;unsigned pair_saves=history_save_calls;fail_history=true;click("Danni");assert(random_calls==effects_calls+6&&damage_parts.weapon.count==4&&damage_parts.radiant.count==2&&damage_parts.total==10&&history_pending&&history_pair_pending&&history_save_calls==pair_saves+1);click("Accelera");screenshot("ux085-true-strike-damage.ppm");
     effects_calls=random_calls;click("Radianti");click("Accelera");assert(random_calls==effects_calls&&damage_view_radiant&&damage_parts.total==10);screenshot("ux085-radiant-dice.ppm");click("Storico");click("Riprova");assert(history_pending&&history_pair_pending&&random_calls==effects_calls);act(2609);assert(page==HISTORY_DETAIL);click("Radiante");screenshot("ux085-pending-radiant.ppm");assert(history_index==PD_HISTORY_LIMIT+1);fail_history=false;click("Riprova");assert(!history_pending&&!history_pair_pending&&history.count==3&&history.entries[0].sides==6&&history.entries[0].count==2&&history.entries[1].count==4&&random_calls==effects_calls);
     /* Direct prepare: cancel and save retry, without slot consumption. */
@@ -1776,7 +1776,7 @@ int main(void) {
     /* Old imported note is only a proposal: the user explicitly chooses 2024. */
     state.magic.powers[0]=(pd_power){.name="True Strike",.kind=1,.flags=PD_PASSIVE,.description="Use your spellcasting ability for a weapon attack"};assert(pd_valid(&state));act(1000);click("Regole");assert(page==MAGIC_PROFILE);screenshot("ux085-magic-profile.ppm");click("Effetti manuali >");while(profile_ability!=5)act(6302);click("Anteprima");assert(scratch.magic.powers[0].effect==PD_TRUE_STRIKE_2024&&state.magic.powers[0].effect==0);click("Conferma");assert(state.magic.powers[0].effect==PD_TRUE_STRIKE_2024&&!state.magic.powers[0].kind);click("Attacca");assert(page==COMBAT&&attack_spell==0);
     /* Physical setup navigation is local and preserves configured shortcuts. */
-    click("True Strike");effects_before=state;wifi_keyboard=false;physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};screen_service(0,0);lv_tick_inc(40);screen_service(0,0);screen_service(1,0);lv_tick_inc(40);screen_service(1,0);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);assert(wifi_keyboard&&page==ATTACK_MODE&&!memcmp(&state,&effects_before,sizeof state));act(6099);
+    click("Varianti");effects_before=state;wifi_keyboard=false;physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};screen_service(0,0);lv_tick_inc(40);screen_service(0,0);screen_service(1,0);lv_tick_inc(40);screen_service(1,0);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);assert(wifi_keyboard&&page==ATTACK_MODE&&!memcmp(&state,&effects_before,sizeof state));act(6099);
     char *session_backup=pd_backup_encode(&state,&history,&external_size);assert(session_backup);free(session_backup);
     puts("Device session 0.85: weapon setup/save retry, direct prepare, armor/CON deltas, explicit old-note profile, True Strike casting ability/critical mixed dice, atomic journal pair/frozen retries, local physical focus and all seven new views passed (synthetic LVGL, no hardware claim)");
 
@@ -1789,6 +1789,37 @@ int main(void) {
     state.hp=35;click("Sintonia");assert(scratch.hp==32&&scratch.max_hp==32);screenshot("ux086-end-attunement.ppm");click("Conferma");assert(state.hp==32&&state.max_hp==32&&state.gear[3].attunement==1&&state.abilities[2]==14&&state.training.save_bonus[2]==0&&state.magic.powers[0].attack_modifier==0&&random_calls==effects_calls);
     click("Configura");click("Armatura e bonus");gear_field=19;render();bounds();wrapped_fits();screenshot("ux086-attunement-editor.ppm");click("Indietro");click("Indietro");assert(page==ITEM_DETAIL);click("Sintonia");click("Conferma");click("Quantita 1 >");click("0");click("Anteprima");click("Conferma");assert(state.items[3].quantity==0&&!state.gear[3].equipped&&state.gear[3].attunement==1&&state.max_hp==32);screenshot("ux086-item-removed.ppm");
     puts("General item UI 0.86: independent equip/attune states, effective spell/AC/CON/HP preview, guarded confirm/cancel/save retry, worn-only bonuses, no healing, bounded editor and quantity-zero end passed; synthetic, no character-specific branch");
+
+    /* Contextual weapon variants: generic identities, all casting abilities. */
+    lv_indev_t *attack_touch=lv_indev_create();lv_indev_set_type(attack_touch,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(attack_touch,probe_touch);lv_indev_set_display(attack_touch,d);
+    for(unsigned casting=0;casting<6;casting++){
+        pd_demo(&state);state.level=6;state.magic.available=true;state.magic.count=4;state.magic.concentration=0;
+        state.magic.powers[0]=(pd_power){.name="Fire Bolt",.flags=PD_PREPARED};
+        state.magic.powers[1]=(pd_power){.name="True Strike (nota)",.kind=1,.flags=PD_PASSIVE,.description="Use your spellcasting ability for a weapon attack"};
+        state.magic.powers[2]=(pd_power){.name="Colpo Accurato",.flags=PD_PREPARED,.ability=casting,.effect=PD_TRUE_STRIKE_2024};
+        state.magic.powers[3]=(pd_power){.name="Altra origine",.ability=(casting+1)%6,.effect=PD_TRUE_STRIKE_2024};
+        assert(pd_valid(&state));page=HERO;history_pending=history_pair_pending=false;pd_history_reset(&history,state.history_epoch);persisted_history=history;fail_save=false;wifi_keyboard=false;display_screen=(pd_screen){0};pd_dice_idle(&dice_animation,1);render();
+        effects_before=state;effects_calls=random_calls;effects_saves=save_calls;
+        assert(attack_power_count()==3&&attack_power_at(0)==2&&attack_power_at(1)==3&&attack_power_at(2)==1&&attack_power_at(3)==PD_POWERS);
+        probe_click(attack_touch,115,266);assert(page==ATTACK_MODE&&attack_return==HERO);bounds();wrapped_fits();if(casting==5)screenshot("ux087-attack-choices.ppm");
+        for(unsigned i=0;i<3;i++)shortcut(i);act(100);assert(page==ATTACK_MODE&&!stage_import(&imported_magic));
+        click("Indietro");assert(page==HERO&&!memcmp(&state,&effects_before,sizeof state));
+        act(81);click("Attacco normale");assert(page==COMBAT&&attack_spell<0);pd_weapon_info ordinary;assert(attack_weapon_info(&ordinary)&&!ordinary.true_strike);if(casting==5)screenshot("ux087-normal.ppm");
+        click("Varianti");click("Colpo Accurato");assert(page==COMBAT&&attack_spell==2);assert(attack_weapon_info(&ts)&&ts.true_strike&&ts.base==pd_modifier(state.abilities[casting])&&ts.radiant_dice==1);if(casting==5)screenshot("ux087-weapon-spell.ppm");
+        /* Even a previous result cannot supply damage after selecting a new mode. */
+        strike_ready=damage_used=has_roll=true;click("Varianti");click("Attacco normale");assert(!strike_ready&&!damage_used&&!has_roll&&!dice_animation.active);
+        click("Varianti");if(casting==5)screenshot("ux087-unprepared.ppm");click("Altra origine");assert(page==MAGIC_PREPARATION&&preparation_return==ATTACK_MODE);if(casting==5)screenshot("ux087-prepare.ppm");
+        wifi_keyboard=false;physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};screen_service(0,0);lv_tick_inc(40);screen_service(0,0);screen_service(1,0);lv_tick_inc(40);screen_service(1,0);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);assert(wifi_keyboard&&page==MAGIC_PREPARATION&&wifi_target_count==2&&!memcmp(&state,&effects_before,sizeof state));
+        click("Indietro");assert(page==ATTACK_MODE&&!memcmp(&state,&effects_before,sizeof state));click("Altra origine");fail_save=true;click("Conferma");assert(page==MAGIC_PREPARATION&&!memcmp(&state,&effects_before,sizeof state));fail_save=false;click("Conferma");assert(page==COMBAT&&attack_spell==3&&(state.magic.powers[3].flags&PD_PREPARED));
+        assert(attack_weapon_info(&ts)&&ts.base==pd_modifier(state.abilities[(casting+1)%6])&&random_calls==effects_calls&&save_calls==effects_saves+2);assert(!memcmp(state.magic.slots,effects_before.magic.slots,sizeof state.magic.slots)&&!memcmp(state.magic.pact,effects_before.magic.pact,sizeof state.magic.pact));
+        effects_before=state;effects_saves=save_calls;click("Varianti");click("True Strike: tipo dell arma");assert(attack_radiant);click("Colpo Accurato");assert(attack_weapon_info(&ts)&&ts.radiant_weapon);click("Varianti");click("True Strike: arma radiante");assert(!attack_radiant);
+        click(">");assert(attack_mode_page==1);bounds();wrapped_fits();if(casting==5)screenshot("ux087-manual.ppm");click("True Strike (nota)");assert(page==MAGIC_PROFILE&&!memcmp(&state,&effects_before,sizeof state));click("Indietro");assert(page==MAGIC_DETAIL);
+        /* Unrelated attack spells never acquire weapon rules; blocked choices cannot fire. */
+        state.combat.raging=true;act(81);assert(page==ATTACK_MODE);bounds();wrapped_fits();if(casting==5)screenshot("ux087-raging.ppm");act(6411);assert(page==ATTACK_MODE&&attack_spell<0);state.combat.raging=false;state.hp=0;render();act(6412);assert(page==ATTACK_MODE&&attack_spell<0);state.hp=state.max_hp;
+        assert(random_calls==effects_calls&&save_calls==effects_saves);state.magic.count=1;page=HERO;act(81);assert(page==COMBAT&&attack_spell<0); /* no redundant menu */
+    }
+    lv_indev_delete(attack_touch);
+    puts("Contextual attacks 0.87: real touch entry, all six casting abilities, normal/prepared/prepare-now, source identity/order/paging, no unrelated spell automation, cancel/save failure/retry, blocked states, stale-damage invalidation, zero RNG/slot/extra-save changes passed; synthetic LVGL");
 
     unsigned covered=0;
     for(unsigned p=0;p<=SYNC_FORGET;p++){

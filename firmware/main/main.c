@@ -96,7 +96,7 @@ static const pd_theme_kind page_themes[]={
     [DEFENCE_LIST]=PD_THEME_DAMAGE,
     [DEFENCE_SETUP]=PD_THEME_DAMAGE,
     [ASSET_INSTALL]=PD_THEME_APPEARANCE,
-    [WEAPON_PICKER]=PD_THEME_PACK,[ITEM_CONFIG_MENU]=PD_THEME_PACK,[WEAPON_SETUP]=PD_THEME_PACK,[GEAR_SETUP]=PD_THEME_PACK,[MAGIC_PROFILE]=PD_THEME_MAGIC,[PLAY_CONFIRM]=PD_THEME_PACK,[ATTACK_MODE]=PD_THEME_MAGIC,
+    [WEAPON_PICKER]=PD_THEME_PACK,[ITEM_CONFIG_MENU]=PD_THEME_PACK,[WEAPON_SETUP]=PD_THEME_PACK,[GEAR_SETUP]=PD_THEME_PACK,[MAGIC_PROFILE]=PD_THEME_MAGIC,[PLAY_CONFIRM]=PD_THEME_PACK,[ATTACK_MODE]=PD_THEME_COMBAT,
     [SYNC_HOME]=PD_THEME_KEYS,[SYNC_REVIEW]=PD_THEME_KEYS,[SYNC_FORGET]=PD_THEME_KEYS,
     [WIFI_HOME]=PD_THEME_KEYS,[WIFI_FORGET]=PD_THEME_KEYS,
     [WIFI_LIST]=PD_THEME_KEYS,[WIFI_PASSWORD]=PD_THEME_KEYS,[WIFI_JOIN_REVIEW]=PD_THEME_KEYS,
@@ -266,6 +266,7 @@ static const char *input_check_notice="PWR lungo: alimentazione";
 static unsigned magic_filter=2,magic_page,power_index,cast_level,text_page,slot_index;
 static bool cast_pact,slot_pact,stop_rage,preparation_target;
 static page_t preparation_return=MAGIC_DETAIL;
+static bool attack_preparing(void){return page==MAGIC_PREPARATION&&preparation_return==ATTACK_MODE;}
 static const char *const shortcut_names[]={"Spento","Eroe","Scheda","Dadi","Zaino","Magie","Lancia","Riposi","Stato","Schermo","Effetti","Round","Danni","Storico","Aspetto"};
 static unsigned key_gesture,key_page;
 static void shortcut(unsigned gesture);
@@ -909,7 +910,7 @@ static void act(intptr_t action) {
     else if(action==4003&&page==MAGIC_PREPARATION){
         if(!pd_magic_prepare(&next,power_index,preparation_target))return;
         bool changed=memcmp(&next,&state,sizeof state)!=0;
-        if(!changed||pd_storage_save(&next)){if(changed){previous=state;undo_available=true;state=next;invalidate_strike();}page=preparation_return;}
+        if(!changed||pd_storage_save(&next)){if(changed){previous=state;undo_available=true;state=next;invalidate_strike();}page=preparation_return;if(preparation_return==ATTACK_MODE&&preparation_target){pd_weapon_info w;if(pd_true_strike_stats(&state,power_index,attack_radiant,&w))attack_select(power_index);}}
     }
 
     else if(action==4100&&page==ITEM_DETAIL&&state.inventory_available&&item_index<state.item_count){number_target=NUMBER_ITEM;number_value=state.items[item_index].quantity;number_fresh=true;page=NUMBER_ENTRY;}
@@ -1142,7 +1143,7 @@ static void act(intptr_t action) {
     else if(action==831&&page==MAGIC_DETAIL&&!(state.magic.powers[power_index].flags&PD_PREPARED)&&!state.magic.powers[power_index].kind){preparation_return=MAGIC_DETAIL;preparation_target=true;page=MAGIC_PREPARATION;}
     else if(action==831&&page==MAGIC_DETAIL&&weapon_spell_candidate(&state.magic.powers[power_index])){
         if(state.magic.powers[power_index].effect!=PD_TRUE_STRIKE_2024){profile_setup_begin();}
-        else if(can_use_power()){if(state.equipped==PD_NO_WEAPON){picker_return=MAGIC_DETAIL;pending_attack_spell=power_index;picker_page=0;weapon_from_attack=true;page=WEAPON_PICKER;}else{attack_spell=power_index;page=COMBAT;combat_roll=1;pool_view=false;has_roll=false;mode=0;strike_ready=false;damage_used=false;roll_context=(pd_roll_context){0};ignore_effects=false;}}
+        else if(can_use_power()){if(state.equipped==PD_NO_WEAPON){picker_return=MAGIC_DETAIL;pending_attack_spell=power_index;picker_page=0;weapon_from_attack=true;page=WEAPON_PICKER;}else attack_start(power_index,false);}
     }
     else if(action==831&&page==MAGIC_DETAIL&&can_use_power())page=MAGIC_CONFIRM;
     else if(action==832&&page==MAGIC_CONFIRM) {
@@ -1627,11 +1628,10 @@ static void act(intptr_t action) {
     else if(action==918){rest_active=false;invalidate_strike();page=RESOURCES;}
     else if(action==80)page=INVENTORY;
     else if(action==81||action==85) {
-        pd_weapon_info w;if(!pd_weapon_stats(&state,state.equipped,&w)){picker_page=0;weapon_from_attack=true;picker_return=HERO;pending_attack_spell=-1;page=WEAPON_PICKER;render();return;}
-        if(action==81)attack_spell=-1;
-        if(action==81){roll_context=(pd_roll_context){0};ignore_effects=false;}
-        page=COMBAT;combat_roll=1;pool_view=false;has_roll=false;mode=0;strike_ready=false;damage_used=false;
-        pd_dice_idle(&dice_animation,pd_attack_mode(&state,mode)?2:1);
+        if(action==81)attack_return=page;
+        pd_weapon_info w;if(!pd_weapon_stats(&state,state.equipped,&w)){picker_page=0;weapon_from_attack=true;picker_return=page;pending_attack_spell=-1;page=WEAPON_PICKER;render();return;}
+        if(action==81)attack_start(-1,true);
+        else{mode=0;attack_select(attack_spell);}
     }
     else if(action==82&&inventory_page)inventory_page--;
     else if(action==83&&(inventory_page+1)*3<pd_catalog_count(&state,PD_CATALOG_ITEMS,item_query))inventory_page++;
@@ -1982,11 +1982,11 @@ static void render_combat(void) {
     snprintf(text,sizeof text,"Attacco %+d >",w.attack_bonus);button(text,83,144,state.roll_conditions?204:300,44,93,true);if(state.roll_conditions){lv_obj_t *c=button("Contesto",299,144,84,44,2230,true);lv_obj_set_style_text_font(c,&lv_font_montserrat_16,0);}
     snprintf(text,sizeof text,"%s %+d / comp. %+d / extra %+d",pd_abilities[attack_spell>=0?state.magic.powers[attack_spell].ability:v->ability],w.base,w.trained,w.attack_extra);small_label(text,83,193,300,PD_TEXT);
     snprintf(text,sizeof text,"Danni %ud%u %+d | gittata %u q.",w.count,w.sides,w.damage_bonus,w.reach);small_label(text,83,215,300,PD_GOLD);
-    if(w.true_strike)snprintf(text,sizeof text,"True Strike: +%ud6 radianti",w.radiant_dice);else snprintf(text,sizeof text,"Arma selezionata: bonus attuali");small_label(text,83,239,300,PD_MUTED);
+    if(w.true_strike&&w.radiant_dice)snprintf(text,sizeof text,"True Strike: +%ud6 radianti",w.radiant_dice);else if(w.true_strike)snprintf(text,sizeof text,"True Strike: caratteristica magica");else snprintf(text,sizeof text,"Arma selezionata: bonus attuali");small_label(text,83,239,300,PD_MUTED);
     button("-",83,263,48,44,86,target_armor>1);snprintf(text,sizeof text,"CA bersaglio %u",target_armor);label(text,139,274,188,false);button("+",335,263,48,44,87,target_armor<30);
     pd_attack_resolution gate={0};pd_attack_resolve(&state,mode,roll_context,ignore_effects,&gate);int effective=gate.mode;
     button(effective>0?"Vantaggio":effective<0?"Svantaggio":"Normale",83,315,144,44,15,true);button("Lancia",239,315,144,44,72,gate.allowed);
-    lv_obj_t *a=button("Arma",83,363,92,44,6403,true),*m=button(attack_spell>=0?"True Strike":"Magie",187,363,92,44,6402,true),*t=button(state.combat.thrown?"Lancio si":"Lancio no",291,363,92,44,92,v->thrown_range>0);lv_obj_set_style_text_font(a,&lv_font_montserrat_16,0);lv_obj_set_style_text_font(m,&lv_font_montserrat_14,0);lv_obj_set_style_text_font(t,&lv_font_montserrat_16,0);
+    lv_obj_t *a=button("Arma",83,363,92,44,6403,true),*m=button("Varianti",187,363,92,44,6402,true),*t=button(state.combat.thrown?"Lancio si":"Lancio no",291,363,92,44,92,v->thrown_range>0);lv_obj_set_style_text_font(a,&lv_font_montserrat_16,0);lv_obj_set_style_text_font(m,&lv_font_montserrat_16,0);lv_obj_set_style_text_font(t,&lv_font_montserrat_16,0);
 }
 static unsigned visible_powers(void) {
     return pd_catalog_filtered_count(&state,magic_filter==2?PD_CATALOG_POWERS:magic_filter==1?PD_CATALOG_FEATURES:PD_CATALOG_SPELLS,power_query,ready_view?PD_CATALOG_READY:PD_CATALOG_ALL);
@@ -2085,7 +2085,9 @@ static void render_magic_management(void){
     small_label("Concentrazione invariata",83,309,300,PD_MUTED);
     small_label("Limiti e requisiti: verifica col DM",83,331,300,PD_GOLD);
     scratch=state;bool valid=pd_magic_prepare(&scratch,power_index,preparation_target),changed=valid&&memcmp(&scratch,&state,sizeof state);
-    button("Indietro",83,359,144,48,4002,true);button("Conferma",239,359,144,48,4003,changed);
+    if(attack_preparing()){
+        wifi_target_count=0;wifi_button("Indietro",83,359,144,48,4002,true);wifi_button("Conferma",239,359,144,48,4003,changed);wifi_mark_focus();
+    }else{button("Indietro",83,359,144,48,4002,true);button("Conferma",239,359,144,48,4003,changed);}
 }
 static void render_magic_text(void) {
     const pd_power *p=&state.magic.powers[power_index];char chunk[PD_POWER_TEXT_BYTES];
@@ -3471,13 +3473,13 @@ static void shortcut(unsigned gesture) {
 static void screen_service(int pwr,int boot){
     input_check_service();
     bool allowed=pd_screen_keys(&display_screen,pwr,boot,lv_tick_get());
-    bool enabled=allowed&&!import_pending&&(!confirmation_open()||appearance_editing()||wifi_editing()||play_editing());
+    bool enabled=allowed&&!import_pending&&(!confirmation_open()||appearance_editing()||wifi_editing()||play_editing()||attack_preparing());
     unsigned gestures=pd_buttons_sample(&physical_keys,pwr,boot,lv_tick_get(),enabled);
     for(unsigned i=0;i<3;i++)if(gestures&(1u<<i)){
-        if(wifi_editing()||play_editing()){
+        if(wifi_editing()||play_editing()||attack_preparing()){
             if(i==0){if(!wifi_keyboard){wifi_keyboard=true;wifi_focus=0;}else if(wifi_target_count)wifi_focus=(wifi_focus+1)%wifi_target_count;wifi_mark_focus();}
             else if(i==1){if(!wifi_keyboard){wifi_keyboard=true;wifi_focus=0;wifi_mark_focus();}else if(wifi_focus<wifi_target_count&&!lv_obj_has_state(wifi_targets[wifi_focus],LV_STATE_DISABLED))lv_obj_send_event(wifi_targets[wifi_focus],LV_EVENT_CLICKED,NULL);}
-            else act(play_editing()?6099:page==WIFI_LIST?5001:page==WIFI_PASSWORD?5023:5025);
+            else act(attack_preparing()?4002:play_editing()?6099:page==WIFI_LIST?5001:page==WIFI_PASSWORD?5023:5025);
         }else if(appearance_editing()){
             if(i==0){if(!appearance_keyboard){appearance_keyboard=true;appearance_focus=0;}else appearance_focus=(appearance_focus+1)%appearance_target_count;appearance_mark_focus();}
             else if(i==1){if(!appearance_keyboard){appearance_keyboard=true;appearance_focus=0;appearance_mark_focus();}else if(appearance_focus<appearance_target_count){lv_obj_t *target=appearance_targets[appearance_focus];if(!lv_obj_has_state(target,LV_STATE_DISABLED))lv_obj_send_event(target,LV_EVENT_CLICKED,NULL);}}
