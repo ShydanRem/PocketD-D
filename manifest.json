@@ -6,7 +6,7 @@
   "chip": "ESP32-S3",
   "flash_size": 16777216,
   "hardware_tested": false,
-  "commit": "6373e5d2d4c11b214a7a8dd7261cb1a4ba10bc8d",
+  "commit": "193720bd66eb5075ed91ec3ac1f6b4b1087b5828",
   "parts": [
     {
       "id": "bootloader",
@@ -27,7 +27,7 @@
       "path": "firmware/app.bin",
       "offset": 65536,
       "size": 3386192,
-      "sha256": "138275500e2d865ec6ddc7c892527a7bedd2a51b574ee1e617ec954f998d411b"
+      "sha256": "353b8f086ac6f224b5b2ea5f754a43f513650c887901621e0e249c1d9bfb5025"
     }
   ]
 }

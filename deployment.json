@@ -1,6 +1,6 @@
 {
   "version": "0.88.0",
-  "source_commit": "6373e5d2d4c11b214a7a8dd7261cb1a4ba10bc8d",
+  "source_commit": "193720bd66eb5075ed91ec3ac1f6b4b1087b5828",
   "files_sha256": {
     "assets/beyond-defences-device.png": "d785cd8175fbe743aa974758840596844c31ea4033251f0d1403b8c612605c89",
     "assets/beyond-defences-import.png": "5716cf71839fb75dc15f56e42425522743b7736557fc3721ba1b2c59d891fe70",
@@ -144,11 +144,11 @@
     "downloads/PocketDD-GITHUB-PAGES.md": "3c3167c9242c3cdc3776082c7aa8229d2356fece08661ac1650266ef61675c95",
     "downloads/PocketDD-INIZIA-QUI.md": "e2a4e714bae5c576f212c756b2737c2436a5a681c215663cd6305d1520a6361b",
     "downloads/PocketDD-OGGETTI-SINTONIA.md": "4f9ab4a34caf96b9f4e48330568ca9f5554f403f2490f3af4b14d9752e5859d3",
-    "downloads/PocketDD-PC.part0.bin": "f1e12fef96bfe5407a154893b280bd19bdc318067d9f880789cffa72bacaff19",
-    "downloads/PocketDD-PC.part1.bin": "c8a0f59ffcf2522d399fc85ed837d14d043b527db5f68dbf6a05e4df57f3f129",
-    "downloads/PocketDD-PC.part2.bin": "2d4fd6a78eb72159d5ecf321504e77bd844ee8cbb9298cb2dcb0a07bc0102500",
-    "downloads/PocketDD-PC.part3.bin": "44346493a77337f4e811e631e48127660e50e375855ced0e57ab22168d807798",
-    "downloads/PocketDD-PC.zip.sha256": "9c20dd419fbbe98ad87b8a1df03b68a373321bddd3d53bd797c63264e941d98f",
+    "downloads/PocketDD-PC.part0.bin": "6198a3be34b0e7c252ca91d07699f4ff9439b8174ad00a7b6b7edd610878d1a2",
+    "downloads/PocketDD-PC.part1.bin": "7c0648cdfebfa90d635068ecd6cd906e9865bf520867b96bde5a9abffc75fb72",
+    "downloads/PocketDD-PC.part2.bin": "59d824d5a660dec7f4ab2f449ea08b3c02bffaa807e0be262945647caac1ab50",
+    "downloads/PocketDD-PC.part3.bin": "1287361842897dd6331d9b05797dd44fa327359628ed9861b259b6692e125f24",
+    "downloads/PocketDD-PC.zip.sha256": "1d0b1223e2e0ffe24aa769434fc25ea0addb47ee29e37f73de1e4d5299ec4de2",
     "downloads/PocketDD-PONTE-BEYOND-PROVE.md": "344972f9c2f850a2d5399f607655e09bd4fb935f79b52d541e374f4a10c53d57",
     "downloads/PocketDD-PONTE-BEYOND.md": "586e97b29d94e5b359de2d69064987013d3c99c5ff32a15d41879b9122e474e6",
     "downloads/PocketDD-SD-WEB-USB.md": "4789773ec4a7daf0e431e17b8001651c53f152e452dd41b81d2f98a9baf83709",
@@ -160,7 +160,7 @@
     "downloads/SESSIONE-V082.md": "2bc2ef1821ee293c2b1f3fb5d2040606baded69e6c49662a845ccbda56d905ed",
     "downloads/STATO-SOFTWARE.md": "68614784476b865d4a5f1a25cfde78ede83ecbfe263840b305f26b02879f7c34",
     "downloads/WIFI.md": "e78496d8ac8850dbbea2a820babbd11a37794e1b7b915895d01630daf6b20dcf",
-    "downloads/pc-package.json": "943d37520dee2310f773dd47cd66a3404250f25b1de022c24cd220fd656bdc76",
+    "downloads/pc-package.json": "6f4b6d34e6af8a9d919f6276a4058752cfea4be844838e80bb026f9b9b535560",
     "downloads/previews/v078-reference-wifi.png": "6e96da74ed983b60521ffa5fdc176fa8b47d08afca2e76d61e9e3cbf2b1c6056",
     "downloads/previews/v079-bridge.png": "79a4be7633bf78d98269f5144280b3621a8327c68c20c707e7bc2b00fc08adb4",
     "downloads/previews/v080-practical-device.png": "13e652ec9ef5a77192d2ae8195d22e6a5c3f7c45abb1f62bcbdc920e36ef0ac4",
@@ -172,7 +172,7 @@
     "downloads/previews/v086-attunement.png": "54bb2286db3c97eefd53df0348b0f618724a426cebc2b20c348a7220e7eff49e",
     "downloads/previews/v087-contextual-attacks.png": "45185e46217b4b2a8d525f705895706c7b1dd3532c57559208469f87daec8964",
     "downloads/previews/v088-on-hit-effects.png": "a1d87d26adbe2171a09310106f30d724e437a944fd5bf36753e2c874d7b583b9",
-    "firmware/app.bin": "138275500e2d865ec6ddc7c892527a7bedd2a51b574ee1e617ec954f998d411b",
+    "firmware/app.bin": "353b8f086ac6f224b5b2ea5f754a43f513650c887901621e0e249c1d9bfb5025",
     "firmware/bootloader.bin": "c4f0a5effcd54df271e2f4cf98262fedd57a74d6475d9fdfdbcdfdb417b526ec",
     "firmware/partitions.bin": "3d83ec6df82ab195d853ac8229e3d83e179b0690610599d32b89e415f351a8aa",
     "index.html": "05fd6eb5882d48472987e2840b12f43f0cfa7e4071bc0fdf98f980e3c1897dfc",
@@ -186,7 +186,7 @@
     "licenses/pako-LICENSE.txt": "a04665b3b2de56c66730c1f720f528175739e4104f79073614aa611da1e85539",
     "licenses/tslib-CopyrightNotice.txt.txt": "da16ddb65f8ca390998fb99223d0112498b56b45784d00afd77ff8ce1ac4de8b",
     "licenses/tslib-LICENSE.txt.txt": "210b19e543130388c68654b7497e967119ce17145f66ab7d85688fbd70f08751",
-    "manifest.json": "6b4dbdbe9f17ccb52563108101a968a74a2457bcd9c8fdb6592a10f6f312e3f0",
+    "manifest.json": "82999ca2b18a2baa57dfb80d518c2c73a30ddce73983910759e325ce5d9a5927",
     "personalizzazione.html": "b65450e3993d090752475754b786020c1c7672ce0bcb99b98fe6c58641c27943"
   }
 }
