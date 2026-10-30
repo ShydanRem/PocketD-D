@@ -29,7 +29,7 @@ int pd_on_hit_spell(const pd_state *s){
     return s->magic.powers[i].effect>=PD_HEX_2024?(int)i:-1;
 }
 bool pd_magic_stats(const pd_state *s,unsigned index,int *attack,int *dc) {
-    if(!s||!attack||!dc||!s->magic.available||index>=s->magic.count||s->magic.powers[index].kind)return false;
+    if(!s||!attack||!dc||!s->magic.available||index>=s->magic.count||s->magic.powers[index].kind||s->magic.powers[index].effect>=PD_HEX_2024)return false;
     const pd_power *v=&s->magic.powers[index];int base=pd_modifier(s->abilities[v->ability])+pd_proficiency(s->level);
     *attack=base+v->attack_modifier;*dc=8+base+v->save_modifier;return true;
 }
