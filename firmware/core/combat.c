@@ -6,7 +6,7 @@ bool pd_weapon_stats(const pd_state *s,unsigned index,pd_weapon_info *out) {
     const pd_item *v=&s->items[index];if(v->kind!=PD_WEAPON||!v->quantity)return false;
     pd_weapon_info w={.base=pd_modifier(s->abilities[v->ability]),.trained=(v->flags&1)?pd_proficiency(s->level):0,.count=v->count,.sides=v->sides};
     bool thrown=s->combat.thrown&&index==s->equipped&&v->thrown_range;
-    w.melee=!(v->flags&4)&&!thrown;w.reach=thrown?v->thrown_range:v->reach;
+    w.melee_weapon=!(v->flags&4);w.melee=w.melee_weapon&&!thrown;w.reach=thrown?v->thrown_range:v->reach;
     w.power_attack=s->combat.power_attack&&w.melee&&(v->flags&8)&&(v->flags&1);
     w.attack_extra=v->attack_modifier-(w.power_attack?5:0);
     w.damage_base=(v->flags&2)?w.base:0;
@@ -86,4 +86,23 @@ bool pd_use_item(const pd_state *s,unsigned index,pd_random random,void *context
     *next=*s;next->items[index].quantity--;next->combat.thrown=false;unsigned old=s->hp;
     if(v->kind==PD_HEALING)pd_hp(next,r.total);
     *gained=next->hp-old;*roll=r;return true;
+}
+bool pd_smite_prepare(const pd_state *s,const pd_strike *hit,unsigned index,unsigned slot,bool pact,bool fiend,pd_state *next,unsigned *dice){
+    if(!s||!hit||!pd_valid(s)||!s->hp||s->combat.raging||!hit->hits||!hit->weapon.melee_weapon||!s->magic.available||index>=s->magic.count)return false;
+    const pd_power *p=&s->magic.powers[index];
+    if(p->effect!=PD_DIVINE_SMITE_2024||!(p->flags&PD_PREPARED)||((p->flags&PD_LIMITED)&&!p->remaining))return false;
+    if(p->flags&PD_USES_SLOT){if(slot<1||slot>9||!(pact?s->magic.pact:s->magic.slots)[slot-1].current)return false;}
+    else if(slot||pact||!(p->flags&PD_LIMITED))return false;
+    unsigned n=((slot?slot:1)+1+(fiend?1:0))*(hit->critical?2:1);
+    if(next){*next=*s;if(p->flags&PD_USES_SLOT)(pact?next->magic.pact:next->magic.slots)[slot-1].current--;if(p->flags&PD_LIMITED)next->magic.powers[index].remaining--;}
+    if(dice)*dice=n;
+    return true;
+}
+bool pd_smite_damage(const pd_state *s,const pd_strike *hit,unsigned index,unsigned slot,bool pact,bool fiend,bool target,pd_random random,void *context,pd_weapon_damage_parts *out){
+    unsigned dice;if(!random||!out||!pd_smite_prepare(s,hit,index,slot,pact,fiend,NULL,&dice)||(target&&pd_on_hit_spell(s)<0))return false;
+    pd_weapon_damage_parts result;if(!pd_weapon_damage_with_effect(s,hit,target,random,context,&result))return false;
+    unsigned first=dice>PD_POOL_MAX?PD_POOL_MAX:dice,extra=dice-first;
+    if(!pd_roll_pool(8,first,0,true,random,context,&result.smite))return false;
+    if(extra&&!pd_roll_pool(8,extra,0,true,random,context,&result.smite_overflow))return false;
+    result.total+=result.smite.total+result.smite_overflow.total;*out=result;return true;
 }

@@ -134,14 +134,14 @@ async function handshake(c,t,command,expected){
 export {session as usbSession,handshake as usbHandshake};
 export async function checkDeviceConnection(options={}){
   return session({...options,operation:'check'},async(c,t)=>{
-    options.onProgress?.('connect');const {ready}=await handshake(c,t,'PDD HELLO',Array.from({length:20},(_,i)=>`PDD READY ${i+1}`));
+    options.onProgress?.('connect');const {ready}=await handshake(c,t,'PDD HELLO',Array.from({length:21},(_,i)=>`PDD READY ${i+1}`));
     options.onProgress?.('connection-checked');return {usbVersion:Number(ready.split(' ').at(-1))};
   });
 }
 export async function readDeviceDiagnostics(options={}){
   return session({...options,operation:'diagnostics'},async(c,t)=>{
     options.onProgress?.('connect');
-    const {ready,duplicates}=await handshake(c,t,'PDD HELLO',Array.from({length:20},(_,i)=>`PDD READY ${i+1}`));
+    const {ready,duplicates}=await handshake(c,t,'PDD HELLO',Array.from({length:21},(_,i)=>`PDD READY ${i+1}`));
     options.onProgress?.('diagnostics');await c.send('PDD DIAGNOSTICS GET 1\n',t.send);
     const line=await c.wait('PDD DIAGNOSTICS ',t.hello,{prefix:true,duplicates,maxLine:2080});
     let value;try{value=validateRuntimeDiagnostics(JSON.parse(line.slice('PDD DIAGNOSTICS '.length)));}catch{throw new Error('Diagnosi firmware non valida o non supportata. Nessun dato della scheda inviato.');}
@@ -151,11 +151,11 @@ export async function readDeviceDiagnostics(options={}){
 }
 export async function sendDeviceCopy(packet,options={}){
   const text=serializeDevice(packet);
-  if(packet?.format!=='pocketdd-device'||!Number.isInteger(packet.version)||packet.version<1||packet.version>20||typeof text!=='string'||text.length>262144||/[^\x20-\x7e]/.test(text))throw new Error('Copia per dispositivo non valida o fuori limite.');
+  if(packet?.format!=='pocketdd-device'||!Number.isInteger(packet.version)||packet.version<1||packet.version>21||typeof text!=='string'||text.length>262144||/[^\x20-\x7e]/.test(text))throw new Error('Copia per dispositivo non valida o fuori limite.');
   const version=packet.version;
   return session({...options,operation:'import'},async(c,t)=>{
     options.onProgress?.('connect');
-    const {ready,duplicates}=await handshake(c,t,'PDD HELLO',Array.from({length:20},(_,i)=>`PDD READY ${i+1}`));
+    const {ready,duplicates}=await handshake(c,t,'PDD HELLO',Array.from({length:21},(_,i)=>`PDD READY ${i+1}`));
     if(version>Number(ready.split(' ').at(-1)))throw new Error(`Aggiorna il firmware: questa copia richiede USB${version}. Nessuna copia inviata.`);
     options.onProgress?.('send');await c.send(text+'\n',t.send);await c.wait('PDD WAIT_CONFIRM',t.hello,{duplicates});options.onProgress?.('confirm-import');
     await c.wait('PDD IMPORTED',t.confirm);options.onProgress?.('imported');

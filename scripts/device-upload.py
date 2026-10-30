@@ -20,7 +20,7 @@ def payload(path):
             result[key] = value
         return result
     obj = json.loads(raw, object_pairs_hook=unique)
-    if not isinstance(obj, dict) or obj.get('format') != 'pocketdd-device' or type(obj.get('version')) is not int or obj['version'] not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20):
+    if not isinstance(obj, dict) or obj.get('format') != 'pocketdd-device' or type(obj.get('version')) is not int or obj['version'] not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21):
         raise ValueError('Usa la copia da “Prepara per dispositivo”, non il backup completo')
     encoded = json.dumps(obj, ensure_ascii=False, separators=(',', ':')).encode('ascii')
     if len(encoded) > 262144 or b'\n' in encoded:
@@ -56,10 +56,10 @@ def wait_for(port, expected, timeout, log=print):
 
 def upload(port, data, log=print):
     version = json.loads(data).get('version')
-    if type(version) is not int or version not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20):
+    if type(version) is not int or version not in (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21):
         raise ValueError('Versione della copia non supportata')
     port.write(b'\nPDD HELLO\n'); port.flush()
-    ready = wait_for(port, ('PDD READY 1', 'PDD READY 2', 'PDD READY 3', 'PDD READY 4', 'PDD READY 5', 'PDD READY 6', 'PDD READY 7', 'PDD READY 8', 'PDD READY 9', 'PDD READY 10', 'PDD READY 11', 'PDD READY 12', 'PDD READY 13', 'PDD READY 14', 'PDD READY 15', 'PDD READY 16', 'PDD READY 17', 'PDD READY 18', 'PDD READY 19', 'PDD READY 20'), 10, log)
+    ready = wait_for(port, ('PDD READY 1', 'PDD READY 2', 'PDD READY 3', 'PDD READY 4', 'PDD READY 5', 'PDD READY 6', 'PDD READY 7', 'PDD READY 8', 'PDD READY 9', 'PDD READY 10', 'PDD READY 11', 'PDD READY 12', 'PDD READY 13', 'PDD READY 14', 'PDD READY 15', 'PDD READY 16', 'PDD READY 17', 'PDD READY 18', 'PDD READY 19', 'PDD READY 20', 'PDD READY 21'), 10, log)
     if version > int(ready.rsplit(' ', 1)[1]):
         raise RuntimeError(f'Aggiorna il firmware PocketD-D: questa copia richiede la versione USB {version}. Nessuna copia inviata.')
     port.write(data); port.flush()

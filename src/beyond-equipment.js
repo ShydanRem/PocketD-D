@@ -64,3 +64,5 @@ export function beyondOnHit2024(definition){
  if(definition?.isHomebrew||definition?.level!==1||definition.concentration!==true||!Array.isArray(definition.sources)||!definition.sources.some(s=>s?.sourceId===145&&s.sourceType===1))return undefined;
  return definition.id===2618988?'hex-2024':definition.id===2619166?'hunters-mark-2024':undefined;
 }
+
+export function beyondSmite2024(d){return d?.id===2618833&&!d.isHomebrew&&d.level===1&&d.concentration!==true&&Array.isArray(d.sources)&&d.sources.some(s=>s?.sourceId===145&&s.sourceType===1);}

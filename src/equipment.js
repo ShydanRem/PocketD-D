@@ -38,7 +38,7 @@ function changeGear(state,id,equipped,attunement){
  if(!integer(next.armorClass,1,40)||!integer(next.maxHp,1,999))throw Error('CA o PF massimi fuori limite');next.hp=Math.min(state.hp,next.maxHp);
  next.inventory=state.inventory.map(i=>i.type==='weapon'?{...i,attackModifier:i.attackModifier+t.attack-old.attack,damageModifier:i.damageModifier+t.damage-old.damage}:i);
  if(next.inventory.some(i=>i.type==='weapon'&&(!integer(i.attackModifier,-10,10)||!integer(i.damageModifier,-10,10))))throw Error('Bonus arma fuori limite');
- next.powers=state.powers.map(p=>p.type==='spell'&&!['true-strike-2024','hex-2024','hunters-mark-2024'].includes(p.effect)?{...p,attackModifier:(p.attackModifier??0)+t.spellAttack-old.spellAttack,saveModifier:(p.saveModifier??0)+t.spellDc-old.spellDc}:p.reference===6?{...p,attackModifier:p.attackModifier+modifier(next.abilities.DES)-dex+t.checks-old.checks}:p);
+ next.powers=state.powers.map(p=>p.type==='spell'&&!['true-strike-2024','hex-2024','hunters-mark-2024','divine-smite-2024'].includes(p.effect)?{...p,attackModifier:(p.attackModifier??0)+t.spellAttack-old.spellAttack,saveModifier:(p.saveModifier??0)+t.spellDc-old.spellDc}:p.reference===6?{...p,attackModifier:p.attackModifier+modifier(next.abilities.DES)-dex+t.checks-old.checks}:p);
  if(next.powers.some(p=>p.type==='spell'&&(!integer(p.attackModifier,-15,30)||!integer(p.saveModifier,-15,30))||p.reference===6&&!integer(p.attackModifier,-15,30)))throw Error('Bonus magia fuori limite');
  for(const k of keys){next.extended.saveBonuses[k]+=t.saves-old.saves;next.extended.checkBonuses[k]+=t.checks-old.checks;}
  for(const k of Object.keys(next.extended.skillBonuses))next.extended.skillBonuses[k]+=t.checks-old.checks;

@@ -1,4 +1,4 @@
-import {beyondEquipment,beyondTrueStrike2024,beyondOnHit2024} from './beyond-equipment.js';
+import {beyondEquipment,beyondTrueStrike2024,beyondOnHit2024,beyondSmite2024} from './beyond-equipment.js';
 import {applyBeyondTraining} from './beyond-training.js';
 import {BeyondError} from './beyond.js';
 import {beyondCannon} from './beyond-cannon.js';
@@ -233,13 +233,20 @@ export function extendBeyond(report,c,customTraining=[]){
     if(maxima?.some((n,i)=>n>0&&!seen.has(i+1))){warn(`${label}: consumi mancanti per un livello della tabella, importazione slot bloccata.`);return null;}
     return result;
   };
-  const sole=array(c.classes).length===1?c.classes[0]:null,rules=sole?.definition?.spellRules;
-  const tableCandidate=sole?.definition?.canCastSpells===true&&rules?.multiClassSpellSlotDivisor===2&&array(c.pactMagic).every(s=>s.available===0&&s.used===0);
-  const row=tableCandidate?rules.levelSpellSlots?.[sole.level]:null;
-  const ordinaryTable=Array.isArray(row)&&row.length===9&&row.every(n=>integer(n,0,9))?row:null;
-  if(tableCandidate&&!ordinaryTable)warn('Tabella slot della classe non valida: slot ordinari da configurare.');
-  const slots=tableCandidate&&!ordinaryTable?null:slotArray(c.spellSlots,'Slot ordinari',ordinaryTable),pact=slotArray(c.pactMagic,'Slot del patto');
-  if(slots&&ordinaryTable)evidence.push(`Slot ordinari: massimi dalla tabella della classe al livello ${sole.level}; consumi dal registro sorgente.`);
+  // Reconcile zero placeholders only with an unambiguous class-owned table.
+  // The 2024 Warlock identity is Pact Magic, regardless of class/character name.
+  const classes=array(c.classes),isPact=cl=>cl.definition?.id===2190885&&!cl.definition.isHomebrew;
+  const uncertainSubclass=classes.some(cl=>cl.definition?.canCastSpells!==true&&(cl.subclassDefinition?.spellCastingAbilityId!=null||cl.subclassDefinition?.spellRules));
+  const ordinary=classes.filter(cl=>cl.definition?.canCastSpells===true&&!isPact(cl)),pactClasses=classes.filter(cl=>cl.definition?.canCastSpells===true&&isPact(cl));
+  const half=ordinary.length===1&&ordinary[0].definition.spellRules?.multiClassSpellSlotDivisor===2&&!uncertainSubclass?ordinary[0]:null;
+  const pactClass=pactClasses.length===1?pactClasses[0]:null;
+  const table=cl=>{const row=cl?.definition?.spellRules?.levelSpellSlots?.[cl.level];return Array.isArray(row)&&row.length===9&&row.every(n=>integer(n,0,9))?row:null;};
+  const ordinaryTable=table(half),pactTable=table(pactClass);
+  if(half&&!ordinaryTable)warn('Tabella slot della classe non valida: slot ordinari da configurare.');
+  if(pactClass&&!pactTable)warn('Tabella del patto non valida: slot del patto da configurare.');
+  const slots=half&&!ordinaryTable?null:slotArray(c.spellSlots,'Slot ordinari',ordinaryTable),pact=pactClass&&!pactTable?null:slotArray(c.pactMagic,'Slot del patto',pactTable);
+  if(slots&&ordinaryTable)evidence.push(`Slot ordinari: massimi dalla tabella della classe al livello ${half.level}; consumi dal registro sorgente.`);
+  if(pact&&pactTable)evidence.push(`Slot del patto: massimi dalla tabella Warlock 2024 al livello ${pactClass.level}; consumi separati dagli slot ordinari.`);
   state.slots=slots??state.slots;ext.pactSlots=pact??ext.pactSlots;
   const spellEntries=[];
   for(const group of array(c.classSpells)){
@@ -263,15 +270,15 @@ export function extendBeyond(report,c,customTraining=[]){
     if(!integer(d.level,0,9)||!validCaster||(s.limitedUse&&!resource)||(usesSlot&&(!slots||!pact))){
       addPower({id:`ddb-spell-note-${powers.length+1}`,type:'feature',name:d.name,description:text(d.description,d.name),passive:true});continue;
     }
-    const ability=abilityKeys[stat-1],trueStrike=beyondTrueStrike2024(d)&&!resource;let onHit=beyondOnHit2024(d);if(onHit==='hunters-mark-2024'&&state.level===20){warn('Marchio al livello 20: verificare potenziamenti del dado; profilo automatico non applicato.');onHit=undefined;}casters.push(ability);
+    const ability=abilityKeys[stat-1],trueStrike=beyondTrueStrike2024(d)&&!resource,smite=beyondSmite2024(d)&&(usesSlot||Boolean(resource));let onHit=beyondOnHit2024(d);if(onHit==='hunters-mark-2024'&&state.level===20){warn('Marchio al livello 20: verificare potenziamenti del dado; profilo automatico non applicato.');onHit=undefined;}casters.push(ability);
     let attackModifier=0,saveModifier=0,unresolved=false;
     for(const m of mods){
-      if(trueStrike||onHit||!['spell-attacks','spell-save-dc'].includes(m.subType))continue;
+      if(trueStrike||onHit||smite||!['spell-attacks','spell-save-dc'].includes(m.subType))continue;
       if(m.restriction||m.type!=='bonus'||m.statId!=null||!integer(m.value,-15,30)){unresolved=true;continue;}
       if(m.subType==='spell-attacks')attackModifier+=m.value;else saveModifier+=m.value;
     }
     if(unresolved){warn(`${d.name}: bonus di lancio non risolto, magia conservata come nota.`);addPower({id:`ddb-spell-note-${powers.length+1}`,type:'feature',name:d.name,description:text(d.description,d.name),passive:true});continue;}
-    addPower({id:`ddb-spell-${powers.length+1}`,type:'spell',name:d.name,description:text(d.description,d.name),level:d.level,concentration:d.concentration===true,castingAbility:ability,attackModifier,saveModifier,prepared:d.level===0||s.alwaysPrepared===true||s.prepared!==false&&s.isPrepared!==false,usesSpellSlot:usesSlot,...(trueStrike?{effect:'true-strike-2024'}:onHit?{effect:onHit}:{}),...(resource?{limited:resource}:{})});
+    addPower({id:`ddb-spell-${powers.length+1}`,type:'spell',name:d.name,description:text(d.description,d.name),level:d.level,concentration:d.concentration===true,castingAbility:ability,attackModifier,saveModifier,prepared:d.level===0||s.alwaysPrepared===true||s.prepared!==false&&s.isPrepared!==false,usesSpellSlot:usesSlot,...(trueStrike?{effect:'true-strike-2024'}:onHit?{effect:onHit}:smite?{effect:'divine-smite-2024'}:{}),...(resource?{limited:resource}:{})});
   }
   if(casters.length)state.spellcastingAbility=casters[0];
   if(powers.length>120)throw new Error('Oltre 120 magie/capacità: conversione non rappresentabile');

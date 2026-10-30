@@ -6,6 +6,12 @@ Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixe
 Firmware e look SD dal browser; app PC opzionale per importare da Beyond.
 [Come pubblicare gli aggiornamenti](docs/GITHUB-PAGES.md).
 
+**v0.89 — [Punizione Divina 2024 dopo il colpo](docs/PUNIZIONE-DIVINA.md):**
+slot ordinari/patto o usi finiti, bersaglio, critici e combinazione con True Strike
+e Hex. Costo salvato una volta, riprove senza rilanci e storico atomico fino a
+cinque parti. Riconciliazione delle tabelle dei due pool anche per mezzo-incantatore
+più Warlock 2024; azioni del turno e capacità 2014 restano manuali.
+
 **v0.88 — [Hex e Marchio 2024 sul colpo](docs/EFFETTI-SUL-COLPO.md):**
 lancio dal menu attacco, slot/concentrazione e conferma del bersaglio dopo il colpo.
 Danni necrotici/forza, critici e totale con arma/True Strike; tre parti nello storico
@@ -70,7 +76,7 @@ riscontro sul Pocket. [Stato generale e limiti](docs/STATO-SOFTWARE.md).
 
 </details>
 
-Il firmware comprende borsello, storico, scheda, inventario, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Scheda PDDd/39 con lettura dei formati precedenti, registri NVS PDH2 con lettura di PDH1, USB fino a 20 e backup PC fino a v23. Il backup nativo è un archivio distinto dal backup della raccolta PC. Regole speciali, altri effetti e prodotto fisico restano aperti.
+Il firmware comprende borsello, storico, scheda, inventario, magie/slot/usi, riposi, PF e temporanei, condizioni esplicite sui tiri, effetti CA/PF massimi, durate, difese/danni e costi delle riduzioni. Scheda PDDe/40 con lettura dei formati precedenti, registri NVS PDH2 con lettura di PDH1, USB fino a 21 e backup PC fino a v24. Il backup nativo è un archivio distinto dal backup della raccolta PC. Regole speciali, altri effetti e prodotto fisico restano aperti.
 
 Il **dispositivo è il prodotto principale**; il PC è lo strumento di preparazione. Hardware: Waveshare **ESP32-S3-Touch-AMOLED-1.75**, 466×466, CO5300/CST9217, 8 MB PSRAM e 16 MB flash. Sorgenti ufficiali e pin verificati; avvio/import USB e SD riferiti funzionanti dall utente. Batteria, interruzioni di alimentazione, radio e collaudo fisico completo restano da verificare.
 

@@ -19,7 +19,7 @@ size_t pd_diagnostics_encode(const pd_diagnostics *d, char *out, size_t capacity
     int n=snprintf(out,capacity,
         "{\"format\":\"pocketdd-diagnostics\",\"version\":1,\"board_target\":\"" PD_BOARD_TARGET "\","
         "\"firmware\":\"%s\",\"idf\":\"%s\",\"uptime_ms\":%" PRIu64 ",\"reset_reason\":%" PRIu32 ","
-        "\"formats\":{\"usb\":20,\"state\":39,\"history\":2,\"backup\":1},"
+        "\"formats\":{\"usb\":21,\"state\":40,\"history\":2,\"backup\":1},"
         "\"memory\":{\"internal\":{\"free\":%" PRIu32 ",\"minimum_free\":%" PRIu32 ",\"largest_block\":%" PRIu32 "},"
         "\"psram\":{\"total\":%" PRIu32 ",\"free\":%" PRIu32 ",\"minimum_free\":%" PRIu32 ",\"largest_block\":%" PRIu32 "}},"
         "\"stack\":{\"ui_min_bytes\":%" PRIu32 ",\"usb_min_bytes\":%" PRIu32 "},"

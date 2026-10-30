@@ -1,7 +1,7 @@
 /* Device-local equipment/spell setup. No rule is granted by an icon or name. */
 static lv_obj_t *wifi_button(const char *,int,int,int,int,int,bool);
 static void wifi_mark_focus(void);
-static bool play_editing(void){return page>=WEAPON_PICKER&&page<=HIT_EFFECTS;}
+static bool play_editing(void){return page>=WEAPON_PICKER&&page<=HIT_SMITE;}
 static unsigned picker_page,weapon_template,gear_field,play_preview_page,play_mode;
 static pd_item weapon_draft;
 static pd_gear gear_draft;
@@ -19,6 +19,17 @@ static page_t picker_return=HERO;
 static unsigned attack_mode_page;
 static page_t attack_return=HERO;
 static int attack_cast_power=-1;
+static unsigned smite_source,smite_cost;
+static bool smite_pact,smite_fiend,smite_target;
+static bool smite_cost_at(unsigned power,unsigned at,unsigned *slot,bool *pact){
+ if(power>=state.magic.count||state.magic.powers[power].effect!=PD_DIVINE_SMITE_2024)return false;
+ const pd_power *p=&state.magic.powers[power];
+ if(!(p->flags&PD_USES_SLOT)){if(at||!pd_smite_prepare(&state,&strike,power,0,false,false,NULL,NULL))return false;*slot=0;*pact=false;return true;}
+ for(unsigned k=0;k<2;k++)for(unsigned i=1;i<=9;i++)if((k?state.magic.pact:state.magic.slots)[i-1].current&&pd_smite_prepare(&state,&strike,power,i,k,false,NULL,NULL)){if(!at){*slot=i;*pact=k;return true;}at--;}
+ return false;
+}
+static unsigned smite_at(unsigned at){for(unsigned i=0;i<state.magic.count;i++){unsigned slot;bool pact;if(smite_cost_at(i,0,&slot,&pact)){if(!at)return i;at--;}}return PD_POWERS;}
+static void smite_begin(void){smite_source=smite_at(0);smite_cost_at(smite_source,0,&smite_cost,&smite_pact);smite_fiend=smite_target=smite_rolled=false;page=HIT_SMITE;wifi_focus=0;}
 static bool attack_context_candidate(const pd_power *p);
 static bool weapon_spell_candidate(const pd_power *p){return p->effect==PD_TRUE_STRIKE_2024||((strstr(p->name,"True Strike")||strstr(p->name,"Colpo Accurato"))&&(strstr(p->description,"spellcasting ability")||strstr(p->description,"caratteristica da incantatore")));}
 static bool attack_context_candidate(const pd_power *p){return weapon_spell_candidate(p)||p->effect>=PD_HEX_2024;}
@@ -67,7 +78,7 @@ static bool play_candidate(void){
  pd_power *p=&scratch.magic.powers[power_index];
  if(p->effect!=(profile_true?PD_TRUE_STRIKE_2024:profile_on_hit)&&scratch.magic.concentration==power_index+1)return false;
  if(profile_true){if(p->level||p->maximum||(p->flags&PD_LIMITED)||scratch.magic.concentration==power_index+1)return false;p->kind=0;p->effect=PD_TRUE_STRIKE_2024;p->level=0;p->flags=(p->flags&PD_EXCERPT)|PD_PREPARED;p->maximum=p->remaining=p->recovery=0;p->ability=profile_ability;p->attack_modifier=profile_attack;p->save_modifier=profile_damage;}
- else if(profile_on_hit){if(p->kind||p->level!=1||!(p->flags&PD_CONCENTRATES))return false;p->effect=profile_on_hit;}
+ else if(profile_on_hit){if(p->kind||p->level!=1||(profile_on_hit==PD_DIVINE_SMITE_2024?!!(p->flags&PD_CONCENTRATES):!(p->flags&PD_CONCENTRATES)))return false;p->effect=profile_on_hit;}
  else if(p->effect>=PD_TRUE_STRIKE_2024){p->effect=0;p->attack_modifier=p->save_modifier=0;}
  return pd_valid(&scratch);
 }
@@ -75,7 +86,7 @@ static void play_preview(unsigned mode,page_t back){play_mode=mode;play_return=b
 static unsigned play_changes(char lines[32][96]){
  unsigned n=0;
  if(play_mode==4)snprintf(lines[n++],96,"%s",scratch.gear[item_index].attunement==2?"Attiva sintonia":"Termina sintonia");
- else if(play_mode==3)snprintf(lines[n++],96,"Profilo: %s",profile_true?"True Strike 2024":profile_on_hit==PD_HEX_2024?"Hex 2024":profile_on_hit?"Marchio 2024":"effetti manuali");
+ else if(play_mode==3)snprintf(lines[n++],96,"Profilo: %s",profile_true?"True Strike 2024":profile_on_hit==PD_DIVINE_SMITE_2024?"Punizione 2024":profile_on_hit==PD_HEX_2024?"Hex 2024":profile_on_hit?"Marchio 2024":"effetti manuali");
  else snprintf(lines[n++],96,"%s",play_mode==1?"Salva arma ed equipaggia":scratch.gear[item_index].equipped?"Oggetto equipaggiato":"Oggetto riposto");
  if(scratch.armor!=state.armor)snprintf(lines[n++],96,"CA base: %u -> %u",state.armor,scratch.armor);
  if(scratch.max_hp!=state.max_hp)snprintf(lines[n++],96,"PF massimi: %u -> %u",state.max_hp,scratch.max_hp);
@@ -94,11 +105,23 @@ static unsigned play_changes(char lines[32][96]){
   if(play_mode==4){unsigned total=0;for(unsigned i=0;i<scratch.item_count;i++)total+=scratch.gear[i].attunement==2;snprintf(lines[n++],96,"Oggetti in sintonia: %u",total);}
  }
  if(play_mode==3&&profile_true){pd_weapon_info w;if(pd_true_strike_stats(&scratch,power_index,false,&w)){snprintf(lines[n++],96,"%s: att %+d / danni %+d",pd_abilities[profile_ability],w.attack_bonus,w.damage_bonus);snprintf(lines[n++],96,"Extra: %ud6 radianti",w.radiant_dice);}else snprintf(lines[n++],96,"Scegli un arma per usare la magia");}
- if(play_mode==3&&profile_on_hit){snprintf(lines[n++],96,"Extra: 1d6 %s",profile_on_hit==PD_HEX_2024?"necrotici":"forza");snprintf(lines[n++],96,"Concentrazione e bersaglio richiesti");snprintf(lines[n++],96,"Tempi e potenziamenti: manuali");}
+ if(play_mode==3&&profile_on_hit==PD_DIVINE_SMITE_2024){snprintf(lines[n++],96,"Dopo il colpo: 2d8 + slot/bersaglio");snprintf(lines[n++],96,"Radianti; richiede azione bonus");}
+ else if(play_mode==3&&profile_on_hit){snprintf(lines[n++],96,"Extra: 1d6 %s",profile_on_hit==PD_HEX_2024?"necrotici":"forza");snprintf(lines[n++],96,"Concentrazione e bersaglio richiesti");snprintf(lines[n++],96,"Tempi e potenziamenti: manuali");}
  return n;
 }
 static bool play_action(intptr_t a){
  play_error="";
+ if(page==HIT_SMITE){
+  if(smite_rolled&&a!=6479)return true;
+  if(a==6099)page=DICE;
+  else if(a==6480)attack_damage_finish(smite_target);
+  else if(a==6470){unsigned at=0;while(smite_at(at)<PD_POWERS&&smite_at(at)!=smite_source)at++;unsigned next=smite_at(at+1);smite_source=next<PD_POWERS?next:smite_at(0);smite_cost_at(smite_source,0,&smite_cost,&smite_pact);}
+  else if(a==6471){unsigned at=0,slot;bool pact;while(smite_cost_at(smite_source,at,&slot,&pact)&&(slot!=smite_cost||pact!=smite_pact))at++;if(!smite_cost_at(smite_source,at+1,&smite_cost,&smite_pact))smite_cost_at(smite_source,0,&smite_cost,&smite_pact);}
+  else if(a==6472)smite_fiend=!smite_fiend;
+  else if(a==6473&&pd_on_hit_spell(&state)>=0)smite_target=!smite_target;
+  else if(a==6479&&!attack_smite_finish(smite_source,smite_cost,smite_pact,smite_fiend,smite_target))play_error="Salvataggio non confermato: riprova";
+  return true;
+ }
  if(a==6099){if(page==HIT_EFFECTS)page=DICE;else if(page==WEAPON_PICKER){page=picker_return;pending_attack_spell=-1;}else if(page==PLAY_CONFIRM)page=play_return;else if(page==MAGIC_PROFILE)page=MAGIC_DETAIL;else if(page==WEAPON_SETUP)page=weapon_from_attack?WEAPON_PICKER:ITEM_CONFIG_MENU;else if(page==GEAR_SETUP)page=ITEM_CONFIG_MENU;else if(page==ATTACK_MODE)page=attack_return;else page=ITEM_DETAIL;wifi_focus=0;return true;}
  if(page==HIT_EFFECTS){if(a==6460)attack_damage_finish(false);else if(a==6461)attack_damage_finish(true);return true;}
  if(a==6500&&page==ITEM_DETAIL&&state.gear[item_index].attunement){play_preview(4,ITEM_DETAIL);return true;}
@@ -112,7 +135,8 @@ static bool play_action(intptr_t a){
   else if(a==6420){attack_radiant=!attack_radiant;strike_ready=damage_used=has_roll=false;pd_dice_idle(&dice_animation,1);}
   else if(a==6411||a==6412){unsigned i=attack_power_at(attack_mode_page*2+a-6411);if(i<PD_POWERS){
    power_index=i;const pd_power *p=&state.magic.powers[i];
-   if(p->effect>=PD_HEX_2024){if(!state.hp||state.combat.raging)return true;if(pd_on_hit_spell(&state)==(int)i)attack_select(attack_spell);else{attack_cast_power=i;page=MAGIC_DETAIL;cast_level=0;cast_pact=false;}}
+   if(p->effect==PD_DIVINE_SMITE_2024){if(!state.hp||state.combat.raging)return true;if(!(p->flags&PD_PREPARED)){preparation_return=MAGIC_DETAIL;preparation_target=true;page=MAGIC_PREPARATION;}else attack_select(attack_spell);}
+   else if(p->effect>=PD_HEX_2024){if(!state.hp||state.combat.raging)return true;if(pd_on_hit_spell(&state)==(int)i)attack_select(attack_spell);else{attack_cast_power=i;page=MAGIC_DETAIL;cast_level=0;cast_pact=false;}}
    else if(p->effect!=PD_TRUE_STRIKE_2024)profile_setup_begin();
    else if(state.hp&&!state.combat.raging){pd_weapon_info w;
     if(!(p->flags&PD_PREPARED)){preparation_return=ATTACK_MODE;preparation_target=true;page=MAGIC_PREPARATION;}
@@ -155,7 +179,7 @@ static bool play_action(intptr_t a){
   }return true;
  }
  if(page==MAGIC_PROFILE){
-  if(a==6301){const pd_power *p=&state.magic.powers[power_index];if(!p->level&&!p->maximum)profile_true=!profile_true;else if(!p->kind&&p->level==1&&(p->flags&PD_CONCENTRATES))profile_on_hit=!profile_on_hit?PD_HEX_2024:profile_on_hit==PD_HEX_2024?PD_HUNTERS_MARK_2024:0;}
+  if(a==6301){const pd_power *p=&state.magic.powers[power_index];if(!p->level&&!p->maximum)profile_true=!profile_true;else if(!p->kind&&p->level==1){if(p->flags&PD_CONCENTRATES)profile_on_hit=!profile_on_hit?PD_HEX_2024:profile_on_hit==PD_HEX_2024?PD_HUNTERS_MARK_2024:0;else profile_on_hit=profile_on_hit?0:PD_DIVINE_SMITE_2024;}}
   else if(a==6302)profile_ability=(profile_ability+1)%6;
   else if(a==6303&&profile_attack> -15)profile_attack--;else if(a==6304&&profile_attack<30)profile_attack++;
   else if(a==6305&&profile_damage> -15)profile_damage--;else if(a==6306&&profile_damage<30)profile_damage++;
@@ -189,6 +213,16 @@ static void render_play_setup(void){
   if(!n)small_label("Nessun oggetto: aggiungilo dal PC",83,211,300,PD_GOLD);
   small_label("Se manca il profilo, configura dadi e bonus",83,319,300,PD_MUTED);
   wifi_button("Indietro",83,359,144,48,6099,true);wifi_button("Zaino",239,359,144,48,6202,true);
+ }else if(page==HIT_SMITE){
+  unsigned dice=0;bool valid=pd_smite_prepare(&state,&strike,smite_source,smite_cost,smite_pact,smite_fiend,NULL,&dice);const pd_power *p=smite_source<state.magic.count?&state.magic.powers[smite_source]:NULL;
+  if(smite_rolled)snprintf(text,sizeof text,"Risultato da salvare");else snprintf(text,sizeof text,"%ud8 rad | azione bonus",dice);label(text,83,111,300,false);
+  snprintf(text,sizeof text,"%s",p?p->name:"Punizione non disponibile");lv_obj_t *b=wifi_button(text,83,147,300,44,6470,!smite_rolled);lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_width(l,280);lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_center(l);
+  if(smite_cost)snprintf(text,sizeof text,"Slot %u %s%s >",smite_cost,smite_pact?"patto":"ordinario",p&&(p->flags&PD_LIMITED)?" + uso":"");else snprintf(text,sizeof text,"Uso innato: %u >",p?p->remaining:0);
+  wifi_button(text,83,197,300,44,6471,!smite_rolled);
+  wifi_button(smite_fiend?"Immondo / Non morto: si":"Immondo / Non morto: no",83,247,300,44,6472,!smite_rolled);
+  int rider=pd_on_hit_spell(&state);if(rider>=0)wifi_button(smite_target?"Extra bersaglio: si":"Extra bersaglio: no",83,297,300,44,6473,!smite_rolled);
+  else{snprintf(text,sizeof text,smite_rolled?"Danni %d congelati: salva per continuare":"Punizione: %ud8 | azione bonus",smite_rolled?smite_frozen.total:dice);small_label(text,83,311,300,smite_rolled?PD_GOLD:PD_TEXT);}
+  wifi_button("Indietro",83,359,92,48,6099,!smite_rolled);wifi_button("Senza",187,359,92,48,6480,!smite_rolled);wifi_button(smite_rolled?"Riprova":"Usa e tira",291,359,92,48,6479,valid);
  }else if(page==HIT_EFFECTS){
   int index=pd_on_hit_spell(&state);const pd_power *p=index>=0?&state.magic.powers[index]:NULL;
   label("Bersaglio dell effetto?",83,111,300,false);setup_name(p?p->name:"Concentrazione terminata",155);
@@ -205,6 +239,7 @@ static void render_play_setup(void){
   bool supported=false;for(unsigned i=0;i<state.magic.count;i++)supported|=state.magic.available&&state.magic.powers[i].effect==PD_TRUE_STRIKE_2024;
   for(unsigned row=0;row<2;row++){unsigned i=attack_power_at(attack_mode_page*2+row);if(i>=PD_POWERS)break;const pd_power *p=&state.magic.powers[i];bool enabled=true;
    if(p->effect>=PD_HEX_2024&&(!state.hp||state.combat.raging)){snprintf(text,sizeof text,"%s",!state.hp?"Non disponibile a zero PF":"Non disponibile durante Ira");enabled=false;}
+   else if(p->effect==PD_DIVINE_SMITE_2024)snprintf(text,sizeof text,"%s",p->flags&PD_PREPARED?"Dopo un colpo: usa dai Danni":"Da preparare: tocca qui");
    else if(p->effect>=PD_HEX_2024)snprintf(text,sizeof text,"%s",pd_on_hit_spell(&state)==(int)i?"Attiva: extra dopo il colpo":"Lancia prima dell attacco");
    else if(p->effect!=PD_TRUE_STRIKE_2024)snprintf(text,sizeof text,"Regole da configurare");
    else if(!state.hp){snprintf(text,sizeof text,"Non disponibile a zero PF");enabled=false;}
@@ -242,10 +277,11 @@ static void render_play_setup(void){
  }else if(page==MAGIC_PROFILE){
   label("Regole della magia",83,111,300,false);setup_name(state.magic.powers[power_index].name,151);
   const pd_power *p=&state.magic.powers[power_index];
-  wifi_button(profile_true?"True Strike 2024 >":profile_on_hit==PD_HEX_2024?"Hex 2024 >":profile_on_hit?"Marchio 2024 >":"Effetti manuali >",83,191,300,44,6301,(!p->level&&!p->maximum)||(!p->kind&&p->level==1&&(p->flags&PD_CONCENTRATES)));
-  snprintf(text,sizeof text,"Caratteristica: %s",pd_abilities[profile_ability]);wifi_button(text,83,243,300,44,6302,profile_true);
-  snprintf(text,sizeof text,"Bonus att %+d | danni %+d",profile_attack,profile_damage);small_label(text,83,291,300,PD_GOLD);
-  const char *names[]={"Att -","Att +","Dan -","Dan +"};for(unsigned i=0;i<4;i++)wifi_button(names[i],83+i*78,313,66,44,6303+i,profile_true);
+  wifi_button(profile_true?"True Strike 2024 >":profile_on_hit==PD_DIVINE_SMITE_2024?"Punizione 2024 >":profile_on_hit==PD_HEX_2024?"Hex 2024 >":profile_on_hit?"Marchio 2024 >":"Effetti manuali >",83,191,300,44,6301,(!p->level&&!p->maximum)||(!p->kind&&p->level==1));
+  if(!p->kind&&p->level==1){small_label(profile_on_hit==PD_DIVINE_SMITE_2024?"D8 radianti dopo un colpo valido":profile_on_hit?"D6 sul bersaglio in concentrazione":"Scegli solo la regola che possiedi",83,253,300,PD_TEXT);small_label(profile_on_hit==PD_DIVINE_SMITE_2024?"Slot/uso e azione bonus richiesti":"Tempi e proprieta speciali: manuali",83,299,300,PD_GOLD);}
+  else{snprintf(text,sizeof text,"Caratteristica: %s",pd_abilities[profile_ability]);wifi_button(text,83,243,300,44,6302,profile_true);
+   snprintf(text,sizeof text,"Bonus att %+d | danni %+d",profile_attack,profile_damage);small_label(text,83,291,300,PD_GOLD);
+   const char *names[]={"Att -","Att +","Dan -","Dan +"};for(unsigned i=0;i<4;i++)wifi_button(names[i],83+i*78,313,66,44,6303+i,profile_true);}
   wifi_button("Indietro",83,359,144,48,6099,true);wifi_button("Anteprima",239,359,144,48,6307,true);
  }else if(page==PLAY_CONFIRM){
   bool okay=play_candidate();char lines[32][96];unsigned n=okay?play_changes(lines):0,pages=n?(n+2)/3:1;if(play_preview_page>=pages)play_preview_page=pages-1;

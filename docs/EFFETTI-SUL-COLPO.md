@@ -1,5 +1,7 @@
 # Hex e Marchio del Cacciatore 2024 — v0.88
 
+> Aggiornamento v0.89: [Punizione Divina 2024 e slot ibridi](PUNIZIONE-DIVINA.md).
+
 30 ottobre 2026. Il Pocket collega due effetti al flusso degli attacchi, per tutti
 i PG che li possiedono. Non vengono aggiunte magie a una scheda che non le ha.
 

@@ -205,7 +205,7 @@ target_compile_options(asset-transfer PRIVATE -Wall -Wextra -Werror)
 target_link_libraries(asset-transfer m OpenSSL::Crypto)
 target_link_options(asset-transfer PRIVATE -Wl,--wrap=fwrite -Wl,--wrap=fsync -Wl,--wrap=rename)
 
-foreach(case loadout true_strike on_hit)
+foreach(case loadout true_strike on_hit smite)
   add_executable(${case} test_${case}.c ../core/pocketdd.c ../core/magic.c ../core/checks.c ../core/combat.c ../core/dice_pool.c)
   target_include_directories(${case} PRIVATE ../core)
   target_compile_options(${case} PRIVATE -Wall -Wextra -Werror)

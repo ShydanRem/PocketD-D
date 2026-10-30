@@ -1,5 +1,7 @@
 # Beyond: prima versione offline
 
+> v0.89: [Punizione 2024, riconciliazione slot ordinari/patto e prove reali](PUNIZIONE-DIVINA.md).
+
 > Aggiornamento v0.86: [bonus permanenti e sintonia per tutti i PG](OGGETTI-SINTONIA.md).
 
 Aggiornamento v0.85: [equipaggiamento e True Strike 2024 operativi sul Pocket](EQUIPAGGIAMENTO-MAGIE.md).
