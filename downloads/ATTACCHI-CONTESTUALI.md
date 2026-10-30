@@ -1,5 +1,7 @@
 # Attacco normale o con magia — v0.87
 
+> Aggiornamento v0.89: [Punizione Divina 2024 e slot ibridi](PUNIZIONE-DIVINA.md).
+
 > Aggiornamento v0.88: [Hex e Marchio 2024 sul colpo](EFFETTI-SUL-COLPO.md).
 
 30 ottobre 2026. Funzione del Pocket, comune a tutti i personaggi e a tutte le

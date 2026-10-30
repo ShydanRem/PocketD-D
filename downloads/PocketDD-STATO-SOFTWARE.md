@@ -1,11 +1,11 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **30 ottobre 2026 — v0.88**. Il dispositivo è il prodotto;
+Aggiornamento del **30 ottobre 2026 — v0.89**. Il dispositivo è il prodotto;
 il PC serve per importare, configurare e conservare i backup.
 
 Il software copre una prima sessione individuale offline. L'utente riferisce
 risolti USB, installer e SD e conferma visibile il sito GitHub Pages. Il collaudo
-completo di batteria, interruzioni di alimentazione e delle nuove funzioni 0.85–0.88
+completo di batteria, interruzioni di alimentazione e delle nuove funzioni 0.85–0.89
 resta distinto da questa conferma.
 
 ## Pagina web di installazione
@@ -15,6 +15,21 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale serve ancora al connettore Beyond.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Nuovo nella v0.89
+
+[Punizione Divina 2024](PUNIZIONE-DIVINA.md): scelta dopo un colpo valido, costo
+ordinario/patto o uso finito, bonus del bersaglio e critico, insieme a True Strike
+e Hex/Marchio. Costi e risultati congelati nelle riprove; storico atomico fino a
+cinque parti, compresi critici da 22d8. Azione bonus e regole generali del turno
+restano dichiarazioni del giocatore, non un bilancio automatizzato.
+
+Correzione dell'import: massimi dalle tabelle quando sono non ambigue per un solo
+mezzo-incantatore ordinario e Warlock 2024; consumi separati. Lettura reale e
+parser/codec C sul PC concordano su PF35/53, CA16, slot ordinari1/2 e patto1/2;
+Punizione con CAR, non preparata. Nessun tiro o USB fisico effettuato su quel PG.
+PC24/USB21 per i nuovi profili, PDDe40 alle stesse dimensioni. Legacy2014,
+altre Punizioni e proprietà non rappresentate rimangono manuali.
 
 ## Nuovo nella v0.88
 
@@ -346,7 +361,7 @@ e look di classe singola supportata; nei casi ambigui la scelta è manuale.
 Restano espressioni/fotogrammi aggiuntivi dei look SD, Artificiere/sottoclassi,
 altre illustrazioni/scene e rifiniture di icone e transizioni. I preset SD hanno
 colori/taglio propri; lo stile originale conserva le proprie scelte. Il pacchetto
-SD è opzionale e la lettura del lettore fisico resta da verificare: lo spazio
+SD è opzionale e il trasferimento SD e l’avvio sono stati riferiti funzionanti dall’utente; nuovi look/interazioni richiedono riscontro: lo spazio
 SD non sostituisce il controllo di RAM, fluidità e salvataggi sul dispositivo.
 
 ## La roadmap in quattro blocchi
