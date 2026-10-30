@@ -1,4 +1,9 @@
-# Beyond: prima versione offline — v0.78
+# Beyond: prima versione offline
+
+Aggiornamento v0.85: [equipaggiamento e True Strike 2024 operativi sul Pocket](EQUIPAGGIAMENTO-MAGIE.md).
+USB/installer/SD riferiti risolti dall’utente; nuove interazioni da provare sul dispositivo.
+Il contratto offline e i limiti descritti sotto restano applicabili, con i profili
+0.85 che aggiornano i valori collegati alle proprietà esplicitamente configurate.
 
 28 ottobre 2026. Il prodotto è PocketD-D sul dispositivo; il PC importa e
 configura. Questa versione non richiede Foundry. I testi restano negli estratti
