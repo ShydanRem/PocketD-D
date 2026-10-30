@@ -137,7 +137,6 @@ export function extendBeyond(report,c,customTraining=[]){
     return weapon;
   });
   const itemImport=beyondItems(c.inventory,state.inventory,{warn,evidence});state.inventory=itemImport.items;
-  beyondEquipment(c,state,{warn,evidence,modifiers:mods});
   const defenceImport=beyondDefences(c,{warn,fact,evidence});if(defenceImport.profile)ext.defences=defenceImport.profile;
   const equipped=state.inventory.filter((item,index)=>item.type==='weapon'&&item.quantity>0&&c.inventory[index].equipped);
   state.equippedWeaponId=equipped.length===1?equipped[0].id:null;
@@ -292,6 +291,7 @@ export function extendBeyond(report,c,customTraining=[]){
   // Custom-action notes are appended to the same list before final validation.
   state.powers=powers;
   evidence.push(`Magie: ${powers.filter(p=>p.type==='spell').length}; capacità e note: ${powers.filter(p=>p.type==='feature').length}. I contatori usano limitedUse, non limiti inventati dai testi.`);
+  beyondEquipment(c,state,{warn,evidence,modifiers:mods,report});
   const omissions=[...issues,...report.conversion.omissions.filter(t=>/Oggetti personalizzati|Note personalizzate/.test(t)),
     'Effetti condizionali, armi versatili, due armi e maestrie restano al DM; Ira, Grande Maestro d’Armi 2014 e dado critico aggiuntivo riconosciuti hanno comandi dedicati.',
     'Condizioni, dadi vita e tiri morte sono conservati e modificabili; solo Avvelenato applica automaticamente svantaggio. Recupero dei dadi vita e stabilizzazione restano manuali.',

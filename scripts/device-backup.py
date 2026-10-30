@@ -31,7 +31,7 @@ def validate(raw):
             or obj['format'] != 'pocketdd-device-backup' or type(obj['version']) is not int or obj['version'] != 1):
         raise ValueError('Usa un backup nativo del dispositivo v1')
     records = []
-    for key, magic, maximum in [('state', (b'PDDP', b'PDDQ', b'PDDR', b'PDDS', b'PDDT', b'PDDU', b'PDDV', b'PDDW', b'PDDX', b'PDDY', b'PDDZ', b'PDDa', b'PDDb'), 76285), ('history', (b'PDH1',), 2481)]:
+    for key, magic, maximum in [('state', (b'PDDP', b'PDDQ', b'PDDR', b'PDDS', b'PDDT', b'PDDU', b'PDDV', b'PDDW', b'PDDX', b'PDDY', b'PDDZ', b'PDDa', b'PDDb', b'PDDc'), 76285), ('history', (b'PDH1',), 2481)]:
         text = obj[key]
         if not isinstance(text, str) or not text or len(text) > 4*((maximum+2)//3):
             raise ValueError('Record nativo fuori limite')
@@ -41,7 +41,7 @@ def validate(raw):
             raise ValueError('Record nativo corrotto o non supportato')
         records.append(data)
     state, history = records
-    if state[:4] == b'PDDb':
+    if state[:4] in (b'PDDb', b'PDDc'):
         if len(state) < 10045:
             raise ValueError('Record equipaggiamento incompleto')
         tail = state[-1085:-4]
@@ -49,7 +49,7 @@ def validate(raw):
             raise ValueError('Formula armatura non valida')
         for i in range(60):
             g = tail[1+i*18:1+(i+1)*18]
-            if g[0] > 5 or g[1] > 1 or g[2] > 30 or any(v > 20 for v in g[3:16]) or int.from_bytes(g[16:18], 'little') > 1998:
+            if g[0] > 5 or g[1] > (5 if state[:4] == b'PDDc' else 1) or g[2] > 30 or any(v > 20 for v in g[3:16]) or int.from_bytes(g[16:18], 'little') > 1998:
                 raise ValueError('Proprieta equipaggiamento non valide')
         # Normalize this local preview only. Return the exact original envelope.
         state = b'PDDa' + state[4:-1085] + state[-4:]

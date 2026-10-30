@@ -847,7 +847,7 @@ static void act(intptr_t action) {
     feedback.active=false;bool report_feedback=feedback_action(action);if(report_feedback)feedback_capture(&feedback_before);
     #define next scratch
     next=state;
-    if((action==6090||action==84||action==6300||action==6000||action==6100||action==6402||action==6403)&&play_action(action)){render();return;}
+    if((action==6090||action==84||action==6300||action==6000||action==6100||action==6402||action==6403||action==6500)&&play_action(action)){render();return;}
     if (action>=100 && action<104) { page=action-100;if(combat_roll>=4)invalidate_strike();rest_active=false;dice_setup=false;die_picker=false; }
     else if(action==4700&&(page==WIFI_HOME||page==SYNC_REVIEW)){sync_notice="";page=SYNC_HOME;}
     else if(action==4701&&page==SYNC_REVIEW){pd_sync_decide(false,state.history_epoch);sync_notice="";page=SYNC_HOME;}
@@ -1870,7 +1870,7 @@ static void render_item(void) {
         button("Attacco",239,299,144,44,81,v->quantity&&state.equipped==item_index);
     } else {
         label(v->kind==PD_HEALING?"Cura":v->kind==PD_CONSUMABLE?"Consumabile":"Oggetto",83,213,300,false);
-        small_label(v->kind==PD_GEAR?(state.gear[item_index].kind>=2?"CA e bonus collegati al profilo":"Configura i bonus per applicare effetti"):"Altri effetti: verifica con il DM",83,247,300,PD_MUTED);
+        small_label(v->kind==PD_GEAR?(state.gear[item_index].attunement==1?"Sintonia richiesta: bonus inattivi":state.gear[item_index].attunement==2?(state.gear[item_index].equipped?"In sintonia: bonus attivi":"In sintonia; riposto, bonus inattivi"):state.gear[item_index].kind>=2?"CA e bonus collegati al profilo":"Configura i bonus per applicare effetti"):"Altri effetti: verifica con il DM",83,247,300,PD_MUTED);
         if(v->kind==PD_GEAR){unsigned hint=pd_item_setup_hint(&state,item_index);bool setup=pd_gear_unconfigured(&state,item_index)&&hint;
             if(setup)button(hint==1?"Configura arma":"Configura armatura",83,299,300,44,hint==1?6000:6100,true);
             else{button(state.gear[item_index].equipped?"Riponi":"Equipaggia",83,299,144,44,84,v->quantity);button("Configura",239,299,144,44,6090,true);}}
@@ -1878,7 +1878,10 @@ static void render_item(void) {
         if(v->kind==PD_CONSUMABLE||v->kind==PD_HEALING)button(v->kind==PD_HEALING&&!state.hp&&state.status.available&&state.status.failures==3?"Tre fallimenti: DM":v->kind==PD_HEALING&&state.hp==pd_max_hp(&state)?"PF al massimo":"Usa",83,299,300,44,88,v->quantity&&(v->kind!=PD_HEALING||(state.hp<pd_max_hp(&state)&&(state.hp||!state.status.available||state.status.failures<3))));
     }
     if(v->kind==PD_WEAPON){button("Zaino",83,359,v->charges.maximum?92:144,48,80,true);lv_obj_t *config=button("Configura",v->charges.maximum?187:239,359,v->charges.maximum?92:144,48,6090,true);lv_obj_set_style_text_font(config,&lv_font_montserrat_16,0);if(v->charges.maximum)button("Cariche",291,359,92,48,2160,true);}
-    else{button("Zaino",83,359,v->charges.maximum?144:300,48,80,true);if(v->charges.maximum)button("Cariche",239,359,144,48,2160,true);}
+    else if(state.gear[item_index].attunement){
+        button("Zaino",83,359,v->charges.maximum?92:144,48,80,true);lv_obj_t *a=button("Sintonia",v->charges.maximum?187:239,359,v->charges.maximum?92:144,48,6500,v->quantity>0);lv_obj_set_style_text_font(a,&lv_font_montserrat_16,0);
+        if(v->charges.maximum){lv_obj_t *b=button("Cariche",291,359,92,48,2160,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
+    }else{button("Zaino",83,359,v->charges.maximum?144:300,48,80,true);if(v->charges.maximum)button("Cariche",239,359,144,48,2160,true);}
 }
 static void render_history(void){
     char text[160];
@@ -3598,7 +3601,7 @@ static void usb_task(void *unused) {
             if(c=='\n') {
                 if(!overflow && used) {
                     line[used]=0;
-                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 18\n");
+                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 19\n");
                     else if(!strcmp(line,"PDD ASSET HELLO 1"))reply("PDD ASSET READY 1\n");
                     else if(!strncmp(line,"PDD ASSET ",10)){
                         pd_asset_request *request=malloc(sizeof *request);

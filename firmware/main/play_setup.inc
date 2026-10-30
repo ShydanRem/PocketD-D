@@ -41,6 +41,7 @@ static void profile_setup_begin(void){
 static bool play_candidate(void){
  scratch=state;
  if(play_mode==0){return state.items[item_index].kind==PD_WEAPON?pd_equip(&scratch,play_return!=WEAPON_PICKER&&state.equipped==item_index?PD_NO_WEAPON:item_index):pd_gear_equip(&scratch,item_index,!state.gear[item_index].equipped);}
+ if(play_mode==4)return pd_gear_attune(&scratch,item_index,state.gear[item_index].attunement!=2);
  if(play_mode==1){
   if(state.gear[item_index].kind&&!pd_gear_configure(&scratch,item_index,(pd_gear){0},state.unarmored_rule,false))return false;
   pd_item v=weapon_draft;int a,d;pd_gear_weapon_bonus(&scratch,&a,&d);int attack=v.attack_modifier+a,damage=v.damage_modifier+d;if(attack< -10||attack>10||damage< -10||damage>10)return false;v.attack_modifier=attack;v.damage_modifier=damage;scratch.items[item_index]=v;
@@ -53,9 +54,10 @@ static bool play_candidate(void){
  return pd_valid(&scratch);
 }
 static void play_preview(unsigned mode,page_t back){play_mode=mode;play_return=back;play_preview_page=0;page=PLAY_CONFIRM;wifi_focus=0;}
-static unsigned play_changes(char lines[20][96]){
+static unsigned play_changes(char lines[32][96]){
  unsigned n=0;
- if(play_mode==3)snprintf(lines[n++],96,"Profilo: %s",profile_true?"True Strike 2024":"effetti manuali");
+ if(play_mode==4)snprintf(lines[n++],96,"%s",scratch.gear[item_index].attunement==2?"Attiva sintonia":"Termina sintonia");
+ else if(play_mode==3)snprintf(lines[n++],96,"Profilo: %s",profile_true?"True Strike 2024":"effetti manuali");
  else snprintf(lines[n++],96,"%s",play_mode==1?"Salva arma ed equipaggia":scratch.gear[item_index].equipped?"Oggetto equipaggiato":"Oggetto riposto");
  if(scratch.armor!=state.armor)snprintf(lines[n++],96,"CA base: %u -> %u",state.armor,scratch.armor);
  if(scratch.max_hp!=state.max_hp)snprintf(lines[n++],96,"PF massimi: %u -> %u",state.max_hp,scratch.max_hp);
@@ -66,12 +68,20 @@ static unsigned play_changes(char lines[20][96]){
   else{snprintf(lines[n++],96,"Attacco: %+d",new.attack_bonus);snprintf(lines[n++],96,"Danni: %ud%u %+d",new.count,new.sides,new.damage_bonus);}
  }
  if(play_mode==2){const pd_gear *old=&state.gear[item_index];if(old->spell_attack!=gear_draft.spell_attack||old->spell_dc!=gear_draft.spell_dc)snprintf(lines[n++],96,"Bonus magie: att %+d / CD %+d",gear_draft.spell_attack,gear_draft.spell_dc);if(old->saves!=gear_draft.saves||old->checks!=gear_draft.checks)snprintf(lines[n++],96,"Bonus tiri: prove %+d / TS %+d",gear_draft.checks,gear_draft.saves);}
+ if(play_mode!=3){
+  const pd_gear *g=&scratch.gear[item_index];
+  if(g->equipped&&g->attunement==1)snprintf(lines[n++],96,"Senza sintonia: bonus inattivi");
+  unsigned seen=0;for(unsigned i=0;i<state.magic.count;i++)if(!state.magic.powers[i].kind&&state.magic.powers[i].effect!=PD_TRUE_STRIKE_2024&&!(seen&(1u<<state.magic.powers[i].ability))){int a,dc,b,bc;if(pd_magic_stats(&state,i,&a,&dc)&&pd_magic_stats(&scratch,i,&b,&bc)&&(a!=b||dc!=bc)){snprintf(lines[n++],96,"Magie %s: att %+d -> %+d",pd_abilities[scratch.magic.powers[i].ability],a,b);snprintf(lines[n++],96,"CD magie: %d -> %d",dc,bc);seen|=1u<<state.magic.powers[i].ability;}}
+  int checks=scratch.training.check_bonus[0]-state.training.check_bonus[0],saves=scratch.training.save_bonus[0]-state.training.save_bonus[0];if(checks||saves)snprintf(lines[n++],96,"Extra tiri: prove %+d / TS %+d",checks,saves);
+  if(play_mode==4){unsigned total=0;for(unsigned i=0;i<scratch.item_count;i++)total+=scratch.gear[i].attunement==2;snprintf(lines[n++],96,"Oggetti in sintonia: %u",total);}
+ }
  if(play_mode==3&&profile_true){pd_weapon_info w;if(pd_true_strike_stats(&scratch,power_index,false,&w)){snprintf(lines[n++],96,"%s: att %+d / danni %+d",pd_abilities[profile_ability],w.attack_bonus,w.damage_bonus);snprintf(lines[n++],96,"Extra: %ud6 radianti",w.radiant_dice);}else snprintf(lines[n++],96,"Scegli un arma per usare la magia");}
  return n;
 }
 static bool play_action(intptr_t a){
  play_error="";
  if(a==6099){if(page==WEAPON_PICKER){page=picker_return;pending_attack_spell=-1;}else if(page==PLAY_CONFIRM)page=play_return;else if(page==MAGIC_PROFILE)page=MAGIC_DETAIL;else if(page==WEAPON_SETUP)page=weapon_from_attack?WEAPON_PICKER:ITEM_CONFIG_MENU;else if(page==GEAR_SETUP)page=ITEM_CONFIG_MENU;else if(page==ATTACK_MODE)page=COMBAT;else page=ITEM_DETAIL;wifi_focus=0;return true;}
+ if(a==6500&&page==ITEM_DETAIL&&state.gear[item_index].attunement){play_preview(4,ITEM_DETAIL);return true;}
  if(a==6090&&page==ITEM_DETAIL){page=ITEM_CONFIG_MENU;return true;}
  if(a==84&&page==ITEM_DETAIL){if(state.items[item_index].kind==PD_GEAR&&pd_gear_unconfigured(&state,item_index)&&pd_item_setup_hint(&state,item_index)){page=ITEM_CONFIG_MENU;return true;}play_preview(0,ITEM_DETAIL);return true;}
  if(a==6402&&page==COMBAT){attack_mode_page=0;page=ATTACK_MODE;return true;}
@@ -101,7 +111,7 @@ static bool play_action(intptr_t a){
   return true;
  }
  if(page==GEAR_SETUP){
-  if(a==6101&&gear_field)gear_field--;else if(a==6102&&gear_field<18)gear_field++;
+  if(a==6101&&gear_field)gear_field--;else if(a==6102&&gear_field<19)gear_field++;
   else if(a==6106)gear_field=gear_field<5?5:0;
   else if(a==6105)play_preview(2,GEAR_SETUP);
   else if(a==6103||a==6104){int d=a==6103?-1:1;
@@ -112,6 +122,7 @@ static bool play_action(intptr_t a){
    else if(gear_field==4){int n=gear_rule+d;if(n>=0&&n<=3)gear_rule=n;}
    else if(gear_field>=5&&gear_field<=10){int n=gear_draft.ability[gear_field-5]+d;if(n>= -10&&n<=10)gear_draft.ability[gear_field-5]=n;}
    else if(gear_field>=11&&gear_field<=17){int8_t *fields[]={&gear_draft.ac,&gear_draft.attack,&gear_draft.damage,&gear_draft.spell_attack,&gear_draft.spell_dc,&gear_draft.saves,&gear_draft.checks};int n=*fields[gear_field-11]+d;if(n>= -10&&n<=10)*fields[gear_field-11]=n;}
+   else if(gear_field==19){int n=gear_draft.attunement+d;if(n>=0&&n<=2)gear_draft.attunement=n;}
    else if(gear_field==18){int n=gear_draft.max_hp+d;if(n>= -999&&n<=999)gear_draft.max_hp=n;}
   }return true;
  }
@@ -163,15 +174,16 @@ static void render_play_setup(void){
   const char *names[]={"Att -","Att +","Dan -","Dan +"};for(unsigned i=0;i<4;i++)wifi_button(names[i],83+i*78,303,66,44,6006+i,true);
   wifi_button("Indietro",83,359,144,48,6099,true);wifi_button("Anteprima",239,359,144,48,6010,true);
  }else if(page==GEAR_SETUP){
-  static const char *const fields[]={"Tipo di oggetto","CA base armatura/scudo","Oggetto equipaggiato","Bonus gia nei valori importati?","CA senza armatura","Bonus FOR","Bonus DES","Bonus COS","Bonus INT","Bonus SAG","Bonus CAR","Bonus CA","Bonus attacchi con arma","Bonus danni con arma","Bonus attacchi magici","Bonus CD magie","Bonus tiri salvezza","Bonus prove e abilita","Bonus PF massimi (oltre COS)"};
-  snprintf(text,sizeof text,"Profilo %u/19",gear_field+1);label(text,139,111,188,false);wifi_button("<",83,99,48,44,6101,gear_field>0);wifi_button(">",335,99,48,44,6102,gear_field<18);setup_name(state.items[item_index].name,153);label(fields[gear_field],83,203,300,false);
+  static const char *const fields[]={"Tipo di oggetto","CA base armatura/scudo","Oggetto equipaggiato","Bonus gia nei valori importati?","CA senza armatura","Bonus FOR","Bonus DES","Bonus COS","Bonus INT","Bonus SAG","Bonus CAR","Bonus CA","Bonus attacchi con arma","Bonus danni con arma","Bonus attacchi magici","Bonus CD magie","Bonus tiri salvezza","Bonus prove e abilita","Bonus PF massimi (oltre COS)","Sintonia dell oggetto"};
+  snprintf(text,sizeof text,"Profilo %u/20",gear_field+1);label(text,139,111,188,false);wifi_button("<",83,99,48,44,6101,gear_field>0);wifi_button(">",335,99,48,44,6102,gear_field<19);setup_name(state.items[item_index].name,153);label(fields[gear_field],83,203,300,false);
   if(gear_field==0)snprintf(text,sizeof text,"%s",(const char *const[]){"","Oggetto indossato","Armatura leggera","Armatura media","Armatura pesante","Scudo"}[gear_draft.kind]);
   else if(gear_field==1)snprintf(text,sizeof text,"%u",gear_draft.armor);else if(gear_field==2)snprintf(text,sizeof text,"%s",gear_draft.equipped?"Si":"No");
   else if(gear_field==3)snprintf(text,sizeof text,"%s",!pd_gear_unconfigured(&state,item_index)?"Delta automatico":gear_adopt==1?"Si: sono gia inclusi":gear_adopt==2?"No: applica i bonus":"Scegli Si oppure No");
   else if(gear_field==4)snprintf(text,sizeof text,"%s",(const char *const[]){"Manuale","10 + DES","10 + DES + COS","10 + DES + SAG (senza scudo)"}[gear_rule]);
+  else if(gear_field==19)snprintf(text,sizeof text,"%s",(const char *const[]){"Non richiesta","Richiesta: non sintonizzato","In sintonia"}[gear_draft.attunement]);
   else if(gear_field<=10)snprintf(text,sizeof text,"%+d",gear_draft.ability[gear_field-5]);else if(gear_field==18)snprintf(text,sizeof text,"%+d",gear_draft.max_hp);
   else{const int values[]={gear_draft.ac,gear_draft.attack,gear_draft.damage,gear_draft.spell_attack,gear_draft.spell_dc,gear_draft.saves,gear_draft.checks};snprintf(text,sizeof text,"%+d",values[gear_field-11]);}small_label(text,83,247,300,PD_GOLD);
-  wifi_button("- / No",83,281,144,44,6103,true);wifi_button("+ / Si",239,281,144,44,6104,true);small_label(!gear_adopt?"Scegli se i bonus sono gia inclusi (4/19)":"Proprieta esplicite: verifica con il DM",83,331,300,PD_MUTED);
+  wifi_button("- / No",83,281,144,44,6103,true);wifi_button("+ / Si",239,281,144,44,6104,true);small_label(!gear_adopt?"Scegli se i bonus sono gia inclusi (4/20)":"Proprieta esplicite: verifica con il DM",83,331,300,PD_MUTED);
   wifi_button("Indietro",83,359,92,48,6099,true);wifi_button(gear_field<5?"Bonus >":"Base",187,359,92,48,6106,true);wifi_button("Anteprima",291,359,92,48,6105,gear_adopt>0);
  }else if(page==MAGIC_PROFILE){
   label("Regole della magia",83,111,300,false);setup_name(state.magic.powers[power_index].name,151);
@@ -181,11 +193,11 @@ static void render_play_setup(void){
   const char *names[]={"Att -","Att +","Dan -","Dan +"};for(unsigned i=0;i<4;i++)wifi_button(names[i],83+i*78,313,66,44,6303+i,profile_true);
   wifi_button("Indietro",83,359,144,48,6099,true);wifi_button("Anteprima",239,359,144,48,6307,true);
  }else if(page==PLAY_CONFIRM){
-  bool okay=play_candidate();char lines[20][96];unsigned n=okay?play_changes(lines):0,pages=n?(n+2)/3:1;if(play_preview_page>=pages)play_preview_page=pages-1;
+  bool okay=play_candidate();char lines[32][96];unsigned n=okay?play_changes(lines):0,pages=n?(n+2)/3:1;if(play_preview_page>=pages)play_preview_page=pages-1;
   snprintf(text,sizeof text,"Conferma %u/%u",play_preview_page+1,pages);label(text,139,111,188,false);wifi_button("<",83,99,48,44,6096,play_preview_page>0);wifi_button(">",335,99,48,44,6097,play_preview_page+1<pages);
   for(unsigned i=0;i<3;i++){unsigned at=play_preview_page*3+i;if(at>=n)break;small_label(lines[at],83,173+i*46,300,PD_TEXT);}
   if(!okay){small_label("Valori non applicabili",83,201,300,PD_GOLD);small_label("Verifica profilo, bonus e formula CA",83,249,300,PD_TEXT);}
-  small_label(play_error[0]?play_error:play_mode==2&&gear_adopt==1?"Gia inclusi: registro senza raddoppiare":"Applico solo alla conferma",83,319,300,PD_GOLD);
+  small_label(play_error[0]?play_error:play_mode==4?"Sintonia: verifica i requisiti":play_mode==2&&gear_adopt==1?"Gia inclusi: registro senza raddoppiare":"Applico solo alla conferma",83,319,300,PD_GOLD);
   wifi_button("Indietro",83,359,144,48,6099,true);wifi_button("Conferma",239,359,144,48,6098,okay);
  }
  wifi_mark_focus();

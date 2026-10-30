@@ -52,7 +52,7 @@ function convertCoreNormalized(payload, expectedId, normalization, extended=fals
         (item.definition.armorTypeId!=null && item.definition.filterType!=='Armor')) block('Tipo o equipaggiamento di un oggetto non risolto.');
     if (item?.equipped && (!item.definition?.canAttune || item.isAttuned)) {
       for (const grant of Array.isArray(item.definition?.grantedModifiers)?item.definition.grantedModifiers:[]) {
-        if (grant && coreModifier(grant) && !(Array.isArray(groups?.item)?groups.item:[]).some(m=>m?.id!=null && String(m.id)===String(grant?.id) && m.type===grant.type && m.subType===grant.subType && m.value===grant.value && m.statId===grant.statId)) block('Modificatori di un oggetto equipaggiato assenti o discordanti nel riepilogo.');
+        if (grant && !(grant.requiresAttunement===true&&item.isAttuned!==true) && coreModifier(grant) && !(Array.isArray(groups?.item)?groups.item:[]).some(m=>m?.id!=null && String(m.id)===String(grant?.id) && m.type===grant.type && m.subType===grant.subType && m.value===grant.value && m.statId===grant.statId)) block('Modificatori di un oggetto equipaggiato assenti o discordanti nel riepilogo.');
       }
     }
   }
@@ -84,9 +84,9 @@ function convertCoreNormalized(payload, expectedId, normalization, extended=fals
       if (group==='item') {
         const owners = inventorySource.filter(item => Array.isArray(item?.definition?.grantedModifiers) && item.definition.grantedModifiers.some(grant => String(grant?.id)===String(m.id)));
         if (owners.length!==1) { block(`Origine oggetto non univoca: ${m.subType}.`); continue; }
-        const item=owners[0];
-        if(item.quantity===0||item.equipped===false||item.definition.canAttune===true&&item.isAttuned===false)continue;
-        if(!integer(item.quantity,1,999)||item.equipped!==true||item.definition.canAttune&&item.isAttuned!==true){block(`Equipaggiamento o sintonia non risolti: ${m.subType}.`);continue;}
+        const item=owners[0],grant=item.definition.grantedModifiers.find(g=>String(g?.id)===String(m.id)),requires=item.definition.canAttune===true||m.requiresAttunement===true||grant?.requiresAttunement===true;
+        if(item.quantity===0||item.equipped===false||requires&&item.isAttuned===false)continue;
+        if(!integer(item.quantity,1,999)||item.equipped!==true||requires&&item.isAttuned!==true){block(`Equipaggiamento o sintonia non risolti: ${m.subType}.`);continue;}
       }
       const chosen=m.isGranted===false&&selectedAbilityBonus(c,group,m);
       if(chosen)evidence.push(`Aumento ${m.subType}: scelta esplicita e opzione concordante, +${m.value}.`);

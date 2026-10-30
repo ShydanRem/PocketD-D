@@ -10,7 +10,7 @@
 #define PD_RESOURCE_BYTES 33
 #define PD_EQUIPMENT_BYTES (1u+18u*60u)
 #define PD_RECORD_SIZE (75204u+PD_EQUIPMENT_BYTES)
-#define PD_RECORD_MAGIC "PDDb"
+#define PD_RECORD_MAGIC "PDDc"
 #define PD_SCENES 3
 #define PD_TURN_NAME_BYTES 21
 #define PD_COINS 5
@@ -48,7 +48,7 @@ enum { PD_WEAR_NONE,PD_WEAR_ITEM,PD_WEAR_LIGHT,PD_WEAR_MEDIUM,PD_WEAR_HEAVY,PD_W
 /* Numeric properties are explicit, never inferred from an item's name. The
    stored character values already include active gear; toggling applies deltas. */
 typedef struct {
-    uint8_t kind,armor;bool equipped;
+    uint8_t kind,armor,attunement;bool equipped; /* 0 not required, 1 required, 2 attuned. */
     int8_t ability[6],ac,attack,damage,spell_attack,spell_dc,saves,checks;
     int16_t max_hp;
 } pd_gear;
@@ -145,6 +145,7 @@ void pd_gear_weapon_bonus(const pd_state *state,int *attack,int *damage);
    effects are already included in imported values. Atomic on failure. */
 bool pd_gear_configure(pd_state *state,unsigned index,pd_gear gear,unsigned unarmored_rule,bool adopt);
 bool pd_gear_equip(pd_state *state,unsigned index,bool equipped);
+bool pd_gear_attune(pd_state *state,unsigned index,bool attuned);
 
 bool pd_wallet_set(pd_state *state,const pd_wallet *wallet);
 bool pd_wallet_change(pd_state *state,unsigned coin,int32_t delta);

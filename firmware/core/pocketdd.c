@@ -20,12 +20,13 @@ bool pd_gear_valid(const pd_state *s){
     unsigned body=0,shield=0;
     for(unsigned i=0;i<PD_ITEMS;i++){
         const pd_gear *g=&s->gear[i];
-        if(g->kind>PD_WEAR_SHIELD||g->armor>30||g->max_hp< -999||g->max_hp>999)return false;
+        if(g->attunement>2||g->kind>PD_WEAR_SHIELD||g->armor>30||g->max_hp< -999||g->max_hp>999)return false;
         const int8_t values[]={g->ability[0],g->ability[1],g->ability[2],g->ability[3],g->ability[4],g->ability[5],g->ac,g->attack,g->damage,g->spell_attack,g->spell_dc,g->saves,g->checks};
         for(unsigned j=0;j<sizeof values;j++)if(values[j]< -10||values[j]>10||(!g->kind&&values[j]))return false;
-        if((!g->kind&&(g->equipped||g->armor||g->max_hp))||(g->kind&&(i>=s->item_count||s->items[i].kind!=PD_GEAR)))return false;
+        if((!g->kind&&(g->equipped||g->attunement||g->armor||g->max_hp))||(g->kind&&(i>=s->item_count||s->items[i].kind!=PD_GEAR)))return false;
         if(g->kind==PD_WEAR_ITEM&&g->armor)return false;
         if(g->kind>=PD_WEAR_LIGHT&&(!g->armor||(g->kind==PD_WEAR_SHIELD&&g->armor>10)))return false;
+        if(g->attunement==2&&!s->items[i].quantity)return false;
         if(g->equipped){if(!s->items[i].quantity)return false;if(g->kind>=PD_WEAR_LIGHT&&g->kind<=PD_WEAR_HEAVY)body++;if(g->kind==PD_WEAR_SHIELD)shield++;}
     }
     return body<=1&&shield<=1;
@@ -43,7 +44,7 @@ static int gear_body(const pd_state *s){
 }
 typedef struct {int ability[6],ac,attack,damage,spell_attack,spell_dc,saves,checks,max_hp;} gear_sum;
 static gear_sum gear_totals(const pd_state *s){
-    gear_sum t={0};for(unsigned i=0;i<s->item_count;i++)if(s->gear[i].equipped){const pd_gear *g=&s->gear[i];for(unsigned j=0;j<6;j++)t.ability[j]+=g->ability[j];t.ac+=g->ac;t.attack+=g->attack;t.damage+=g->damage;t.spell_attack+=g->spell_attack;t.spell_dc+=g->spell_dc;t.saves+=g->saves;t.checks+=g->checks;t.max_hp+=g->max_hp;}return t;
+    gear_sum t={0};for(unsigned i=0;i<s->item_count;i++)if(s->gear[i].equipped&&s->gear[i].attunement!=1){const pd_gear *g=&s->gear[i];for(unsigned j=0;j<6;j++)t.ability[j]+=g->ability[j];t.ac+=g->ac;t.attack+=g->attack;t.damage+=g->damage;t.spell_attack+=g->spell_attack;t.spell_dc+=g->spell_dc;t.saves+=g->saves;t.checks+=g->checks;t.max_hp+=g->max_hp;}return t;
 }
 void pd_gear_weapon_bonus(const pd_state *s,int *attack,int *damage){gear_sum total=gear_totals(s);if(attack)*attack=total.attack;if(damage)*damage=total.damage;}
 /* Small numeric rollback snapshot: do not allocate/copy a 75 KiB character on
@@ -79,7 +80,7 @@ static bool gear_delta(pd_state *s,gear_sum old,int old_body,unsigned old_rule,b
 bool pd_gear_unconfigured(const pd_state *s,unsigned index){
     if(!s||index>=s->item_count)return false;
     const pd_gear *g=&s->gear[index];
-    if(g->kind>PD_WEAR_ITEM||g->armor||g->max_hp||g->ac||g->attack||g->damage||g->spell_attack||g->spell_dc||g->saves||g->checks)return false;
+    if(g->attunement||g->kind>PD_WEAR_ITEM||g->armor||g->max_hp||g->ac||g->attack||g->damage||g->spell_attack||g->spell_dc||g->saves||g->checks)return false;
     for(unsigned i=0;i<6;i++)if(g->ability[i])return false;
     return true;
 }
@@ -99,6 +100,11 @@ bool pd_gear_configure(pd_state *s,unsigned index,pd_gear g,unsigned rule,bool a
 bool pd_gear_equip(pd_state *s,unsigned index,bool equipped){
     if(!s||index>=s->item_count)return false;
     pd_gear g=s->gear[index];if(!g.kind)g.kind=PD_WEAR_ITEM;g.equipped=equipped;
+    return pd_gear_configure(s,index,g,s->unarmored_rule,false);
+}
+bool pd_gear_attune(pd_state *s,unsigned index,bool attuned){
+    if(!s||!pd_valid(s)||index>=s->item_count||!s->items[index].quantity||!s->gear[index].attunement)return false;
+    pd_gear g=s->gear[index];g.attunement=attuned?2:1;
     return pd_gear_configure(s,index,g,s->unarmored_rule,false);
 }
 bool pd_turn_name_set(pd_state *s,unsigned owner,const char *name){
@@ -451,6 +457,7 @@ bool pd_resource_change(pd_state *s, unsigned index, int delta) {
 bool pd_item_quantity_set(pd_state *s,unsigned index,unsigned quantity){
     if(!s||!pd_valid(s)||!s->inventory_available||index>=s->item_count||quantity>999)return false;
     if(!quantity&&s->gear[index].equipped&&!pd_gear_equip(s,index,false))return false;
+    if(!quantity&&s->gear[index].attunement)s->gear[index].attunement=1;
     s->items[index].quantity=quantity;
     if(!quantity&&s->equipped==index){s->equipped=PD_NO_WEAPON;s->combat.thrown=false;}
     return true;
@@ -581,17 +588,17 @@ size_t pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
     memcpy(p,s->training.skill_abilities,PD_SKILLS);p+=PD_SKILLS;
     *p++=s->unarmored_rule;
     for(unsigned i=0;i<PD_ITEMS;i++){
-        const pd_gear *g=&s->gear[i];*p++=g->kind;*p++=g->equipped;*p++=g->armor;
+        const pd_gear *g=&s->gear[i];*p++=g->kind;*p++=g->equipped|(g->attunement<<1);*p++=g->armor;
         for(unsigned j=0;j<6;j++)*p++=g->ability[j]+10;
         const int8_t values[]={g->ac,g->attack,g->damage,g->spell_attack,g->spell_dc,g->saves,g->checks};for(unsigned j=0;j<7;j++)*p++=values[j]+10;
         put16(&p,g->max_hp+999);
     }
     size_t size=pd_encoded_size(s);put32(out+size-4,pd_crc32(out,size-4));return size;
 }
-static bool record_payments(const uint8_t *data){return !memcmp(data,"PDDS",4)||!memcmp(data,"PDDT",4)||!memcmp(data,"PDDU",4)||!memcmp(data,"PDDV",4)||(!memcmp(data,"PDDW",4)||(!memcmp(data,"PDDX",4)||(!memcmp(data,"PDDY",4)||(!memcmp(data,"PDDZ",4)||(!memcmp(data,"PDDa",4)||!memcmp(data,"PDDb",4))))));}
+static bool record_payments(const uint8_t *data){return !memcmp(data,"PDDS",4)||!memcmp(data,"PDDT",4)||!memcmp(data,"PDDU",4)||!memcmp(data,"PDDV",4)||(!memcmp(data,"PDDW",4)||(!memcmp(data,"PDDX",4)||(!memcmp(data,"PDDY",4)||(!memcmp(data,"PDDZ",4)||(!memcmp(data,"PDDa",4)||(!memcmp(data,"PDDb",4)||!memcmp(data,"PDDc",4)))))));}
 bool pd_record_known(const uint8_t *data,size_t size) {
     if(!data)return false;
-    if(size>=8964u+PD_EQUIPMENT_BYTES&&size<=PD_RECORD_SIZE&&!memcmp(data,"PDDb",4)&&data[5123]<=PD_POWERS)return size==8964u+PD_EQUIPMENT_BYTES+552u*data[5123];
+    if(size>=8964u+PD_EQUIPMENT_BYTES&&size<=PD_RECORD_SIZE&&(!memcmp(data,"PDDb",4)||!memcmp(data,"PDDc",4))&&data[5123]<=PD_POWERS)return size==8964u+PD_EQUIPMENT_BYTES+552u*data[5123];
     if(size>=8964&&size<=75204&&(!memcmp(data,"PDDY",4)||!memcmp(data,"PDDZ",4)||!memcmp(data,"PDDa",4))&&data[5123]<=PD_POWERS)return size==8964u+552u*data[5123];
     if(size>=8946&&size<=75186&&!memcmp(data,"PDDX",4)&&data[5123]<=PD_POWERS)return size==8946u+552u*data[5123];
     if(size==384&&(!memcmp(data,"PDD1",4)||!memcmp(data,"PDD2",4)))return true;
@@ -669,16 +676,16 @@ static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint
         pd_magic *m=&candidate.magic;if(*p>1)goto invalid;m->available=*p++;m->count=*p++;m->concentration=*p++;
         for(int i=0;i<9;i++){m->slots[i].current=*p++;m->slots[i].maximum=*p++;m->pact[i].current=*p++;m->pact[i].maximum=*p++;}
         memcpy(candidate.shortcuts,p,3);p+=3;
-        if(memcmp(data,"PDDT",4)&&memcmp(data,"PDDU",4)&&memcmp(data,"PDDV",4)&&memcmp(data,"PDDW",4)&&memcmp(data,"PDDX",4)&&memcmp(data,"PDDY",4)&&memcmp(data,"PDDZ",4)&&(memcmp(data,"PDDa",4)&&memcmp(data,"PDDb",4))&&(candidate.shortcuts[0]>13||candidate.shortcuts[1]>13||candidate.shortcuts[2]>13))goto invalid;
+        if(memcmp(data,"PDDT",4)&&memcmp(data,"PDDU",4)&&memcmp(data,"PDDV",4)&&memcmp(data,"PDDW",4)&&memcmp(data,"PDDX",4)&&memcmp(data,"PDDY",4)&&memcmp(data,"PDDZ",4)&&(memcmp(data,"PDDa",4)&&(memcmp(data,"PDDb",4)&&memcmp(data,"PDDc",4)))&&(candidate.shortcuts[0]>13||candidate.shortcuts[1]>13||candidate.shortcuts[2]>13))goto invalid;
         if((memcmp(data,"PDDP",4)&&(memcmp(data,"PDDQ",4)&&(memcmp(data,"PDDR",4)&&!record_payments(data))))&&(candidate.shortcuts[0]>12||candidate.shortcuts[1]>12||candidate.shortcuts[2]>12))goto invalid;
         for(int i=0;i<m->count;i++) {
             pd_power *v=&m->powers[i];memcpy(v->name,p,41);p+=41;memcpy(v->description,p,PD_POWER_TEXT_BYTES);p+=PD_POWER_TEXT_BYTES;
             v->kind=*p++;v->level=*p++;v->flags=*p++;v->ability=*p++;v->maximum=*p++;v->remaining=*p++;v->recovery=*p++;v->effect=*p++;
             if(p[0]>45||p[1]>45)goto invalid;
             v->attack_modifier=(int)*p++-15;v->save_modifier=(int)*p++-15;
-            if(v->effect>5&&memcmp(data,"PDDb",4))goto invalid;
-            if(v->effect==3&&memcmp(data,"PDDZ",4)&&(memcmp(data,"PDDa",4)&&memcmp(data,"PDDb",4)))goto invalid;
-            if(v->effect>=4&&(memcmp(data,"PDDa",4)&&memcmp(data,"PDDb",4)))goto invalid;
+            if(v->effect>5&&(memcmp(data,"PDDb",4)&&memcmp(data,"PDDc",4)))goto invalid;
+            if(v->effect==3&&memcmp(data,"PDDZ",4)&&(memcmp(data,"PDDa",4)&&(memcmp(data,"PDDb",4)&&memcmp(data,"PDDc",4))))goto invalid;
+            if(v->effect>=4&&(memcmp(data,"PDDa",4)&&(memcmp(data,"PDDb",4)&&memcmp(data,"PDDc",4))))goto invalid;
         }
     }
     if(!memcmp(data,"PDD6",4)||!memcmp(data,"PDD7",4)||!memcmp(data,"PDD8",4)||!memcmp(data,"PDD9",4)||!memcmp(data,"PDDA",4)||!memcmp(data,"PDDB",4)||!memcmp(data,"PDDC",4)||!memcmp(data,"PDDD",4)||!memcmp(data,"PDDE",4)||!memcmp(data,"PDDF",4)||!memcmp(data,"PDDG",4)||!memcmp(data,"PDDH",4)||!memcmp(data,"PDDI",4)||!memcmp(data,"PDDJ",4)||!memcmp(data,"PDDK",4)||!memcmp(data,"PDDL",4)||!memcmp(data,"PDDM",4)||!memcmp(data,"PDDN",4)||!memcmp(data,"PDDO",4)||(!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data))))) {
@@ -757,15 +764,15 @@ static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint
     }
     if((!memcmp(data,"PDDP",4)||(!memcmp(data,"PDDQ",4)||(!memcmp(data,"PDDR",4)||record_payments(data))))){candidate.history_epoch=get32(p);p+=4;}
     if((!memcmp(data,"PDDR",4)||record_payments(data))){memcpy(candidate.turn_names,p,sizeof candidate.turn_names);p+=sizeof candidate.turn_names;}
-    if(!memcmp(data,"PDDT",4)||!memcmp(data,"PDDU",4)||!memcmp(data,"PDDV",4)||(!memcmp(data,"PDDW",4)||(!memcmp(data,"PDDX",4)||(!memcmp(data,"PDDY",4)||(!memcmp(data,"PDDZ",4)||(!memcmp(data,"PDDa",4)||!memcmp(data,"PDDb",4)))))))candidate.scene=*p++;
-    if(!memcmp(data,"PDDU",4)||!memcmp(data,"PDDV",4)||(!memcmp(data,"PDDW",4)||(!memcmp(data,"PDDX",4)||(!memcmp(data,"PDDY",4)||(!memcmp(data,"PDDZ",4)||(!memcmp(data,"PDDa",4)||!memcmp(data,"PDDb",4))))))){candidate.lineage=*p++;candidate.body=*p++;}
-    if((!memcmp(data,"PDDX",4)||(!memcmp(data,"PDDY",4)||(!memcmp(data,"PDDZ",4)||(!memcmp(data,"PDDa",4)||!memcmp(data,"PDDb",4))))))candidate.outfit=*p++;
-    if((!memcmp(data,"PDDY",4)||(!memcmp(data,"PDDZ",4)||(!memcmp(data,"PDDa",4)||!memcmp(data,"PDDb",4))))){memcpy(candidate.training.skill_abilities,p,PD_SKILLS);p+=PD_SKILLS;}
+    if(!memcmp(data,"PDDT",4)||!memcmp(data,"PDDU",4)||!memcmp(data,"PDDV",4)||(!memcmp(data,"PDDW",4)||(!memcmp(data,"PDDX",4)||(!memcmp(data,"PDDY",4)||(!memcmp(data,"PDDZ",4)||(!memcmp(data,"PDDa",4)||(!memcmp(data,"PDDb",4)||!memcmp(data,"PDDc",4))))))))candidate.scene=*p++;
+    if(!memcmp(data,"PDDU",4)||!memcmp(data,"PDDV",4)||(!memcmp(data,"PDDW",4)||(!memcmp(data,"PDDX",4)||(!memcmp(data,"PDDY",4)||(!memcmp(data,"PDDZ",4)||(!memcmp(data,"PDDa",4)||(!memcmp(data,"PDDb",4)||!memcmp(data,"PDDc",4)))))))){candidate.lineage=*p++;candidate.body=*p++;}
+    if((!memcmp(data,"PDDX",4)||(!memcmp(data,"PDDY",4)||(!memcmp(data,"PDDZ",4)||(!memcmp(data,"PDDa",4)||(!memcmp(data,"PDDb",4)||!memcmp(data,"PDDc",4)))))))candidate.outfit=*p++;
+    if((!memcmp(data,"PDDY",4)||(!memcmp(data,"PDDZ",4)||(!memcmp(data,"PDDa",4)||(!memcmp(data,"PDDb",4)||!memcmp(data,"PDDc",4)))))){memcpy(candidate.training.skill_abilities,p,PD_SKILLS);p+=PD_SKILLS;}
     if((!memcmp(data,"PDDU",4)&&candidate.lineage>=12)||(!memcmp(data,"PDDV",4)&&candidate.lineage>=16))goto invalid;
-    if(!memcmp(data,"PDDb",4)){
+    if((!memcmp(data,"PDDb",4)||!memcmp(data,"PDDc",4))){
         candidate.unarmored_rule=*p++;
         for(unsigned i=0;i<PD_ITEMS;i++){
-            pd_gear *g=&candidate.gear[i];g->kind=*p++;if(*p>1)goto invalid;g->equipped=*p++;g->armor=*p++;
+            pd_gear *g=&candidate.gear[i];g->kind=*p++;unsigned flags=*p++;if(flags>(!memcmp(data,"PDDc",4)?5u:1u))goto invalid;g->equipped=flags&1;g->attunement=flags>>1;g->armor=*p++;
             for(unsigned j=0;j<6;j++){if(*p>20)goto invalid;g->ability[j]=(int)*p++-10;}
             int8_t *values[]={&g->ac,&g->attack,&g->damage,&g->spell_attack,&g->spell_dc,&g->saves,&g->checks};for(unsigned j=0;j<7;j++){if(*p>20)goto invalid;*values[j]=(int)*p++-10;}
             g->max_hp=(int)get16(&p)-999;

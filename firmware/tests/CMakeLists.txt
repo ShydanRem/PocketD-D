@@ -211,3 +211,7 @@ foreach(case loadout true_strike)
   target_compile_options(${case} PRIVATE -Wall -Wextra -Werror)
   target_link_libraries(${case} m)
 endforeach()
+
+add_executable(attunement test_attunement.c ../core/pocketdd.c ../core/magic.c ../core/checks.c ../core/combat.c ../core/dice_pool.c)
+target_include_directories(attunement PRIVATE ../core)
+target_compile_options(attunement PRIVATE -Wall -Wextra -Werror)

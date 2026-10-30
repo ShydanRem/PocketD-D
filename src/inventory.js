@@ -1,4 +1,4 @@
-import {equipGear,gearTotals} from './equipment.js';
+import {equipGear,gearTotals,attuneGear} from './equipment.js';
 export const MAX_ITEMS = 60;
 export const DIE_SIDES = [4,6,8,10,12];
 const integer = (n,min,max) => Number.isInteger(n) && n>=min && n<=max;
@@ -89,6 +89,7 @@ export function adjustQuantity(state,id,delta) {
   const item=state.inventory.find(item=>item.id===id);
   if(!item || !integer(delta,-999,999) || !integer(item.quantity+delta,0,999)) throw new Error('Quantità non valida');
   if(item.quantity+delta===0&&state.extended?.loadout?.items.some(g=>g.id===id&&g.equipped))state=equipGear(state,id,false);
+  if(item.quantity+delta===0&&state.extended?.loadout?.items.some(g=>g.id===id&&g.attunement===2))state=attuneGear(state,id,false);
   return changed(state,state.inventory.map(other=>other.id===id?{...other,quantity:item.quantity+delta}:other));
 }
 

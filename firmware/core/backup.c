@@ -71,7 +71,7 @@ bool pd_backup_decode(const char *json,size_t size,pd_backup *out){
     uint8_t *records=malloc(PD_RECORD_SIZE+PD_HISTORY_RECORD);pd_backup *candidate=calloc(1,sizeof *candidate);
     if(!records||!candidate){free(records);free(candidate);return false;}
     size_t n=decode64(state_text,state_length,records,PD_RECORD_SIZE),m=decode64(history_text,history_length,records+PD_RECORD_SIZE,PD_HISTORY_RECORD);
-    uint32_t gen;bool valid=n>=8879&&m>=21&&(!memcmp(records,"PDDP",4)||(!memcmp(records,"PDDQ",4)||(!memcmp(records,"PDDR",4)||(!memcmp(records,"PDDS",4)||(!memcmp(records,"PDDT",4)||(!memcmp(records,"PDDU",4)||(!memcmp(records,"PDDV",4)||(!memcmp(records,"PDDW",4)||(!memcmp(records,"PDDX",4)||(!memcmp(records,"PDDY",4)||(!memcmp(records,"PDDZ",4)||(!memcmp(records,"PDDa",4)||!memcmp(records,"PDDb",4)))))))))))))&&!memcmp(records+PD_RECORD_SIZE,"PDH1",4)&&pd_decode(records,n,&candidate->state,&gen)&&
+    uint32_t gen;bool valid=n>=8879&&m>=21&&(!memcmp(records,"PDDP",4)||(!memcmp(records,"PDDQ",4)||(!memcmp(records,"PDDR",4)||(!memcmp(records,"PDDS",4)||(!memcmp(records,"PDDT",4)||(!memcmp(records,"PDDU",4)||(!memcmp(records,"PDDV",4)||(!memcmp(records,"PDDW",4)||(!memcmp(records,"PDDX",4)||(!memcmp(records,"PDDY",4)||(!memcmp(records,"PDDZ",4)||(!memcmp(records,"PDDa",4)||(!memcmp(records,"PDDb",4)||!memcmp(records,"PDDc",4))))))))))))))&&!memcmp(records+PD_RECORD_SIZE,"PDH1",4)&&pd_decode(records,n,&candidate->state,&gen)&&
         pd_history_decode(records+PD_RECORD_SIZE,m,&candidate->history,&gen)&&candidate->state.history_epoch==candidate->history.epoch;
     if(valid)*out=*candidate;
     free(records);free(candidate);return valid;

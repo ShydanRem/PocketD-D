@@ -1,5 +1,7 @@
 # PocketD-D — uso pratico sul dispositivo
 
+> Aggiornamento v0.86: [bonus permanenti e sintonia per tutti i PG](OGGETTI-SINTONIA.md).
+
 Aggiornamento v0.85: [preparazione diretta, equipaggiamento con calcoli collegati,
 True Strike e icone riconoscibili](EQUIPAGGIAMENTO-MAGIE.md).
 

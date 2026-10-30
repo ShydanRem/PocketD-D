@@ -34,7 +34,7 @@ class BackupTests(unittest.TestCase):
         path=Path(__file__).resolve().parents[1]/'firmware/tests/out/loadout-backup.synthetic.json'
         raw=path.read_bytes();obj,preview=backup.validate(raw)
         self.assertEqual(obj,json.loads(raw));self.assertEqual(preview['rolls'],0)
-        data=bytearray(base64.b64decode(obj['state']));self.assertEqual(data[:4],b'PDDb')
+        data=bytearray(base64.b64decode(obj['state']));self.assertEqual(data[:4],b'PDDc')
         data[-1085]=4;data[-4:]=zlib.crc32(data[:-4]).to_bytes(4,'little');obj['state']=base64.b64encode(data).decode('ascii')
         with self.assertRaises(ValueError):backup.validate(json.dumps(obj).encode('ascii'))
 

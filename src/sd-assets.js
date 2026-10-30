@@ -13,7 +13,7 @@ export async function prepareSdAssets({fetcher=fetch,url,bytes}={}){
 export async function installSdAssets(handle,options={}){
   const bytes=prepared.get(handle);if(!bytes)throw Error('Prepara e verifica il pacchetto prima di collegare il Pocket.');
   return usbSession({...options,operation:'assets'},async(c,t)=>{
-    options.onProgress?.('connect');const {duplicates}=await usbHandshake(c,t,'PDD HELLO',Array.from({length:18},(_,i)=>`PDD READY ${i+1}`));
+    options.onProgress?.('connect');const {duplicates}=await usbHandshake(c,t,'PDD HELLO',Array.from({length:19},(_,i)=>`PDD READY ${i+1}`));
     await c.send('PDD ASSET HELLO 1\n',t.send);
     try{await c.wait('PDD ASSET READY 1',t.hello,{duplicates});}catch(error){if(!error.assetCode&&error.message?.includes('rifiutata'))throw Error('Per installare sulla SD aggiorna PocketD-D al firmware 0.83. Nessun pacchetto inviato.');throw error;}
     let started=false,confirmed=false;

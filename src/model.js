@@ -136,7 +136,9 @@ function validInteger(value, min, max) {
 }
 export function parseBackup(raw) {
   const s = JSON.parse(raw);
-  if (!s || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21].includes(s.version)) throw new Error('Versione backup non supportata');
+  if (!s || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22].includes(s.version)) throw new Error('Versione backup non supportata');
+  const attuned=s.extended?.loadout?.items?.some(g=>g.attunement!==undefined);
+  if((s.version<22&&attuned)||(s.version===22&&!attuned))throw Error("La sintonia richiede il formato v22");
   const modern=s.extended?.loadout!==undefined||s.powers?.some(p=>p?.effect==='true-strike-2024');
   if((s.version<21&&modern)||(s.version===21&&!modern))throw new Error('Equipaggiamento e attacchi magici richiedono il formato v21');
   const reference=Array.isArray(s.powers)&&s.powers.some(p=>p?.reference!==undefined);
@@ -189,8 +191,8 @@ export function parseBackup(raw) {
   const result={...base,...core,resolve:s.resolve};validateEquippedState(result);return result;
 }
 export function serialize(state) {
-  const identity=avatarIdentity(state.avatar),outfit=avatarOutfit(state.avatar),defences=state.extended?.defences!==undefined,mapped=state.extended?.skillAbilities!==undefined,manual=state.extended?.manualResources!==undefined,cannon=state.powers.some(p=>p.effect==='eldritch-cannon'),reference=state.powers.some(p=>p.reference!==undefined),modern=state.extended?.loadout!==undefined||state.powers.some(p=>p.effect==='true-strike-2024'),variant=Boolean(modern||reference||cannon||manual||mapped||defences||outfit||identity.lineage||identity.body);
-  return JSON.stringify({...state,...(variant?{avatar:{...state.avatar,...identity,...((modern||reference||cannon||manual||mapped||defences)?{outfit}:{})}}:{}),version:modern?21:reference?20:cannon?19:manual?18:mapped?17:defences?16:outfit?15:identity.lineage>=16?14:identity.lineage>=12?13:variant?12:11},null,2);
+  const identity=avatarIdentity(state.avatar),outfit=avatarOutfit(state.avatar),defences=state.extended?.defences!==undefined,mapped=state.extended?.skillAbilities!==undefined,manual=state.extended?.manualResources!==undefined,cannon=state.powers.some(p=>p.effect==='eldritch-cannon'),reference=state.powers.some(p=>p.reference!==undefined),attuned=state.extended?.loadout?.items.some(g=>g.attunement!==undefined),modern=state.extended?.loadout!==undefined||state.powers.some(p=>p.effect==='true-strike-2024'),variant=Boolean(modern||reference||cannon||manual||mapped||defences||outfit||identity.lineage||identity.body);
+  return JSON.stringify({...state,...(variant?{avatar:{...state.avatar,...identity,...((modern||reference||cannon||manual||mapped||defences)?{outfit}:{})}}:{}),version:attuned?22:modern?21:reference?20:cannon?19:manual?18:mapped?17:defences?16:outfit?15:identity.lineage>=16?14:identity.lineage>=12?13:variant?12:11},null,2);
 }
 export function restore(raw) {
   try { return parseBackup(raw); } catch { return initialState(); }
