@@ -1,9 +1,16 @@
 # Pocket autonomo: obiettivo e primo controllo
 
-30 ottobre 2026 · v0.89.1. Il dispositivo è il prodotto. Il traguardo concordato
+31 ottobre 2026 · aggiornamento v0.90 (verifica account introdotta nella v0.89.1). Il dispositivo è il prodotto. Il traguardo concordato
 è usare il PC per installazione/aggiornamento e, se necessario, per il primo
 collegamento Beyond; poi scegliere e importare un PG dal Pocket tramite Wi-Fi.
-Questo documento non dichiara già disponibile tale importazione.
+L’importazione Wi-Fi non è ancora disponibile. La v0.90 aggiunge la raccolta
+locale sul Pocket: [guida](https://github.com/ShydanRem/PocketD-D/blob/main/docs/LIBRERIA-LOCALE.md).
+
+**Prova reale, 31 ottobre:** l’utente ha caricato l’estensione nel proprio browser,
+visualizzato i PG e confermato che ci sono tutti rispetto a «I miei personaggi».
+È una conferma dell’utente su login/elenco, senza raccolta di credenziali o JSON.
+Non dimostra rinnovo della sessione, lettura delle schede private o conversione
+sul dispositivo. Non è un nuovo test autenticato eseguito dall’agente.
 
 ## Esperienza da ottenere
 
@@ -83,12 +90,12 @@ hanno esiti diversi. Non tentare di aggirare il login o le verifiche del sito.
 | Test automatici del client | Risposte e token sintetici: HTTP/JSON/schema separati, rifiuti, scadenza, timeout, limiti, niente fallback anonimo/campagne, niente segreti nei risultati |
 | Interfaccia | Pagina reale in Chromium a 900/390/320 px, API permessi simulate e risposte HTTPS sintetiche: consenso rifiutato, elenco, testo sicuro, parziale/vuoto, HTTP/formato, cancellazione e revoca verificati |
 | Estensione MV3 caricata | **Bloccata dalla policy del Chromium gestito**: nessuna prova di caricamento/permessi/cookie reali superata qui. Il worker esistente è verificato con API simulate; non aggirata la policy |
-| Account Beyond reale | **Da eseguire nel browser dell'utente**: login, formato effettivo, elenco completo/privati e comportamento della sessione |
+| Account Beyond reale | **Confermato dall’utente il 31 ottobre:** PG visibili e lista completa. Non acquisiti credenziali, risposte grezze o dati completi; durata/rinnovo della sessione e schede private restano separati |
 | Lettura HTTP pubblica del PG | Già provata nelle versioni precedenti con il connettore PC; non ripetuta o spacciata per prova account in questa versione |
 | Conversione/USB esistenti | Percorso PC esistente conservato; nessuna nuova importazione o modifica alla raccolta personale |
 | ESP32 → Beyond | **Non implementato in questa versione**: questa verifica non dimostra TLS, RAM o conversione sul Pocket |
 
-Controlli della release: **339 test JS superati** (12 dedicati alla verifica
+Controlli della release **0.89.1**: **339 test JS superati** (12 dedicati alla verifica
 account), compilazione ESP32-S3 riuscita, pacchetto e sito verificati separatamente.
 Nessuna modifica alla logica firmware o ai formati PG/USB: nel firmware cambia
 solo la versione. Le prove native dettagliate della v0.89 restano documentate
@@ -96,13 +103,13 @@ nelle rispettive guide, non dichiarate rieseguite da questa verifica account.
 
 ## Prossimi blocchi, in ordine
 
-1. **Validare account ed elenco reali.** Sessione scaduta/rifiutata, PG privati,
-   account senza PG, confronto dei risultati e loro completezza. Nessuna promessa
+1. **Account ed elenco reali confermati dall’utente.** Restano da validare
+   scadenza/rifiuto della sessione, lettura delle schede private e account senza PG. Nessuna promessa
    di login permanente: logout/revoca possono richiedere una nuova associazione.
-2. **Libreria locale sul dispositivo.** Copie per PG su SD, progressi/aspetto e
-   storico separati, backup prima del cambio, salvataggio recuperabile dopo
-   interruzione. Senza SD, dichiarare il limite di un PG attivo. Oggi la raccolta
-   multipla è sul PC; il dispositivo conserva un PG attivo.
+2. **Libreria locale implementata nella v0.90.** Fino a 32 copie native su SD,
+   progressi/aspetto/storico separati, checkpoint prima dei cambi e doppie copie
+   verificate. Senza SD rimane un PG attivo. Prove software passate; collaudo SD
+   fisica, fluidità e interruzioni reali restano da fare.
 3. **Lettura e conversione native.** HTTPS con verifica certificato/orario e
    limiti espliciti; parsing selettivo/streaming e conversione C confrontata con
    quella JS. PF, CA, caratteristiche, equipaggiamento, magie e risorse devono

@@ -1,12 +1,12 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **30 ottobre 2026 — v0.89.1**. Il dispositivo è il prodotto;
+Aggiornamento del **31 ottobre 2026 — v0.90**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Oggi il PC
 serve ancora per importare, oltre che per installazione, aggiornamenti e backup.
 
 Il software copre una prima sessione individuale offline. L'utente riferisce
 risolti USB, installer e SD e conferma visibile il sito GitHub Pages. Il collaudo
-completo di batteria, interruzioni di alimentazione e delle nuove funzioni 0.85–0.89
+completo di batteria, interruzioni di alimentazione e delle nuove funzioni 0.85–0.90
 resta distinto da questa conferma.
 
 ## Pagina web di installazione
@@ -16,6 +16,21 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale serve ancora al connettore Beyond.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Nuovo nella v0.90
+
+[Raccolta locale sul Pocket](LIBRERIA-LOCALE.md): fino a 32 copie native su SD,
+con anteprima, conferma e cambio offline. PF, slot, aspetto e storico separati;
+preferenze e tasti del dispositivo conservati. Checkpoint prima di cambi e
+import/ripristini USB, doppie copie verificate, identità d’installazione distinta,
+recupero CRC e blocco dei commit incerti. Nuovo contenitore SD PDL1; formati PG,
+USB21/PDDe40 e backup USB1 invariati. Il collaudo della nuova raccolta su SD
+fisica rimane da fare; USB/installer/asset SD precedenti già confermati.
+
+Account Beyond: **l’utente conferma il 31 ottobre login, PG visibili ed elenco
+completo**. È una prova riferita dal suo browser, non una nuova lettura autenticata
+dell’agente. Sessione sul Pocket, rinnovo, schede private e conversione nativa
+non ancora verificati. Nessuna credenziale o raccolta personale acquisita.
 
 ## Nuovo nella v0.89.1
 
@@ -402,12 +417,21 @@ sono distinte da quelle nuove ancora verificate solo tramite software.
    I testi possono restare negli estratti attuali, come concordato.
 
 Direzione del prodotto confermata: [Pocket autonomo](POCKET-AUTONOMO.md).
-In parallelo al riscontro fisico: verifica account reale, raccolta locale su SD,
-conversione nativa, associazione protetta e infine galleria/importazione sul Pocket.
-La verifica browser 0.89.1 non completa questi blocchi.
+L’elenco account reale è confermato dall’utente e la raccolta locale SD è nel
+codice della v0.90, da collaudare sull’hardware. Seguono conversione nativa,
+associazione protetta e importazione Beyond dal Pocket. L’elenco nel browser
+non completa questi blocchi.
 
 Non serve attendere tutte le regole D&D per questa prima sessione. Servono un
 trasferimento verificato, valori confrontati e progressi recuperabili.
+
+## Verifiche v0.90
+
+Suite JS e nativa, 142 viste LVGL incluse le nuove pagine, engine SD su filesystem
+host con errori iniettati e identità NVS con API simulate. ASan/UBSan sul nuovo
+engine e sull’interfaccia; build ESP32-S3. Nessuna nuova prova USB/SD fisica
+eseguita dall’agente. La conferma reale dell’elenco Beyond proviene dall’utente.
+[Dettagli e procedura di collaudo](LIBRERIA-LOCALE.md).
 
 ## Verifiche v0.89.1
 
