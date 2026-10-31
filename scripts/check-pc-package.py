@@ -9,7 +9,7 @@ with zipfile.ZipFile(archive) as z:
  assert not any('/node_modules/' in n or '/device-backups/' in n or '/.git/' in n for n in names)
  with tempfile.TemporaryDirectory(prefix='pocketdd-pc-') as tmp:
   z.extractall(tmp);app=Path(tmp)/'PocketDD-PC';assert (app/'Avvia-PocketDD.cmd').exists();assert not (app/'node_modules').exists()
-  for name in ['Avvia-Ponte.cmd','docs/PONTE-BEYOND.md','docs/POCKET-AUTONOMO.md','extension/manifest.json','extension/background.js','extension/protocol.js','extension/account-check.js','extension/account.js','extension/account.html','extension/account.css','tools/bridge/index.html']:
+  for name in ['Avvia-Ponte.cmd','docs/PONTE-BEYOND.md','docs/POCKET-AUTONOMO.md','docs/LIBRERIA-LOCALE.md','docs/previews/v090-local-library.png','extension/manifest.json','extension/background.js','extension/protocol.js','extension/account-check.js','extension/account.js','extension/account.html','extension/account.css','tools/bridge/index.html']:
    assert (app/name).read_bytes()==(ROOT/name).read_bytes()
   assert (app/'extension/protocol.js').read_bytes()==(app/'src/sync-protocol.js').read_bytes()
   pin=json.loads((ROOT/'scripts/windows-runtime.json').read_text());node=(app/'runtime/node.exe').read_bytes()

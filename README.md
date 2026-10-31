@@ -6,6 +6,12 @@ Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixe
 Firmware e look SD dal browser; app PC opzionale per importare da Beyond.
 [Come pubblicare gli aggiornamenti](docs/GITHUB-PAGES.md).
 
+**v0.90 — [I miei PG sul Pocket](docs/LIBRERIA-LOCALE.md):** fino a 32 copie
+native su SD, anteprima e cambio offline, progressi/aspetto/storico separati e
+checkpoint prima dei cambi/import USB. Nuove funzioni verificate tramite software,
+collaudo SD fisico ancora da fare. Elenco account Beyond completo confermato
+dall’utente; importazione Wi-Fi e conversione nativa rimangono da implementare.
+
 **v0.89.1 — [Verso il Pocket autonomo](docs/POCKET-AUTONOMO.md):**
 verifica opzionale di login ed elenco account nell’estensione esistente, senza
 esportare credenziali o modificare PG. Non è ancora importazione Wi-Fi sul Pocket.

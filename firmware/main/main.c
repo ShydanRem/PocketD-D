@@ -4,6 +4,8 @@
 #include "storage.h"
 #include "history_store.h"
 #include "backup.h"
+#include "library.h"
+#include "library_owner.h"
 #include "dice_animation.h"
 #include "visual.h"
 #include "avatar.h"
@@ -47,7 +49,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, KEY_PICKER, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM, POWER_HOME, POWER_OFF, ITEM_SEARCH, POWER_SEARCH, MAGIC_MANAGE, MAGIC_PREPARATION, ITEM_QUANTITY_CONFIRM, AVATAR_EDIT, SCENE_EDIT, APPEARANCE_CONFIRM, DEFENCE_SETUP, WIFI_HOME, WIFI_FORGET, REFERENCE_HOME, REFERENCE_TEXT, WIFI_LIST, WIFI_PASSWORD, WIFI_JOIN_REVIEW, WEAPON_PICKER, ITEM_CONFIG_MENU, WEAPON_SETUP, GEAR_SETUP, MAGIC_PROFILE, PLAY_CONFIRM, ATTACK_MODE, HIT_EFFECTS, HIT_SMITE, ASSET_INSTALL, SYNC_HOME, SYNC_REVIEW, SYNC_FORGET } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, KEY_PICKER, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM, POWER_HOME, POWER_OFF, ITEM_SEARCH, POWER_SEARCH, MAGIC_MANAGE, MAGIC_PREPARATION, ITEM_QUANTITY_CONFIRM, AVATAR_EDIT, SCENE_EDIT, APPEARANCE_CONFIRM, DEFENCE_SETUP, WIFI_HOME, WIFI_FORGET, REFERENCE_HOME, REFERENCE_TEXT, WIFI_LIST, WIFI_PASSWORD, WIFI_JOIN_REVIEW, WEAPON_PICKER, ITEM_CONFIG_MENU, WEAPON_SETUP, GEAR_SETUP, MAGIC_PROFILE, PLAY_CONFIRM, ATTACK_MODE, HIT_EFFECTS, HIT_SMITE, ASSET_INSTALL, SYNC_HOME, SYNC_REVIEW, SYNC_FORGET, LIBRARY_HOME, LIBRARY_CONFIRM } page_t;
 static const pd_theme_kind page_themes[]={
     [HERO]=PD_THEME_NONE,
     [SHEET]=PD_THEME_SHEET,
@@ -148,6 +150,8 @@ static const pd_theme_kind page_themes[]={
     [WALLET_HOME]=PD_THEME_WALLET,
     [WALLET_EDIT]=PD_THEME_WALLET,
     [WALLET_CONFIRM]=PD_THEME_WALLET,
+    [LIBRARY_HOME]=PD_THEME_LIBRARY,
+    [LIBRARY_CONFIRM]=PD_THEME_LIBRARY,
     [HISTORY_HOME]=PD_THEME_HISTORY,
     [HISTORY_DETAIL]=PD_THEME_HISTORY,
     [HISTORY_DISCARD]=PD_THEME_HISTORY,
@@ -285,7 +289,7 @@ static pd_pool item_result;
 static unsigned item_gained;
 static bool wifi_editing(void){return page==WIFI_LIST||page==WIFI_PASSWORD||page==WIFI_JOIN_REVIEW;}
 static bool appearance_editing(void){return page==AVATAR_EDIT||page==SCENE_EDIT||page==APPEARANCE_CONFIRM;}
-static bool confirmation_open(void){return play_editing()||wifi_editing()||page==ASSET_INSTALL||page==KEY_PICKER||page==SYNC_REVIEW||page==SYNC_FORGET||page==WIFI_FORGET||page==DEFENCE_SETUP||appearance_editing()||page==ITEM_QUANTITY_CONFIRM||page==MAGIC_PREPARATION||page==ITEM_SEARCH||page==POWER_SEARCH||power_paused||power_off_attempted||page==POWER_OFF||page==NUMBER_ENTRY||page==VITAL_CONFIRM||page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
+static bool confirmation_open(void){return page==LIBRARY_CONFIRM||play_editing()||wifi_editing()||page==ASSET_INSTALL||page==KEY_PICKER||page==SYNC_REVIEW||page==SYNC_FORGET||page==WIFI_FORGET||page==DEFENCE_SETUP||appearance_editing()||page==ITEM_QUANTITY_CONFIRM||page==MAGIC_PREPARATION||page==ITEM_SEARCH||page==POWER_SEARCH||power_paused||power_off_attempted||page==POWER_OFF||page==NUMBER_ENTRY||page==VITAL_CONFIRM||page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
 static pd_damage_plan damage_plan; /* First component + explicit concentration choice. */
 static pd_damage_component damage_extra[PD_DAMAGE_COMPONENTS-1],damage_part_draft;
 static pd_damage_context damage_context,damage_extra_context[PD_DAMAGE_COMPONENTS-1],damage_part_context,source_context_draft;
@@ -786,6 +790,7 @@ static unsigned wifi_key_pages(void){return (strlen(wifi_keys[wifi_key_mode])+9)
 static void wifi_clear_draft(void){memset(&wifi_draft,0,sizeof wifi_draft);wifi_reveal=false;wifi_key_mode=wifi_key_page=wifi_focus=0;}
 
 static const char *sync_notice="";
+#include "library_ui.inc"
 #include "play_setup.inc"
 static void act(intptr_t action) {
     if(page!=MAGIC_DETAIL&&page!=MAGIC_CONFIRM&&page!=MAGIC_PREPARATION&&page!=MAGIC_TEXT&&page!=MAGIC_MANAGE)attack_cast_power=-1;
@@ -794,6 +799,8 @@ static void act(intptr_t action) {
     if(power_paused||power_off_attempted)return;
     if(appearance_editing()&&(action<4301||action>4332))return;
     if(play_editing()){play_action(action);pd_screen_activity(&display_screen,lv_tick_get());render();return;}
+    if(library_failed)return;
+    if(page==LIBRARY_CONFIRM&&action!=5304&&action!=5305)return;
     if(page==APPEARANCE_CONFIRM&&action!=4307&&action!=4308)return;
     if(page==POWER_OFF&&action!=3703&&action!=3704)return;
     if(page==ITEM_QUANTITY_CONFIRM&&action!=4101&&action!=4102)return;
@@ -997,6 +1004,13 @@ static void act(intptr_t action) {
         apply(&next);if(!memcmp(&next,&state,sizeof state))page=HERO;
     }
 
+    else if(action==5300&&!import_pending&&!confirmation_open()&&!dice_animation.active)library_open();
+    else if(action==5301&&page==LIBRARY_HOME)page=HOME_MENU;
+    else if(action==5302&&page==LIBRARY_HOME&&library_page){library_page--;library_focus=0;}
+    else if(action==5303&&page==LIBRARY_HOME&&(library_page+1)*3<library_catalog.count){library_page++;library_focus=0;}
+    else if(action>=5310&&action<5313&&page==LIBRARY_HOME)library_select(library_page*3+action-5310);
+    else if(action==5304&&page==LIBRARY_CONFIRM){page=LIBRARY_HOME;library_notice[0]=0;library_focus=0;}
+    else if(action==5305&&page==LIBRARY_CONFIRM)library_confirm();
     else if(action==2800){page=BACKUP_HOME;}
     else if(action==2801&&(page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM)){pd_history_store_cancel_restore();page=BACKUP_HOME;backup_notice="Richiesta annullata";reply("PDD CANCELLED backup\n");}
     else if(action==2802&&page==BACKUP_SEND_CONFIRM){
@@ -1004,6 +1018,7 @@ static void act(intptr_t action) {
         if(!sent)reply("PDD ERROR backup-send\n");
     }
     else if(action==2803&&page==BACKUP_RESTORE_CONFIRM){
+        if(!library_checkpoint()){backup_notice=library_notice;render();return;}
         if(!pd_history_store_prepare_restore(&backup_history)){backup_notice="Errore storico: riprova";reply("PDD ERROR backup-history\n");}
         else if(!pd_storage_save(&pending)){pd_history_store_uncertain_restore();backup_notice="Errore scheda: riavvia";reply("PDD ERROR storage\n");}
         else {pd_history_store_finish_restore();history=backup_history;adopt_pending_state();history_pending=false;history_pair_pending=history_third_pending=history_fourth_pending=history_fifth_pending=false;backup_notice="Copia ripristinata";reply("PDD RESTORED\n");}
@@ -1107,6 +1122,7 @@ static void act(intptr_t action) {
     else if (action==20 || action==21) { if(pd_resource_change(&next,resource_index,action==20?-1:1))apply(&next); }
     else if (action==22 && state.resource_count) resource_index=(resource_index+1)%state.resource_count;
     else if (action==30) {
+        if(!library_checkpoint()){reply("PDD ERROR library\n");import_pending=false;library_catalog.count=0;page=LIBRARY_HOME;render();return;}
         if (pd_storage_save(&pending)) {
             pd_history_store_load(pending.history_epoch,&history);
             adopt_pending_state();
@@ -3135,6 +3151,7 @@ static void companion_event(companion_action selected,void *unused) {
         case COMPANION_APPEARANCE:action=50;break;
         case COMPANION_RESOURCES:action=103;break;
         case COMPANION_SETTINGS:action=1600;break;
+        case COMPANION_LIBRARY:action=5300;break;
         case COMPANION_MINUS:if(page!=HOME_VITALS)return;action=1;break;
         case COMPANION_PLUS:if(page!=HOME_VITALS)return;action=2;break;
         case COMPANION_HEAL:if(page!=HOME_VITALS)return;action=3600;break;
@@ -3281,6 +3298,7 @@ static void render_content(void) {
     if(page==ITEM_QUANTITY_CONFIRM){render_item_quantity_confirm();return;}
     if(page==VITAL_CONFIRM){render_vital_confirm();return;}
     if(page==PAYMENT_CHOICE){render_payment_choice();return;}
+    if(library_view()){render_library();return;}
     if(page==BACKUP_HOME||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM){render_backup();return;}
     if(page==HISTORY_HOME||page==HISTORY_DETAIL||page==HISTORY_DISCARD){render_history();return;}
     if(page==WALLET_HOME||page==WALLET_EDIT||page==WALLET_CONFIRM){render_wallet();return;}
@@ -3431,7 +3449,7 @@ static void render_content(void) {
     }
 }
 #ifdef PD_UI_TEST
-static bool styled_pages[SYNC_FORGET+1];
+static bool styled_pages[LIBRARY_CONFIRM+1];
 static void capture_styled_page(unsigned view);
 #endif
 /* Only page lists accept swipes. No gesture can confirm, spend or roll. */
@@ -3444,6 +3462,7 @@ static void list_swipe(lv_event_t *event){
     if(page==INVENTORY){unsigned count=pd_catalog_filtered_count(&state,PD_CATALOG_ITEMS,item_query,pouch_view?PD_CATALOG_POUCH:PD_CATALOG_ALL);if(forward?(inventory_page+1)*3<count:inventory_page>0)action=forward?83:82;}
     else if(page==MAGIC_LIST){if(forward?(magic_page+1)*3<visible_powers():magic_page>0)action=forward?806:805;}
     else if(page==SHEET&&sheet_tab==1){if(forward?skill_page<5:skill_page>0)action=forward?64:63;}
+    else if(page==LIBRARY_HOME){if(forward?(library_page+1)*3<library_catalog.count:library_page>0)action=forward?5303:5302;}
     else if(page==HISTORY_HOME){if(forward?(history_page+1)*3<history.count+(history_pending?1u:0u):history_page>0)action=forward?2602:2601;}
     if(action){lv_indev_wait_release(input);act(action);}
 }
@@ -3496,10 +3515,15 @@ static void shortcut(unsigned gesture) {
 static void screen_service(int pwr,int boot){
     input_check_service();
     bool allowed=pd_screen_keys(&display_screen,pwr,boot,lv_tick_get());
-    bool enabled=allowed&&!import_pending&&(!confirmation_open()||appearance_editing()||wifi_editing()||play_editing()||attack_preparing());
+    bool enabled=allowed&&!import_pending&&(!confirmation_open()||appearance_editing()||wifi_editing()||play_editing()||attack_preparing()||library_view());
     unsigned gestures=pd_buttons_sample(&physical_keys,pwr,boot,lv_tick_get(),enabled);
     for(unsigned i=0;i<3;i++)if(gestures&(1u<<i)){
-        if(wifi_editing()||play_editing()||attack_preparing()){
+        if(library_view()){
+            if(library_failed)continue;
+            if(i==0){if(!library_keyboard){library_keyboard=true;library_focus=0;}else if(library_target_count)library_focus=(library_focus+1)%library_target_count;library_mark_focus();}
+            else if(i==1){if(!library_keyboard){library_keyboard=true;library_focus=0;library_mark_focus();}else if(library_focus<library_target_count&&!lv_obj_has_state(library_targets[library_focus],LV_STATE_DISABLED))lv_obj_send_event(library_targets[library_focus],LV_EVENT_CLICKED,NULL);}
+            else act(page==LIBRARY_CONFIRM?5304:5301);
+        }else if(wifi_editing()||play_editing()||attack_preparing()){
             if(i==0){if(!wifi_keyboard){wifi_keyboard=true;wifi_focus=0;}else if(wifi_target_count)wifi_focus=(wifi_focus+1)%wifi_target_count;wifi_mark_focus();}
             else if(i==1){if(!wifi_keyboard){wifi_keyboard=true;wifi_focus=0;wifi_mark_focus();}else if(wifi_focus<wifi_target_count&&!lv_obj_has_state(wifi_targets[wifi_focus],LV_STATE_DISABLED))lv_obj_send_event(wifi_targets[wifi_focus],LV_EVENT_CLICKED,NULL);}
             else act(attack_preparing()?4002:play_editing()?6099:page==WIFI_LIST?5001:page==WIFI_PASSWORD?5023:5025);
@@ -3553,7 +3577,7 @@ static bool stage_backup(const pd_backup *snapshot){
     if(history_pending||!pd_history_store_available()||(!snapshot&&history.epoch!=state.history_epoch)){reply("PDD ERROR history\n");return false;}
     if(snapshot&&!pd_storage_writable()){reply("PDD ERROR storage\n");return false;}
     uint32_t epoch=state.history_epoch;
-    if(snapshot&&(!pd_valid(&snapshot->state)||!pd_history_valid(&snapshot->history)||snapshot->state.history_epoch!=snapshot->history.epoch||!pd_history_store_next_epoch(state.history_epoch,&epoch))){reply("PDD ERROR backup\n");return false;}
+    if(snapshot&&(!pd_valid(&snapshot->state)||!pd_history_valid(&snapshot->history)||snapshot->state.history_epoch!=snapshot->history.epoch||!library_next_epoch(state.history_epoch,&epoch))){reply("PDD ERROR backup\n");return false;}
     if(dice_animation.active){pd_dice_finish(&dice_animation);has_roll=true;}
     pending=snapshot?snapshot->state:state;backup_history=snapshot?snapshot->history:history;
     if(snapshot){pending.history_epoch=epoch;backup_history.epoch=epoch;}
@@ -3570,7 +3594,12 @@ static void backup_service(void){
 static bool stage_import(const pd_state *candidate) {
     if(import_pending||confirmation_open()) { reply("PDD ERROR busy\n");return false; }
     uint32_t epoch;
-    if(history_pending||!pd_history_store_next_epoch(state.history_epoch,&epoch)){reply("PDD ERROR history\n");return false;}
+    if(history_pending||!pd_history_store_available()){reply("PDD ERROR history\n");return false;}
+    if(!library_next_epoch(state.history_epoch,&epoch)){
+        if(pd_board_library_root()){library_catalog.count=0;page=LIBRARY_HOME;snprintf(library_notice,sizeof library_notice,"Storico o SD non disponibili: PG conservato");reply("PDD ERROR library\n");render();}
+        else reply("PDD ERROR history\n");
+        return false;
+    }
     if(dice_animation.active) { pd_dice_finish(&dice_animation);has_roll=true; }
     pd_screen_activity(&display_screen,lv_tick_get());
     pending=*candidate;pending.history_epoch=epoch;pending.brightness=state.brightness;pending.dim_timeout=state.dim_timeout;pending.idle_animation=state.idle_animation;pending.scene=state.scene;memcpy(pending.shortcuts,state.shortcuts,3);import_pending=true;

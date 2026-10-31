@@ -9,6 +9,8 @@ void pd_board_init(void);
 void pd_board_assets_refresh(void);
 void pd_board_assets_activate(void);
 bool pd_board_assets_available(void);
+/* NULL without a mounted card. No formatting or credentials on SD. */
+const char *pd_board_library_root(void);
 bool pd_board_assets_space(uint64_t *available);
 bool pd_board_assets_verify(const char *path,const char *sha256);
 void pd_board_tick(void);

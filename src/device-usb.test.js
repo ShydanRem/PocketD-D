@@ -53,7 +53,7 @@ test('USB browser: old/future protocol, malformed copy, chooser cancellation and
  const busy=fake({openError:true});await assert.rejects(sendDeviceCopy(packet(),options(busy)),/busy/);assert.equal(busy.writes.length,0);
 });
 test('USB browser: device cancellation/storage/busy errors, timeout, wrong ACK and unplug are never reported as success',async()=>{
- for(const settings of [{cancel:true},{error:'storage'},{error:'busy'},{noAck:true},{unexpected:'PDD RESTORED\n'},{noAck:true,eof:true},{writeError:true}]){
+ for(const settings of [{cancel:true},{error:'storage'},{error:'library'},{error:'busy'},{noAck:true},{unexpected:'PDD RESTORED\n'},{noAck:true,eof:true},{writeError:true}]){
   const f=fake(settings),states=[];await assert.rejects(sendDeviceCopy(packet(),options(f,s=>states.push(s))));assert.ok(!states.includes('imported'));assert.equal(f.port.readable.locked,false);assert.equal(f.port.writable.locked,false);assert.equal(f.closed,1);
  }
 });

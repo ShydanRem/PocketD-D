@@ -7,6 +7,10 @@ static void *ui_malloc(size_t size);
 #undef lv_malloc
 #include <stdlib.h>
 #include <math.h>
+#include <unistd.h>
+static const char *library_test_root;
+const char *pd_board_library_root(void){return library_test_root;}
+uint64_t pd_library_owner(void){return 42;}
 static bool sd_present,sd_verified;
 bool pd_board_assets_available(void){return sd_present;}
 bool pd_board_assets_space(uint64_t *available){*available=PD_ASSET_BYTES+4096;return sd_present;}
@@ -1844,13 +1848,54 @@ int main(void) {
     state.magic.powers[0].effect=0;act(1000);click("Gestisci");click("Regole della magia");click("Effetti manuali >");assert(profile_on_hit==PD_DIVINE_SMITE_2024);click("Anteprima");bounds();wrapped_fits();screenshot("ux089-profile.ppm");effects_before=state;effects_calls=random_calls;click("Indietro");assert(!memcmp(&state,&effects_before,sizeof state));click("Anteprima");click("Conferma");assert(state.magic.powers[0].effect==PD_DIVINE_SMITE_2024&&!state.magic.powers[0].remaining&&state.magic.slots[0].current==2&&random_calls==effects_calls);
     puts("Smite UI 0.89: post-hit eligibility, distinct pact/ordinary/free costs, target and rider choices, cancel/no-spend, failed NVS frozen retry/modal lock, 4/5-part journal atomic retry, 22d8 split/replay, ranged exclusion, explicit existing-spell profile and no concentration loss passed; synthetic LVGL.");
 
+    {
+    /* Local SD collection: real filesystem + production native backup codec,
+       production LVGL actions, with the existing NVS/peripheral test doubles. */
+    pd_demo(&state);state.history_epoch=100;pd_history_reset(&history,100);
+    history_pending=smite_rolled=false;history_quarantined=false;fail_save=fail_history=fail_storage_commit=false;
+    import_pending=false;page=HOME_MENU;render();tap(121,71);assert(page==LIBRARY_HOME&&!library_catalog.count);bounds();screenshot("ux090-no-sd.ppm");
+    assert(strstr(library_notice,"SD"));act(5301);assert(page==HOME_MENU);
+    char library_tmp[]="/tmp/pdd-ui-library-XXXXXX";assert(mkdtemp(library_tmp));char library_path[256];snprintf(library_path,sizeof library_path,"%s/characters",library_tmp);library_test_root=library_path;
+    pd_library fixture_library;assert(pd_library_init(&fixture_library,library_path,42,NULL,NULL));
+    pd_state *other=malloc(sizeof *other);pd_history *other_history=malloc(sizeof *other_history);pd_backup *archived=malloc(sizeof *archived);assert(other&&other_history&&archived);
+    pd_demo(other);strcpy(other->name,"Mira delle stelle");other->history_epoch=200;other->hp=7;other->avatar.skin=2;other->scene=2;other->brightness=20;
+    pd_history_reset(other_history,200);pd_history_entry library_roll={.kind=PD_H_FREE,.count=1,.sides=20,.dice={15},.total=15};strcpy(library_roll.label,"Tiro di Mira");assert(pd_history_append(other_history,&library_roll));
+    assert(pd_library_save(&fixture_library,1,other,other_history,NULL)==PD_LIBRARY_OK);
+    state.brightness=80;state.shortcuts[0]=2;pd_avatar active_avatar=state.avatar;unsigned library_rng=random_calls,library_writes=save_calls;
+    tap(121,71);assert(page==LIBRARY_HOME&&library_catalog.count==2);bounds();
+    {lv_area_t a,b;lv_obj_get_coords(lv_obj_get_child(library_targets[0],0),&a);lv_obj_get_coords(lv_obj_get_child(library_targets[0],1),&b);assert(a.y2<b.y1);}
+    screenshot("ux090-library.ppm");
+    assert(save_calls==library_writes&&random_calls==library_rng);click("Mira delle stelle");assert(page==LIBRARY_CONFIRM&&pending.hp==7&&state.history_epoch==100);bounds();screenshot("ux090-open-pg.ppm");
+    assert(!stage_import(other)&&!stage_backup(NULL));act(100);assert(page==LIBRARY_CONFIRM);click("Indietro");assert(page==LIBRARY_HOME&&save_calls==library_writes);
+    /* A card copy changed since preview is refused, not silently replaced. */
+    click("Mira delle stelle");other->hp=8;assert(pd_library_save(&fixture_library,1,other,other_history,NULL)==PD_LIBRARY_OK);click("Apri e gioca");assert(page==LIBRARY_CONFIRM&&state.history_epoch==100&&strstr(library_notice,"Copia cambiata"));click("Indietro");
+    click("Mira delle stelle");assert(pending.hp==8);fail_history=true;click("Apri e gioca");assert(page==LIBRARY_CONFIRM&&state.history_epoch==100);fail_history=false;
+    click("Apri e gioca");assert(page==HERO&&state.hp==8&&state.scene==2&&state.avatar.skin==2&&state.brightness==80&&state.shortcuts[0]==2&&history.count==1&&history.entries[0].total==15&&state.history_epoch>200&&history.epoch==state.history_epoch&&!undo_available);
+    assert(random_calls==library_rng&&save_calls==library_writes+1);assert(pd_library_read(&fixture_library,2,archived)==PD_LIBRARY_OK&&archived->state.history_epoch==100&&archived->state.avatar.skin==active_avatar.skin);
+    /* Progress is checkpointed before changing PG; same name does not identify it. */
+    state.hp=3;act(5300);assert(page==LIBRARY_HOME);click("Elian");assert(page==LIBRARY_CONFIRM);click("Apri e gioca");assert(page==HERO&&!strcmp(state.name,"Elian")&&state.brightness==80&&state.history_epoch>200);
+    assert(pd_library_read(&fixture_library,1,archived)==PD_LIBRARY_OK&&archived->state.hp==3&&archived->state.scene==2);
+    /* Existing USB import archives the outgoing PG; unreadable SD refuses it. */
+    assert(stage_import(other));act(30);assert(!import_pending&&state.hp==8);assert(pd_library_read(&fixture_library,2,archived)==PD_LIBRARY_OK&&!strcmp(archived->state.name,"Elian"));
+    act(5300);assert(library_catalog.count==3);library_keyboard=false;render();screen_service(0,0);lv_tick_inc(50);screen_service(0,0);
+    /* Physical entry uses local focus, leaving saved global bindings unchanged. */
+    physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};screen_service(0,0);lv_tick_inc(40);screen_service(0,0);screen_service(1,0);lv_tick_inc(40);screen_service(1,0);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);assert(library_keyboard&&library_focus==0&&state.shortcuts[0]==2&&page==LIBRARY_HOME);
+    screen_service(0,1);lv_tick_inc(40);screen_service(0,1);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);assert(page==LIBRARY_CONFIRM);
+    screen_service(0,1);lv_tick_inc(40);screen_service(0,1);lv_tick_inc(801);screen_service(0,1);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);assert(page==LIBRARY_HOME&&state.shortcuts[0]==2);act(5301);
+    act(5300);click("Elian");assert(page==LIBRARY_CONFIRM);fail_storage_commit=true;click("Apri e gioca");assert(page==LIBRARY_CONFIRM&&library_failed&&history_quarantined);unsigned failed_writes=save_calls;act(100);act(5305);assert(page==LIBRARY_CONFIRM&&save_calls==failed_writes);bounds();screenshot("ux090-reboot-required.ppm");
+    fail_storage_commit=false;library_failed=false;history_quarantined=false;prepared_ready=false;library_test_root=NULL;
+    for(unsigned id=1;id<=PD_LIBRARY_LIMIT;id++)for(unsigned bank=0;bank<2;bank++){char file[300];snprintf(file,sizeof file,"%s/pg%02u%c.pdl",library_path,id,bank?'b':'a');remove(file);}
+    assert(!rmdir(library_path)&&!rmdir(library_tmp));free(other);free(other_history);free(archived);
+    puts("Local library: no-SD, checkpoint, real snapshot previews/cancel/stale refusal, NVS/history errors, device preferences, independent avatar/HP/history, USB preservation and uncertainty quarantine passed; host filesystem/LVGL with NVS doubles, no physical SD claim.");
+
+    }
     unsigned covered=0;
-    for(unsigned p=0;p<=SYNC_FORGET;p++){
+    for(unsigned p=0;p<=LIBRARY_CONFIRM;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)SYNC_FORGET+1);
-    assert(covered==SYNC_FORGET+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)LIBRARY_CONFIRM+1);
+    assert(covered==LIBRARY_CONFIRM+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

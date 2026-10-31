@@ -21,11 +21,12 @@ static const pd_theme_spec themes[]={
     [PD_THEME_HISTORY]={"Storico",0xe3c487,&theme_notes,&theme_room_study},
     [PD_THEME_BACKUP]={"Backup",0x8ad9e2,&theme_usb,&theme_room_study},
     [PD_THEME_CHECK]={"Collaudo",0xb5d4da,&theme_gear,&theme_room_study},
-    [PD_THEME_IMPORT]={"Copia USB",0x8ad9e2,&theme_usb,&theme_room_study}
+    [PD_THEME_IMPORT]={"Copia USB",0x8ad9e2,&theme_usb,&theme_room_study},
+    [PD_THEME_LIBRARY]={"Raccolta",0xa6dbc9,&theme_hero,&theme_room_rest}
 };
 static const pd_theme_spec *current;
 static lv_obj_t *crest,*panel;
-const pd_theme_spec *pd_theme_get(pd_theme_kind kind){return kind>PD_THEME_NONE&&kind<=PD_THEME_IMPORT?&themes[kind]:NULL;}
+const pd_theme_spec *pd_theme_get(pd_theme_kind kind){return kind>PD_THEME_NONE&&kind<=PD_THEME_LIBRARY?&themes[kind]:NULL;}
 static lv_obj_t *rect(lv_obj_t *root,int x,int y,int w,int h,uint32_t color,lv_opa_t opacity,int radius){
     lv_obj_t *o=lv_obj_create(root);lv_obj_remove_style_all(o);lv_obj_set_pos(o,x,y);lv_obj_set_size(o,w,h);
     lv_obj_set_style_bg_color(o,lv_color_hex(color),0);lv_obj_set_style_bg_opa(o,opacity,0);lv_obj_set_style_radius(o,radius,0);
@@ -36,7 +37,7 @@ void pd_theme_begin(lv_obj_t *root,pd_theme_kind kind,bool dice_tray){
     lv_obj_t *bg=lv_image_create(root);lv_image_set_src(bg,pd_room_image(current->room));
     lv_obj_remove_flag(bg,LV_OBJ_FLAG_CLICKABLE|LV_OBJ_FLAG_SCROLLABLE);
     rect(root,0,0,466,466,0x061923,80,0);
-    panel=rect(root,74,96,318,kind==PD_THEME_HISTORY?261:249,0x081c27,230,10);
+    panel=rect(root,74,96,318,kind==PD_THEME_HISTORY||kind==PD_THEME_LIBRARY?261:249,0x081c27,230,10);
     lv_obj_set_style_border_width(panel,1,0);lv_obj_set_style_border_color(panel,lv_color_hex(0x49616b),0);
     rect(root,121,24,230,47,0x081c27,230,8);
     rect(root,91,72,284,20,0x081c27,235,4);

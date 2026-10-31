@@ -141,9 +141,10 @@ static void home(void) {
 static void menu(void) {
     block(surface,0,0,466,466,INK,210,0);
     if(current.storage_error||current.notice){
-        lv_obj_t *warning=text(surface,current.notice?current.notice:"Errore memoria: non salvato",104,49,204,&lv_font_montserrat_16,current.storage_error?RED:GOLD);
+        lv_obj_t *warning=text(surface,current.notice?current.notice:"Errore memoria: non salvato",149,49,160,&lv_font_montserrat_16,current.storage_error?RED:GOLD);
         lv_label_set_long_mode(warning,LV_LABEL_LONG_WRAP);lv_obj_set_height(warning,44);
-    }else text(surface,"AZIONI",133,56,176,&lv_font_montserrat_26,IVORY);
+    }else text(surface,"AZIONI",149,56,160,&lv_font_montserrat_26,IVORY);
+    {lv_obj_t *library=control("",99,49,44,44,COMPANION_LIBRARY,INK);sprite(library,pd_ui_icon(PD_UI_SHEET),6,6);pd_ui_name(library,"I miei PG");}
     {lv_obj_t *settings=control("",323,49,44,44,COMPANION_SETTINGS,INK);sprite(settings,pd_ui_icon(PD_UI_GEAR),6,6);pd_ui_name(settings,"Schermo e rete");}
     text(surface,"Premi a lungo per il nome",98,94,270,&lv_font_montserrat_16,GOLD);
     const char *names[]={"Attacco","Dadi","Magie","Zaino","Riposo","Scheda"};

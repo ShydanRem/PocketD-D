@@ -75,7 +75,7 @@ class Channel{
       if(duplicates?.remaining>0&&line===duplicates.line){duplicates.remaining--;continue;}
       if(line.startsWith('PDD CANCELLED'))throw new Error('Richiesta annullata o scaduta sul dispositivo. Nessuna conferma ricevuta.');
       if(line.startsWith('PDD ERROR')){
-        const detail=line.split(' ').slice(2).join(' '),messages={busy:'Dispositivo occupato: chiudi la conferma aperta sul display.',history:'Storico da salvare sul dispositivo: controlla il display.',storage:'Salvataggio non confermato dal dispositivo: controlla il display.',packet:'Copia rifiutata dal dispositivo.',size:'Copia oltre il limite del firmware.'};
+        const detail=line.split(' ').slice(2).join(' '),messages={library:'Raccolta sulla SD non salvata: controlla il display. Il PG attuale è conservato.',busy:'Dispositivo occupato: chiudi la conferma aperta sul display.',history:'Storico da salvare sul dispositivo: controlla il display.',storage:'Salvataggio non confermato dal dispositivo: controlla il display.',packet:'Copia rifiutata dal dispositivo.',size:'Copia oltre il limite del firmware.'};
         throw new Error(messages[detail]??'Richiesta USB rifiutata dal dispositivo. Controlla il display.');
       }
       if(prefix?line.startsWith(expected):Array.isArray(expected)?expected.includes(line):line===expected)return line;

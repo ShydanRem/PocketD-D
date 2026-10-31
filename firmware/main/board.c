@@ -89,6 +89,7 @@ static void read_touch(lv_indev_t *indev,lv_indev_data_t *data) {
 }
 static sdmmc_card_t *asset_card;
 bool pd_board_assets_available(void){return asset_card!=NULL;}
+const char *pd_board_library_root(void){return asset_card?"/sdcard/pocketdd/characters":NULL;}
 bool pd_board_assets_space(uint64_t *available){uint64_t total;return asset_card&&esp_vfs_fat_info("/sdcard",&total,available)==ESP_OK;}
 static void asset_yield(void *unused){(void)unused;vTaskDelay(pdMS_TO_TICKS(1));}
 bool pd_board_assets_verify(const char *path,const char *sha){
