@@ -1,17 +1,18 @@
 import {preparePocketAccount,pairPocketAccount} from './account-link.js';
-const find=id=>document.getElementById(id);let prepared,controller,generation=0;
-export function cancelPocketLink(){generation++;controller?.abort();prepared=undefined;find('connect').disabled=true;find('pair-code').textContent='';find('prepare').disabled=false;}
-find('prepare').onclick=async()=>{
- cancelPocketLink();const run=generation;controller=new AbortController();find('prepare').disabled=true;find('link-status').textContent='Verifico l’accesso per questo collegamento…';
- try{const access=await preparePocketAccount({signal:controller.signal});if(run!==generation)return;prepared=access;setTimeout(()=>{if(run===generation&&prepared===access){prepared=undefined;access.cookie='';find('connect').disabled=true;find('link-status').textContent='Preparazione scaduta: premi Prepara accesso.';}},Math.max(1,access.expires-Date.now()));find('connect').disabled=false;find('link-status').textContent=`Account verificato (${access.count} PG). Collega il Pocket via USB e premi Collega Pocket entro tre minuti.`;}
- catch{if(run===generation)find('link-status').textContent='Accesso non preparato. Verifica il login Beyond, i permessi dell’estensione e riprova.';}
- finally{if(run===generation)find('prepare').disabled=false;}
-};
+import {ACCOUNT_ORIGINS} from './account-check.js';
+import {observeUsbPort,usbPortState} from './usb-port.js';
+const find=id=>document.getElementById(id);let controller,generation=0,granted=false,linking=false;
+function refresh(){const state=usbPortState(),version=/^(\d+)\.(\d+)\./.exec(state.firmware??''),old=version&&Number(version[1])===0&&Number(version[2])<92;
+ if(old)find('link-status').textContent='Per Beyond aggiorna il firmware del Pocket alla 0.92 o successiva dal sito PocketD-D.';find('prepare').hidden=granted;find('prepare').disabled=linking||usbPortState().busy;find('connect').hidden=!granted;find('connect').disabled=!granted||linking||state.busy||Boolean(old);find('cancel-link').hidden=!linking;}
+observeUsbPort(refresh);
+async function permissions(){try{granted=await chrome.permissions.contains({permissions:['cookies'],origins:ACCOUNT_ORIGINS});}catch{granted=false;}refresh();}
+export function cancelPocketLink(){generation++;controller?.abort();linking=false;find('pair-code').textContent='';permissions();}
+find('prepare').onclick=async()=>{try{granted=await chrome.permissions.request({permissions:['cookies'],origins:ACCOUNT_ORIGINS});find('link-status').textContent=granted?'Consenso ricevuto. Premi Collega Beyond.':'Consenso non concesso. Puoi comunque usare gli altri strumenti Pocket.';}catch{find('link-status').textContent='Controlla i permessi dell’estensione e riprova.';}refresh();};
 find('connect').onclick=async()=>{
- const access=prepared;if(!access)return;prepared=undefined;const run=generation;controller=new AbortController();find('connect').disabled=find('prepare').disabled=true;
- try{await pairPocketAccount(access,{signal:controller.signal,onCode:code=>{if(run===generation){find('pair-code').textContent=code;find('link-status').textContent='Confronta il codice sul Pocket, scegli se ricordare l’accesso e conferma sul display.';}},onStage:stage=>{if(run===generation&&stage==='link')find('link-status').textContent='Il Pocket verifica l’account via Wi-Fi. Attendi la conferma.';}});if(run===generation)find('link-status').textContent='Pocket collegato: scegli il PG dal suo display. Il PC può essere scollegato.';}
- catch{if(run===generation)find('link-status').textContent='Collegamento non confermato. Controlla il display del Pocket prima di riprovare.';}
- finally{access.cookie='';if(run===generation){find('prepare').disabled=false;find('pair-code').textContent='';}}
+ if(linking||usbPortState().busy)return;const run=++generation;controller=new AbortController();linking=true;refresh();
+ try{await pairPocketAccount(()=>preparePocketAccount({signal:controller.signal,requestPermission:false}),{signal:controller.signal,onCode:code=>{if(run===generation){find('pair-code').textContent=code;find('link-status').textContent='Confronta il codice sul Pocket e conferma sul display.';}},onStage:stage=>{if(run===generation){const labels={account:'Verifico il tuo accesso Beyond…',code:'Attendo il Pocket…',link:'Il Pocket verifica l’account via Wi-Fi…'};if(labels[stage])find('link-status').textContent=labels[stage];}}});if(run===generation)find('link-status').textContent='Beyond collegato. Scegli il PG sul Pocket: ora puoi scollegare il PC.';}
+ catch(error){if(run===generation){find('link-status').textContent=error.message||'Collegamento non confermato. Controlla il display del Pocket.';permissions();}}
+ finally{if(run===generation){linking=false;find('pair-code').textContent='';refresh();}}
 };
-find('cancel-link').onclick=()=>{cancelPocketLink();find('link-status').textContent='Operazione interrotta. Se avevi già confermato, controlla l’esito sul Pocket.';};
-window.addEventListener('pagehide',cancelPocketLink);
+find('cancel-link').onclick=()=>{cancelPocketLink();find('link-status').textContent='Operazione interrotta. Controlla il Pocket se avevi già confermato.';};
+window.addEventListener('pagehide',cancelPocketLink);permissions();

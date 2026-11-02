@@ -1,3 +1,4 @@
+import {chooseUsbPort,rememberUsbPort,forgetUsbPort,claimUsbPort} from './usb-port.js';
 import {serializeDevice} from './device-export.js';
 import {crc32,inspectDeviceBackup,DEVICE_BACKUP_MAX} from './device-backup.js';
 import {createUsbDiagnostics} from './device-usb-diagnostics.js';
@@ -97,10 +98,10 @@ async function session(options,task){
   const serial=options.serial??globalThis.navigator?.serial;
   if(!serial?.requestPort)throw new Error('Per l’USB usa Chrome o Edge su PC, su HTTPS o localhost.');
   if(options.signal?.aborted)throw aborted();
-  active=true;let port,channel;const diagnostics=createUsbDiagnostics(options.operation);
+  const release=claimUsbPort();active=true;let port,channel;const diagnostics=createUsbDiagnostics(options.operation);
   try{
     // Called synchronously from the UI click; no await before the chooser.
-    port=await serial.requestPort();
+    port=await chooseUsbPort(serial,{chooseNew:options.chooseNew});
     diagnostics.port(port.getInfo?.());
     if(options.signal?.aborted)throw aborted();
     const opening=port.open({baudRate:115200,bufferSize:8192});
@@ -109,13 +110,14 @@ async function session(options,task){
     // Release modem-control lines together. Never run a bootloader/reset sequence.
     if(typeof port.setSignals==='function')await limited(port.setSignals({dataTerminalReady:false,requestToSend:false}),options.timeouts?.open??10000,options.signal);
     if(!port.readable||!port.writable)throw new Error('Porta USB non disponibile. Chiudi gli altri programmi che la usano.');
-    channel=new Channel(port,options.signal,diagnostics);const result=await task(channel,{hello:10000,send:30000,confirm:125000,data:30000,...options.timeouts});diagnostics.data.outcome='completed';return result;
+    channel=new Channel(port,options.signal,diagnostics);channel.onPocket=()=>rememberUsbPort(port,serial);channel.onFirmware=version=>rememberUsbPort(port,serial,version);const result=await task(channel,{hello:10000,send:30000,confirm:125000,data:30000,...options.timeouts});diagnostics.data.outcome='completed';return result;
   }catch(error){
+    if(error?.name!=='NotFoundError')forgetUsbPort(port);
     error.usbDiagnostic=diagnostics.snapshot();
     if(error?.name==='NotFoundError')throw new Error('Scelta della porta annullata. Nessun invio avviato.');
     throw error;
   }finally{
-    try{if(channel)await channel.close();}finally{try{if(port)await limited(port.close(),1000);}catch{/* Already disconnected/closed. */}active=false;options.onDiagnostic?.(diagnostics.snapshot());}
+    try{if(channel)await channel.close();}finally{try{if(port)await limited(port.close(),1000);}catch{/* Already disconnected/closed. */}active=false;release();options.onDiagnostic?.(diagnostics.snapshot());}
   }
 }
 async function handshake(c,t,command,expected){
@@ -125,7 +127,7 @@ async function handshake(c,t,command,expected){
     await c.send('\n'+command+'\n',Math.min(t.send,remaining));attempts++;c.diagnostics.data.helloAttempts=attempts;
     try{
       const ready=await c.wait(expected,Math.min(t.helloAttempt??1000,deadline-Date.now()),{hello:true});
-      c.diagnostics.data.usbVersion=Number(ready.split(' ').at(-1));c.diagnostics.data.protocol=command.includes('BACKUP')?'backup':'character';
+      c.onPocket?.();c.diagnostics.data.usbVersion=Number(ready.split(' ').at(-1));c.diagnostics.data.protocol=command.includes('BACKUP')?'backup':'character';
       return {ready,duplicates:{line:ready,remaining:attempts-1}};
     }catch(error){if(error.code!=='USB_TIMEOUT')throw error;}
   }
@@ -146,7 +148,7 @@ export async function readDeviceDiagnostics(options={}){
     const line=await c.wait('PDD DIAGNOSTICS ',t.hello,{prefix:true,duplicates,maxLine:2080});
     let value;try{value=validateRuntimeDiagnostics(JSON.parse(line.slice('PDD DIAGNOSTICS '.length)));}catch{throw new Error('Diagnosi firmware non valida o non supportata. Nessun dato della scheda inviato.');}
     if(value.formats.usb!==Number(ready.split(' ').at(-1)))throw new Error('Versioni USB discordanti nella diagnosi. Nessun dato della scheda inviato.');
-    c.diagnostics.data.runtime=value;options.onProgress?.('diagnostics-read');return value;
+    c.onFirmware?.(value.firmware);c.diagnostics.data.runtime=value;options.onProgress?.('diagnostics-read');return value;
   });
 }
 export async function sendDeviceCopy(packet,options={}){

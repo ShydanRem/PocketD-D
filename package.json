@@ -1,12 +1,12 @@
 {
   "name": "pocket-d-d",
-  "version": "0.92.0",
+  "version": "0.93.0",
   "private": true,
   "type": "module",
   "scripts": {
     "start": "node --use-env-proxy scripts/app-server.js",
     "dev": "vite --host 0.0.0.0",
-    "build": "vite build && node scripts/standalone.js",
+    "build": "node scripts/build-pocket-tools.js && vite build && node scripts/standalone.js",
     "preview": "vite preview --host 0.0.0.0",
     "test": "node --test --test-isolation=none src/*.test.js",
     "beyond:probe": "node --use-env-proxy scripts/beyond-probe.js",
@@ -17,7 +17,8 @@
     "installer": "node scripts/installer-server.js",
     "pages:prepare": "python3 scripts/publish-pages.py",
     "pages:publish": "python3 scripts/publish-pages.py --push",
-    "firmware:bundle": "node scripts/build-beyond-bundle.js"
+    "firmware:bundle": "node scripts/build-beyond-bundle.js",
+    "extension:build": "node scripts/build-pocket-tools.js"
   },
   "devDependencies": {
     "vite": "^7.1.0",

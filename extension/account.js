@@ -1,3 +1,4 @@
+import './pocket-ui.js';
 import {cancelPocketLink} from './account-link-ui.js';
 import {ACCOUNT_ORIGINS, checkAccount} from './account-check.js';
 const find = id => document.getElementById(id);

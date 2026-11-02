@@ -179,7 +179,7 @@ page.write_text(page.read_text().replace('<section class="after">',section+'<sec
 # This is separate from firmware and does not require a device update.
 import zipfile
 extension_names=('manifest.json','background.js','content.js','protocol.js','page-adapter.js',
-                 'popup.html','popup.css','popup.js','account.html','account.css','account.js','account-check.js','account-link.js','account-link-ui.js')
+                 'popup.html','popup.css','popup.js','account.html','account.css','account.js','account-check.js','account-link.js','account-link-ui.js','pocket-tools.js','pocket-ui.js','usb-port.js','helper-origin.js','site-helper.js','open-tools.js')
 with zipfile.ZipFile(out/'downloads/PocketDD-Beyond-Check.zip','w',zipfile.ZIP_DEFLATED) as archive:
  for name in extension_names:archive.write(ROOT/'extension'/name,'extension/'+name)
  archive.write(ROOT/'docs/POCKET-AUTONOMO.md','LEGGIMI.md')
@@ -260,4 +260,13 @@ shutil.copyfile(ROOT/'docs/previews/v092-beyond-account.png',out/'downloads/prev
 for name in ('ux092-pair','ux092-account','ux092-forget'):
  shutil.copyfile(ROOT/'firmware/tests/out/ui-build'/f'{name}.png',out/'assets'/f'{name}.png')
 section='<section class="after"><h2>Il tuo account sul Pocket · v0.92</h2><p>Prima associazione dal PC: estensione aggiornata → Prepara accesso → Collega Pocket. Confronta il codice e conferma sul display prima del trasferimento. Poi elenco e importazione dei propri PG direttamente via Wi-Fi, senza tenere il PC acceso.</p><p>Accesso ricordato opzionale nella memoria attuale non cifrata, separato da schede/SD/backup PG. Esci → Scollega rimuove solo il collegamento. Il cookie conserva i privilegi del proprio account; il software esegue solo letture.</p><p><strong>Nuovo percorso autenticato ancora da collaudare realmente su estensione ed ESP32.</strong> Le nuove prove di cookie, USB, account e schede private usano sessioni e risposte sintetiche. Aggiorna il firmware conservando i dati e ricarica la nuova estensione quando vorrai provarlo.</p><p><a href="downloads/PocketDD-Beyond-Check.zip?v=0.92.0" download>Aggiorna l’estensione Beyond</a> · <a href="downloads/PocketDD-COLLEGAMENTO-BEYOND.md">Guida completa, limiti e recupero</a>. Nessuna scrittura dei PG su Beyond. Le immagini mostrano dati e codici sintetici.</p><div class="import-captures"><img src="assets/ux092-pair.png" width="466" height="466" alt="Codice e scelta memoria sul Pocket, esempio sintetico"><img src="assets/ux092-account.png" width="466" height="466" alt="Elenco account con personaggio sintetico"></div></section>'
+page.write_text(page.read_text().replace('<section class="after">',section+'<section class="after">',1))
+
+# Pocket PC entry: one page and one remembered selection, synthetic screenshot.
+for name in ('POCKET-PC','COLLEGAMENTO-BEYOND','POCKET-AUTONOMO','STATO-SOFTWARE','INIZIA-QUI'):
+ shutil.copyfile(ROOT/'docs'/f'{name}.md',out/'downloads'/f'PocketDD-{name}.md')
+ shutil.copyfile(ROOT/'docs'/f'{name}.md',out/'downloads'/f'{name}.md')
+shutil.copyfile(ROOT/'docs/previews/v093-pocket-pc.png',out/'downloads/previews/v093-pocket-pc.png')
+shutil.copyfile(ROOT/'docs/previews/v093-pocket-pc.png',out/'assets/pocket-pc-preview.png')
+section='<section class="after"><h2>Pocket PC, meno passaggi · v0.93</h2><p>Beyond, look SD e backup nella stessa pagina. Scegli l’azione: il collegamento viene verificato e la porta riconosciuta viene riutilizzata. Per Beyond basta il pulsante Collega Beyond dopo il primo consenso; resta la conferma sul display prima del trasferimento dell’accesso.</p><p>Il sito rileva il componente e apre Pocket PC senza chiedere credenziali o ricevere dati del personaggio. Firmware, look e archivio PC vengono scaricati solo quando apri lo strumento relativo.</p><p><a href="downloads/PocketDD-POCKET-PC.md">Guida rapida</a>. Nuova interfaccia e selezione USB provate con API e risposte simulate, collaudo reale ancora da fare. La nuova pagina funziona anche con firmware 0.92; non cambia partizioni o formati.</p><div class="import-captures"><img src="assets/pocket-pc-preview.png" width="1000" alt="Pocket PC reale con dati e dispositivo simulati"></div></section>'
 page.write_text(page.read_text().replace('<section class="after">',section+'<section class="after">',1))

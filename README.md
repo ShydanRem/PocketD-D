@@ -6,6 +6,11 @@ Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixe
 Firmware e look SD dal browser; nuovo percorso Beyond autonomo via Wi-Fi, da collaudare.
 [Come pubblicare gli aggiornamenti](docs/GITHUB-PAGES.md).
 
+**v0.93 — [Pocket PC, un solo posto per collegare il dispositivo](docs/POCKET-PC.md):**
+Beyond, look SD e backup nella stessa pagina, porta riconosciuta riutilizzata,
+preparazione account automatica e sito che apre direttamente gli strumenti.
+Le conferme sul display restano; nuovo flusso verificato con servizi e USB simulati.
+
 **v0.92 — [Collega Beyond al Pocket](docs/COLLEGAMENTO-BEYOND.md):**
 prima associazione USB con codice e conferma sul display, accesso ricordato
 opzionale, elenco proprio e importazione autenticata direttamente via Wi-Fi.

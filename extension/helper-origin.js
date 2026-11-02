@@ -1,0 +1,2 @@
+// Site bridge may open this extension UI; it cannot read accounts, PGs or USB.
+export function pocketSite(url){try{const u=new URL(url);return u.protocol==='https:'&&u.hostname==='shydanrem.github.io'&&u.pathname.startsWith('/PocketD-D/')||u.protocol==='http:'&&u.hostname==='127.0.0.1'&&(u.pathname==='/'||u.pathname.startsWith('/install/')||u.pathname.startsWith('/PocketD-D/'));}catch{return false;}}

@@ -24,3 +24,8 @@ test('Account USB rejects cancelled, foreign or failed acknowledgement without c
 test('Account USB rejects expired preparations and unsafe cookie syntax before choosing a port',async()=>{
  let chosen=0;for(const access of [{cookie,user,expires:now()-1},{cookie:'bad;header',user,expires:now()+10000}])await assert.rejects(pairPocketAccount(access,{now,serial:{requestPort(){chosen++;}}}));assert.equal(chosen,0);
 });
+test('One-click account association chooses the port before preparing access and requires existing cookie permission',async()=>{
+ const mock=usb(),order=[];let cookieReads=0;const opts=preparation();opts.api.permissions.contains=async()=>true;opts.api.permissions.request=async()=>{throw Error('Must not request permissions outside a click');};
+ const result=await pairPocketAccount(async()=>{order.push('prepare');const access=await preparePocketAccount({...opts,requestPermission:false});return access;},{...mock,serial:{requestPort:async()=>{order.push('port');return await mock.serial.requestPort();}},now});assert.ok(result.linked);assert.deepEqual(order,['port','prepare']);
+ opts.api.permissions.contains=async()=>false;opts.api.cookies.get=async()=>{cookieReads++;};await assert.rejects(preparePocketAccount({...opts,requestPermission:false}));assert.equal(cookieReads,0);
+});

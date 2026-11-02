@@ -1,15 +1,16 @@
 {
   "manifest_version": 3,
   "name": "PocketD-D · Ponte Beyond",
-  "version": "0.92.0",
-  "description": "Ponte locale, verifica account e associazione opzionale del proprio accesso Beyond al Pocket via USB.",
+  "version": "0.93.0",
+  "description": "Pocket PC: collegamento USB, Beyond, look SD e backup del proprio Pocket.",
   "permissions": [
     "storage",
     "scripting"
   ],
   "host_permissions": [
     "http://127.0.0.1/*",
-    "https://www.dndbeyond.com/*"
+    "https://www.dndbeyond.com/*",
+    "https://shydanrem.github.io/PocketD-D/*"
   ],
   "background": {
     "service_worker": "background.js",
@@ -26,6 +27,15 @@
       ],
       "js": [
         "content.js"
+      ]
+    },
+    {
+      "matches": [
+        "https://shydanrem.github.io/PocketD-D/*",
+        "http://127.0.0.1/*"
+      ],
+      "js": [
+        "site-helper.js"
       ]
     }
   ],

@@ -1,8 +1,11 @@
+import {openPocketTools} from './open-tools.js';
+import {pocketSite} from './helper-origin.js';
 import {pageAdapter} from './page-adapter.js';import {brokerRoll} from './protocol.js';
 const local=chrome.storage.local;
 async function api(path,data,connection){const r=await fetch(connection.url+path,{method:'POST',headers:{'Content-Type':'application/json',...(connection.token?{Authorization:'Bearer '+connection.token}:{})},body:JSON.stringify(data),signal:AbortSignal.timeout(10000)});if(!r.ok)throw Error('Ponte non disponibile o abbinamento scaduto');return r.json();}
 const busy=new Set();
 chrome.runtime.onMessage.addListener((m,sender,reply)=>{(async()=>{
+ if(m.type==='open-pocket-tools'){if(!pocketSite(sender.tab?.url)&&!(sender.id===chrome.runtime.id&&!sender.tab&&sender.url===chrome.runtime.getURL('popup.html')))throw Error('Pagina non supportata');return openPocketTools(chrome);}
  if(m.type==='connect'&&!sender.tab){if(!/^http:\/\/127\.0\.0\.1:\d{4,5}$/.test(m.url)||!/^\d{9}$/.test(m.code))throw Error('Indirizzo locale o codice non validi');const c={url:m.url};const r=await api('/extension/connect',{code:m.code},c);await local.set({connection:{url:m.url,token:r.token},receipts:{}});return {ok:true};}
  if(m.type!=='tick'||!sender.tab||!/^https:\/\/www\.dndbeyond\.com\/(?:profile\/[^/]+\/)?characters\/[1-9]\d*/.test(sender.url??''))throw Error('Pagina non supportata');
  const {connection,receipts={}}=await local.get(['connection','receipts']);if(!connection)return {state:'Abbina l’estensione dal popup'};

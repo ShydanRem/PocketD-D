@@ -20,8 +20,8 @@ try:
         context=browser.new_context(viewport={'width':900,'height':1000})
         context.add_init_script('''
           window.allowCheck=false;window.permissionCalls=0;window.removals=0;
-          window.cookieReads=0;window.secretWrites=0;
-          window.chrome={cookies:{get:async()=>{window.cookieReads++;return {value:'synthetic-session-only',expirationDate:Date.now()/1000+3600}}},permissions:{request:async()=>{window.permissionCalls++;return window.allowCheck},remove:async()=>{window.removals++;return true}}};
+          window.cookieReads=0;window.secretWrites=0;window.cookieGranted=false;
+          window.chrome={cookies:{get:async()=>{window.cookieReads++;return {value:'synthetic-session-only',expirationDate:Date.now()/1000+3600}}},permissions:{contains:async()=>window.cookieGranted,request:async r=>{window.permissionCalls++;if(window.allowCheck&&r.permissions?.includes('cookies'))window.cookieGranted=true;return window.allowCheck},remove:async()=>{window.cookieGranted=false;window.removals++;return true}}};
           const original=window.fetch.bind(window);
           window.fetch=(url,options)=>window.holdCheck&&String(url).includes('auth-service.')
             ?new Promise((_,reject)=>options.signal.addEventListener('abort',()=>reject(options.signal.reason),{once:true}))
@@ -69,6 +69,7 @@ try:
         context.route('**/*',bounded_route)
         page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)))
         page.goto(f'http://127.0.0.1:{server.server_port}/account.html')
+        page.locator('.read-only-check>summary').click()
         page.locator('#check').click();expect(page.locator('#status')).to_contain_text('Permessi non concessi');assert not calls
         page.evaluate('allowCheck=true');page.locator('#check').click()
         expect(page.locator('#status')).to_contain_text('Login ed elenco letti')
@@ -86,15 +87,15 @@ try:
             mode['value']=value;page.locator('#check').click();expect(page.locator('#status')).to_contain_text(expected)
             expect(page.locator('#catalog')).to_be_hidden();assert page.locator('#characters li').count()==0
             assert 'synthetic secret' not in page.locator('body').inner_text()
-        mode['value']='ok';page.locator('#prepare').click();expect(page.locator('#connect')).to_be_enabled();assert page.evaluate('cookieReads')==2
+        mode['value']='ok';page.locator('#prepare').click();expect(page.locator('#connect')).to_be_enabled();assert page.evaluate('cookieReads')==0
         assert 'synthetic-session-only' not in page.locator('body').inner_text()
-        page.locator('#connect').click();expect(page.locator('#pair-code')).to_have_text('123456');assert page.evaluate('secretWrites')==0
-        page.evaluate('approvePocket()');expect(page.locator('#link-status')).to_contain_text('Pocket collegato');assert page.evaluate('secretWrites')==1
+        page.locator('#connect').click();expect(page.locator('#pair-code')).to_have_text('123456');assert page.evaluate('secretWrites')==0 and page.evaluate('cookieReads')==2
+        page.evaluate('approvePocket()');expect(page.locator('#link-status')).to_contain_text('Beyond collegato');assert page.evaluate('secretWrites')==1
         assert 'synthetic-session-only' not in page.locator('body').inner_text() and page.evaluate('localStorage.length')==0
         page.evaluate('holdCheck=true');page.locator('#check').click();expect(page.locator('#check')).to_be_disabled()
         page.locator('#clear').click();expect(page.locator('#status')).to_contain_text('Risultato cancellato')
         expect(page.locator('#check')).to_be_enabled();page.wait_for_timeout(100);expect(page.locator('#status')).to_contain_text('Risultato cancellato')
-        page.locator('#revoke').click();expect(page.locator('#status')).to_contain_text('Permessi di verifica rimossi');assert page.evaluate('removals')==1
+        page.get_by_text('Permessi e scollegamento',exact=True).click();page.locator('#revoke').click();expect(page.locator('#status')).to_contain_text('Permessi di verifica rimossi');assert page.evaluate('removals')==1
         assert not errors,errors
         browser.close()
     print('PASS account page + USB association with cookie/serial doubles: prepare, code before secret, physical approval, final receipt, no DOM/localStorage secret; denied permissions/no requests, projected synthetic catalogue, 6 checks, XSS text rendering, empty/partial, HTTP-vs-format, clear/cancel, revoke, 900/390/320px. Chrome API doubles and synthetic HTTPS routes only; no actual login, MV3 permission/cookies, PG writes or ESP32.')

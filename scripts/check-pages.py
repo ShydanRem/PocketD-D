@@ -42,10 +42,15 @@ try:
  with sync_playwright() as p:
   browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox']);context=browser.new_context(viewport={'width':1100,'height':900},accept_downloads=True)
   context.add_init_script("Object.defineProperty(navigator,'serial',{value:{requestPort:async()=>{window.chooserCalls=(window.chooserCalls||0)+1;throw new DOMException('cancel','NotFoundError')}}});")
+  context.add_init_script("window.chrome={runtime:{getManifest:()=>({version:'0.93.0'}),sendMessage:(m,reply)=>{window.helperOpens=(window.helperOpens||0)+1;reply({ok:true})}}};")
+  context.add_init_script((ROOT/'extension/site-helper.js').read_text())
   page=context.new_page();errors=[];requests=[];page.on('pageerror',lambda e:errors.append(str(e)));page.on('request',lambda r:requests.append(r.url));page.goto(url)
+  expect(page.locator('[data-open-pocket]')).to_be_visible();assert not any(u.endswith(('.bin','.pdc','.zip')) for u in requests)
+  page.locator('[data-open-pocket]').click();expect(page.locator('[data-helper-status]')).to_contain_text('Pocket PC aperto');assert page.evaluate('helperOpens')==1
+  page.locator('[data-show-firmware]').click()
   expect(page.locator('#status')).to_contain_text('Firmware pronto');expect(page.locator('#version')).to_have_text('Firmware '+m['version']);expect(page.locator('[value=update]')).to_be_checked()
-  expect(page.locator('#install')).to_be_visible();expect(page.locator('[data-sd-install]')).to_be_visible();expect(page.locator('[data-sd-install]')).to_be_enabled(timeout=15000)
-  expect(page.get_by_role('link',name='Scarica app PC per Windows')).not_to_be_visible();assert page.locator('main>.card').count()==1;assert not any('pc-package' in u for u in requests)
+  expect(page.locator('#install')).to_be_visible();page.locator('.sd-tools>summary').click();expect(page.locator('[data-sd-install]')).to_be_visible();expect(page.locator('[data-sd-install]')).to_be_enabled(timeout=15000)
+  expect(page.get_by_role('link',name='Scarica app PC per Windows')).not_to_be_visible();assert page.locator('.firmware-tools>.card').count()==1;assert not any('pc-package' in u for u in requests)
   for width in [1100,390,320]:
    page.set_viewport_size({'width':width,'height':900});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
   page.set_viewport_size({'width':1100,'height':900});page.locator('#board').check();page.locator('#install').click();expect(page.locator('#status')).to_contain_text('annullata');assert page.evaluate('chooserCalls')==1
@@ -54,11 +59,14 @@ try:
   with page.expect_download() as download:page.get_by_role('link',name='Scarica app PC per Windows').click()
   assert Path(download.value.path()).read_bytes()==(base/'downloads/PocketDD-PC.zip').read_bytes()
   page.locator('.pc-tools>summary').click();page.screenshot(path='/workspace/PocketDD-GitHub-Pages-preview.png',full_page=True)
+  page.locator('.release-history>summary').click()
   page.get_by_text('Verso il Pocket autonomo · verifica account Beyond',exact=True).click()
   with page.expect_download() as helper:page.get_by_role('link',name='Scarica solo l’estensione di verifica').click()
   assert Path(helper.value.path()).read_bytes()==(base/'downloads/PocketDD-Beyond-Check.zip').read_bytes()
   page.goto(url+'personalizzazione.html');page.get_by_role('link',name='← PocketD-D',exact=True).click();assert page.url==url
   assert not errors,errors;assert all(u.startswith(url) or u.startswith('blob:'+url) for u in requests),requests
+  missing=browser.new_context();missing.add_init_script("Object.defineProperty(navigator,'serial',{value:{requestPort:async()=>{throw new DOMException('cancel','NotFoundError')}}});")
+  fallback=missing.new_page();fallback.goto(url);fallback.locator('[data-open-pocket]').click();expect(fallback.locator('[data-helper-help]')).to_be_visible();expect(fallback.locator('[data-helper-status]')).to_contain_text('prima volta');missing.close()
   browser.close()
  print('PASS Pages: fixed /PocketD-D/ prefix, firmware/SD without ZIP, safe update default, optional verified PC and account-helper downloads, relative gallery back, mobile, simulated chooser, exact provenance/hashes and rejection of arbitrary JSON/corrupt firmware/extra helper ZIP entries. Does not prove GitHub activation or physical USB.')
 finally:server.shutdown();server.server_close();thread.join()

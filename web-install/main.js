@@ -1,3 +1,4 @@
+import {bindPocketHub} from './helper-link.js';
 import {bindSdInstaller} from '../src/sd-assets-ui.js';
 import {ESPLoader,Transport} from 'esptool-js';
 import CryptoJS from 'crypto-js';
@@ -12,9 +13,13 @@ const announce=(phase,value)=>{if(guided&&parent!==window)parent.postMessage({ty
 if(!guided){
   const fold=(node,title,cls)=>{if(!node)return;const details=document.createElement('details'),summary=document.createElement('summary');details.className=cls;summary.textContent=title;node.before(details);details.append(summary,node);};
   const firmware=document.querySelector('.card'),sd=document.querySelector('#look-sd'),pc=document.querySelector('#app-pc');
-  document.querySelector('.intro').after(firmware,sd,pc);
-  fold(pc,'Importa Beyond e configura dal PC · opzionale','pc-tools');
-  const extras=[...document.querySelectorAll('main>section.after')];if(extras.length){const details=document.createElement('details'),summary=document.createElement('summary');details.className='release-history';summary.textContent='Anteprime, novità e limiti delle versioni';extras[0].before(details);details.append(summary,...extras);}
+  document.querySelector('#pocket-hub').after(firmware,sd,pc);
+  fold(firmware,'Firmware · installazione e aggiornamento','firmware-tools');document.querySelector('.firmware-tools').id='firmware-tools';
+  document.querySelector('[data-show-firmware]').onclick=()=>{document.querySelector('.firmware-tools').open=true;};
+  fold(sd,'Look SD · installazione diretta senza componente','sd-tools');
+  bindPocketHub(document.querySelector('#pocket-hub'),{blocked:()=>busy||sdBusy});
+  fold(pc,'App PC avanzata · opzionale','pc-tools');
+  const extras=[...document.querySelectorAll('main>section.after,main>details.after')];if(extras.length){const details=document.createElement('details'),summary=document.createElement('summary');details.className='release-history';summary.textContent='Anteprime, novità e limiti delle versioni';extras[0].before(details);details.append(summary,...extras);}
 }
 
 const supported=window.isSecureContext&&'serial' in navigator;
@@ -44,9 +49,9 @@ button.addEventListener('click',async()=>{
     window.removeEventListener('beforeunload',unload);busy=false;document.querySelector('[data-sd-root]').inert=false;announce('busy',false);for(const el of document.querySelectorAll('input'))el.disabled=false;ready();
   }
 });
-prepare();
+if(guided)prepare();else{message('Apri Installa / aggiorna per preparare il firmware.');document.querySelector('.firmware-tools').addEventListener('toggle',event=>{if(event.target.open&&!prepared&&!busy)prepare();});}
 
 const pcLink=document.querySelector('[download="PocketDD-PC.zip"]');
 if(pcLink)pcLink.addEventListener('click',async event=>{event.preventDefault();if(pcLink.getAttribute('aria-disabled')==='true')return;const status=document.querySelector('#pc-download-status');pcLink.setAttribute('aria-disabled','true');status.textContent='Preparo il download…';try{const data=await preparePcPackage(new URL('./downloads/pc-package.json',location.href),{fetcher:url=>fetch(url,{signal:AbortSignal.timeout(90000),cache:'no-store'}),onProgress:n=>status.textContent=`Scarico e verifico il pacchetto · ${n}%`});const url=URL.createObjectURL(new Blob([data],{type:'application/zip'})),a=document.createElement('a');a.href=url;a.download='PocketDD-PC.zip';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);status.textContent='Pacchetto verificato. Estrai tutto lo ZIP e apri Avvia-PocketDD.cmd.';}catch(error){status.textContent=/^(Pacchetto|Descrizione|Download|Verifica)/.test(error.message??'')?error.message:'Download non riuscito. Ricarica la pagina e riprova.';}finally{pcLink.removeAttribute('aria-disabled');}});
 
-if(!guided)bindSdInstaller(document.querySelector('[data-sd-root]'),{isBlocked:()=>busy,onBusy:value=>{sdBusy=value;ready();}});
+if(!guided){let sdBound=false;document.querySelector('.sd-tools').addEventListener('toggle',event=>{if(event.target.open&&!sdBound){sdBound=true;bindSdInstaller(document.querySelector('[data-sd-root]'),{isBlocked:()=>busy,onBusy:value=>{sdBusy=value;ready();}});}});}
