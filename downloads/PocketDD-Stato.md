@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **2 novembre 2026 — v0.92**. Il dispositivo è il prodotto;
+Aggiornamento del **2 novembre 2026 — v0.93**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
@@ -19,6 +19,21 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Nuovo nella v0.93
+
+[Pocket PC](POCKET-PC.md): sito come ingresso unico, apertura dell’estensione
+rilevata senza passare dal popup, Beyond/SD/backup nella stessa pagina e selezione
+USB riutilizzata dopo un riconoscimento valido. Nessuna scansione delle porte
+all’avvio; cambio esplicito e invalidazione su scollegamento/errore. Preparazione
+account automatica dopo la scelta USB e consenso cookie solo quando serve.
+Il ponte sito/estensione scambia soltanto presenza/apertura, mai credenziali o PG.
+
+354 test JS e pagina reale con risposte simulate: una scelta della porta per SD,
+Beyond e backup, consenso fisico prima del segreto, blocco delle operazioni
+concorrenti, formato backup controllato e cambio Pocket esplicito. Firmware
+0.93 compilato; logica nativa/partizioni/formati invariati dalla 0.92. Nessun
+nuovo accesso Beyond reale o collaudo fisico dichiarato.
 
 ## Nuovo nella v0.92
 

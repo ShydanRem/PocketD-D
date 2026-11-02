@@ -1,12 +1,12 @@
 {
   "schema": 1,
   "name": "PocketD-D",
-  "version": "0.92.0",
+  "version": "0.93.0",
   "board": "Waveshare ESP32-S3-Touch-AMOLED-1.75",
   "chip": "ESP32-S3",
   "flash_size": 16777216,
   "hardware_tested": false,
-  "commit": "112759beafdc65be13e15ccdfffc279ec7c26513",
+  "commit": "2e03dd7c300825aa5b9eb924a4a2279e208217d4",
   "parts": [
     {
       "id": "bootloader",
@@ -27,7 +27,7 @@
       "path": "firmware/app.bin",
       "offset": 65536,
       "size": 3904000,
-      "sha256": "a9ba9a4ed3f43ddf1d0761e645524f520282b3fa793394c86d63179466deee5b"
+      "sha256": "5b455466a2b1d327e65976cb47774807534871a72ce741bfdc581adfc5a839aa"
     }
   ]
 }

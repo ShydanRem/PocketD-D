@@ -1,3 +1,5 @@
+> v0.93: interfaccia PC semplificata, stessa autenticazione nativa v0.92; prove reali sul dispositivo ancora da eseguire.
+
 # Collega Beyond al Pocket una volta
 
 2 novembre 2026 · v0.92 · **percorso sperimentale, da collaudare sull’hardware**.
@@ -7,32 +9,26 @@ sintetiche: non attestano un login reale ESP32 o la lettura reale di un PG priva
 
 ![UI firmware con account e codice sintetici](previews/v092-beyond-account.png)
 
-## Prima associazione
+## Prima associazione, flusso semplificato v0.93
 
-1. Dal [sito PocketD-D](https://shydanrem.github.io/PocketD-D/) aggiorna il firmware
-   alla **0.92 conservando i dati**. Collega il Pocket al Wi-Fi dalle impostazioni.
-   Non cancellare flash o SD; non occorre reinstallare i look.
-2. Scarica l’[estensione aggiornata](https://shydanrem.github.io/PocketD-D/downloads/PocketDD-Beyond-Check.zip),
-   estraila e ricarica la cartella `extension` nella gestione estensioni Chrome/Edge.
-   Sostituisci la copia precedente, senza tenere due ponti attivi.
-3. Accedi normalmente a Beyond nello stesso profilo browser. Nell’estensione
-   apri **Account Beyond e Pocket**, quindi **Prepara accesso**. Consenti il
-   permesso opzionale cookie e l’accesso ai due servizi Beyond.
-4. Collega il Pocket via USB, premi **Collega Pocket** e scegli la sua porta.
-   Confronta il codice di sei cifre sul PC e sul display. Il codice non è una
-   credenziale Beyond; la richiesta scade se non viene confermata.
-5. Sul Pocket scegli **Ricorda accesso: SI/NO**, poi **Collega**. Solo dopo
-   questa conferma l’estensione invia l’accesso. Il dispositivo verifica via Wi-Fi
-   identità dell’account ed elenco; non basta la ricezione USB per riuscire.
-6. Attendi **Pocket collegato** nel browser e l’elenco sul display. Solo allora
-   il nuovo collegamento è confermato. Puoi scollegare e chiudere il PC.
+1. Sul Pocket serve firmware **0.92 o successivo**. Dal [sito](https://shydanrem.github.io/PocketD-D/)
+   puoi aggiornarlo conservando i dati, poi **Apri Pocket PC**. Se manca il componente,
+   segui i passaggi iniziali mostrati dal sito per caricare l’estensione Chrome/Edge.
+2. Accedi a Beyond nello stesso browser e collega il Pocket al Wi-Fi.
+3. In Pocket PC premi **Collega Beyond**. La prima volta autorizza prima
+   **Consenti accesso a Beyond**. Non occorre una preparazione separata.
+4. Scegli la porta se necessario e confronta il codice sul PC e sul display.
+   Scegli **Ricorda accesso: SI/NO**, poi **Collega** sul Pocket. Solo dopo la
+   conferma fisica parte il trasferimento dell’accesso.
+5. Attendi **Beyond collegato** nel browser e l’elenco sul Pocket. Il dispositivo
+   verifica identità ed elenco via Wi-Fi e, se scelto, salva/rilegge l’accesso.
+   Solo la ricevuta finale conferma l’associazione. Puoi chiudere il PC.
 
-La preparazione nel browser dura al massimo tre minuti. Il confronto sul Pocket
-scade dopo due minuti; dopo la conferma attende il trasferimento per 30 secondi.
-**Annulla** interrompe la richiesta; se la conferma era già partita, controlla
-il display prima di riprovare. Non vengono ripetuti automaticamente gli invii
-contenenti l’accesso. Una cancellazione arrivata dopo il commit non finge di
-aver rimosso un collegamento già salvato.
+La porta riconosciuta viene riutilizzata per Beyond, SD e backup nella stessa
+pagina. Il controllo dettagliato del solo elenco è facoltativo. La preparazione
+automatica dell’accesso resta temporanea: confronto entro due minuti, poi invio
+entro 30 secondi dalla conferma. Annullamento e commit tardivi non fingono di
+rimuovere un collegamento già salvato. [Guida Pocket PC](POCKET-PC.md).
 
 ## Uso autonomo
 

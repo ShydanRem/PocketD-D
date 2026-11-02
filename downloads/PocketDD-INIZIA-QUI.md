@@ -1,5 +1,9 @@
 # Da zero al tuo eroe — PocketD-D
 
+**v0.93:** apri il sito → **Collega Pocket / Apri Pocket PC**. Beyond, look SD e
+backup sono nella stessa pagina; la porta riconosciuta viene riutilizzata. Per
+Beyond non serve più preparare l’accesso a parte. [Guida rapida](POCKET-PC.md).
+
 **v0.92:** [collegamento account al Pocket](COLLEGAMENTO-BEYOND.md), con codice USB,
 memoria opzionale ed elenco sul display. Nuovo percorso autenticato da collaudare realmente.
 

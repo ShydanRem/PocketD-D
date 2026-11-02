@@ -1,3 +1,5 @@
+> v0.93: [Pocket PC](https://github.com/ShydanRem/PocketD-D/blob/main/docs/POCKET-PC.md) riunisce Beyond, SD e backup. Non serve più preparare l’accesso separatamente: prima autorizzazione, poi Collega Beyond e conferma sul display.
+
 # Pocket autonomo: stato dell’integrazione Beyond
 
 2 novembre 2026 · v0.92. Il dispositivo è il prodotto: il PC serve per
@@ -32,8 +34,7 @@ codice prevede scelta e importazione del PG dal Pocket tramite Wi-Fi.
 ## Come partire quando si potrà provare
 
 Aggiorna il firmware conservando i dati e ricarica l’estensione aggiornata;
-collega il Pocket al Wi-Fi. Popup → **Account Beyond e Pocket → Prepara accesso →
-Collega Pocket**. Confronta il codice sul display, scegli se ricordare l’accesso
+collega il Pocket al Wi-Fi. Popup → **Apri Pocket PC → Collega Beyond**. Confronta il codice sul display, scegli se ricordare l’accesso
 in memoria non cifrata e conferma. Solo la ricevuta finale conferma l’associazione.
 Poi scegli il PG direttamente dal Pocket e verifica anteprima/limiti prima di importare.
 La guida collegata sopra contiene recupero dagli errori e scollegamento.
