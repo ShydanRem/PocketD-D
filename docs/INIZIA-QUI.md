@@ -1,4 +1,9 @@
-# Da zero al tuo eroe — PocketD-D v0.84
+# Da zero al tuo eroe — PocketD-D
+
+**v0.91:** è presente un primo percorso di importazione **direttamente sul Pocket
+tramite Wi-Fi**, per PG pubblici con ID numerico: [guida](BEYOND-DISPOSITIVO.md).
+Lettura/conversione verificate su PC, nuovo percorso da collaudare sull’hardware;
+associazione dell’account e PG privati sul Pocket restano successivi.
 
 Per **aggiornare il firmware o installare i look sulla SD**, basta la pagina
 web in Chrome/Edge con il Pocket collegato via USB: nessun pacchetto da

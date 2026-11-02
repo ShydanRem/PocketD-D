@@ -3,14 +3,21 @@
 Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixel art, una scheda interattiva e dadi animati su un dispositivo AMOLED rotondo.
 
 **Pagina web attiva:** [installa e aggiorna PocketD-D](https://shydanrem.github.io/PocketD-D/).
-Firmware e look SD dal browser; app PC opzionale per importare da Beyond.
+Firmware e look SD dal browser; import Beyond pubblico anche dal Pocket tramite Wi-Fi.
 [Come pubblicare gli aggiornamenti](docs/GITHUB-PAGES.md).
+
+**v0.91 — [Beyond direttamente sul dispositivo](docs/BEYOND-DISPOSITIVO.md):**
+ID pubblico → lettura Wi-Fi → conversione locale con le stesse regole del PC →
+anteprima di valori e limiti → conferma. Parità completa PC/nativo sul PG reale
+e su 74 casi sintetici; 341 test JS e build ESP32-S3 riusciti. La nuova lettura
+HTTPS sull’hardware deve ancora essere provata. Collegamento account, elenco
+sul display e PG privati rimangono successivi; nessuna credenziale trasferita.
 
 **v0.90 — [I miei PG sul Pocket](docs/LIBRERIA-LOCALE.md):** fino a 32 copie
 native su SD, anteprima e cambio offline, progressi/aspetto/storico separati e
 checkpoint prima dei cambi/import USB. Nuove funzioni verificate tramite software,
 collaudo SD fisico ancora da fare. Elenco account Beyond completo confermato
-dall’utente; importazione Wi-Fi e conversione nativa rimangono da implementare.
+dall’utente; la v0.91 aggiunge il primo percorso Wi-Fi pubblico.
 
 **v0.89.1 — [Verso il Pocket autonomo](docs/POCKET-AUTONOMO.md):**
 verifica opzionale di login ed elenco account nell’estensione esistente, senza

@@ -1,3 +1,7 @@
+> 2 novembre, v0.91: [percorso nativo pubblico implementato](BEYOND-DISPOSITIVO.md),
+> lettura reale e parità completa PC/nativo verificate sul PC; nuovo HTTPS e memoria
+> sul dispositivo ancora da collaudare. Account/sessione e PG privati restano successivi.
+
 > 30 ottobre, v0.89.1: [obiettivo Pocket autonomo e verifica account](POCKET-AUTONOMO.md).
 > La verifica browser è separata dall’importazione ESP32 e dalla sincronizzazione.
 

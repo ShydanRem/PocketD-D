@@ -4,6 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 : "${IDF_PATH:?Activate ESP-IDF v5.5.5 first}"
 mkdir -p firmware/tests/out
+node scripts/build-beyond-bundle.js --check
 python3 scripts/generate-control-icons.py --check
 python3 scripts/generate-semantic-icons.py --check
 python3 scripts/generate-device-art.py --check
@@ -51,6 +52,10 @@ cc -std=c11 -Wall -Wextra -Werror -Ifirmware/core -Ifirmware/tests/fake firmware
 firmware/tests/out/session
 cmake -S firmware/tests -B firmware/tests/out/ui-build -G Ninja
 cmake --build firmware/tests/out/ui-build --parallel 4
+node --input-type=module -e "import {beyondRichFixture} from './src/beyond-fixtures.js';process.stdout.write(JSON.stringify(beyondRichFixture()))" > firmware/tests/out/beyond-source.synthetic.json
+firmware/tests/out/ui-build/beyond-core firmware/tests/out/beyond-source.synthetic.json
+firmware/tests/out/ui-build/beyond-service firmware/tests/out/beyond-source.synthetic.json
+node scripts/check-beyond-runtime.js
 (export PD_TEST_CLASS_PACK="$PWD/public/assets/classes.pdc"; cd firmware/tests/out/ui-build && ./dice && ./pool && ./avatar && ./room-cache && ./appearance && ./wallet && ./vitals && ./quantities && ./power && ./catalog && ./history && ./diagnostics diagnostics-codec.json && ./input-check && ./library && ./library-owner && ./backup ../backup-fixture.json && ./checks && ./loadout && ./attunement && ./true_strike && ./on_hit && ./smite && ./combat && ./magic && ./cannon && ./wifi-setup && ./wifi-service && ./reference && ./preparation && ./rest && ./status && ./death-roll && ./effects && ./durations && ./damage && ./death-damage && ./concentration && ./links && ./temporary-defences && ./mixed-damage && ./conditional-defences && ./multiple-defences && ./reductions && ./reduction-profiles && ./profile-costs && ./slot-costs && ./turns && ./external-turns && ./turn-names && ./time && ./charges && ./multi-costs && ./alternative-costs && ./recharge && ./roll-conditions && ./screen && ./buttons && ./alloc && ./ui)
 firmware/tests/out/ui-build/avatar --hashes > firmware/tests/out/avatar-hashes.txt
 rm -f firmware/tests/out/species-hashes.txt

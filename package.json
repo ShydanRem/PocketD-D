@@ -1,6 +1,6 @@
 {
   "name": "pocket-d-d",
-  "version": "0.90.0",
+  "version": "0.91.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -16,10 +16,12 @@
     "installer:build": "npm run build && vite build --config vite.installer.config.js && python3 scripts/build-installer.py && python3 scripts/package-pc.py",
     "installer": "node scripts/installer-server.js",
     "pages:prepare": "python3 scripts/publish-pages.py",
-    "pages:publish": "python3 scripts/publish-pages.py --push"
+    "pages:publish": "python3 scripts/publish-pages.py --push",
+    "firmware:bundle": "node scripts/build-beyond-bundle.js"
   },
   "devDependencies": {
-    "vite": "^7.1.0"
+    "vite": "^7.1.0",
+    "esbuild": "0.28.2"
   },
   "dependencies": {
     "crypto-js": "4.2.0",

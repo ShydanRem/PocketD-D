@@ -11,6 +11,14 @@ static void *ui_malloc(size_t size);
 static const char *library_test_root;
 const char *pd_board_library_root(void){return library_test_root;}
 uint64_t pd_library_owner(void){return 42;}
+static pd_beyond_info beyond_mock;
+static pd_beyond_candidate *beyond_result_mock;
+static char beyond_requested[16];static unsigned beyond_start_calls;
+void pd_beyond_boot(void){}
+void pd_beyond_snapshot(pd_beyond_info *out){*out=beyond_mock;}
+bool pd_beyond_start(const char *id){if(beyond_mock.running)return false;strcpy(beyond_requested,id);beyond_start_calls++;beyond_mock=(pd_beyond_info){.phase=PD_BEYOND_HTTP,.running=true};return true;}
+void pd_beyond_cancel(void){free(beyond_result_mock);beyond_result_mock=NULL;beyond_mock=(pd_beyond_info){.phase=PD_BEYOND_FAILED,.error=PD_BEYOND_CANCELLED};}
+pd_beyond_candidate *pd_beyond_take(void){pd_beyond_candidate *out=beyond_result_mock;beyond_result_mock=NULL;return out;}
 static bool sd_present,sd_verified;
 bool pd_board_assets_available(void){return sd_present;}
 bool pd_board_assets_space(uint64_t *available){*available=PD_ASSET_BYTES+4096;return sd_present;}
@@ -1889,13 +1897,46 @@ int main(void) {
     puts("Local library: no-SD, checkpoint, real snapshot previews/cancel/stale refusal, NVS/history errors, device preferences, independent avatar/HP/history, USB preservation and uncertainty quarantine passed; host filesystem/LVGL with NVS doubles, no physical SD claim.");
 
     }
+    {
+    /* Native Beyond UI: worker/HTTP doubles, real production views and state
+       staging. The converter is tested independently against full PC records. */
+    pd_demo(&state);state.history_epoch=500;pd_history_reset(&history,500);
+    import_pending=import_from_beyond=library_failed=history_pending=history_quarantined=smite_rolled=false;
+    fail_save=fail_storage_commit=fail_history=false;library_test_root=NULL;
+    wifi_mock=(pd_wifi_info){.state=PD_WIFI_CONNECTED,.configured=true};page=LIBRARY_HOME;library_catalog.count=0;render();
+    tap(359,121);assert(page==BEYOND_FORM&&!import_pending);bounds();screenshot("ux091-beyond-form.ppm");
+    pd_state original=state;unsigned original_saves=save_calls,original_rng=random_calls;char original_reply[sizeof last_reply];strcpy(original_reply,last_reply);
+    for(const char *p="123456";*p;p++)act(B_DIGIT+*p-'0');assert(!strcmp(beyond_id,"123456"));
+    click("Wi-Fi");assert(page==WIFI_HOME);click("Indietro");assert(page==BEYOND_FORM&&!strcmp(beyond_id,"123456"));
+    click("Leggi");assert(page==BEYOND_BUSY&&beyond_mock.running&&!strcmp(beyond_requested,"123456"));bounds();screenshot("ux091-beyond-busy.ppm");
+    assert(!stage_import(&original)&&!stage_backup(NULL));act(100);assert(page==BEYOND_BUSY);click("Annulla");beyond_poll();assert(page==BEYOND_FORM&&!import_pending&&!memcmp(&original,&state,sizeof state)&&save_calls==original_saves);
+    click("Leggi");beyond_mock=(pd_beyond_info){.phase=PD_BEYOND_FAILED,.error=PD_BEYOND_DENIED};beyond_poll();assert(page==BEYOND_FORM&&strstr(beyond_notice,"privato"));bounds();screenshot("ux091-beyond-denied.ppm");
+    click("Leggi");beyond_result_mock=calloc(1,sizeof *beyond_result_mock);assert(beyond_result_mock);beyond_result_mock->report=(pd_beyond_report){.blockers=1,.limits=1,.count=2};strcpy(beyond_result_mock->report.lines[0],"Bonus non riconciliato: conversione bloccata");strcpy(beyond_result_mock->report.lines[1],"Controlla i dati del personaggio");beyond_mock=(pd_beyond_info){.phase=PD_BEYOND_FINISHED,.error=PD_BEYOND_BLOCKED};beyond_poll();assert(page==BEYOND_REPORT&&!import_pending);bounds();screenshot("ux091-beyond-blocked.ppm");click(">");assert(beyond_note==1);click("Indietro");assert(page==BEYOND_FORM&&!memcmp(&original,&state,sizeof state)&&save_calls==original_saves);
+    click("Leggi");beyond_result_mock=calloc(1,sizeof *beyond_result_mock);assert(beyond_result_mock);beyond_result_mock->state=original;strcpy(beyond_result_mock->state.name,"Sonda nativa");beyond_result_mock->state.hp=7;beyond_result_mock->state.lineage=2;beyond_result_mock->state.brightness=10;
+    beyond_result_mock->report=(pd_beyond_report){.limits=2,.count=2};strcpy(beyond_result_mock->report.lines[0],"Effetti condizionali: verifica con il DM");memset(beyond_result_mock->report.lines[1],'W',160);beyond_result_mock->report.lines[1][160]=0;
+    beyond_mock=(pd_beyond_info){.phase=PD_BEYOND_FINISHED,.error=PD_BEYOND_READY};beyond_poll();assert(import_pending&&import_from_beyond&&pending.hp==7&&state.hp==original.hp&&!strcmp(last_reply,"PDD ERROR busy\n"));bounds();screenshot("ux091-beyond-preview.ppm");
+    click("Limiti e dati manuali (2)");assert(page==BEYOND_REPORT&&import_pending);click(">");wrapped_fits();bounds();screenshot("ux091-beyond-notes.ppm");click("Indietro");assert(import_pending&&page==BEYOND_BUSY);
+    physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};beyond_keyboard=false;screen_service(0,0);lv_tick_inc(40);screen_service(0,0);screen_service(1,0);lv_tick_inc(40);screen_service(1,0);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);assert(beyond_keyboard&&beyond_focus==0&&import_pending&&state.hp==original.hp);
+    click("Importa");assert(page==HERO&&!import_pending&&!import_from_beyond&&state.hp==7&&state.lineage==2&&state.brightness==original.brightness&&state.history_epoch>original.history_epoch&&!history.count&&!undo_available);assert(save_calls==original_saves+1&&random_calls==original_rng&&!strcmp(last_reply,"PDD ERROR busy\n"));act(30);assert(save_calls==original_saves+1&&state.hp==7);
+    /* Digit cap/backspace, no blind physical action or private-session storage. */
+    page=LIBRARY_HOME;render();act(B_OPEN);for(unsigned i=0;i<30;i++)act(B_DIGIT+9);assert(strlen(beyond_id)==15);click("Cancella");assert(strlen(beyond_id)==14);click("Indietro");assert(page==LIBRARY_HOME);beyond_mock=(pd_beyond_info){0};
+    /* An uncertain NVS commit cannot be retried or escaped through a stale
+       confirmation, navigation button, or physical key before reboot. */
+    original=state;original_saves=save_calls;strcpy(original_reply,last_reply);page=BEYOND_BUSY;
+    assert(stage_import_from(&original,true));pending.hp=6;fail_storage_commit=true;click("Importa");
+    assert(library_failed&&history_quarantined&&!import_pending&&!import_from_beyond&&page==BEYOND_FORM&&!memcmp(&original,&state,sizeof state)&&save_calls==original_saves+1&&!strcmp(original_reply,last_reply));
+    bounds();screenshot("ux091-beyond-storage.ppm");act(30);act(B_BACK);act(B_OPEN);act(100);
+    assert(library_failed&&page==BEYOND_FORM&&save_calls==original_saves+1&&!memcmp(&original,&state,sizeof state));
+    library_failed=history_quarantined=fail_storage_commit=false;
+    puts("Native Beyond UI: actual touch entry, ID keyboard/cap, Wi-Fi return, async cancel/denial/blockers, read-only notes, old PG retained until confirmation, no unsolicited USB ACK, native preparation, local physical focus and one explicit state commit passed with worker/peripheral doubles. No actual ESP32 Wi-Fi claim.");
+    }
     unsigned covered=0;
-    for(unsigned p=0;p<=LIBRARY_CONFIRM;p++){
+    for(unsigned p=0;p<=BEYOND_REPORT;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)LIBRARY_CONFIRM+1);
-    assert(covered==LIBRARY_CONFIRM+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)BEYOND_REPORT+1);
+    assert(covered==BEYOND_REPORT+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

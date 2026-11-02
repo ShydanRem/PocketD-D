@@ -4,7 +4,7 @@ static pd_library_catalog library_catalog;
 static unsigned library_page,library_slot,library_focus,library_target_count;
 static uint32_t library_origin;
 static bool library_keyboard,library_failed;
-static lv_obj_t *library_targets[6];
+static lv_obj_t *library_targets[7];
 static char library_notice[100];
 static bool library_view(void){return page==LIBRARY_HOME||page==LIBRARY_CONFIRM;}
 static void library_yield(void *unused){(void)unused;
@@ -89,7 +89,7 @@ static void library_confirm(void){
 }
 static lv_obj_t *library_control(const char *text,int x,int y,int w,int h,intptr_t action,bool enabled){
     lv_obj_t *b=button(text,x,y,w,h,action,enabled);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
-    if(library_target_count<6)library_targets[library_target_count++]=b;
+    if(library_target_count<7)library_targets[library_target_count++]=b;
     return b;
 }
 static void library_mark_focus(void){
@@ -109,7 +109,7 @@ static void render_library(void){
         lv_obj_t *notice=small_label(library_notice,83,303,300,PD_DANGER);lv_label_set_long_mode(notice,LV_LABEL_LONG_WRAP);lv_obj_set_height(notice,40);
         library_control("Indietro",83,359,144,48,5304,!library_failed);library_control("Apri e gioca",239,359,144,48,5305,!library_failed&&power_storage_ready());
     }else{
-        label("I miei PG",83,111,300,true);
+        label("I miei PG",83,111,244,true);
         lv_obj_t *notice=small_label(library_notice,83,153,300,PD_GOLD);lv_label_set_long_mode(notice,LV_LABEL_LONG_WRAP);lv_obj_set_height(notice,38);
         for(unsigned i=0;i<3&&library_page*3+i<library_catalog.count;i++){
             const pd_library_entry *e=library_catalog.entries+library_page*3+i;bool known=e->status==PD_LIBRARY_OK||e->status==PD_LIBRARY_RECOVERED;
@@ -122,6 +122,7 @@ static void render_library(void){
             lv_label_set_text(detail,text);lv_obj_align(detail,LV_ALIGN_TOP_LEFT,12,23);
         }
         library_control("Indietro",83,359,92,48,5301,true);library_control("<",187,359,92,48,5302,library_page>0);library_control(">",291,359,92,48,5303,(library_page+1)*3<library_catalog.count);
+        if(library_target_count<7)library_targets[library_target_count++]=icon_button("Importa da Beyond",PD_UI_SEARCH,335,99,48,44,5440,true);
     }
     library_mark_focus();
 }

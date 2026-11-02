@@ -182,8 +182,9 @@ function convertCoreNormalized(payload, expectedId, normalization, extended=fals
 }
 
 export function convertBeyondCore(payload,expectedId){const n=normalizeBeyondSource(payload);return convertCoreNormalized(n.payload,expectedId,n);}
-export function convertBeyond(payload,expectedId){const n=normalizeBeyondSource(payload);return addBeyondAppearance(extendBeyond(convertCoreNormalized(n.payload,expectedId,n,true),n.payload.data,n.training),n.payload.data);}
+function convertNormalized(n,expectedId){return addBeyondAppearance(extendBeyond(convertCoreNormalized(n.payload,expectedId,n,true),n.payload.data,n.training),n.payload.data);}
+export function convertBeyond(payload,expectedId){return convertNormalized(normalizeBeyondSource(payload),expectedId);}
 
 // Full first-version import. The historical bounded converter remains available for
 // adapters/tests that explicitly need the old projection without reference pages.
-export function convertBeyondFull(payload,expectedId){const n=normalizeBeyondSource(payload);return finalizeBeyondReport(addBeyondReference(convertBeyond(payload,expectedId),n.payload.data));}
+export function convertBeyondFull(payload,expectedId){const n=normalizeBeyondSource(payload);return finalizeBeyondReport(addBeyondReference(convertNormalized(n,expectedId),n.payload.data));}

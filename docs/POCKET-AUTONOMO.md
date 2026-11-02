@@ -1,10 +1,13 @@
 # Pocket autonomo: obiettivo e primo controllo
 
-31 ottobre 2026 · aggiornamento v0.90 (verifica account introdotta nella v0.89.1). Il dispositivo è il prodotto. Il traguardo concordato
+2 novembre 2026 · aggiornamento v0.91 (verifica account introdotta nella v0.89.1). Il dispositivo è il prodotto. Il traguardo concordato
 è usare il PC per installazione/aggiornamento e, se necessario, per il primo
 collegamento Beyond; poi scegliere e importare un PG dal Pocket tramite Wi-Fi.
-L’importazione Wi-Fi non è ancora disponibile. La v0.90 aggiunge la raccolta
-locale sul Pocket: [guida](https://github.com/ShydanRem/PocketD-D/blob/main/docs/LIBRERIA-LOCALE.md).
+La v0.91 aggiunge lettura e conversione Wi-Fi per ID pubblico, con anteprima e
+conferma: [guida](https://github.com/ShydanRem/PocketD-D/blob/main/docs/BEYOND-DISPOSITIVO.md).
+Il nuovo percorso richiede ancora collaudo sull’ESP32. La v0.90 ha aggiunto la
+raccolta locale sul Pocket: [guida](https://github.com/ShydanRem/PocketD-D/blob/main/docs/LIBRERIA-LOCALE.md).
+**Elenco autenticato, associazione e sessione sul Pocket non sono ancora disponibili.**
 
 **Prova reale, 31 ottobre:** l’utente ha caricato l’estensione nel proprio browser,
 visualizzato i PG e confermato che ci sono tutti rispetto a «I miei personaggi».
@@ -32,7 +35,7 @@ in un dettaglio, errori bloccanti subito visibili; niente nuova accettazione
 generica delle omissioni a ogni azione. Un errore di rete non deve apparire come
 un'importazione riuscita né sostituire il personaggio attivo.
 
-## Cosa c'è in questa versione
+## Verifica account nell’estensione (dalla v0.89.1)
 
 Nell'estensione esistente compare **Verifica account Beyond**. Apre una pagina
 separata: accesso opzionale ai soli servizi auth/character richiesto dal browser
@@ -91,9 +94,9 @@ hanno esiti diversi. Non tentare di aggirare il login o le verifiche del sito.
 | Interfaccia | Pagina reale in Chromium a 900/390/320 px, API permessi simulate e risposte HTTPS sintetiche: consenso rifiutato, elenco, testo sicuro, parziale/vuoto, HTTP/formato, cancellazione e revoca verificati |
 | Estensione MV3 caricata | **Bloccata dalla policy del Chromium gestito**: nessuna prova di caricamento/permessi/cookie reali superata qui. Il worker esistente è verificato con API simulate; non aggirata la policy |
 | Account Beyond reale | **Confermato dall’utente il 31 ottobre:** PG visibili e lista completa. Non acquisiti credenziali, risposte grezze o dati completi; durata/rinnovo della sessione e schede private restano separati |
-| Lettura HTTP pubblica del PG | Già provata nelle versioni precedenti con il connettore PC; non ripetuta o spacciata per prova account in questa versione |
-| Conversione/USB esistenti | Percorso PC esistente conservato; nessuna nuova importazione o modifica alla raccolta personale |
-| ESP32 → Beyond | **Non implementato in questa versione**: questa verifica non dimostra TLS, RAM o conversione sul Pocket |
+| Lettura HTTP pubblica del PG | Ripetuta il 2 novembre con il connettore Pocket PC, HTTP/JSON attesi. Non è una prova account |
+| Conversione nativa v0.91 | Stesse regole PC in QuickJS isolato e parser C: intero record identico su PG pubblico reale e su 67 casi sintetici accettati; 7 casi bloccati. Nessuna importazione nella raccolta personale |
+| ESP32 → Beyond | Worker HTTPS e UI implementati per PG pubblici; build ESP32 riuscita, **radio/TLS/memoria/tempi fisici ancora da collaudare**. Nessuna sessione salvata sul Pocket |
 
 Controlli della release **0.89.1**: **339 test JS superati** (12 dedicati alla verifica
 account), compilazione ESP32-S3 riuscita, pacchetto e sito verificati separatamente.
@@ -110,18 +113,19 @@ nelle rispettive guide, non dichiarate rieseguite da questa verifica account.
    progressi/aspetto/storico separati, checkpoint prima dei cambi e doppie copie
    verificate. Senza SD rimane un PG attivo. Prove software passate; collaudo SD
    fisica, fluidità e interruzioni reali restano da fare.
-3. **Lettura e conversione native.** HTTPS con verifica certificato/orario e
-   limiti espliciti; parsing selettivo/streaming e conversione C confrontata con
-   quella JS. PF, CA, caratteristiche, equipaggiamento, magie e risorse devono
-   coincidere per i profili supportati. La SD aumenta lo spazio ma non elimina
-   i limiti di RAM. L'attuale parser C riceve pacchetti Pocket già convertiti,
-   non il JSON Beyond: sostituirlo con un GET non completa l'importazione.
+3. **Lettura e conversione native implementate nella v0.91.** HTTPS con verifica
+   certificato/orario, sorgente limitata a 1 MiB e interprete a 4 MiB. Stesse
+   regole PC incorporate nel firmware, con parser C finale; confronto di tutto
+   il record su sorgente reale e casi sintetici. Anteprima, limiti, annullamento e
+   conferma integrati. Restano collaudo ESP32 e lettura autenticata; la SD non
+   elimina i limiti di RAM. Non si mantiene una seconda conversione delle regole
+   in C né si esegue il corpo JSON ricevuto come codice.
 4. **Associazione protetta e UI sul Pocket.** Trasferimento con conferma del
    dispositivo, sessione fuori da PG/backup/SD, cancellazione e ricollegamento.
    L'attuale NVS non è cifrata: non depositarvi una sessione Beyond fingendo che
    sia protetta. Non modificare eFuse/cifratura flash durante un aggiornamento
    ordinario. Questa versione non trasferisce alcuna sessione al dispositivo.
-5. **Importazione integrata.** Galleria, anteprima con copertura reale e conferma,
+5. **Scelta autenticata integrata.** Galleria dell’account sul Pocket, anteprima con copertura reale e conferma,
    nuova copia senza cancellare altri PG; aggiornamento sorgente separato dai
    progressi al tavolo. Nessuna sovrascrittura automatica di PF/slot/aspetto.
 

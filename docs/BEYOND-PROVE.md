@@ -1,3 +1,7 @@
+> 2 novembre, v0.91: [lettura e conversione direttamente sul Pocket](BEYOND-DISPOSITIVO.md).
+> Parità dell’intero record PC/nativo su sorgente pubblica reale; HTTP ESP32 ancora da collaudare.
+> Associazione account, rinnovo e PG privati sul Pocket restano separati.
+
 > Aggiornamento 30 ottobre, v0.85: [lettura reale di Soren, profili armatura e True Strike](EQUIPAGGIAMENTO-MAGIE.md).
 > HTTP, schema e conversione sono distinti; nessuna raccolta modificata o JSON completo pubblicato.
 > L'utente riferisce risolti USB/installer/SD. Le vecchie segnalazioni sotto sono storiche.
