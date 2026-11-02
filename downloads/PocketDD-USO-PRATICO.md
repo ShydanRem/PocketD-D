@@ -1,5 +1,9 @@
 # PocketD-D — uso pratico sul dispositivo
 
+> Aggiornamento v0.91: [lettura e conversione Beyond sul Pocket via Wi-Fi](BEYOND-DISPOSITIVO.md), per ID pubblico; nuovo percorso da collaudare sull’hardware.
+>
+> Aggiornamento v0.90: [raccolta locale I miei PG sulla SD](LIBRERIA-LOCALE.md).
+
 > Aggiornamento v0.89: [Punizione Divina 2024 e slot ibridi](PUNIZIONE-DIVINA.md).
 
 > Aggiornamento v0.88: [Hex e Marchio 2024, bersaglio e danni collegati](EFFETTI-SUL-COLPO.md).

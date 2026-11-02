@@ -1,12 +1,15 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **31 ottobre 2026 — v0.90**. Il dispositivo è il prodotto;
-l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Oggi il PC
-serve ancora per importare, oltre che per installazione, aggiornamenti e backup.
+Aggiornamento del **2 novembre 2026 — v0.91**. Il dispositivo è il prodotto;
+l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
+ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
+sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
+percorso d’importazione già provato. Collegamento account e PG privati sul Pocket
+non sono ancora implementati.
 
 Il software copre una prima sessione individuale offline. L'utente riferisce
 risolti USB, installer e SD e conferma visibile il sito GitHub Pages. Il collaudo
-completo di batteria, interruzioni di alimentazione e delle nuove funzioni 0.85–0.90
+completo di batteria, interruzioni di alimentazione e delle nuove funzioni 0.85–0.91
 resta distinto da questa conferma.
 
 ## Pagina web di installazione
@@ -14,8 +17,29 @@ resta distinto da questa conferma.
 [GitHub Pages](https://shydanrem.github.io/PocketD-D/) è attivo sul repository
 ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
-aggiornano dal browser; il pacchetto locale serve ancora al connettore Beyond.
+aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Nuovo nella v0.91
+
+[Beyond sul dispositivo](BEYOND-DISPOSITIVO.md): da I miei PG, icona di ricerca,
+ID pubblico e Wi-Fi. HTTPS con orario/certificati verificati, stessa conversione
+PC in QuickJS isolato e validazione C finale; anteprima con caratteristiche,
+PF, CA, conteggi e note. Annullamento e conferma sul display; checkpoint della
+scheda uscente sulla SD e blocco dei salvataggi incerti. Nessun cambio ai formati
+PG/USB/backup/PDL1 né alle partizioni, nessuna scrittura verso Beyond.
+
+Lettura reale del PG `167361077`: HTTP 200/JSON atteso, PF53/53, CA16,
+caratteristiche15/10/16/8/8/17, 11 oggetti e 69 magie/capacità, 35 note/limiti.
+Record nativo identico a quello del PC sugli stessi dati; nessuna modifica alla
+raccolta personale. I vecchi PF35/53 erano il saldo della lettura precedente,
+non quello restituito dal servizio oggi. La parità non prova tutte le meccaniche
+D&D né il percorso Wi-Fi fisico dell’ESP32. Nessuna nuova prova privata/account.
+
+341 test JS, 74 confronti PC/nativo (67 accettati, 7 bloccati), suite native,
+145 viste LVGL e build ESP32-S3. La nuova funzione richiede una prova sul Pocket
+per HTTPS/radio, memoria totale, tempi, annullamento e conferma. Associazione,
+rinnovo della sessione ed elenco autenticato sul dispositivo restano successivi.
 
 ## Nuovo nella v0.90
 
@@ -29,8 +53,8 @@ fisica rimane da fare; USB/installer/asset SD precedenti già confermati.
 
 Account Beyond: **l’utente conferma il 31 ottobre login, PG visibili ed elenco
 completo**. È una prova riferita dal suo browser, non una nuova lettura autenticata
-dell’agente. Sessione sul Pocket, rinnovo, schede private e conversione nativa
-non ancora verificati. Nessuna credenziale o raccolta personale acquisita.
+dell’agente. Sessione sul Pocket, rinnovo e schede private non ancora verificati;
+conversione nativa aggiunta nella v0.91. Nessuna credenziale o raccolta personale acquisita.
 
 ## Nuovo nella v0.89.1
 

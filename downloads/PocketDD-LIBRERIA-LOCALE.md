@@ -44,13 +44,15 @@ associazioni globali configurate vengono conservate e riprendono fuori dal perco
 
 ## Cosa significa rispetto a Beyond
 
-**Questa è una raccolta locale, non ancora importazione Wi-Fi da Beyond.**
+**Questa è una raccolta locale.** La v0.91 aggiunge un percorso separato di
+[importazione Wi-Fi da Beyond per ID pubblico](BEYOND-DISPOSITIVO.md), ancora da
+collaudare sull’hardware; il collegamento all’account resta successivo.
 L'elenco dell'account nell'estensione è stato provato dall'utente e confermato
 completo il 31 ottobre. Quel risultato non trasferisce ancora schede o sessioni
 al dispositivo. Per aggiungere adesso un PG Beyond si usa il percorso PC/USB
 già funzionante, poi si cambia PG dalla raccolta senza PC.
 
-Restano conversione nativa del JSON Beyond, associazione protetta, rinnovo della
+Restano associazione protetta, rinnovo della
 sessione e lettura delle schede autenticata sul Pocket. Nessuna scrittura nuova
 verso Beyond. Se è configurato il ponte sperimentale, il cambio di identità
 ferma l'invio del nuovo PG finché il ponte non viene riabbinato esplicitamente.
