@@ -53,6 +53,7 @@ firmware/tests/out/session
 cmake -S firmware/tests -B firmware/tests/out/ui-build -G Ninja
 cmake --build firmware/tests/out/ui-build --parallel 4
 node --input-type=module -e "import {beyondRichFixture} from './src/beyond-fixtures.js';process.stdout.write(JSON.stringify(beyondRichFixture()))" > firmware/tests/out/beyond-source.synthetic.json
+firmware/tests/out/ui-build/beyond-account
 firmware/tests/out/ui-build/beyond-core firmware/tests/out/beyond-source.synthetic.json
 firmware/tests/out/ui-build/beyond-service firmware/tests/out/beyond-source.synthetic.json
 node scripts/check-beyond-runtime.js

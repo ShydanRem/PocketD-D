@@ -10,7 +10,7 @@ runtime_info=json.loads((ROOT/'scripts/windows-runtime.json').read_text());runti
 files=[ROOT/'docs/LIBRERIA-LOCALE.md',ROOT/'docs/previews/v090-local-library.png',ROOT/'docs/POCKET-AUTONOMO.md',ROOT/'docs/PUNIZIONE-DIVINA.md',ROOT/'docs/previews/v089-divine-smite.png',ROOT/'docs/EFFETTI-SUL-COLPO.md',ROOT/'docs/previews/v088-on-hit-effects.png',ROOT/'docs/ATTACCHI-CONTESTUALI.md',ROOT/'docs/previews/v087-contextual-attacks.png',ROOT/'docs/OGGETTI-SINTONIA.md',ROOT/'docs/previews/v086-attunement.png',ROOT/'docs/EQUIPAGGIAMENTO-MAGIE.md',ROOT/'docs/previews/v085-device-session.png',ROOT/'docs/GITHUB-PAGES.md',ROOT/'docs/previews/v084-wifi-direct.png',ROOT/'docs/previews/v083-sd-install.png',ROOT/'docs/SD-WEB-USB.md',ROOT/'package.json',ROOT/'Avvia-PocketDD.cmd',ROOT/'Avvia-Ponte.cmd',ROOT/'docs/PONTE-BEYOND.md',ROOT/'docs/PONTE-BEYOND-PROVE.md',ROOT/'docs/STATO-SOFTWARE.md',ROOT/'docs/USO-PRATICO.md',ROOT/'docs/INIZIA-QUI.md',ROOT/'docs/SESSIONE-V082.md',ROOT/'docs/BEYOND-CONSENSO-V0821.md',ROOT/'docs/previews/v082-key-picker.png',ROOT/'docs/previews/v081-setup-flow.png',ROOT/'docs/previews/v080-practical-device.png',ROOT/'docs/BEYOND-PERSONALIZZAZIONI-TIRI.md',ROOT/'docs/ABILITA-CARATTERISTICHE.md',ROOT/'docs/DIFESE-VERIFICA-RAPIDA.md',ROOT/'docs/BEYOND-CONTATORI-MANUALI.md',ROOT/'docs/BEYOND-CANNONE.md',ROOT/'docs/BEYOND-V1.md',ROOT/'docs/WIFI.md',ROOT/'docs/BEYOND-TEMPO-REALE.md',ROOT/'docs/previews/v078-reference-wifi.png',ROOT/'docs/previews/v079-bridge.png']
 for directory in ('src','scripts'):
  files += [f for f in (ROOT/directory).glob('*') if f.is_file() and f.suffix in ('.js','.json') and not f.name.endswith('.test.js')]
-files += [ROOT/'docs/BEYOND-DISPOSITIVO.md', ROOT/'docs/previews/v091-beyond-native.png']
+files += [ROOT/'docs/BEYOND-DISPOSITIVO.md', ROOT/'docs/previews/v091-beyond-native.png', ROOT/'docs/COLLEGAMENTO-BEYOND.md', ROOT/'docs/previews/v092-beyond-account.png']
 files += [f for folder in ('extension','tools/bridge') for f in (ROOT/folder).rglob('*') if f.is_file()]
 files += [ROOT/'dist/index.html']+[f for f in (ROOT/'dist/assets').rglob('*') if f.is_file()]
 # Include the embedded installer without its downloads (avoids a recursive PC ZIP).
@@ -42,7 +42,8 @@ Profilo PG, iniziativa e dotazioni: nuova importazione v20, firmware 0.78 / USB1
 Wi-Fi: Menu > ingranaggio > Wi-Fi > Cerca reti; password sul display; vedi docs/WIFI.md.
 Beyond dal Pocket v0.91: I miei PG > ricerca > ID pubblico > Leggi > anteprima > Importa.
 Guida e limiti: docs/BEYOND-DISPOSITIVO.md. Nuovo HTTPS/convertitore da collaudare sull'ESP32.
-Non e ancora collegamento account, elenco o import dei PG privati sul Pocket.
+v0.92: account ed elenco sul Pocket, associazione USB una volta e accesso ricordato opzionale.
+Guida docs/COLLEGAMENTO-BEYOND.md. Nuovo percorso da collaudare realmente; NVS non cifrata.
 Ponte Beyond sperimentale: Avvia-Ponte.cmd e cartella extension. Guida docs/PONTE-BEYOND.md.
 USB/installer/SD riferiti risolti dall utente; le nuove funzioni e il ponte richiedono collaudo separato.
 Punizione 2024 e slot ibridi: docs/PUNIZIONE-DIVINA.md.
@@ -64,7 +65,7 @@ Personalizzazioni standard di abilita/salvezze riconciliate; altre eccezioni res
 Punteggi fissati e massimi delle caratteristiche riconciliati; bonus personalizzato dopo il limite.
 Cariche, consumabili e cure esplicite vengono riconciliati; recuperi ambigui restano manuali.
 Un profilo difese richiede firmware 0.71 / USB14: aggiorna PocketD-D conservando i dati.
-Le regole Beyond non rappresentate restano esplicite/manuali; import privati non supportato.
+Le regole Beyond non rappresentate restano esplicite/manuali; percorso privato nuovo non ancora provato realmente.
 L'importazione PC crea una nuova scheda; sul dispositivo la SD conserva la scheda uscente
 con la raccolta v0.90. Senza SD il trasferimento sostituisce l'unica scheda attiva.
 La raccolta resta nel browser: usa sempre lo stesso indirizzo e conserva un backup.

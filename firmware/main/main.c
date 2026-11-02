@@ -50,7 +50,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, KEY_PICKER, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM, POWER_HOME, POWER_OFF, ITEM_SEARCH, POWER_SEARCH, MAGIC_MANAGE, MAGIC_PREPARATION, ITEM_QUANTITY_CONFIRM, AVATAR_EDIT, SCENE_EDIT, APPEARANCE_CONFIRM, DEFENCE_SETUP, WIFI_HOME, WIFI_FORGET, REFERENCE_HOME, REFERENCE_TEXT, WIFI_LIST, WIFI_PASSWORD, WIFI_JOIN_REVIEW, WEAPON_PICKER, ITEM_CONFIG_MENU, WEAPON_SETUP, GEAR_SETUP, MAGIC_PROFILE, PLAY_CONFIRM, ATTACK_MODE, HIT_EFFECTS, HIT_SMITE, ASSET_INSTALL, SYNC_HOME, SYNC_REVIEW, SYNC_FORGET, LIBRARY_HOME, LIBRARY_CONFIRM, BEYOND_FORM, BEYOND_BUSY, BEYOND_REPORT } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, KEY_PICKER, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM, POWER_HOME, POWER_OFF, ITEM_SEARCH, POWER_SEARCH, MAGIC_MANAGE, MAGIC_PREPARATION, ITEM_QUANTITY_CONFIRM, AVATAR_EDIT, SCENE_EDIT, APPEARANCE_CONFIRM, DEFENCE_SETUP, WIFI_HOME, WIFI_FORGET, REFERENCE_HOME, REFERENCE_TEXT, WIFI_LIST, WIFI_PASSWORD, WIFI_JOIN_REVIEW, WEAPON_PICKER, ITEM_CONFIG_MENU, WEAPON_SETUP, GEAR_SETUP, MAGIC_PROFILE, PLAY_CONFIRM, ATTACK_MODE, HIT_EFFECTS, HIT_SMITE, ASSET_INSTALL, SYNC_HOME, SYNC_REVIEW, SYNC_FORGET, LIBRARY_HOME, LIBRARY_CONFIRM, BEYOND_FORM, BEYOND_BUSY, BEYOND_REPORT, BEYOND_ACCOUNT, BEYOND_PAIR, BEYOND_FORGET } page_t;
 static const pd_theme_kind page_themes[]={
     [HERO]=PD_THEME_NONE,
     [SHEET]=PD_THEME_SHEET,
@@ -151,7 +151,7 @@ static const pd_theme_kind page_themes[]={
     [WALLET_HOME]=PD_THEME_WALLET,
     [WALLET_EDIT]=PD_THEME_WALLET,
     [WALLET_CONFIRM]=PD_THEME_WALLET,
-    [BEYOND_FORM]=PD_THEME_BEYOND,[BEYOND_BUSY]=PD_THEME_BEYOND,[BEYOND_REPORT]=PD_THEME_BEYOND,
+    [BEYOND_FORM]=PD_THEME_BEYOND,[BEYOND_BUSY]=PD_THEME_BEYOND,[BEYOND_REPORT]=PD_THEME_BEYOND,[BEYOND_ACCOUNT]=PD_THEME_BEYOND,[BEYOND_PAIR]=PD_THEME_BEYOND,[BEYOND_FORGET]=PD_THEME_BEYOND,
     [LIBRARY_HOME]=PD_THEME_LIBRARY,
     [LIBRARY_CONFIRM]=PD_THEME_LIBRARY,
     [HISTORY_HOME]=PD_THEME_HISTORY,
@@ -453,7 +453,7 @@ static unsigned selected_hit_dice(void){unsigned n=0;for(unsigned i=0;i<PD_HIT_P
 
 
 #ifndef PD_UI_TEST
-static QueueHandle_t packets,backup_packets,diagnostic_requests,asset_requests;
+static QueueHandle_t packets,backup_packets,diagnostic_requests,asset_requests,account_requests;
 static SemaphoreHandle_t usb_output;
 static TaskHandle_t usb_thread;
 static TickType_t import_started;
@@ -806,7 +806,7 @@ static void act(intptr_t action) {
     if(appearance_editing()&&(action<4301||action>4332))return;
     if(action==B_OPEN){beyond_action(action);render();return;}
     if(beyond_local()){
-        if(action>=B_BACK&&action<=B_DIGIT+9){beyond_action(action);render();return;}
+        if(action>=B_BACK&&action<B_END){beyond_action(action);render();return;}
         if(!(import_pending&&import_from_beyond&&page!=BEYOND_REPORT&&(action==30||action==31)))return;
     }
     if(play_editing()){play_action(action);pd_screen_activity(&display_screen,lv_tick_get());render();return;}
@@ -894,7 +894,7 @@ static void act(intptr_t action) {
     else if(action==4705&&page==SYNC_FORGET){if(pd_sync_forget()){sync_notice="";page=SYNC_HOME;}else sync_notice="Rimozione non confermata";}
     else if(action==4706&&page==SYNC_HOME)page=WIFI_HOME;
     else if(action==4500&&page==DEVICE_SETTINGS){beyond_wifi_return=false;wifi_notice="";page=WIFI_HOME;}
-    else if(action==4501&&page==WIFI_HOME){if(beyond_wifi_return){beyond_wifi_return=false;page=BEYOND_FORM;}else page=DEVICE_SETTINGS;}
+    else if(action==4501&&page==WIFI_HOME){if(beyond_wifi_return){beyond_wifi_return=false;page=beyond_return();}else page=DEVICE_SETTINGS;}
     else if((action==4502||action==4503||action==4504)&&page==WIFI_HOME){if(!pd_wifi_command(action==4502?PD_WIFI_ENABLE:action==4503?PD_WIFI_DISABLE:PD_WIFI_SETUP))wifi_notice="Richiesta occupata: riprova";else wifi_notice="Richiesta inviata";}
     else if(action==5000&&page==WIFI_HOME){
         wifi_clear_draft();wifi_keyboard=false;wifi_list_page=0;
@@ -1140,7 +1140,7 @@ static void act(intptr_t action) {
             import_pending=import_from_beyond=false;
         } else { if(import_from_beyond){pd_history_store_uncertain_restore();library_failed=true;page=BEYOND_FORM;beyond_notice="Memoria non salvata: riavvia";}else reply("PDD ERROR storage\n");import_pending=import_from_beyond=false; }
     }
-    else if (action==31&&import_pending) { if(import_from_beyond){page=BEYOND_FORM;beyond_notice="Importazione annullata: PG conservato";}else reply("PDD CANCELLED\n");import_pending=import_from_beyond=false; }
+    else if (action==31&&import_pending) { if(import_from_beyond){page=beyond_return();beyond_notice="Importazione annullata: PG conservato";}else reply("PDD CANCELLED\n");import_pending=import_from_beyond=false; }
     else if (action==50)page=APPEARANCE;
     else if(action==4300&&page==APPEARANCE){appearance_draft=state.avatar;appearance_scene=state.scene;appearance_lineage=state.lineage;appearance_body=state.body;appearance_group=state.lineage/3;appearance_outfit=state.outfit;appearance_class_group=state.outfit/3;appearance_field=state.outfit?6:0;appearance_keyboard=false;appearance_focus=0;page=AVATAR_EDIT;}
     else if((action==4301||action==4303)&&page==AVATAR_EDIT){do{appearance_field=(appearance_field+(action==4301?6:1))%7;}while((appearance_outfit&&appearance_field<4)||(appearance_field==1&&!pd_species_hair(appearance_lineage)));}
@@ -3469,7 +3469,7 @@ static void render_content(void) {
     }
 }
 #ifdef PD_UI_TEST
-static bool styled_pages[BEYOND_REPORT+1];
+static bool styled_pages[BEYOND_FORGET+1];
 static void capture_styled_page(unsigned view);
 #endif
 /* Only page lists accept swipes. No gesture can confirm, spend or roll. */
@@ -3680,7 +3680,12 @@ static void usb_task(void *unused) {
             char c=data[i];
             if(c=='\r')continue;
             if(c=='\n') {
-                if(!overflow && used) {
+                if(!overflow && used && used>=12&&!memcmp(line,"PDD ACCOUNT ",12)){
+                    pd_account_request *request=calloc(1,sizeof *request);
+                    if(!request||!pd_account_command(line,used,request)){reply("PDD ACCOUNT ERROR command\n");if(request){pd_account_wipe(request,sizeof *request);free(request);}}
+                    else if(xQueueSend(account_requests,&request,0)!=pdPASS){pd_account_wipe(request,sizeof *request);free(request);reply("PDD ACCOUNT ERROR busy\n");}
+                    pd_account_wipe(line,used);
+                }else if(!overflow && used) {
                     if(!pd_beyond_usb_begin()){reply("PDD ERROR busy\n");used=0;overflow=false;continue;}
                     line[used]=0;
                     if(!strcmp(line,"PDD HELLO")) reply("PDD READY 21\n");
@@ -3708,6 +3713,7 @@ static void usb_task(void *unused) {
                     }
                     pd_beyond_usb_end();
                 } else if(overflow) reply("PDD ERROR size\n");
+                if(used>=12&&!memcmp(line,"PDD ACCOUNT ",12))pd_account_wipe(line,used);
                 used=0;overflow=false;
             } else if (used<PD_PACKET_MAX && !overflow) line[used++]=c;
             else overflow=true;
@@ -3728,6 +3734,7 @@ void app_main(void) {
     backup_packets=xQueueCreate(1,sizeof(pd_backup *));assert(backup_packets);
     diagnostic_requests=xQueueCreate(1,sizeof(uint8_t));assert(diagnostic_requests);
     asset_requests=xQueueCreate(1,sizeof(pd_asset_request *));assert(asset_requests);
+    account_requests=xQueueCreate(1,sizeof(pd_account_request *));assert(account_requests);
     pd_beyond_boot();
     assert(xTaskCreate(usb_task,"usb_import",12288,NULL,3,&usb_thread)==pdPASS);
     render();
@@ -3736,10 +3743,11 @@ void app_main(void) {
         pd_state *incoming=NULL;
         if(xQueueReceive(packets,&incoming,0)==pdPASS) {stage_import(incoming);free(incoming);}
         if(import_pending && (xTaskGetTickCount()-import_started)>pdMS_TO_TICKS(import_from_beyond?600000:120000)) {
-            if(import_from_beyond){page=BEYOND_FORM;beyond_notice="Anteprima scaduta: PG conservato";}else reply("PDD CANCELLED timeout\n");import_pending=import_from_beyond=false;render();
+            if(import_from_beyond){page=beyond_return();beyond_notice="Anteprima scaduta: PG conservato";}else reply("PDD CANCELLED timeout\n");import_pending=import_from_beyond=false;render();
         }
         pd_backup *snapshot=NULL;
         if(xQueueReceive(backup_packets,&snapshot,0)==pdPASS){stage_backup(snapshot);free(snapshot);}
+        pd_account_request *account_request=NULL;if(xQueueReceive(account_requests,&account_request,0)==pdPASS){beyond_account_request(account_request);pd_account_wipe(account_request,sizeof *account_request);free(account_request);}
         beyond_poll();
         backup_service();
         pd_asset_request *asset=NULL;if(xQueueReceive(asset_requests,&asset,0)==pdPASS){asset_request(asset);free(asset);}

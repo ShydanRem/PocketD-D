@@ -8,6 +8,8 @@ add_subdirectory(../.deps/lvgl lvgl)
 add_executable(ui ../core/catalog.c ../core/power.c ../core/input_check.c ../core/diagnostics.c ../core/backup.c ../core/history.c ../core/recharge.c ../core/damage.c ../core/screen.c ../core/status.c ../core/rest.c test_ui.c ../core/buttons.c ../core/pocketdd.c ../core/magic.c ../core/checks.c ../core/combat.c ../core/dice_animation.c ../core/dice_pool.c ../core/class_looks.c ../core/avatar.c)
 target_sources(ui PRIVATE ../core/beyond_source.c ../core/library.c ../ui/semantic_icons.c ../core/wifi_setup.c ../core/asset_transfer.c ../ui/icons.c ../ui/room_cache.c ../ui/scenes/scenes.c ../ui/scenes/scene_assets.c ../ui/theme/theme.c ../ui/theme/theme_assets.c ../ui/companion/companion.c ../ui/companion/companion_assets.c)
 target_include_directories(ui PRIVATE ../core ../ui/companion ../ui/theme)
+target_sources(ui PRIVATE ../core/beyond_account.c $ENV{IDF_PATH}/components/json/cJSON/cJSON.c)
+target_include_directories(ui PRIVATE "$ENV{IDF_PATH}/components/json/cJSON")
 target_link_libraries(ui lvgl m)
 
 # Standalone view harness, using the same production renderer and committed assets.
@@ -233,7 +235,7 @@ find_package(ZLIB REQUIRED)
 target_compile_definitions(beyond-runtime PRIVATE PD_BEYOND_TEST_INIT)
 target_link_libraries(beyond-runtime pocket_quickjs ZLIB::ZLIB m)
 
-add_executable(beyond-service test_beyond_service.c ../core/beyond_runtime.c ../core/beyond_source.c ../core/packet.c ../core/pocketdd.c ../core/magic.c ../core/checks.c $ENV{IDF_PATH}/components/json/cJSON/cJSON.c)
+add_executable(beyond-service ../core/beyond_account.c test_beyond_service.c ../core/beyond_runtime.c ../core/beyond_source.c ../core/packet.c ../core/pocketdd.c ../core/magic.c ../core/checks.c $ENV{IDF_PATH}/components/json/cJSON/cJSON.c)
 target_include_directories(beyond-service PRIVATE ../main ../core . "$ENV{IDF_PATH}/components/json/cJSON")
 target_compile_options(beyond-service PRIVATE -Wall -Wextra -Werror -Wno-unused-parameter)
 target_link_libraries(beyond-service pocket_quickjs ZLIB::ZLIB m)
@@ -242,3 +244,8 @@ add_executable(beyond-core test_beyond_runtime.c ../core/beyond_runtime.c ../cor
 target_include_directories(beyond-core PRIVATE ../core "$ENV{IDF_PATH}/components/json/cJSON")
 target_compile_options(beyond-core PRIVATE -Wall -Wextra -Werror -Wno-unused-parameter)
 target_link_libraries(beyond-core pocket_quickjs ZLIB::ZLIB m)
+
+add_executable(beyond-account test_beyond_account.c ../main/beyond_store.c ../core/beyond_account.c ../core/beyond_source.c $ENV{IDF_PATH}/components/json/cJSON/cJSON.c)
+target_include_directories(beyond-account PRIVATE ../main ../core fake "$ENV{IDF_PATH}/components/json/cJSON")
+target_compile_options(beyond-account PRIVATE -Wall -Wextra -Werror)
+target_link_libraries(beyond-account m)

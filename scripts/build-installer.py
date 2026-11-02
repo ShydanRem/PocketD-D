@@ -179,14 +179,14 @@ page.write_text(page.read_text().replace('<section class="after">',section+'<sec
 # This is separate from firmware and does not require a device update.
 import zipfile
 extension_names=('manifest.json','background.js','content.js','protocol.js','page-adapter.js',
-                 'popup.html','popup.css','popup.js','account.html','account.css','account.js','account-check.js')
+                 'popup.html','popup.css','popup.js','account.html','account.css','account.js','account-check.js','account-link.js','account-link-ui.js')
 with zipfile.ZipFile(out/'downloads/PocketDD-Beyond-Check.zip','w',zipfile.ZIP_DEFLATED) as archive:
  for name in extension_names:archive.write(ROOT/'extension'/name,'extension/'+name)
  archive.write(ROOT/'docs/POCKET-AUTONOMO.md','LEGGIMI.md')
 for name in ('POCKET-AUTONOMO',):
  shutil.copyfile(ROOT/'docs'/f'{name}.md',out/'downloads'/f'PocketDD-{name}.md')
  shutil.copyfile(ROOT/'docs'/f'{name}.md',out/'downloads'/f'{name}.md')
-account_section='<details class="after"><summary>Verso il Pocket autonomo · verifica account Beyond</summary><p>Controllo sperimentale nell’estensione: login ed elenco dei PG, senza esportare credenziali o modificare schede. Non è ancora importazione Wi-Fi dal dispositivo; non serve aggiornare il firmware per questa prova.</p><p><a href="downloads/PocketDD-Beyond-Check.zip" download>Scarica solo l’estensione di verifica</a> · <a href="downloads/PocketDD-POCKET-AUTONOMO.md">Istruzioni e stato dei lavori</a>. Confronta l’elenco con quello del tuo account; un HTTP riuscito non prova la conversione.</p></details>'
+account_section='<details class="after"><summary>Verso il Pocket autonomo · verifica account Beyond</summary><p>Verifica login ed elenco senza esportare credenziali, oppure collega il Pocket con consenso esplicito. La nuova associazione richiede il firmware 0.92 e trasferisce l’accesso solo dopo la conferma sul display. Nessuna modifica ai PG Beyond.</p><p><a href="downloads/PocketDD-Beyond-Check.zip?v=0.92.0" download>Scarica solo l’estensione di verifica</a> · <a href="downloads/PocketDD-POCKET-AUTONOMO.md">Istruzioni e stato dei lavori</a>. Confronta l’elenco con quello del tuo account; un HTTP riuscito non prova la conversione.</p></details>'
 page.write_text(page.read_text().replace('<section class="after">',account_section+'<section class="after">',1))
 
 # Generic equipment/attunement UI, not a particular character build.
@@ -250,4 +250,14 @@ shutil.copyfile(ROOT/'docs/previews/v091-beyond-native.png',out/'downloads/previ
 for name in ('ux091-beyond-form','ux091-beyond-busy','ux091-beyond-preview','ux091-beyond-blocked'):
  shutil.copyfile(ROOT/'firmware/tests/out/ui-build'/f'{name}.png',out/'assets'/f'{name}.png')
 section='<section class="after"><h2>Beyond dal Pocket via Wi-Fi · v0.91</h2><p>I miei PG → ricerca → ID pubblico → Leggi → anteprima → Importa. Lettura e conversione locali con le stesse regole del PC, caratteristiche/PF/CA visibili, limiti consultabili e conferma sul display. La SD conserva la scheda uscente; senza SD resta un solo PG attivo.</p><p>Record nativo identico al PC sul PG pubblico reale e su 67 casi sintetici accettati; altri 7 casi bloccati. Firmware compilato per ESP32-S3, nuovo percorso HTTPS e consumo totale di memoria ancora da collaudare sul Pocket fisico. Le immagini usano PG sintetici.</p><p><a href="downloads/PocketDD-BEYOND-DISPOSITIVO.md">Guida alla prova e limiti precisi</a>. Aggiorna conservando i dati, senza reinstallare look o cancellare la SD. Collegamento account, elenco sul display e PG privati restano successivi; nessuna credenziale trasferita e nessuna scrittura su Beyond.</p><div class="import-captures"><img src="assets/ux091-beyond-form.png" width="466" height="466" alt="Inserimento ID pubblico sul dispositivo"><img src="assets/ux091-beyond-preview.png" width="466" height="466" alt="Anteprima del PG sintetico prima della conferma"></div></section>'
+page.write_text(page.read_text().replace('<section class="after">',section+'<section class="after">',1))
+
+# Account association: explicit optional browser cookie permission and device confirmation.
+for name in ('COLLEGAMENTO-BEYOND','POCKET-AUTONOMO','STATO-SOFTWARE','INIZIA-QUI','USO-PRATICO'):
+ shutil.copyfile(ROOT/'docs'/f'{name}.md',out/'downloads'/f'PocketDD-{name}.md')
+ shutil.copyfile(ROOT/'docs'/f'{name}.md',out/'downloads'/f'{name}.md')
+shutil.copyfile(ROOT/'docs/previews/v092-beyond-account.png',out/'downloads/previews/v092-beyond-account.png')
+for name in ('ux092-pair','ux092-account','ux092-forget'):
+ shutil.copyfile(ROOT/'firmware/tests/out/ui-build'/f'{name}.png',out/'assets'/f'{name}.png')
+section='<section class="after"><h2>Il tuo account sul Pocket · v0.92</h2><p>Prima associazione dal PC: estensione aggiornata → Prepara accesso → Collega Pocket. Confronta il codice e conferma sul display prima del trasferimento. Poi elenco e importazione dei propri PG direttamente via Wi-Fi, senza tenere il PC acceso.</p><p>Accesso ricordato opzionale nella memoria attuale non cifrata, separato da schede/SD/backup PG. Esci → Scollega rimuove solo il collegamento. Il cookie conserva i privilegi del proprio account; il software esegue solo letture.</p><p><strong>Nuovo percorso autenticato ancora da collaudare realmente su estensione ed ESP32.</strong> Le nuove prove di cookie, USB, account e schede private usano sessioni e risposte sintetiche. Aggiorna il firmware conservando i dati e ricarica la nuova estensione quando vorrai provarlo.</p><p><a href="downloads/PocketDD-Beyond-Check.zip?v=0.92.0" download>Aggiorna l’estensione Beyond</a> · <a href="downloads/PocketDD-COLLEGAMENTO-BEYOND.md">Guida completa, limiti e recupero</a>. Nessuna scrittura dei PG su Beyond. Le immagini mostrano dati e codici sintetici.</p><div class="import-captures"><img src="assets/ux092-pair.png" width="466" height="466" alt="Codice e scelta memoria sul Pocket, esempio sintetico"><img src="assets/ux092-account.png" width="466" height="466" alt="Elenco account con personaggio sintetico"></div></section>'
 page.write_text(page.read_text().replace('<section class="after">',section+'<section class="after">',1))

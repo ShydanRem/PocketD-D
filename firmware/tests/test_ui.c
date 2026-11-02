@@ -19,6 +19,13 @@ void pd_beyond_snapshot(pd_beyond_info *out){*out=beyond_mock;}
 bool pd_beyond_start(const char *id){if(beyond_mock.running)return false;strcpy(beyond_requested,id);beyond_start_calls++;beyond_mock=(pd_beyond_info){.phase=PD_BEYOND_HTTP,.running=true};return true;}
 void pd_beyond_cancel(void){free(beyond_result_mock);beyond_result_mock=NULL;beyond_mock=(pd_beyond_info){.phase=PD_BEYOND_FAILED,.error=PD_BEYOND_CANCELLED};}
 pd_beyond_candidate *pd_beyond_take(void){pd_beyond_candidate *out=beyond_result_mock;beyond_result_mock=NULL;return out;}
+static pd_account_row account_row_mock={.id="123456",.name="Eroe account",.level=3};
+bool pd_beyond_list(void){beyond_mock.operation=PD_BEYOND_LIST;beyond_mock.running=true;beyond_mock.phase=PD_BEYOND_HTTP;return true;}
+bool pd_beyond_owned(unsigned index){if(index>=beyond_mock.count)return false;pd_beyond_start(account_row_mock.id);beyond_mock.operation=PD_BEYOND_OWNED;return true;}
+bool pd_beyond_link(const pd_account_access *a,bool remember){assert(pd_account_valid(a));beyond_mock.operation=PD_BEYOND_LINK;beyond_mock.remembered=remember;beyond_mock.running=true;beyond_mock.phase=PD_BEYOND_HTTP;return true;}
+bool pd_beyond_row(unsigned index,pd_account_row *out){if(index>=beyond_mock.count)return false;*out=account_row_mock;return true;}
+bool pd_beyond_forget(void){beyond_mock.configured=false;beyond_mock.count=0;return true;}
+
 static bool sd_present,sd_verified;
 bool pd_board_assets_available(void){return sd_present;}
 bool pd_board_assets_space(uint64_t *available){*available=PD_ASSET_BYTES+4096;return sd_present;}
@@ -1904,7 +1911,7 @@ int main(void) {
     import_pending=import_from_beyond=library_failed=history_pending=history_quarantined=smite_rolled=false;
     fail_save=fail_storage_commit=fail_history=false;library_test_root=NULL;
     wifi_mock=(pd_wifi_info){.state=PD_WIFI_CONNECTED,.configured=true};page=LIBRARY_HOME;library_catalog.count=0;render();
-    tap(359,121);assert(page==BEYOND_FORM&&!import_pending);bounds();screenshot("ux091-beyond-form.ppm");
+    tap(359,121);assert(page==BEYOND_ACCOUNT);click("PG pubblico");assert(page==BEYOND_FORM&&!import_pending);bounds();screenshot("ux091-beyond-form.ppm");
     pd_state original=state;unsigned original_saves=save_calls,original_rng=random_calls;char original_reply[sizeof last_reply];strcpy(original_reply,last_reply);
     for(const char *p="123456";*p;p++)act(B_DIGIT+*p-'0');assert(!strcmp(beyond_id,"123456"));
     click("Wi-Fi");assert(page==WIFI_HOME);click("Indietro");assert(page==BEYOND_FORM&&!strcmp(beyond_id,"123456"));
@@ -1919,7 +1926,7 @@ int main(void) {
     physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};beyond_keyboard=false;screen_service(0,0);lv_tick_inc(40);screen_service(0,0);screen_service(1,0);lv_tick_inc(40);screen_service(1,0);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);assert(beyond_keyboard&&beyond_focus==0&&import_pending&&state.hp==original.hp);
     click("Importa");assert(page==HERO&&!import_pending&&!import_from_beyond&&state.hp==7&&state.lineage==2&&state.brightness==original.brightness&&state.history_epoch>original.history_epoch&&!history.count&&!undo_available);assert(save_calls==original_saves+1&&random_calls==original_rng&&!strcmp(last_reply,"PDD ERROR busy\n"));act(30);assert(save_calls==original_saves+1&&state.hp==7);
     /* Digit cap/backspace, no blind physical action or private-session storage. */
-    page=LIBRARY_HOME;render();act(B_OPEN);for(unsigned i=0;i<30;i++)act(B_DIGIT+9);assert(strlen(beyond_id)==15);click("Cancella");assert(strlen(beyond_id)==14);click("Indietro");assert(page==LIBRARY_HOME);beyond_mock=(pd_beyond_info){0};
+    page=LIBRARY_HOME;render();act(B_OPEN);click("PG pubblico");for(unsigned i=0;i<30;i++)act(B_DIGIT+9);assert(strlen(beyond_id)==15);click("Cancella");assert(strlen(beyond_id)==14);click("Indietro");assert(page==BEYOND_ACCOUNT);click("Indietro");assert(page==LIBRARY_HOME);beyond_mock=(pd_beyond_info){0};
     /* An uncertain NVS commit cannot be retried or escaped through a stale
        confirmation, navigation button, or physical key before reboot. */
     original=state;original_saves=save_calls;strcpy(original_reply,last_reply);page=BEYOND_BUSY;
@@ -1930,13 +1937,22 @@ int main(void) {
     library_failed=history_quarantined=fail_storage_commit=false;
     puts("Native Beyond UI: actual touch entry, ID keyboard/cap, Wi-Fi return, async cancel/denial/blockers, read-only notes, old PG retained until confirmation, no unsolicited USB ACK, native preparation, local physical focus and one explicit state commit passed with worker/peripheral doubles. No actual ESP32 Wi-Fi claim.");
     }
+    {
+    library_failed=history_quarantined=fail_storage_commit=false;page=HERO;render();pd_state before_account=state;unsigned saves_before_account=save_calls;
+    pd_account_request *req=calloc(1,sizeof *req);assert(req);req->kind=PD_ACCOUNT_HELLO;beyond_account_request(req);assert(page==BEYOND_PAIR&&beyond_pairing&&!beyond_approved);bounds();screenshot("ux092-pair.ppm");
+    click("Ricorda accesso: SI");assert(!beyond_remember);click("Collega");assert(beyond_approved&&strstr(last_reply,"ACCOUNT ACCEPT"));
+    req->kind=PD_ACCOUNT_OFFER;strcpy(req->nonce,beyond_nonce);req->access.version=1;strcpy(req->access.user,"1234");strcpy(req->access.cookie,"synthetic-session");beyond_account_request(req);assert(page==BEYOND_BUSY&&beyond_mock.operation==PD_BEYOND_LINK);
+    beyond_mock.running=false;beyond_mock.phase=PD_BEYOND_FINISHED;beyond_mock.configured=true;beyond_mock.count=1;beyond_mock.error=0;req->kind=PD_ACCOUNT_CANCEL;beyond_account_request(req);assert(page==BEYOND_BUSY&&beyond_pairing);beyond_poll();assert(page==BEYOND_ACCOUNT&&!beyond_pairing&&strstr(last_reply,"ACCOUNT LINKED"));bounds();screenshot("ux092-account.ppm");
+    click("Esci");assert(page==BEYOND_FORGET);bounds();screenshot("ux092-forget.ppm");click("Indietro");assert(page==BEYOND_ACCOUNT&&beyond_mock.configured);click("Esci");click("Scollega");assert(page==BEYOND_ACCOUNT&&!beyond_mock.configured&&!memcmp(&state,&before_account,sizeof state)&&save_calls==saves_before_account);
+    pd_account_wipe(req,sizeof *req);free(req);beyond_mock=(pd_beyond_info){0};
+    }
     unsigned covered=0;
-    for(unsigned p=0;p<=BEYOND_REPORT;p++){
+    for(unsigned p=0;p<=BEYOND_FORGET;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)BEYOND_REPORT+1);
-    assert(covered==BEYOND_REPORT+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)BEYOND_FORGET+1);
+    assert(covered==BEYOND_FORGET+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

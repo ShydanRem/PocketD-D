@@ -5,7 +5,7 @@
 <main>
   <p class="eyebrow">POCKETD-D · VERSO IL POCKET AUTONOMO</p>
   <h1>Ritrova i tuoi eroi</h1>
-  <p>Verifica sperimentale del login e dell’elenco Beyond. Non associa ancora il dispositivo e non importa o modifica personaggi.</p>
+  <p>Verifica sperimentale del login e dell’elenco Beyond. La verifica resta separata dal collegamento opzionale al dispositivo. Non modifica personaggi Beyond.</p>
   <ol><li><a href="https://www.dndbeyond.com/my-characters" target="_blank" rel="noreferrer">Apri Beyond e accedi</a> in questo browser.</li>
   <li>Premi <strong>Verifica accesso</strong> e consenti l’accesso ai due servizi Beyond, se richiesto dal browser.</li></ol>
   <p>La sessione resta gestita dal browser. Il token temporaneo viene usato solo durante questa verifica, senza salvarlo, esportarlo o inviarlo al ponte PC o al Pocket.</p>
@@ -14,6 +14,12 @@
   <dl id="checks" aria-label="Controlli separati"></dl>
   <section id="catalog" hidden><h2>Personaggi letti dall’account</h2><p id="completeness"></p><ul id="characters"></ul></section>
   <p class="note">Un HTTP riuscito non prova il formato, la completezza dell’elenco o la conversione dei valori. Questa verifica non legge le schede complete e non prova l’importazione sul dispositivo.</p>
+  <section aria-labelledby="link-title"><h2 id="link-title">Collega il tuo Pocket</h2>
+  <p>Prima collega il Pocket al Wi-Fi. Prepara l’accesso, poi scegli la sua porta USB e confronta il codice sul display. Il PC servirà solo per questa associazione e per gli aggiornamenti.</p>
+  <p>Questo passaggio richiede il permesso opzionale <strong>cookie</strong>: legge soltanto <code>CobaltSession</code> di Beyond. L’accesso viene inviato al dispositivo solo dopo la conferma fisica. Non viene salvato nell’estensione né inviato al ponte locale.</p>
+  <p>Sul Pocket scegli se ricordarlo. La memoria attuale non è cifrata: chi legge la flash può recuperare l’accesso salvato. Non compare in schede, SD o backup PG. Puoi scollegarlo dal Pocket senza perdere i personaggi locali.</p>
+  <div class="actions"><button id="prepare">Prepara accesso</button><button id="connect" disabled>Collega Pocket</button><button id="cancel-link" class="secondary">Annulla</button></div>
+  <p id="link-status" role="status" aria-live="polite">Nessun accesso trasferito al dispositivo.</p><strong id="pair-code" aria-label="Codice da confrontare sul Pocket"></strong></section>
   <button id="revoke" class="secondary">Rimuovi permessi di verifica</button>
 </main><script type="module" src="account.js"></script>
 </html>

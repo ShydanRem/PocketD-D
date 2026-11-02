@@ -1,15 +1,15 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **2 novembre 2026 — v0.91**. Il dispositivo è il prodotto;
+Aggiornamento del **2 novembre 2026 — v0.92**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
 percorso d’importazione già provato. Collegamento account e PG privati sul Pocket
-non sono ancora implementati.
+sono implementati nella v0.92 con prove sintetiche, ancora da collaudare realmente.
 
 Il software copre una prima sessione individuale offline. L'utente riferisce
 risolti USB, installer e SD e conferma visibile il sito GitHub Pages. Il collaudo
-completo di batteria, interruzioni di alimentazione e delle nuove funzioni 0.85–0.91
+completo di batteria, interruzioni di alimentazione e delle nuove funzioni 0.85–0.92
 resta distinto da questa conferma.
 
 ## Pagina web di installazione
@@ -19,6 +19,22 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Nuovo nella v0.92
+
+[Collegamento Beyond](COLLEGAMENTO-BEYOND.md): cookie opzionale nell’estensione,
+codice USB e consenso fisico prima del trasferimento; verifica dell’identità dal
+Pocket, scelta di persistenza, elenco e lettura autenticati. Nessun fallback
+anonimo o elenco campagna. Ricevuta solo dopo verifica e salvataggio/rilettura;
+commit incerti bloccano le operazioni account fino al riavvio. Scollegamento del
+solo accesso, senza cambiare PG, SD, Wi-Fi o browser. NVS non cifrata dichiarata;
+credenziali escluse dai backup PG, nessuna modifica a partizioni/formati/eFuse.
+
+345 test JS, 148 viste LVGL e prove native con sessioni/HTTP/NVS/USB simulati.
+Nessuna credenziale reale acquisita, nessuna nuova lettura privata reale.
+Il login/elenco reale del browser resta quello confermato dall’utente il
+31 ottobre; handshake USB, cookie MV3, autenticazione ESP32, schede private e
+persistenza dopo riavvio di questo nuovo percorso restano da collaudare.
 
 ## Nuovo nella v0.91
 

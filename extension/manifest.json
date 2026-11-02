@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "PocketD-D · Ponte Beyond",
-  "version": "0.89.1",
-  "description": "Ponte locale e verifica sperimentale dell’account Beyond, senza esportare credenziali.",
+  "version": "0.92.0",
+  "description": "Ponte locale, verifica account e associazione opzionale del proprio accesso Beyond al Pocket via USB.",
   "permissions": [
     "storage",
     "scripting"
@@ -32,5 +32,8 @@
   "optional_host_permissions": [
     "https://auth-service.dndbeyond.com/*",
     "https://character-service.dndbeyond.com/*"
+  ],
+  "optional_permissions": [
+    "cookies"
   ]
 }

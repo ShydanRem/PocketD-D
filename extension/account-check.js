@@ -88,7 +88,7 @@ function catalog(data) {
   return {characters, completeness:partial ? 'partial' : 'unverified'};
 }
 
-export async function checkAccount({fetcher = fetch, now = Date.now, signal:externalSignal, timeoutMs = 10000} = {}) {
+export async function checkAccount({fetcher = fetch, now = Date.now, signal:externalSignal, timeoutMs = 10000, onIdentity} = {}) {
   const checks = {authHTTP:null, authJSON:null, session:null, listHTTP:null, listJSON:null, catalog:null};
   const status = {auth:null, list:null};
   let stage = 'auth', credential = null;
@@ -116,6 +116,7 @@ export async function checkAccount({fetcher = fetch, now = Date.now, signal:exte
     const result = catalog(data);
     if (now() >= credential.expires) fail('expired');
     checks.catalog = true;
+    onIdentity?.(credential.id);
     return {ok:true, stage, checks, status, ...result};
   } catch (error) {
     const code = externalSignal?.aborted ? 'cancelled' : signal.aborted ? 'timeout' : error instanceof CheckError ? error.code : 'network';

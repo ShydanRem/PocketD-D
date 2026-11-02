@@ -1,5 +1,8 @@
 # Da zero al tuo eroe — PocketD-D
 
+**v0.92:** [collegamento account al Pocket](COLLEGAMENTO-BEYOND.md), con codice USB,
+memoria opzionale ed elenco sul display. Nuovo percorso autenticato da collaudare realmente.
+
 **v0.91:** è presente un primo percorso di importazione **direttamente sul Pocket
 tramite Wi-Fi**, per PG pubblici con ID numerico: [guida](BEYOND-DISPOSITIVO.md).
 Lettura/conversione verificate su PC, nuovo percorso da collaudare sull’hardware;

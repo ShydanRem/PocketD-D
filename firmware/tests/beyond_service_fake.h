@@ -29,6 +29,8 @@ typedef struct {unsigned event_id;void *user_data;const char *header_key,*header
 typedef struct {const char *url;unsigned method,timeout_ms;bool disable_auto_redirect,skip_cert_common_name_check;esp_err_t (*crt_bundle_attach)(void *);esp_err_t (*event_handler)(esp_http_client_event_t *);void *user_data;unsigned buffer_size,buffer_size_tx;} esp_http_client_config_t;
 typedef void *esp_http_client_handle_t;
 #define HTTP_METHOD_GET 0
+#define HTTP_METHOD_POST 1
+int esp_http_client_write(esp_http_client_handle_t,const char *,int);
 #define HTTP_EVENT_ON_HEADER 1
 esp_err_t esp_crt_bundle_attach(void *);
 esp_http_client_handle_t esp_http_client_init(const esp_http_client_config_t *);

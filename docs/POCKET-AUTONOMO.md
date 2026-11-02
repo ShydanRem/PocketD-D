@@ -1,136 +1,63 @@
-# Pocket autonomo: obiettivo e primo controllo
+# Pocket autonomo: stato dell’integrazione Beyond
 
-2 novembre 2026 · aggiornamento v0.91 (verifica account introdotta nella v0.89.1). Il dispositivo è il prodotto. Il traguardo concordato
-è usare il PC per installazione/aggiornamento e, se necessario, per il primo
-collegamento Beyond; poi scegliere e importare un PG dal Pocket tramite Wi-Fi.
-La v0.91 aggiunge lettura e conversione Wi-Fi per ID pubblico, con anteprima e
-conferma: [guida](https://github.com/ShydanRem/PocketD-D/blob/main/docs/BEYOND-DISPOSITIVO.md).
-Il nuovo percorso richiede ancora collaudo sull’ESP32. La v0.90 ha aggiunto la
-raccolta locale sul Pocket: [guida](https://github.com/ShydanRem/PocketD-D/blob/main/docs/LIBRERIA-LOCALE.md).
-**Elenco autenticato, associazione e sessione sul Pocket non sono ancora disponibili.**
+2 novembre 2026 · v0.92. Il dispositivo è il prodotto: il PC serve per
+installazione/aggiornamenti e per la prima associazione dell’account; poi il
+codice prevede scelta e importazione del PG dal Pocket tramite Wi-Fi.
+**Questo nuovo percorso deve ancora essere collaudato con l’account reale e l’ESP32.**
 
-**Prova reale, 31 ottobre:** l’utente ha caricato l’estensione nel proprio browser,
-visualizzato i PG e confermato che ci sono tutti rispetto a «I miei personaggi».
-È una conferma dell’utente su login/elenco, senza raccolta di credenziali o JSON.
-Non dimostra rinnovo della sessione, lettura delle schede private o conversione
-sul dispositivo. Non è un nuovo test autenticato eseguito dall’agente.
+[Guida al collegamento, alla memoria opzionale e ai limiti](https://github.com/ShydanRem/PocketD-D/blob/main/docs/COLLEGAMENTO-BEYOND.md).
+[Pagina di installazione](https://shydanrem.github.io/PocketD-D/).
 
-## Esperienza da ottenere
+## Che cosa è implementato
 
-1. Al primo avvio: «Gioca», «I miei PG», «Impostazioni», con icone comuni e
-   brevi etichette. Personaggio dimostrativo subito utilizzabile senza rete.
-2. Prima associazione: login nel browser sul sito Beyond, verifica dell'account
-   e conferma del Pocket riconoscibile. Nessuna password da digitare sul display.
-   È un percorso da implementare, non un OAuth ufficiale già disponibile.
-3. Sul Pocket: «I miei PG» → scegli avatar/nome → anteprima → «Importa e gioca».
-   Non ripetere l'associazione per ogni PG; al cambio di sessione chiedere di
-   ricollegare l'account, senza perdere le copie locali.
-4. Avvii successivi: ultimo PG immediatamente giocabile offline. Wi-Fi per
-   cercare/importare/aggiornare, non per poter aprire una scheda o tirare.
-5. Personalizza dal PG, con anteprima sullo stesso avatar. Comandi fisici locali
-   coerenti con il touch e con i tasti configurabili; indietro sempre prevedibile.
+1. **Account ed elenco browser:** verifica opzionale nell’estensione, già
+   confermata dall’utente il 31 ottobre: i PG visibili coincidono tutti con
+   «I miei personaggi». Nessun cookie o JSON reale acquisito dall’agente.
+2. **Raccolta locale v0.90:** fino a 32 copie native su SD, progressi/aspetto/storico
+   separati, checkpoint prima dei cambi, doppie copie verificate. Senza SD resta
+   un PG attivo. USB/installer/asset SD precedenti confermati dall’utente; nuove
+   operazioni della raccolta e interruzioni fisiche hanno collaudo separato.
+3. **Conversione nativa v0.91:** regole PC eseguite localmente in QuickJS isolato
+   e parser C finale. Intero record identico su sorgente pubblica reale e su 67
+   casi sintetici accettati; altri 7 bloccati. Non basta un GET riuscito.
+4. **Associazione e sessione v0.92:** preparazione esplicita nel browser, cookie
+   opzionale, codice USB e conferma fisica prima del trasferimento, verifica
+   indipendente dell’identità sul Pocket. Accesso ricordato solo se scelto;
+   namespace separato da PG/SD/backup, NVS non cifrata dichiarata, cancellazione
+   e ricollegamento. Nessuna password da digitare sul display.
+5. **Scelta account v0.92:** elenco proprio sul Pocket, rilettura e schede
+   autenticate, anteprima con valori/limiti e conferma. Non usa elenchi campagna
+   né fallback anonimi. Se Beyond non risponde, i PG locali restano giocabili.
 
-Le conferme proteggono associazione, sostituzione e salvataggi. Avvisi estesi
-in un dettaglio, errori bloccanti subito visibili; niente nuova accettazione
-generica delle omissioni a ogni azione. Un errore di rete non deve apparire come
-un'importazione riuscita né sostituire il personaggio attivo.
+## Come partire quando si potrà provare
 
-## Verifica account nell’estensione (dalla v0.89.1)
+Aggiorna il firmware conservando i dati e ricarica l’estensione aggiornata;
+collega il Pocket al Wi-Fi. Popup → **Account Beyond e Pocket → Prepara accesso →
+Collega Pocket**. Confronta il codice sul display, scegli se ricordare l’accesso
+in memoria non cifrata e conferma. Solo la ricevuta finale conferma l’associazione.
+Poi scegli il PG direttamente dal Pocket e verifica anteprima/limiti prima di importare.
+La guida collegata sopra contiene recupero dagli errori e scollegamento.
 
-Nell'estensione esistente compare **Verifica account Beyond**. Apre una pagina
-separata: accesso opzionale ai soli servizi auth/character richiesto dal browser
-quando si preme **Verifica accesso**. Il ponte PC può rimanere spento.
+## Distinzione fra prove
 
-- Il browser invia la propria sessione all'URL HTTPS fisso di autenticazione.
-  PocketD-D non estrae cookie e non usa l'API `chrome.cookies`.
-- Il token breve rimane nelle variabili della verifica, senza cache persistente.
-  L'identificativo account deriva dallo stesso token; non da un ID inserito
-  dall'utente o dai personaggi di una campagna.
-- Si legge solo l'elenco, con bearer e senza cookie verso character-service.
-  Non si leggono schede complete, non si scrive su Beyond e non si invia niente
-  al Pocket o al ponte locale. Nessun servizio cloud Pocket obbligatorio.
-- Risultato: sei controlli separati, nomi/livello/razza/classe minimi proiettati
-  con `textContent`. Nessun token, ID account, eccezione remota o corpo grezzo
-  nei messaggi. Il risultato non viene salvato; «Cancella risultato» annulla
-  anche un controllo in corso. I permessi opzionali sono rimovibili dalla pagina.
+- **Reale riferita dall’utente:** login ed elenco completo nel browser, 31 ottobre.
+- **Reale eseguita dall’agente:** lettura pubblica con connettore PC e parità
+  completa del convertitore nativo nella v0.91; nessuna modifica alla raccolta.
+- **Sintetiche v0.92:** cookie/token, permessi, seriale, risposte auth/lista/scheda,
+  NVS e task. UI di produzione e controlli memoria; non sono accessi privati reali.
+- **Da fare:** nuovo permesso cookie su MV3 reale, codice USB su hardware,
+  autenticazione diretta ESP32, elenco/PG privati reali, rinnovo dopo riavvio,
+  scadenza/revoca reali, memoria totale e fluidità. Il Chromium gestito non
+  permette di caricare la MV3: qui non si aggira quella policy.
 
-Gli endpoint sono **non documentati come contratto pubblico per PocketD-D**:
-non ho trovato un OAuth pubblico utilizzabile dal prodotto. Le fonti di codice
-sostengono la fattibilità, non dimostrano il funzionamento con questo account.
-Le richieste sono limitate nel tempo (10 s complessivi), senza redirect o
-ripetizioni automatiche, con JSON limitato a 32 KiB per auth e 512 KiB/300 righe
-per l'elenco. Oltre limite si rifiuta il risultato, senza troncarlo di nascosto.
-Un elenco paginato viene indicato come parziale. Anche un elenco formalmente
-valido va confrontato con «I miei personaggi»; zero righe non prova completezza.
+Gli endpoint non sono un OAuth pubblico per Pocket. Nessuna promessa di sessione
+permanente: logout/revoca possono richiedere un nuovo collegamento. Il cookie
+mantiene i privilegi del proprio account, anche se il software esegue solo
+letture. Non pubblicare credenziali o JSON completi. L’estensione non salva
+cookie/token, non li mostra e non li invia al ponte locale o a server Pocket.
 
-## Come eseguire la prima prova con il proprio account
-
-Non serve aggiornare o collegare il firmware per questo controllo.
-
-1. Scarica [solo l'estensione di verifica](https://shydanrem.github.io/PocketD-D/downloads/PocketDD-Beyond-Check.zip)
-   ed estraila. È inclusa anche nel pacchetto PC 0.89.1, cartella `extension`.
-2. Chrome: `chrome://extensions`, Edge: `edge://extensions`. Abilita modalità
-   sviluppatore e «Carica estensione non pacchettizzata», scegliendo `extension`.
-   Se usi già l'estensione Pocket, sostituisci i file nella cartella già caricata
-   e premi «Ricarica» nella gestione estensioni: non caricare due copie del ponte
-   in contemporanea.
-3. Apri il popup Pocket → **Verifica account Beyond**. Apri Beyond, accedi
-   normalmente nel medesimo profilo browser, poi **Verifica accesso**.
-4. Controlla i sei esiti e confronta l'elenco con quello Beyond, includendo
-   eventuali PG privati e fuori campagna. Basta riferire esiti, conteggio e se
-   manca un PG: **non condividere cookie, token, dump di rete o JSON completi**.
-
-Se il browser non trasmette la sessione nel contesto dell'estensione, il
-controllo fallisce esplicitamente: non estrae altre credenziali come ripiego.
-401/403, indisponibilità del servizio, rete/timeout e formato non riconosciuto
-hanno esiti diversi. Non tentare di aggirare il login o le verifiche del sito.
-
-## Stato delle prove
-
-| Livello | Esito / limite |
-| --- | --- |
-| Ricerca del protocollo | Codice pubblico: scambio Cobalt → bearer, claim identità, endpoint account e `data.characters`; non una verifica autenticata |
-| Test automatici del client | Risposte e token sintetici: HTTP/JSON/schema separati, rifiuti, scadenza, timeout, limiti, niente fallback anonimo/campagne, niente segreti nei risultati |
-| Interfaccia | Pagina reale in Chromium a 900/390/320 px, API permessi simulate e risposte HTTPS sintetiche: consenso rifiutato, elenco, testo sicuro, parziale/vuoto, HTTP/formato, cancellazione e revoca verificati |
-| Estensione MV3 caricata | **Bloccata dalla policy del Chromium gestito**: nessuna prova di caricamento/permessi/cookie reali superata qui. Il worker esistente è verificato con API simulate; non aggirata la policy |
-| Account Beyond reale | **Confermato dall’utente il 31 ottobre:** PG visibili e lista completa. Non acquisiti credenziali, risposte grezze o dati completi; durata/rinnovo della sessione e schede private restano separati |
-| Lettura HTTP pubblica del PG | Ripetuta il 2 novembre con il connettore Pocket PC, HTTP/JSON attesi. Non è una prova account |
-| Conversione nativa v0.91 | Stesse regole PC in QuickJS isolato e parser C: intero record identico su PG pubblico reale e su 67 casi sintetici accettati; 7 casi bloccati. Nessuna importazione nella raccolta personale |
-| ESP32 → Beyond | Worker HTTPS e UI implementati per PG pubblici; build ESP32 riuscita, **radio/TLS/memoria/tempi fisici ancora da collaudare**. Nessuna sessione salvata sul Pocket |
-
-Controlli della release **0.89.1**: **339 test JS superati** (12 dedicati alla verifica
-account), compilazione ESP32-S3 riuscita, pacchetto e sito verificati separatamente.
-Nessuna modifica alla logica firmware o ai formati PG/USB: nel firmware cambia
-solo la versione. Le prove native dettagliate della v0.89 restano documentate
-nelle rispettive guide, non dichiarate rieseguite da questa verifica account.
-
-## Prossimi blocchi, in ordine
-
-1. **Account ed elenco reali confermati dall’utente.** Restano da validare
-   scadenza/rifiuto della sessione, lettura delle schede private e account senza PG. Nessuna promessa
-   di login permanente: logout/revoca possono richiedere una nuova associazione.
-2. **Libreria locale implementata nella v0.90.** Fino a 32 copie native su SD,
-   progressi/aspetto/storico separati, checkpoint prima dei cambi e doppie copie
-   verificate. Senza SD rimane un PG attivo. Prove software passate; collaudo SD
-   fisica, fluidità e interruzioni reali restano da fare.
-3. **Lettura e conversione native implementate nella v0.91.** HTTPS con verifica
-   certificato/orario, sorgente limitata a 1 MiB e interprete a 4 MiB. Stesse
-   regole PC incorporate nel firmware, con parser C finale; confronto di tutto
-   il record su sorgente reale e casi sintetici. Anteprima, limiti, annullamento e
-   conferma integrati. Restano collaudo ESP32 e lettura autenticata; la SD non
-   elimina i limiti di RAM. Non si mantiene una seconda conversione delle regole
-   in C né si esegue il corpo JSON ricevuto come codice.
-4. **Associazione protetta e UI sul Pocket.** Trasferimento con conferma del
-   dispositivo, sessione fuori da PG/backup/SD, cancellazione e ricollegamento.
-   L'attuale NVS non è cifrata: non depositarvi una sessione Beyond fingendo che
-   sia protetta. Non modificare eFuse/cifratura flash durante un aggiornamento
-   ordinario. Questa versione non trasferisce alcuna sessione al dispositivo.
-5. **Scelta autenticata integrata.** Galleria dell’account sul Pocket, anteprima con copertura reale e conferma,
-   nuova copia senza cancellare altri PG; aggiornamento sorgente separato dai
-   progressi al tavolo. Nessuna sovrascrittura automatica di PF/slot/aspetto.
-
-La sincronizzazione in tempo reale verso Beyond rimane un lavoro separato:
-una lettura diretta non prova scritture, ricevute, conflitti o tiri sul sito.
+La sincronizzazione di danni, tiri e altri cambi verso Beyond resta un lavoro
+separato: questo percorso non scrive i personaggi sul sito.
 
 ## Fonti primarie di codice esaminate
 

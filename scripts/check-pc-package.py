@@ -12,7 +12,7 @@ with zipfile.ZipFile(archive) as z:
   for name in ['Avvia-Ponte.cmd','docs/PONTE-BEYOND.md','docs/POCKET-AUTONOMO.md','docs/LIBRERIA-LOCALE.md','docs/previews/v090-local-library.png','extension/manifest.json','extension/background.js','extension/protocol.js','extension/account-check.js','extension/account.js','extension/account.html','extension/account.css','tools/bridge/index.html']:
    assert (app/name).read_bytes()==(ROOT/name).read_bytes()
   assert (app/'extension/protocol.js').read_bytes()==(app/'src/sync-protocol.js').read_bytes()
-  for name in ['docs/BEYOND-DISPOSITIVO.md','docs/previews/v091-beyond-native.png']:
+  for name in ['docs/BEYOND-DISPOSITIVO.md','docs/previews/v091-beyond-native.png','docs/COLLEGAMENTO-BEYOND.md','docs/previews/v092-beyond-account.png','extension/account-link.js','extension/account-link-ui.js']:
    assert (app/name).read_bytes()==(ROOT/name).read_bytes()
   assert (app/'dist/install/licenses/QuickJS-LICENSE.txt').read_bytes()==(ROOT/'firmware/licenses/QuickJS-LICENSE.txt').read_bytes()
   pin=json.loads((ROOT/'scripts/windows-runtime.json').read_text());node=(app/'runtime/node.exe').read_bytes()

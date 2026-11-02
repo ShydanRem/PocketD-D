@@ -2,6 +2,8 @@
 #include <stddef.h>
 typedef int esp_err_t;
 typedef int nvs_handle_t;
+typedef int nvs_open_mode_t;
+esp_err_t nvs_erase_key(nvs_handle_t,const char*);
 #define ESP_OK 0
 #define ESP_FAIL -1
 #define ESP_ERR_NVS_NOT_FOUND 1

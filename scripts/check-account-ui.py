@@ -20,7 +20,8 @@ try:
         context=browser.new_context(viewport={'width':900,'height':1000})
         context.add_init_script('''
           window.allowCheck=false;window.permissionCalls=0;window.removals=0;
-          window.chrome={permissions:{request:async()=>{window.permissionCalls++;return window.allowCheck},remove:async()=>{window.removals++;return true}}};
+          window.cookieReads=0;window.secretWrites=0;
+          window.chrome={cookies:{get:async()=>{window.cookieReads++;return {value:'synthetic-session-only',expirationDate:Date.now()/1000+3600}}},permissions:{request:async()=>{window.permissionCalls++;return window.allowCheck},remove:async()=>{window.removals++;return true}}};
           const original=window.fetch.bind(window);
           window.fetch=(url,options)=>window.holdCheck&&String(url).includes('auth-service.')
             ?new Promise((_,reject)=>options.signal.addEventListener('abort',()=>reject(options.signal.reason),{once:true}))
@@ -49,6 +50,16 @@ try:
                 if mode['value']=='outage':request.fulfill(status=503,headers=headers,body=json.dumps({'token':'synthetic secret never displayed'}));return
                 if mode['value']=='empty':body['data']['characters']=[]
             request.fulfill(status=200,headers=headers,body=json.dumps(body))
+        context.add_init_script("""
+          let pocketReader;const nonce='0123456789abcdef0123456789abcdef';
+          const push=text=>pocketReader.enqueue(new TextEncoder().encode(text+'\\n'));
+          window.approvePocket=()=>push('PDD ACCOUNT ACCEPT 1 '+nonce);
+          Object.defineProperty(navigator,'serial',{value:{requestPort:async()=>({
+            readable:new ReadableStream({start(c){pocketReader=c}}),
+            writable:new WritableStream({write(data){const line=new TextDecoder().decode(data);if(line.startsWith('PDD ACCOUNT HELLO'))push('PDD ACCOUNT CODE 1 '+nonce+' 123456');if(line.startsWith('PDD ACCOUNT OFFER')){window.secretWrites++;push('PDD ACCOUNT LINKED 1 '+nonce)}}}),
+            open:async()=>{},setSignals:async()=>{},close:async()=>{}
+          })}});
+        """)
         # Abort any other remote origin: the page must not contact a bridge or cloud service.
         local=f'http://127.0.0.1:{server.server_port}/'
         def bounded_route(request):
@@ -75,11 +86,16 @@ try:
             mode['value']=value;page.locator('#check').click();expect(page.locator('#status')).to_contain_text(expected)
             expect(page.locator('#catalog')).to_be_hidden();assert page.locator('#characters li').count()==0
             assert 'synthetic secret' not in page.locator('body').inner_text()
+        mode['value']='ok';page.locator('#prepare').click();expect(page.locator('#connect')).to_be_enabled();assert page.evaluate('cookieReads')==2
+        assert 'synthetic-session-only' not in page.locator('body').inner_text()
+        page.locator('#connect').click();expect(page.locator('#pair-code')).to_have_text('123456');assert page.evaluate('secretWrites')==0
+        page.evaluate('approvePocket()');expect(page.locator('#link-status')).to_contain_text('Pocket collegato');assert page.evaluate('secretWrites')==1
+        assert 'synthetic-session-only' not in page.locator('body').inner_text() and page.evaluate('localStorage.length')==0
         page.evaluate('holdCheck=true');page.locator('#check').click();expect(page.locator('#check')).to_be_disabled()
         page.locator('#clear').click();expect(page.locator('#status')).to_contain_text('Risultato cancellato')
         expect(page.locator('#check')).to_be_enabled();page.wait_for_timeout(100);expect(page.locator('#status')).to_contain_text('Risultato cancellato')
         page.locator('#revoke').click();expect(page.locator('#status')).to_contain_text('Permessi di verifica rimossi');assert page.evaluate('removals')==1
         assert not errors,errors
         browser.close()
-    print('PASS account page: denied permissions/no requests, projected synthetic catalogue, 6 checks, XSS text rendering, empty/partial, HTTP-vs-format, clear/cancel, revoke, 900/390/320px. Chrome API doubles and synthetic HTTPS routes only; no actual login, MV3 permission/cookies, PG writes or ESP32.')
+    print('PASS account page + USB association with cookie/serial doubles: prepare, code before secret, physical approval, final receipt, no DOM/localStorage secret; denied permissions/no requests, projected synthetic catalogue, 6 checks, XSS text rendering, empty/partial, HTTP-vs-format, clear/cancel, revoke, 900/390/320px. Chrome API doubles and synthetic HTTPS routes only; no actual login, MV3 permission/cookies, PG writes or ESP32.')
 finally:server.shutdown();server.server_close()

@@ -1,13 +1,14 @@
+import {cancelPocketLink} from './account-link-ui.js';
 import {ACCOUNT_ORIGINS, checkAccount} from './account-check.js';
 const find = id => document.getElementById(id);
 let controller, generation = 0;
 const labels = {authHTTP:'Accesso HTTP al login',authJSON:'Login: formato JSON',session:'Token: identità e scadenza',listHTTP:'Accesso HTTP all’elenco',listJSON:'Elenco: formato JSON',catalog:'Elenco: struttura e dati minimi'};
 function reset() {
-  generation++; controller?.abort(); controller = undefined;
+  cancelPocketLink();generation++; controller?.abort(); controller = undefined;
   find('check').disabled = false;
   find('checks').replaceChildren(); find('characters').replaceChildren(); find('catalog').hidden = true;
 }
-find('clear').onclick = () => {reset();find('status').textContent='Risultato cancellato. Nessun dato salvato; la verifica non ha modificato i PG.';};
+find('clear').onclick = () => {reset();find('status').textContent='Risultato cancellato dall’estensione. Per scollegare il Pocket usa Esci sul suo display.';};
 find('check').onclick = async () => {
   reset(); const run = generation; controller = new AbortController(); const signal = controller.signal;
   find('check').disabled = true;find('status').textContent='Verifica in corso…';
@@ -23,7 +24,7 @@ find('check').onclick = async () => {
       term.textContent=label;value.textContent=result.checks[key]===null?'Da fare':result.checks[key]?'OK':'Fallito';
       find('checks').append(term,value);
     }
-    find('status').textContent = result.ok ? 'Login ed elenco letti. Conversione e importazione sul Pocket ancora da realizzare.'
+    find('status').textContent = result.ok ? 'Login ed elenco letti. Puoi preparare il collegamento al Pocket nella sezione qui sotto.'
       : result.message + (result.status[result.stage] ? ' HTTP '+result.status[result.stage]+'.' : '');
     if (!result.ok) return;
     find('catalog').hidden=false;
@@ -41,7 +42,7 @@ find('check').onclick = async () => {
 find('revoke').onclick = async () => {
   reset();const run=generation;
   try {
-    const removed=await chrome.permissions.remove({origins:ACCOUNT_ORIGINS});
+    const removed=await chrome.permissions.remove({origins:ACCOUNT_ORIGINS,permissions:['cookies']});
     if(run===generation)find('status').textContent=removed?'Permessi di verifica rimossi. Il login Beyond del browser è conservato.':'Il browser non ha rimosso i permessi. Controlla la gestione estensioni.';
   } catch { if(run===generation)find('status').textContent='Apri la gestione estensioni del browser per rimuovere i permessi.'; }
 };

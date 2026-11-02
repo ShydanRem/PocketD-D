@@ -25,7 +25,7 @@ def validate(base,revision,version):
         if path.stat().st_size!=part['size'] or sha(path)!=part['sha256']:raise ValueError('Firmware integrity failed')
     if sha(base/'assets/classes.pdc')!=sha(ROOT/'public/assets/classes.pdc'):raise ValueError('SD catalog integrity failed')
     extension_names=('manifest.json','background.js','content.js','protocol.js','page-adapter.js',
-                     'popup.html','popup.css','popup.js','account.html','account.css','account.js','account-check.js')
+                     'popup.html','popup.css','popup.js','account.html','account.css','account.js','account-check.js','account-link.js','account-link-ui.js')
     expected_extension={'extension/'+name:ROOT/'extension'/name for name in extension_names}
     expected_extension['LEGGIMI.md']=ROOT/'docs/POCKET-AUTONOMO.md'
     with zipfile.ZipFile(base/'downloads/PocketDD-Beyond-Check.zip') as archive:
