@@ -1,3 +1,5 @@
+> v0.92: [collegamento account e scelta dei propri PG](COLLEGAMENTO-BEYOND.md) ora implementati; nuovo percorso autenticato da collaudare sull’hardware. Il documento sotto descrive la release pubblica v0.91.
+
 # Beyond direttamente sul Pocket
 
 2 novembre 2026 · v0.91. Il firmware può leggere un **PG pubblico tramite Wi-Fi e
@@ -12,7 +14,7 @@ associazione e sessione sul Pocket rimangono il blocco successivo.
 
 1. Dal [sito di installazione](https://shydanrem.github.io/PocketD-D/) aggiorna il
    firmware **conservando i dati**. Non reinstallare i look né cancellare la SD.
-2. Pocket → **I miei PG** → icona di ricerca in alto a destra. Per questo primo
+2. Pocket → **I miei PG** → icona di ricerca in alto a destra → **PG pubblico**. Per questo primo
    percorso serve l’ID numerico finale del link Beyond, per esempio
    `…/characters/123456`. La tastiera accetta solo cifre.
 3. Se necessario apri **Wi-Fi**, cerca la rete e inserisci la password sul Pocket;
