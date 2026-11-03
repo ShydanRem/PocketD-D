@@ -550,15 +550,15 @@ int main(void) {
     click("Altro");calls=random_calls;act(915);assert(page==HIT_DICE&&random_calls==calls);click("Indietro");click("Fine");assert(!rest_active);
     click("Eroe");click("Annulla");assert(state.hp==28&&state.recovery.pools[0].used==2);click("Usi");click("Riposi");
     before_rest=state;click("Riposo lungo");screenshot("rest-settings.ppm");click("Anteprima");assert(page==REST_PREVIEW&&!memcmp(&state,&before_rest,sizeof state));click("Indietro");
-    click("Dadi vita: manuale >");click("Scegli dadi da recuperare");click("+1");click(">");click("+1");screenshot("rest-regain.ppm");
+    click("2014");click("Scegli dadi da recuperare");click("+1");click(">");click("+1");screenshot("rest-regain.ppm");
     act(917);assert(selected_hit_dice()==2&&rest_plan.regain[0]==1&&rest_plan.regain[1]==1);
     click("Indietro");click("Anteprima");screenshot("rest-long.ppm");calls=random_calls;shortcut(1);assert(page==REST_PREVIEW&&random_calls==calls);click("Indietro");
-    click("Dadi vita: 2014 >");assert(rest_plan.policy==PD_HD_2024&&!selected_hit_dice());click("Anteprima");assert(scratch.recovery.pools[0].used==0&&scratch.recovery.pools[1].used==0);click("Indietro");
-    click("Dadi vita: 2024 >");click("Dadi vita: manuale >");click("Scegli dadi da recuperare");click("+1");click(">");click("+1");click("Indietro");click("Anteprima");click("Conferma");
+    click("2024");assert(rest_plan.policy==PD_HD_2024&&!selected_hit_dice());click("Anteprima");assert(scratch.recovery.pools[0].used==0&&scratch.recovery.pools[1].used==0);click("Indietro");
+    click("Manuale");click("2014");click("Scegli dadi da recuperare");click("+1");click(">");click("+1");click("Indietro");click("Anteprima");click("Conferma");
     assert(page==REST_HOME&&state.hp==32&&!state.temp_hp&&state.magic.slots[0].current==3&&state.magic.powers[2].remaining==3&&state.magic.powers[0].remaining==1&&state.recovery.pools[0].used==1&&!state.recovery.pools[1].used&&random_calls==calls);
     assert(!memcmp(state.items,before_rest.items,sizeof state.items)&&!memcmp(state.resources,before_rest.resources,sizeof state.resources));
     click("Usi");click("Eroe");click("Annulla");assert(!memcmp(&state,&before_rest,sizeof state));
-    click("Usi");click("Riposi");click("Riposo lungo");click("Dadi vita: manuale >");click("Dadi vita: 2014 >");click("Anteprima");click("Conferma");assert(!state.recovery.pools[0].used&&!state.recovery.pools[1].used);
+    click("Usi");click("Riposi");click("Riposo lungo");click("2014");click("2024");click("Anteprima");click("Conferma");assert(!state.recovery.pools[0].used&&!state.recovery.pools[1].used);
     rest_saves=save_calls;click("Riposo lungo");click("Anteprima");click("Conferma");assert(save_calls==rest_saves); /* No-op rest avoids flash wear. */
     state.recovery.available=false;state.recovery.count=0;click("Riposo breve");click("Conferma");screenshot("rest-legacy.ppm");click("Fine");
     state.recovery=(pd_recovery){.available=true,.count=20};for(unsigned i=0;i<20;i++)state.recovery.pools[i]=(pd_hit_die){.name="Classe",.die=12,.maximum=20,.used=i};
@@ -2173,6 +2173,42 @@ int main(void) {
     state=original;act(501);screenshot("ux097-item.ppm");memset(state.items[1].name,'W',40);state.items[1].name[40]=0;render();lv_obj_update_layout(lv_screen_active());wrapped_tree_fits(lv_screen_active());bounds();
     lv_indev_delete(result_touch);state=original;page=HERO;render();
     puts("Result UX: fixed hidden-in-flight/large critical/miss/free-20 values, real-pointer next damage, frozen mixed-component replay with no RNG/journal/PG writes, capped actual healing, no-canvas fallback, spell-header text/cast cancel, manual-effect disclosure and full wide-name wrapping passed; synthetic native LVGL, no hardware claim.");
+    }
+    {
+    /* Transaction UX: actual pointer entry/confirmation, generic synthetic PG. */
+    pd_demo(&state);state.item_count=5;state.items[3]=(pd_item){.name="Razione sintetica",.kind=PD_CONSUMABLE,.quantity=1};state.items[4]=(pd_item){.name="Anello del viaggio",.quantity=1};state.gear[4]=(pd_gear){.kind=PD_WEAR_ITEM,.ac=1,.ability={0,0,2,0,0,0}};
+    fail_save=fail_storage_commit=fail_history=false;history_pending=history_pair_pending=history_third_pending=history_fourth_pending=history_fifth_pending=false;smite_rolled=false;import_pending=false;wifi_keyboard=false;power_paused=power_off_attempted=false;display_screen=(pd_screen){0};feedback.active=false;pd_dice_idle(&dice_animation,1);
+    pd_history_reset(&history,state.history_epoch);persisted_history=history;strcpy(item_query,"Anello");inventory_page=0;pouch_view=false;page=INVENTORY;render();
+    pd_state before=state,expected=state;assert(pd_gear_equip(&expected,4,true));unsigned writes=save_calls,draws=random_calls,journal=history_save_calls;
+    lv_indev_t *tx=lv_indev_create();lv_indev_set_type(tx,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(tx,probe_touch);lv_indev_set_display(tx,d);
+    screenshot("ux098-backpack.ppm");probe_click(tx,359,176);assert(page==PLAY_CONFIRM&&item_index==4&&play_return==INVENTORY&&!play_details&&!memcmp(&state,&before,sizeof state)&&save_calls==writes&&random_calls==draws);
+    screenshot("ux098-equip.ppm");click("Dettagli");assert(play_details);bounds();screenshot("ux098-equip-details.ppm");click("Riepilogo");assert(!play_details&&!memcmp(&state,&before,sizeof state));
+    for(unsigned i=0;i<3;i++)shortcut(i);act(100);assert(page==PLAY_CONFIRM&&!stage_import(&before));
+    fail_save=true;click("Conferma");assert(page==PLAY_CONFIRM&&!memcmp(&state,&before,sizeof state)&&save_calls==writes+1);click("Dettagli");assert(play_error[0]&&save_calls==writes+1);click("Riepilogo");fail_save=false;
+    probe_click(tx,337,383);assert(page==INVENTORY&&!memcmp(&state,&expected,sizeof state)&&save_calls==writes+2&&random_calls==draws&&history_save_calls==journal);
+    probe_click(tx,359,176);assert(page==PLAY_CONFIRM);click("Indietro");assert(page==INVENTORY&&!memcmp(&state,&expected,sizeof state));
+    /* Disabled/depleted and unknown profiles cannot be equipped by forged events. */
+    state=before;state.items[4].quantity=0;render();writes=save_calls;act(5614);assert(page==INVENTORY&&!state.gear[4].equipped&&save_calls==writes);
+    state=before;state.gear[4]=(pd_gear){0};render();act(5614);assert(page==INVENTORY&&!state.gear[4].kind&&save_calls==writes);
+    /* Long rest can REDUCE HP when a concentration-bound maximum ends. */
+    pd_demo(&state);state.magic.available=true;state.magic.count=2;state.magic.powers[0]=(pd_power){.name="Vigore sintetico",.level=1,.flags=PD_PREPARED|PD_CONCENTRATES|PD_USES_SLOT};state.magic.powers[1]=(pd_power){.name="Nuova concentrazione",.level=1,.flags=PD_PREPARED|PD_CONCENTRATES|PD_USES_SLOT|PD_LIMITED,.maximum=1,.remaining=1};state.magic.concentration=1;
+    state.effects[0]=(pd_effect){.target=PD_EFFECT_MAX_HP,.active=true,.value=10,.concentration=1};state.effects[1]=(pd_effect){.target=PD_EFFECT_ARMOR,.active=true,.value=2,.concentration=1};state.effect_count=2;state.hp=40;state.temp_hp=3;
+    state.magic.slots[0]=(pd_slot){0,2};state.magic.pact[0]=(pd_slot){0,1};state.recovery=(pd_recovery){.available=true,.count=2,.pools={{.name="Classe A",.die=8,.maximum=3,.used=2},{.name="Classe B",.die=6,.maximum=2,.used=1}}};assert(pd_valid(&state));
+    before=state;writes=save_calls;draws=random_calls;act(900);click("Riposo lungo");probe_click(tx,337,221);assert(rest_plan.policy==PD_HD_2024&&!memcmp(&state,&before,sizeof state));screenshot("ux098-rest-policy.ppm");
+    click("Anteprima");assert(page==REST_PREVIEW&&!rest_details&&scratch.hp==32&&state.hp==40);screenshot("ux098-rest.ppm");
+    click("Dettagli");assert(rest_details);bounds();screenshot("ux098-rest-details.ppm");click("Riepilogo");assert(!rest_details&&save_calls==writes&&random_calls==draws&&!memcmp(&state,&before,sizeof state));
+    expected=state;assert(pd_rest_apply(&expected,&rest_plan));fail_save=true;click("Conferma");assert(page==REST_PREVIEW&&!memcmp(&state,&before,sizeof state));fail_save=false;click("Conferma");assert(page==REST_HOME&&!memcmp(&state,&expected,sizeof state)&&save_calls==writes+2&&random_calls==draws);
+    state=before;act(903);probe_click(tx,233,221);assert(rest_plan.policy==PD_HD_2014);click("Scegli dadi da recuperare");click("+1");click("Indietro");probe_click(tx,233,221);assert(rest_plan.policy==PD_HD_2014&&selected_hit_dice()==1);probe_click(tx,337,221);assert(rest_plan.policy==PD_HD_2024&&!selected_hit_dice());probe_click(tx,129,221);assert(rest_plan.policy==PD_HD_MANUAL&&!selected_hit_dice());click("Indietro");assert(!memcmp(&state,&before,sizeof state));
+    /* A spell costs a slot AND a finite use, replaces concentration, caps HP/AC. */
+    state=before;state.magic.slots[0]=(pd_slot){2,2};state.magic.pact[0]=(pd_slot){0,0};act(1001);click("Lancia");assert(page==MAGIC_CONFIRM&&!cast_details);before=state;expected=state;assert(pd_magic_use(&expected,1,1,false));
+    writes=save_calls;draws=random_calls;screenshot("ux098-cast.ppm");click("Dettagli");assert(cast_details);bounds();wrapped_fits();assert(visible_text(lv_screen_active(),"CA 18 > 16 | usi 1 > 0"));screenshot("ux098-cast-details.ppm");click("Riepilogo");assert(!cast_details&&!memcmp(&state,&before,sizeof state)&&save_calls==writes&&random_calls==draws);
+    for(unsigned i=0;i<3;i++)shortcut(i);act(100);assert(page==MAGIC_CONFIRM&&!stage_import(&before));
+    fail_save=true;click("Conferma");assert(page==MAGIC_CONFIRM&&!memcmp(&state,&before,sizeof state));fail_save=false;click("Conferma");assert(page==MAGIC_DETAIL&&!memcmp(&state,&expected,sizeof state)&&save_calls==writes+2&&random_calls==draws&&state.hp==32&&pd_armor(&state)==16&&state.magic.slots[0].current==1&&!state.magic.powers[1].remaining&&state.magic.concentration==2);
+    /* Missing imports stay unknown in the new summary instead of fabricated zero. */
+    pd_demo(&state);state.magic=(pd_magic){0};state.recovery=(pd_recovery){0};act(900);click("Riposo lungo");click("Anteprima");lv_obj_update_layout(lv_screen_active());assert(visible_text(lv_screen_active(),"Non disponibili"));click("Indietro");click("Indietro");
+    pd_demo(&state);act(501);click("Usa");screenshot("ux098-consume.ppm");before=state;writes=save_calls;draws=random_calls;click("Indietro");assert(!memcmp(&state,&before,sizeof state)&&save_calls==writes&&random_calls==draws);
+    lv_indev_delete(tx);item_query[0]=0;page=HERO;render();
+    puts("Transaction UX: filtered original-index equip in two pointer taps/return, readonly details, modal keys/import, save retry/cancel, disabled/unknown guards, direct recovery policy and draft reset, negative-HP long rest, ordinary+finite spell cost/concentration/HP/AC consequences, unknown data and consumable cancel passed with synthetic LVGL; no physical claim.");
     }
     unsigned covered=0;
     for(unsigned p=0;p<=MAGIC_PREPARE_CONFIRM;p++){

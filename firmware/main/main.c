@@ -284,6 +284,7 @@ static unsigned key_gesture,key_page;
 static void shortcut(unsigned gesture);
 static bool can_use_power(void);
 static pd_rest_plan rest_plan;
+static bool rest_details,cast_details;
 static unsigned hit_index;
 static bool rest_active,hit_rolled;
 PD_EXT static pd_state hit_candidate;
@@ -740,6 +741,9 @@ static void meter(unsigned current,unsigned maximum,int y,unsigned color) {
     if(current&&maximum){unsigned filled=(288*current+maximum-1)/maximum;decoration(89,y,filled,4,color,0);for(unsigned x=24;x<filled;x+=24)decoration(89+x,y,2,4,PD_PANEL_LOW,0);}
 }
 static lv_obj_t *button(const char *text,int x,int y,int w,int h,intptr_t action,bool enabled);
+static void transaction_header(const lv_image_dsc_t *,const char *);
+static void delta_tile(pd_ui_icon_id,const char *,int,int,int,int);
+static void status_tile(pd_ui_icon_id,const char *,const char *,int,int);
 static lv_obj_t *icon_button(const char *name,pd_ui_icon_id icon,int x,int y,int w,int h,intptr_t action,bool enabled);
 static void frame(void) {
     pd_theme_kind kind=import_pending?(import_from_beyond?PD_THEME_BEYOND:PD_THEME_IMPORT):page==NUMBER_ENTRY&&number_target==NUMBER_ITEM?PD_THEME_PACK:page_themes[page];
@@ -838,7 +842,7 @@ static void act(intptr_t action) {
     if(page==WALLET_EDIT&&(action<2404||action>2410))return;
     if(page==WALLET_CONFIRM&&action!=2411&&action!=2412&&action!=2409)return;
     if(page==MAGIC_STOP&&action!=852&&action!=853)return;
-    if(page==MAGIC_CONFIRM&&action!=832&&action!=833)return;
+    if(page==MAGIC_CONFIRM&&action!=832&&action!=833&&action!=5604)return;
     if(page==SYNC_REVIEW&&action!=4701&&action!=4702)return;
     if(page==SYNC_FORGET&&action!=4704&&action!=4705)return;
     if(page==WIFI_FORGET&&action!=4506&&action!=4507)return;
@@ -884,7 +888,7 @@ static void act(intptr_t action) {
     if(page==STATUS_CONFIRM&&status_command==STATUS_ROLL&&status_rolled&&action!=1505)return;
     if(page==ASSET_INSTALL){if(action==4900&&!asset_verifying)asset_cancel("cancelled");return;}
     if(page==KEY_PICKER&&(action<4800||action>4824||(action>4802&&action<4810)))return;
-    if(page==REST_PREVIEW&&action!=902&&action!=907)return;
+    if(page==REST_PREVIEW&&action!=902&&action!=907&&action!=5600)return;
     if(page==HIT_CONFIRM&&(action!=910&&action!=914))return;
     if(page==HIT_CONFIRM&&hit_rolled&&action!=914)return;
     /* Disabled controls also reject queued/synthetic events while dice are in flight. */
@@ -895,6 +899,11 @@ static void act(intptr_t action) {
     feedback.active=false;bool report_feedback=feedback_action(action);if(report_feedback)feedback_capture(&feedback_before);
     #define next scratch
     next=state;
+    if(action>=5610&&action<5610+PD_ITEMS&&page==INVENTORY){
+        unsigned i=action-5610;
+        if(i<state.item_count&&state.items[i].quantity&&(state.items[i].kind==PD_WEAPON||(state.items[i].kind==PD_GEAR&&state.gear[i].kind))){item_index=i;page=ITEM_DETAIL;play_action(84);if(page==PLAY_CONFIRM)play_return=INVENTORY;}
+        render();return;
+    }
     if((action==6090||action==84||action==6300||action==6000||action==6100||action==6402||action==6403||action==6410||action==6445||action==6500)&&play_action(action)){render();return;}
     if (action>=100 && action<104) { page=action-100;if(combat_roll>=4)invalidate_strike();rest_active=false;dice_setup=false;die_picker=false; }
     else if(action==4700&&(page==WIFI_HOME||page==SYNC_REVIEW)){sync_notice="";page=SYNC_HOME;}
@@ -1203,7 +1212,8 @@ static void act(intptr_t action) {
         if(state.magic.powers[power_index].effect!=PD_TRUE_STRIKE_2024){profile_setup_begin();}
         else if(can_use_power()){if(state.equipped==PD_NO_WEAPON){picker_return=MAGIC_DETAIL;pending_attack_spell=power_index;picker_page=0;weapon_from_attack=true;page=WEAPON_PICKER;}else attack_start(power_index,false);}
     }
-    else if(action==831&&page==MAGIC_DETAIL&&can_use_power())page=MAGIC_CONFIRM;
+    else if(action==831&&page==MAGIC_DETAIL&&can_use_power()){cast_details=false;page=MAGIC_CONFIRM;}
+    else if(action==5604&&page==MAGIC_CONFIRM)cast_details=!cast_details;
     else if(action==832&&page==MAGIC_CONFIRM) {
         if(!pd_magic_use(&next,power_index,cast_level,cast_pact))return;
         if(!memcmp(&next,&state,sizeof state)){page=MAGIC_DETAIL;}
@@ -1645,12 +1655,14 @@ static void act(intptr_t action) {
         }
     }
     else if(action==900){page=REST_HOME;rest_active=false;rest_plan=(pd_rest_plan){0};hit_index=0;}
-    else if(action==901){rest_plan=(pd_rest_plan){0};page=REST_PREVIEW;}
+    else if(action==901){rest_plan=(pd_rest_plan){0};rest_details=false;page=REST_PREVIEW;}
     else if(action==902){page=rest_plan.long_rest?REST_LONG_SETTINGS:REST_HOME;}
     else if(action==903&&(state.hp||!state.status.available||state.status.failures<3)){rest_plan=(pd_rest_plan){.long_rest=true};page=REST_LONG_SETTINGS;hit_index=0;}
     else if(action==904&&page==REST_LONG_SETTINGS){rest_plan.policy=(rest_plan.policy+1)%3;memset(rest_plan.regain,0,sizeof rest_plan.regain);}
     else if(action==905&&page==REST_LONG_SETTINGS&&rest_plan.policy==PD_HD_2014&&state.recovery.count){page=REST_REGAIN;hit_index=0;}
-    else if(action==906&&page==REST_LONG_SETTINGS)page=REST_PREVIEW;
+    else if(action>=5601&&action<=5603&&page==REST_LONG_SETTINGS&&rest_plan.policy!=action-5601){rest_plan.policy=action-5601;memset(rest_plan.regain,0,sizeof rest_plan.regain);}
+    else if(action==5600&&page==REST_PREVIEW)rest_details=!rest_details;
+    else if(action==906&&page==REST_LONG_SETTINGS){rest_details=false;page=REST_PREVIEW;}
     else if(action==907&&page==REST_PREVIEW){
         if(!pd_rest_apply(&next,&rest_plan))return;
         bool changed=memcmp(&next,&state,sizeof state)!=0;
@@ -1765,6 +1777,26 @@ static void emblem_name(lv_obj_t *name,const char *text,int width){
     lv_point_t extent;lv_text_get_size(&extent,text,&lv_font_montserrat_16,0,0,width,LV_TEXT_FLAG_NONE);
     lv_obj_set_style_text_font(name,extent.y>58?&lv_font_montserrat_14:&lv_font_montserrat_16,0);
     lv_obj_set_size(name,width,58);lv_label_set_long_mode(name,LV_LABEL_LONG_WRAP);
+}
+static void transaction_header(const lv_image_dsc_t *icon,const char *name){
+    lv_obj_t *im=art(icon,85,105,lv_screen_active());lv_image_set_pivot(im,0,0);lv_image_set_scale(im,48*256/icon->header.w);lv_image_set_antialias(im,false);
+    lv_obj_t *title=small_label(name,143,99,240,PD_TEXT);emblem_name(title,name,240);
+}
+static lv_obj_t *tile_label(lv_obj_t *parent,const char *text,int x,int y,int w,const lv_font_t *font,unsigned color){
+    lv_obj_t *l=lv_label_create(parent);lv_label_set_text(l,text);lv_obj_set_pos(l,x,y);lv_obj_set_size(l,w,font->line_height);lv_obj_set_style_text_font(l,font,0);lv_obj_set_style_text_color(l,lv_color_hex(color),0);lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);return l;
+}
+static lv_obj_t *transaction_tile(pd_ui_icon_id icon,const char *name,int x,int y){
+    lv_obj_t *tile=decoration(x,y,144,60,0x122b38,2);lv_obj_set_style_border_width(tile,1,0);lv_obj_set_style_border_color(tile,lv_color_hex(PD_EDGE),0);lv_obj_set_style_pad_all(tile,0,0);
+    lv_obj_t *im=art(pd_ui_icon(icon),5,5,tile);lv_image_set_pivot(im,0,0);lv_image_set_scale(im,16*256/pd_ui_icon(icon)->header.w);lv_image_set_antialias(im,false);
+    tile_label(tile,name,26,4,112,&lv_font_montserrat_14,PD_MUTED);return tile;
+}
+static void delta_tile(pd_ui_icon_id icon,const char *name,int before,int after,int x,int y){
+    lv_obj_t *tile=transaction_tile(icon,name,x,y);char text[32];snprintf(text,sizeof text,"%d",before);tile_label(tile,text,6,30,49,&lv_font_montserrat_16,PD_MUTED);
+    lv_obj_t *arrow=art(pd_ui_icon(PD_UI_NEXT),59,31,tile);lv_image_set_pivot(arrow,0,0);lv_image_set_scale(arrow,170);lv_image_set_antialias(arrow,false);
+    snprintf(text,sizeof text,"%d",after);tile_label(tile,text,82,27,57,&lv_font_montserrat_20,before==after?PD_TEXT:after<before&&(icon==PD_UI_HEART||icon==PD_UI_SHIELD||icon==PD_UI_ATTACK)?PD_DANGER:PD_GOLD);
+}
+static void status_tile(pd_ui_icon_id icon,const char *name,const char *value,int x,int y){
+    lv_obj_t *tile=transaction_tile(icon,name,x,y);tile_label(tile,value,6,31,132,&lv_font_montserrat_16,PD_TEXT);
 }
 /* Game command: one emblem, a short name, one useful value. Metadata and
    formulas stay in the detail view; names remain available on long press. */
@@ -1902,21 +1934,23 @@ static void render_inventory(void) {
         do {
             snprintf(text,sizeof text,"%.*s%s%s  x%u",(int)shown,v->name,shown<length?"...":"",(i==state.equipped||state.gear[i].equipped)?" [E]":"",v->quantity);
             lv_text_get_size(&extent,text,&lv_font_montserrat_16,0,0,1000,LV_TEXT_FLAG_NONE);
-            if(extent.x<=234||!shown)break;
+            if(extent.x<=((v->kind==PD_WEAPON||(v->kind==PD_GEAR&&state.gear[i].kind))?186:234)||!shown)break;
             shown--;
         } while(true);
-        lv_obj_t *b=button(text,83,155+row*49,300,44,500+i,true);
+        lv_obj_t *b=button(text,83,155+row*49,(v->kind==PD_WEAPON||(v->kind==PD_GEAR&&state.gear[i].kind))?244:300,44,500+i,true);
         lv_obj_set_style_pad_all(b,0,0);
         const lv_image_dsc_t *icon=pd_item_icon(&state,i);
         art(icon,10,10,b);
-        lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_style_text_font(l,&lv_font_montserrat_16,0);lv_obj_set_style_text_align(l,LV_TEXT_ALIGN_LEFT,0);lv_obj_set_width(l,236);lv_obj_set_height(l,lv_font_get_line_height(&lv_font_montserrat_16));
+        bool quick=v->kind==PD_WEAPON||(v->kind==PD_GEAR&&state.gear[i].kind);
+        lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_style_text_font(l,&lv_font_montserrat_16,0);lv_obj_set_style_text_align(l,LV_TEXT_ALIGN_LEFT,0);lv_obj_set_width(l,quick?188:236);lv_obj_set_height(l,lv_font_get_line_height(&lv_font_montserrat_16));
         lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_align(l,LV_ALIGN_TOP_LEFT,45,2);
         if(!v->quantity)snprintf(text,sizeof text,"Esaurito");
         else if(v->charges.maximum)snprintf(text,sizeof text,"Cariche %u/%u",v->charges.current,v->charges.maximum);
         else if(v->kind==PD_HEALING)snprintf(text,sizeof text,"Cura %ud%u%+d",v->count,v->sides,v->healing_modifier);
         else if(v->kind==PD_WEAPON){pd_weapon_info weapon;if(pd_weapon_stats(&state,i,&weapon))snprintf(text,sizeof text,"%+d | %ud%u%+d",weapon.attack_bonus,weapon.count,weapon.sides,weapon.damage_bonus);else snprintf(text,sizeof text,"Da configurare");}
         else snprintf(text,sizeof text,"%s",state.gear[i].attunement==2?"In sintonia":state.gear[i].equipped?"Indossato":v->kind==PD_CONSUMABLE?"Consumabile":"Oggetto");
-        lv_obj_t *detail=lv_label_create(b);lv_label_set_text(detail,text);lv_obj_set_style_text_align(detail,LV_TEXT_ALIGN_LEFT,0);lv_obj_set_pos(detail,45,23);lv_obj_set_size(detail,236,18);lv_label_set_long_mode(detail,LV_LABEL_LONG_DOT);lv_obj_set_style_text_font(detail,&lv_font_montserrat_14,0);lv_obj_set_style_text_color(detail,lv_color_hex((i==state.equipped||state.gear[i].equipped)?PD_GOLD:PD_MUTED),0);
+        lv_obj_t *detail=lv_label_create(b);lv_label_set_text(detail,text);lv_obj_set_style_text_align(detail,LV_TEXT_ALIGN_LEFT,0);lv_obj_set_pos(detail,45,23);lv_obj_set_size(detail,quick?188:236,18);lv_label_set_long_mode(detail,LV_LABEL_LONG_DOT);lv_obj_set_style_text_font(detail,&lv_font_montserrat_14,0);lv_obj_set_style_text_color(detail,lv_color_hex((i==state.equipped||state.gear[i].equipped)?PD_GOLD:PD_MUTED),0);
+        if(quick){bool worn=i==state.equipped||state.gear[i].equipped;lv_obj_t *equip=icon_button(worn?"Riponi":"Equipaggia",PD_UI_EQUIP,335,155+row*49,48,44,5610+i,v->quantity>0);if(worn)lv_obj_set_style_border_color(equip,lv_color_hex(PD_GOLD),0);}
     }
     if(item_query[0])snprintf(text,sizeof text,"Cerca: %s >",item_query);else strcpy(text,"Cerca nello zaino");
     search_button(text,83,303,244,state.inventory_available&&(state.item_count||item_query[0]),item_query[0]!=0);
@@ -1929,13 +1963,12 @@ static void render_item(void) {
     lv_obj_t *emblem=art(pd_item_icon(&state,item_index),85,105,lv_screen_active());lv_image_set_pivot(emblem,0,0);lv_image_set_scale(emblem,512);lv_image_set_antialias(emblem,false);
     lv_obj_t *title=small_label(v->name,143,99,240,PD_TEXT);emblem_name(title,v->name,240);
     if(page==ITEM_CONFIRM) {
-        snprintf(text,sizeof text,"Quantita %u",v->quantity);label(text,83,164,300,false);
-        label("Usare una unita?",83,201,300,false);
-        if(v->kind==PD_HEALING)snprintf(text,sizeof text,"Cura %ud%u %+d PF",v->count,v->sides,v->healing_modifier);
-        else snprintf(text,sizeof text,"Altri effetti: gestisci con il DM");
-        small_label(text,83,237,300,PD_GOLD);
-        small_label("PF e quantita salvati insieme",83,273,300,PD_MUTED);
-        button("Indietro",83,359,144,48,91,!item_rolled);button(item_rolled?"Riprova":"Conferma",239,359,144,48,89,true);if(item_rolled)small_label("Tiro fissato: riprova a salvare",83,307,300,PD_GOLD);return;
+        small_label("Usa una unita",83,174,300,PD_TEXT);
+        delta_tile(PD_UI_PACK,"Quantita",v->quantity,v->quantity?v->quantity-1:0,83,199);
+        if(v->kind==PD_HEALING)snprintf(text,sizeof text,"%ud%u%+d PF",v->count,v->sides,v->healing_modifier);else snprintf(text,sizeof text,"Manuali");status_tile(v->kind==PD_HEALING?PD_UI_HEART:PD_UI_SHEET,"Effetti",text,239,199);
+        snprintf(text,sizeof text,"PF %u / %u",state.hp,pd_max_hp(&state));label(text,83,277,300,true);
+        small_label(item_rolled?"Tiro fissato: riprova a salvare":v->kind==PD_HEALING?"Cura limitata ai PF massimi":"Altri effetti: gestisci con il DM",83,319,300,PD_GOLD);
+        button("Indietro",83,359,144,48,91,!item_rolled);button(item_rolled?"Riprova":"Conferma",239,359,144,48,89,true);return;
     }
     snprintf(text,sizeof text,"Quantita %u >",v->quantity);button(text,83,163,300,44,4100,true);
     if(v->kind==PD_WEAPON) {
@@ -2223,14 +2256,24 @@ static void render_magic_other(void) {
     char text[180];
     if(page==MAGIC_CONFIRM) {
         const pd_power *p=&state.magic.powers[power_index];choose_cost();
-        label("Conferma utilizzo",83,111,300,true);label(p->name,83,159,300,false);cost_text(text,sizeof text);small_label(text,83,204,300,PD_GOLD);
-        if((p->effect==3&&!p->remaining)||(!p->kind&&p->level&&(p->flags&PD_USES_SLOT))){snprintf(text,sizeof text,"Slot %u %s",cast_level,cast_pact?"patto":"ordinario");small_label(text,83,231,300,PD_TEXT);}
-        small_label(p->flags&PD_CONCENTRATES&&state.magic.concentration?"Sostituisce la concentrazione attuale":p->effect==1?"Attiva Ira e termina concentrazione":p->effect==3?"Verifica strumenti e cannone attivo":"Effetti da risolvere con il DM",83,275,300,PD_MUTED);
-        if(((p->flags&PD_CONCENTRATES)||p->effect==1)&&state.magic.concentration){
-            scratch=state;pd_concentration_end(&scratch);
-            snprintf(text,sizeof text,"Termina %u effetti | PF %u -> %u",pd_concentration_effects(&state),state.hp,scratch.hp);small_label(text,83,306,300,PD_GOLD);
+        scratch=state;bool valid=pd_magic_use(&scratch,power_index,cast_level,cast_pact);
+        if(cast_details){
+            label("Costo e conseguenze",83,111,300,false);cost_text(text,sizeof text);small_label(text,83,155,300,PD_GOLD);
+            snprintf(text,sizeof text,"PF %u > %u | max %u > %u",state.hp,scratch.hp,pd_max_hp(&state),pd_max_hp(&scratch));small_label(text,83,190,300,PD_TEXT);
+            snprintf(text,sizeof text,"CA %u > %u | usi %u > %u",pd_armor(&state),pd_armor(&scratch),p->remaining,scratch.magic.powers[power_index].remaining);small_label(text,83,222,300,PD_TEXT);
+            snprintf(text,sizeof text,"Concentrazione: %s",state.magic.concentration==scratch.magic.concentration?"invariata":!scratch.magic.concentration?"fine":state.magic.concentration?"sostituisce":"inizia");small_label(text,83,254,300,PD_GOLD);
+            snprintf(text,sizeof text,"%s",state.magic.concentration?state.magic.powers[state.magic.concentration-1].name:"Nessuna concentrazione precedente");lv_obj_t *old=small_label(text,83,280,300,PD_MUTED);lv_label_set_long_mode(old,LV_LABEL_LONG_WRAP);lv_obj_set_height(old,58);
+        }else{
+        transaction_header(pd_power_icon(p),p->name);small_label(p->kind?"Usa capacita":"Lancia magia",83,174,300,PD_TEXT);
+        bool spends_slot=valid&&cast_level&&(cast_pact?state.magic.pact[cast_level-1].current!=scratch.magic.pact[cast_level-1].current:state.magic.slots[cast_level-1].current!=scratch.magic.slots[cast_level-1].current);
+        if(spends_slot){snprintf(text,sizeof text,"Slot %u %s",cast_level,cast_pact?"patto":"ord.");delta_tile(PD_UI_MAGIC,text,cast_pact?state.magic.pact[cast_level-1].current:state.magic.slots[cast_level-1].current,cast_pact?scratch.magic.pact[cast_level-1].current:scratch.magic.slots[cast_level-1].current,83,199);}
+        else status_tile(PD_UI_MAGIC,"Slot",valid?"Nessun costo":"Non disponibile",83,199);
+        if(p->kind||(p->flags&PD_LIMITED))delta_tile(PD_UI_USES,"Utilizzi",p->remaining,scratch.magic.powers[power_index].remaining,239,199);else status_tile(PD_UI_USES,"Utilizzi","Non richiesti",239,199);
+        delta_tile(PD_UI_HEART,"PF",state.hp,scratch.hp,83,267);
+        const char *conc=state.magic.concentration==scratch.magic.concentration?"Invariata":!scratch.magic.concentration?"Termina":state.magic.concentration?"Sostituisce":"Inizia";status_tile(PD_UI_MAGIC,"Concentraz.",conc,239,267);
+        lv_obj_t *warning=small_label(p->effect==1?"Attiva Ira e termina concentrazione":p->effect>=PD_HEX_2024?"Bersaglio ed effetti: dettagli magia":p->effect==2?"Recupera 1 PF e spende un uso":p->effect==3?"Verifica strumenti e cannone attivo":"Effetti manuali: verifica con il DM",83,333,300,PD_GOLD);label_font(warning,&lv_font_montserrat_14);
         }
-        button("Indietro",83,359,144,48,833,true);button("Conferma",239,359,144,48,832,can_use_power());
+        lv_obj_t *back=button("Indietro",83,359,92,48,833,true),*details=button(cast_details?"Riepilogo":"Dettagli",187,359,92,48,5604,true),*confirm=button("Conferma",291,359,92,48,832,valid);lv_obj_set_style_text_font(back,&lv_font_montserrat_16,0);lv_obj_set_style_text_font(details,&lv_font_montserrat_16,0);lv_obj_set_style_text_font(confirm,&lv_font_montserrat_16,0);
     } else if(page==MAGIC_STATUS) {
         label("Risorse magiche",83,111,300,true);button("Slot ordinari / patto",83,153,300,44,851,true);
         button(state.magic.concentration?"Concentrazione: termina":"Concentrazione: no",83,207,300,44,837,state.magic.concentration>0);
@@ -2297,14 +2340,16 @@ static void render_rest(void) {
         small_label("Contatori: recupero manuale",83,321,300,PD_MUTED);
         button("Usi",83,359,300,48,103,true);
     } else if(page==REST_LONG_SETTINGS) {
-        label("Riposo lungo",83,111,300,true);
-        snprintf(text,sizeof text,"Dadi vita: %s >",(const char *const[]){"manuale","2014","2024"}[rest_plan.policy]);button(text,83,157,300,48,904,true);
-        small_label(rest_plan.policy==PD_HD_2014?"Meta del totale, min. 1; scegli dadi":rest_plan.policy==PD_HD_2024?"Recupera tutti i dadi vita spesi":"Dadi vita invariati; recuperi manuali",83,223,300,PD_GOLD);
-        if(state.recovery.available)snprintf(text,sizeof text,"Dadi da recuperare: %u",rest_plan.policy==PD_HD_2024?pd_hit_budget(&state,rest_plan.policy):selected_hit_dice());else snprintf(text,sizeof text,"Dati assenti: importa nuova copia");small_label(text,83,249,300,PD_TEXT);
-        button("Scegli dadi da recuperare",83,283,300,48,905,rest_plan.policy==PD_HD_2014&&state.recovery.available&&state.recovery.count);
+        transaction_header(&theme_rest,"Riposo lungo");
+        small_label("Recupero dadi vita",83,174,300,PD_TEXT);
+        const char *policies[]={"Manuale","2014","2024"};for(unsigned i=0;i<3;i++){lv_obj_t *p=button(policies[i],83+i*104,199,92,44,5601+i,true);lv_obj_set_style_text_font(p,&lv_font_montserrat_16,0);if(rest_plan.policy==i)lv_obj_set_style_border_color(p,lv_color_hex(PD_GOLD),0);}
+        small_label(rest_plan.policy==PD_HD_2014?"Meta del totale: scegli quali dadi":rest_plan.policy==PD_HD_2024?"Recupera tutti i dadi vita spesi":"Dadi vita invariati",83,255,300,PD_GOLD);
+        if(state.recovery.available)snprintf(text,sizeof text,"Recupero %u dadi",rest_plan.policy==PD_HD_2024?pd_hit_budget(&state,rest_plan.policy):selected_hit_dice());else snprintf(text,sizeof text,"Dati dadi vita non disponibili");small_label(text,83,281,300,PD_TEXT);
+        button("Scegli dadi da recuperare",83,309,300,44,905,rest_plan.policy==PD_HD_2014&&state.recovery.available&&state.recovery.count);
         button("Indietro",83,359,144,48,900,true);button("Anteprima",239,359,144,48,906,true);
     } else if(page==REST_PREVIEW) {
         pd_rest_summary delta;if(!pd_rest_preview(&state,&rest_plan,&scratch,&delta))return;
+        if(rest_details){
         label(rest_plan.long_rest?"Conferma riposo lungo":"Conferma riposo breve",83,107,300,false);
         snprintf(text,sizeof text,"PF %u -> %u | temporanei %u -> %u",state.hp,scratch.hp,state.temp_hp,scratch.temp_hp);small_label(text,83,148,300,PD_MINT);
         snprintf(text,sizeof text,"Slot: +%u ordinari / +%u patto",delta.ordinary,delta.pact);small_label(text,83,175,300,PD_TEXT);
@@ -2314,7 +2359,17 @@ static void render_rest(void) {
         if(rest_plan.long_rest)snprintf(text,sizeof text,"Concentr.: fine | %u effetti terminati",pd_concentration_effects(&state));else strcpy(text,"Concentrazione: invariata");small_label(text,83,284,300,PD_TEXT);
         small_label(rest_plan.long_rest&&state.status.available?"Registro morte: azzera al riposo":"Contatori invariati; eccezioni: DM",83,309,300,PD_MUTED);
         small_label(rest_plan.long_rest?"Requisiti e durate: verifica DM":"Poi spendi dadi vita per curarti",83,333,300,PD_MUTED);
-        button("Indietro",83,359,144,48,902,true);button("Conferma",239,359,144,48,907,true);
+        }else{
+            transaction_header(&theme_rest,rest_plan.long_rest?"Riposo lungo":"Riposo breve");
+            if(delta.powers||delta.charges)snprintf(text,sizeof text,"Usi %u | cariche +%u",delta.powers,delta.charges);else snprintf(text,sizeof text,"%s",rest_plan.long_rest?(const char *const[]){"Dadi vita manuali","Dadi vita 2014","Dadi vita 2024"}[rest_plan.policy]:"Dadi vita dopo il riposo");small_label(text,83,174,300,PD_TEXT);
+            delta_tile(PD_UI_HEART,"PF",state.hp,scratch.hp,83,199);
+            if(state.recovery.available)snprintf(text,sizeof text,"+%u",delta.hit_dice);else snprintf(text,sizeof text,"Non disponibili");status_tile(PD_UI_USES,"Dadi vita",text,239,199);
+            unsigned ordinary=0,pact=0;for(unsigned i=0;i<9;i++){ordinary+=state.magic.slots[i].current;pact+=state.magic.pact[i].current;}
+            if(state.magic.available){delta_tile(PD_UI_MAGIC,"Slot ordinari",ordinary,ordinary+delta.ordinary,83,267);delta_tile(PD_UI_MAGIC,"Slot patto",pact,pact+delta.pact,239,267);}else{status_tile(PD_UI_MAGIC,"Slot ordinari","Non disponibili",83,267);status_tile(PD_UI_MAGIC,"Slot patto","Non disponibili",239,267);}
+            if(rest_plan.long_rest&&state.temp_hp&&state.magic.concentration)snprintf(text,sizeof text,"Temp %u > 0 | concentrazione: fine",state.temp_hp);else if(rest_plan.long_rest)snprintf(text,sizeof text,state.magic.concentration?"Termina la concentrazione":state.temp_hp?"PF temporanei %u > 0":delta.ends_rage?"Termina Ira":"",state.temp_hp);else snprintf(text,sizeof text,delta.ends_rage?"Concentrazione invariata | fine Ira":"Concentrazione invariata");
+            small_label(text,83,333,300,PD_GOLD);
+        }
+        lv_obj_t *back=button("Indietro",83,359,92,48,902,true),*details=button(rest_details?"Riepilogo":"Dettagli",187,359,92,48,5600,true),*confirm=button("Conferma",291,359,92,48,907,true);lv_obj_set_style_text_font(back,&lv_font_montserrat_16,0);lv_obj_set_style_text_font(details,&lv_font_montserrat_16,0);lv_obj_set_style_text_font(confirm,&lv_font_montserrat_16,0);
     } else if(page==REST_SESSION) {
         label("Riposo breve applicato",83,111,300,false);
         snprintf(text,sizeof text,"PF %u/%u | COS %+d",state.hp,pd_max_hp(&state),pd_modifier(state.abilities[2]));label(text,83,159,300,false);

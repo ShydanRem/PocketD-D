@@ -22,4 +22,4 @@ text='\n'.join(lines)+'\n'
 p=argparse.ArgumentParser();p.add_argument('--check',action='store_true');args=p.parse_args()
 if args.check:assert (root/'control_icons.inc').read_text()==text,'Regenerate UI glyphs'
 else:(root/'control_icons.inc').write_text(text)
-print('UI control glyphs: seven original 12x12 masks, exact 2x pixels, static RGB565A8 checked')
+print(f'UI control glyphs: {len(source["glyphs"])} original 12x12 masks, exact 2x pixels, static RGB565A8 checked')
