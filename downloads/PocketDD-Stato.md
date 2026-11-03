@@ -29,6 +29,8 @@ nessuna lettura interrompe editor, revisione rete o tocco. Account temporaneo e
 ricordato visibili, elenco valido vuoto distinto dal mai caricato. Errori di
 trasporto distinti dall’accesso da ricollegare; un nuovo collegamento fallito
 conserva il precedente. Nessun aggiornamento silenzioso delle schede.
+Il collegamento web alla sezione firmware funziona anche cambiando il frammento
+di una pagina già aperta, oltre all’apertura iniziale e al ricaricamento.
 
 354 test JS, suite nativa e **150 viste LVGL**, controlli ASan/UBSan e build ESP32.
 Nuove prove con rete, HTTP e account simulati: non sono un accesso privato reale.
