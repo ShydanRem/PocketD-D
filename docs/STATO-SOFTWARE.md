@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **3 novembre 2026 — v0.98**. Il dispositivo è il prodotto;
+Aggiornamento del **3 novembre 2026 — v0.99**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
@@ -19,6 +19,32 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Quarta iterazione UX · v0.99
+
+[Riposo e stati sul dispositivo](UX-RPG.md#v099-riserve-condizioni-ed-effetti-locali).
+Riserve dei dadi vita selezionabili direttamente dal riposo breve, tre per pagina,
+per tutte le 20 riserve del modello; quantità e conferma prima di tirare. Riprova
+conserva il tiro fissato. Stato come griglia di comandi; note delle condizioni con
+icone bilingui condivise, livelli e meccaniche tenuti separati. I quattro stati
+supportati sui tiri restano una bozza da confermare; le altre regole rimangono
+manuali e Avvelenato mantiene il comando separato.
+
+Effetti locali con attività, durata, pausa e vincolo leggibili. Unità ore/minuti
+corrette, modifica e avanzamento del round con confronto di CA/massimi/PF. La
+scadenza può far perdere PF: non viene descritta come cura. Nessuna scadenza
+avviene leggendo una pagina; resta l’avanzamento esplicito del motore esistente.
+
+Prove nuove con PG, riserve e timer sintetici; nessuna lettura reale Beyond,
+modifica della raccolta personale o nuova prova fisica dichiarata. Formati,
+partizioni, tasti e asset SD conservati. Prossima priorità UX: raccolta/importazione,
+aspetto e impostazioni. Editor avanzati di durate e difese ancora rifinibili;
+la roadmap funzionale resta conservata.
+
+
+Verifiche v0.99: 357 test JavaScript, suite nativa, 153 viste LVGL, nuovi
+scenari di sessione/stati, ASan/UBSan e compilazione ESP32. Dati sintetici;
+nessuna nuova lettura reale Beyond o modifica della raccolta personale.
 
 ## Terza iterazione UX · v0.98
 

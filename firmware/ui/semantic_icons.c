@@ -13,3 +13,5 @@ const lv_image_dsc_t *pd_item_icon(const pd_state *s,unsigned index){
 const lv_image_dsc_t *pd_power_icon(const pd_power *p){if(!p)return &sem_scroll;if(p->effect==PD_DIVINE_SMITE_2024)return &sem_sun;if(p->effect==PD_HEX_2024)return &sem_skull;if(p->effect==PD_HUNTERS_MARK_2024)return &sem_eye;if(p->effect==PD_TRUE_STRIKE_2024)return &sem_strike;if(p->effect==1)return &sem_rage;if(p->effect==2)return &sem_heal;const lv_image_dsc_t *im=find(p->kind?2:1,p->name);return im?im:p->kind?&sem_feature:&sem_scroll;}
 
 unsigned pd_item_setup_hint(const pd_state *s,unsigned index){if(!s||index>=s->item_count)return 0;const lv_image_dsc_t *im=find(0,s->items[index].name);return im==&sem_sword||im==&sem_axe||im==&sem_bow||im==&sem_hammer||im==&sem_staff?1:im==&sem_armor||im==&sem_shield?2:0;}
+
+const lv_image_dsc_t *pd_condition_icon(const char *name){const lv_image_dsc_t *im=name?find(3,name):NULL;return im?im:&sem_scroll;}

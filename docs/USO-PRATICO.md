@@ -1,5 +1,7 @@
 # PocketD-D — uso pratico sul dispositivo
 
+> v0.99: [riserve dei dadi vita, condizioni ed effetti](UX-RPG.md#v099-riserve-condizioni-ed-effetti-locali).
+
 > v0.98: [dotazione rapida, conferme e riposi](UX-RPG.md#v098-equipaggiamento-conferme-e-riposi).
 
 > Aggiornamento v0.97: [risultati, dadi e schede di gioco](UX-RPG.md#seconda-iterazione--risultati-e-schede-di-gioco).
@@ -162,3 +164,21 @@ Nel riposo lungo scegli direttamente **Manuale**, **2014** o **2024** per i dadi
 vita. La scelta 2014 mantiene la selezione esplicita dei dadi da recuperare.
 Cambiando regola si azzera quella selezione nella bozza. Il riepilogo separa
 slot ordinari e patto; i dati assenti restano indicati come non disponibili.
+
+## Riposo breve, condizioni ed effetti · v0.99
+
+Dopo il riposo breve scegli direttamente una riserva fra le tre mostrate;
+le frecce danno accesso a tutte le classi/riserve. Controlla il dado e il costo,
+poi Conferma. La selezione non tira né spende. **Riprova** dopo un errore salva
+lo stesso tiro. **Spendi un dado vita** conserva anche il percorso classico.
+
+**Stato** mostra i comandi per condizioni, effetti locali, morte, danni, tempo,
+reazione e usi. Una condizione annotata conserva nome, icona e livello; resta
+una **nota**. **Condizioni → Tiri** modifica separatamente i quattro stati
+meccanici supportati, dopo anteprima/conferma. Avvelenato ha ancora il proprio
+comando da Stato. Un’icona non aggiunge regole al PG.
+
+Negli effetti locali, **pausa**, **scaduto**, durata e **C** (concentrazione) sono
+separati dal valore. **1 round** apre l’anteprima delle scadenze; non avanza nulla
+finché non confermi. CA e PF possono diminuire alla fine di un bonus: controlla
+il confronto prima/dopo. Ore e minuti sono presentati nell’unità corretta.

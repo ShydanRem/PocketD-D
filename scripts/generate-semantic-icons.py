@@ -14,7 +14,7 @@ for name,g in source['glyphs'].items():
 lines.append('typedef struct {unsigned family;const char *alias;const lv_image_dsc_t *image;} semantic_alias;\nstatic const semantic_alias semantic_aliases[]={')
 for family,items in source['aliases'].items():
  for name,aliases in items:
-  for alias in aliases:lines.append('{'+str(['item','spell','feature'].index(family))+','+json.dumps(alias)+',&sem_'+name+'},')
+  for alias in aliases:lines.append('{'+str(['item','spell','feature','condition'].index(family))+','+json.dumps(alias)+',&sem_'+name+'},')
 lines.append('};');data='\n'.join(lines)+'\n';out=ROOT/'firmware/ui/semantic_icons.inc'
 p=argparse.ArgumentParser();p.add_argument('--check',action='store_true');args=p.parse_args()
 if args.check:assert out.read_text()==data,'Regenerate semantic glyphs'

@@ -285,6 +285,7 @@ static void shortcut(unsigned gesture);
 static bool can_use_power(void);
 static pd_rest_plan rest_plan;
 static bool rest_details,cast_details;
+static unsigned session_hit_page;
 static unsigned hit_index;
 static bool rest_active,hit_rolled;
 PD_EXT static pd_state hit_candidate;
@@ -1655,7 +1656,7 @@ static void act(intptr_t action) {
         }
     }
     else if(action==900){page=REST_HOME;rest_active=false;rest_plan=(pd_rest_plan){0};hit_index=0;}
-    else if(action==901){rest_plan=(pd_rest_plan){0};rest_details=false;page=REST_PREVIEW;}
+    else if(action==901){rest_plan=(pd_rest_plan){0};rest_details=false;session_hit_page=0;page=REST_PREVIEW;}
     else if(action==902){page=rest_plan.long_rest?REST_LONG_SETTINGS:REST_HOME;}
     else if(action==903&&(state.hp||!state.status.available||state.status.failures<3)){rest_plan=(pd_rest_plan){.long_rest=true};page=REST_LONG_SETTINGS;hit_index=0;}
     else if(action==904&&page==REST_LONG_SETTINGS){rest_plan.policy=(rest_plan.policy+1)%3;memset(rest_plan.regain,0,sizeof rest_plan.regain);}
@@ -1672,6 +1673,10 @@ static void act(intptr_t action) {
         }
     }
     else if(action==908&&page==REST_REGAIN)page=REST_LONG_SETTINGS;
+    else if((action==5730||action==5731)&&page==REST_SESSION){if(action==5730&&session_hit_page)session_hit_page--;else if(action==5731&&(session_hit_page+1)*3<state.recovery.count)session_hit_page++;}
+    else if(action>=5700&&action<5700+PD_HIT_POOLS&&page==REST_SESSION&&rest_active&&state.recovery.available&&state.hp>0&&state.hp<pd_max_hp(&state)){
+        unsigned i=action-5700;if(i<state.recovery.count&&state.recovery.pools[i].used<state.recovery.pools[i].maximum){hit_index=i;hit_rolled=false;page=HIT_CONFIRM;}
+    }
     else if(action==909&&rest_active&&state.recovery.count){page=HIT_DICE;hit_index=0;}
     else if(action==910){hit_rolled=false;page=HIT_DICE;}
     else if(action==911&&rest_active)page=REST_SESSION;
@@ -1797,6 +1802,12 @@ static void delta_tile(pd_ui_icon_id icon,const char *name,int before,int after,
 }
 static void status_tile(pd_ui_icon_id icon,const char *name,const char *value,int x,int y){
     lv_obj_t *tile=transaction_tile(icon,name,x,y);tile_label(tile,value,6,31,132,&lv_font_montserrat_16,PD_TEXT);
+}
+static lv_obj_t *scene_control(const char *name,const lv_image_dsc_t *icon,const char *caption,const char *badge,int x,int y,int w,int h,int action,bool enabled){
+    lv_obj_t *b=button(name,x,y,w,h,action,enabled);lv_obj_t *semantic=lv_obj_get_child(b,0);lv_obj_set_size(semantic,1,1);lv_label_set_long_mode(semantic,LV_LABEL_LONG_CLIP);lv_obj_add_flag(semantic,LV_OBJ_FLAG_HIDDEN);pd_ui_name(b,lv_label_get_text(semantic));lv_obj_set_style_pad_all(b,0,0);
+    lv_obj_t *im=art(icon,9,(h-32)/2,b);lv_image_set_pivot(im,0,0);lv_image_set_scale(im,32*256/icon->header.w);lv_image_set_antialias(im,false);
+    tile_label(b,caption,48,h<=48?2:10,w-54,&lv_font_montserrat_16,enabled?PD_TEXT:PD_MUTED);
+    tile_label(b,badge,48,h<=48?24:36,w-54,&lv_font_montserrat_14,PD_MUTED);return b;
 }
 /* Game command: one emblem, a short name, one useful value. Metadata and
    formulas stay in the detail view; names remain available on long press. */
@@ -2371,19 +2382,23 @@ static void render_rest(void) {
         }
         lv_obj_t *back=button("Indietro",83,359,92,48,902,true),*details=button(rest_details?"Riepilogo":"Dettagli",187,359,92,48,5600,true),*confirm=button("Conferma",291,359,92,48,907,true);lv_obj_set_style_text_font(back,&lv_font_montserrat_16,0);lv_obj_set_style_text_font(details,&lv_font_montserrat_16,0);lv_obj_set_style_text_font(confirm,&lv_font_montserrat_16,0);
     } else if(page==REST_SESSION) {
-        label("Riposo breve applicato",83,111,300,false);
-        snprintf(text,sizeof text,"PF %u/%u | COS %+d",state.hp,pd_max_hp(&state),pd_modifier(state.abilities[2]));label(text,83,159,300,false);
-        button("Spendi un dado vita",83,211,300,48,909,state.recovery.available&&state.recovery.count&&state.hp>0&&state.hp<pd_max_hp(&state));
-        small_label(!state.recovery.available?"Dadi vita assenti: importa una copia":!state.recovery.count?"Nessuna riserva dadi vita nella scheda":state.hp==0?"A zero PF: verifica con il DM":"Cura base: dado + COS, minimo zero",83,289,300,PD_GOLD);
-        small_label("Ogni spesa richiede conferma",83,318,300,PD_MUTED);button("Fine",83,359,300,48,918,true);
+        unsigned pages=state.recovery.count?(state.recovery.count+2)/3:1;if(session_hit_page>=pages)session_hit_page=pages-1;
+        snprintf(text,sizeof text,"PF %u/%u",state.hp,pd_max_hp(&state));label(text,139,109,188,true);
+        button("<",83,99,48,44,5730,session_hit_page>0);button(">",335,99,48,44,5731,session_hit_page+1<pages);
+        snprintf(text,sizeof text,"COS %+d | riserve %u/%u",pd_modifier(state.abilities[2]),session_hit_page+1,pages);small_label(text,83,145,300,PD_GOLD);
+        for(unsigned row=0;row<3;row++){unsigned i=session_hit_page*3+row;if(i>=state.recovery.count)break;const pd_hit_die *h=&state.recovery.pools[i];char badge[80];snprintf(badge,sizeof badge,"d%u | %u/%u disponibili",h->die,h->maximum-h->used,h->maximum);
+            scene_control(h->name,&theme_dice,h->name,badge,83,171+row*56,300,48,5700+i,rest_active&&state.recovery.available&&state.hp>0&&state.hp<pd_max_hp(&state)&&h->used<h->maximum);}
+        if(!state.recovery.available)small_label("Dati dadi vita non disponibili",83,233,300,PD_GOLD);else if(!state.recovery.count)small_label("Nessuna riserva dadi vita",83,233,300,PD_GOLD);
+        if(!state.hp||state.hp==pd_max_hp(&state))small_label(state.hp?"PF al massimo":"A zero PF: verifica con il DM",83,331,300,PD_GOLD);
+        lv_obj_t *all=button("Spendi un dado vita",83,359,204,48,909,rest_active&&state.recovery.available&&state.recovery.count&&state.hp>0&&state.hp<pd_max_hp(&state));lv_obj_set_style_text_font(all,&lv_font_montserrat_16,0);button("Fine",295,359,88,48,918,true);
     } else if(page==REST_REGAIN||page==HIT_DICE) {
         bool regain=page==REST_REGAIN;const pd_hit_die *h=&state.recovery.pools[hit_index];
         label(regain?"Recupera dadi":"Dadi vita",139,111,188,false);
         button("<",83,99,48,44,912,hit_index>0);button(">",335,99,48,44,913,hit_index+1<state.recovery.count);
         if(regain)snprintf(text,sizeof text,"Scelti %u / limite %u",selected_hit_dice(),pd_hit_budget(&state,rest_plan.policy));
         else snprintf(text,sizeof text,"Riserva %u/%u | COS %+d",hit_index+1,state.recovery.count,pd_modifier(state.abilities[2]));
-        small_label(text,83,153,300,PD_GOLD);
-        lv_obj_t *name=small_label(h->name,83,183,300,PD_TEXT);lv_label_set_long_mode(name,LV_LABEL_LONG_WRAP);lv_obj_set_height(name,58);
+        small_label(text,83,213,300,PD_GOLD);
+        lv_obj_t *name=small_label(h->name,83,151,300,PD_TEXT);lv_label_set_long_mode(name,LV_LABEL_LONG_WRAP);lv_obj_set_height(name,58);
         snprintf(text,sizeof text,regain?"Spesi %u / %u d%u":"Disponibili %u / %u d%u",regain?h->used:h->maximum-h->used,h->maximum,h->die);label(text,83,243,300,false);
         if(regain) {
             button("-1",83,279,72,44,916,rest_plan.regain[hit_index]>0);snprintf(text,sizeof text,"%u",rest_plan.regain[hit_index]);label(text,163,289,140,false);
@@ -2391,12 +2406,12 @@ static void render_rest(void) {
         } else button(state.hp==pd_max_hp(&state)?"PF al massimo":h->used==h->maximum?"Riserva esaurita":"Spendi 1 dado",83,279,300,44,915,rest_active&&state.hp>0&&state.hp<pd_max_hp(&state)&&h->used<h->maximum);
         button("Indietro",83,359,300,48,regain?908:911,true);
     } else if(page==HIT_CONFIRM) {
-        const pd_hit_die *h=&state.recovery.pools[hit_index];label("Spendere un dado vita?",83,111,300,false);
-        small_label(h->name,83,159,300,PD_TEXT);
-        snprintf(text,sizeof text,"1d%u %+d COS | minimo 0 PF",h->die,pd_modifier(state.abilities[2]));label(text,83,201,300,false);
-        snprintf(text,sizeof text,"PF attuali %u/%u",state.hp,pd_max_hp(&state));label(text,83,241,300,false);
-        small_label("Consuma il dado anche con cura zero",83,285,300,PD_GOLD);
-        small_label(hit_rolled?"Tiro fissato: riprova a salvare":"Bonus speciali: verifica con il DM",83,314,300,hit_rolled?PD_GOLD:PD_MUTED);
+        const pd_hit_die *h=&state.recovery.pools[hit_index];transaction_header(&theme_dice,h->name);
+        snprintf(text,sizeof text,"1d%u%+d PF",h->die,pd_modifier(state.abilities[2]));label(text,83,174,300,true);
+        delta_tile(PD_UI_DICE,"Dadi vita",h->maximum-h->used,h->maximum-h->used-1,83,225);
+        snprintf(text,sizeof text,"%u/%u",state.hp,pd_max_hp(&state));status_tile(PD_UI_HEART,"PF attuali",text,239,225);
+        small_label("Il dado si spende anche con cura zero",83,298,300,PD_GOLD);
+        if(hit_rolled)snprintf(text,sizeof text,"Tiro fissato | PF +%u",hit_gained);else snprintf(text,sizeof text,"Bonus speciali: verifica con il DM");small_label(text,83,327,300,hit_rolled?PD_GOLD:PD_MUTED);
         button("Indietro",83,359,144,48,910,!hit_rolled);button(hit_rolled?"Riprova":"Conferma",239,359,144,48,914,true);
     }
 }
@@ -2656,12 +2671,13 @@ static void render_death_roll_setup(void){
 static void render_status(void) {
     char text[180];
     if(page==STATUS_HOME){
-        label("Stato",83,111,84,false);lv_obj_t *time=button("Tempo",179,99,84,44,2140,true);lv_obj_set_style_text_font(time,&lv_font_montserrat_16,0);lv_obj_t *react=button("Reazione",283,99,100,44,2117,true);lv_obj_set_style_text_font(react,&lv_font_montserrat_16,0);snprintf(text,sizeof text,"PF %u/%u | temporanei %u",state.hp,pd_max_hp(&state),state.temp_hp);small_label(text,83,149,300,PD_MINT);
-        button("Salvezze contro morte",83,177,300,44,1501,true);
-        snprintf(text,sizeof text,"Condizioni: %u note",state.status.count);button(text,83,231,300,44,1503,true);
-        button(state.training.poisoned?"Avvelenato: si":"Avvelenato: no",83,285,300,44,1504,true);
-        const char *names[]={"Usi","Effetti","Danni"};const unsigned actions[]={103,1700,1800};
-        for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names[i],83+i*104,359,92,48,actions[i],true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
+        snprintf(text,sizeof text,"%u/%u",state.hp,pd_max_hp(&state));status_tile(PD_UI_HEART,"PF",text,83,99);snprintf(text,sizeof text,"%u",state.temp_hp);status_tile(PD_UI_USES,"Temporanei",text,239,99);
+        char condition_name[64],badge[64];snprintf(condition_name,sizeof condition_name,"Condizioni: %u note",state.status.count);if(state.status.count||state.status.available)snprintf(badge,sizeof badge,state.status.count==1?"%u nota":"%u note",state.status.count);else snprintf(badge,sizeof badge,"Dati assenti");scene_control(condition_name,pd_condition_icon("stordito"),"Condizioni",badge,83,167,144,64,1503,true);
+        unsigned active=0;for(unsigned i=0;i<state.effect_count;i++)active+=state.effects[i].active;snprintf(badge,sizeof badge,"%u attivi",active);scene_control("Effetti",pd_ui_icon(PD_UI_USES),"Effetti",badge,239,167,144,64,1700,true);
+        scene_control("Salvezze contro morte",pd_condition_icon("privo di sensi"),"Morte",state.status.available?death_caption(&state):"Dati assenti",83,239,144,64,1501,true);
+        scene_control("Danni",pd_ui_icon(PD_UI_SHIELD),"Danni","Difese e PF",239,239,144,64,1800,true);
+        lv_obj_t *poison=button(state.training.poisoned?"Avvelenato: si":"Avvelenato: no",83,309,300,44,1504,true);if(state.training.poisoned)lv_obj_set_style_border_color(poison,lv_color_hex(PD_DANGER),0);
+        const char *names[]={"Tempo","Reazione","Usi"};const unsigned actions[]={2140,2117,103};for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names[i],83+i*104,359,92,48,actions[i],true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
     } else if(page==DEATH_VIEW){
         label("Salvezze contro morte",83,111,300,false);snprintf(text,sizeof text,"PF %u/%u",state.hp,pd_max_hp(&state));label(text,83,149,300,false);
         small_label(death_caption(&state),83,180,300,PD_GOLD);
@@ -2688,17 +2704,16 @@ static void render_status(void) {
         if(!count)small_label(state.status.available?"Nessuna condizione annotata":"Dati assenti: importa o aggiungi note",83,231,300,PD_TEXT);
         for(unsigned row=0;row<3;row++) {
             unsigned i=*current*3+row;if(i>=count)break;
-            lv_obj_t *b=button(pick?condition_presets[i]:state.status.conditions[i].name,83,183+row*48,300,44,(pick?1300:1200)+i,true);
-            lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_width(l,284);lv_obj_set_height(l,lv_font_get_line_height(&lv_font_montserrat_20));lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_center(l);
+            const char *name=pick?condition_presets[i]:state.status.conditions[i].name;char badge[48];if(!pick&&state.status.conditions[i].level)snprintf(badge,sizeof badge,"Nota | livello %u",state.status.conditions[i].level);else snprintf(badge,sizeof badge,"Nota");scene_control(name,pd_condition_icon(name),name,badge,83,183+row*48,300,44,(pick?1300:1200)+i,true);
         }
         if(pick)button("Indietro",83,359,300,48,1503,true);
         else{const char *names[]={"Indietro","Aggiungi","Tiri"};const unsigned actions[]={1500,1520,2200};for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names[i],83+i*104,359,92,48,actions[i],i!=1||state.status.count<PD_CONDITIONS);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}}
     } else if(page==CONDITION_DETAIL){
         const pd_condition *c=&state.status.conditions[condition_index];lv_obj_t *name=small_label(c->name,83,99,300,PD_TEXT);lv_label_set_long_mode(name,LV_LABEL_LONG_WRAP);lv_obj_set_height(name,80);
-        small_label("Nota; Avvelenato si regola da Stato",83,185,300,PD_GOLD);
-        snprintf(text,sizeof text,"Livello %u",c->level);label(text,83,217,300,true);
-        button("-1",83,251,144,44,1523,c->level>0);button("+1",239,251,144,44,1524,c->level<6);
-        button("Rimuovi nota",83,305,300,44,1525,true);button("Elenco",83,359,300,48,1503,true);
+        lv_obj_t *im=art(pd_condition_icon(c->name),209,187,lv_screen_active());lv_image_set_pivot(im,0,0);lv_image_set_scale(im,512);lv_image_set_antialias(im,false);
+        if(c->level)snprintf(text,sizeof text,"Livello %u",c->level);else snprintf(text,sizeof text,"Senza livello");label(text,83,243,300,true);
+        small_label("Solo nota | tiri separati",83,279,300,PD_GOLD);button("Rimuovi nota",83,305,300,44,1525,true);
+        button("-1",83,359,92,48,1523,c->level>0);button("+1",187,359,92,48,1524,c->level<6);lv_obj_t *back=button("Elenco",291,359,92,48,1503,true);lv_obj_set_style_text_font(back,&lv_font_montserrat_16,0);
     } else if(page==STATUS_CONFIRM){
         const char *title=status_command==STATUS_ROLL?"Tirare contro morte?":status_command==STATUS_POISON?"Effetto Avvelenato":status_command==STATUS_DEATH?"Correzione con il DM":status_command==STATUS_REMOVE?"Rimuovere la nota?":status_command==STATUS_ADD?"Aggiungere la nota?":"Cambiare livello?";
         label(title,83,111,300,false);
@@ -2731,6 +2746,12 @@ static void render_status(void) {
     }
 }
 
+static void effect_clock_text(const pd_effect *e,char *text,size_t size){
+    if(!e->timed)snprintf(text,size,"manuale");
+    else if(e->tick==PD_TICK_HOURS)time_text(text,size,e->minutes);
+    else if(e->tick==PD_TICK_MINUTES)snprintf(text,size,"%u min",e->minutes);
+    else snprintf(text,size,"%u %s",e->rounds,duration_owned(e->timed,e->tick,e->owner));
+}
 static void render_effects(void) {
     char text[160];
     if(page==EFFECT_LIST) {
@@ -2746,7 +2767,11 @@ static void render_effects(void) {
             else if(!duration_left(e->tick,e->rounds,e->minutes))strcpy(duration,"scaduto");else snprintf(duration,sizeof duration,"%u%s%s",duration_left(e->tick,e->rounds,e->minutes),duration_owned_mark(e->tick,e->owner),e->active?"":" pausa");
             snprintf(text,sizeof text,"%u. %s %+d | %s",i+1,e->target==PD_EFFECT_ARMOR?"CA":"PF max",e->value,duration);
             if(e->concentration)strcat(text," | C");
-            lv_obj_t *b=button(text,83,159+row*48,300,44,1720+i,true);if(e->timed||e->concentration)lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
+            char caption[48],badge[96];snprintf(caption,sizeof caption,"%s %+d",e->target==PD_EFFECT_ARMOR?"CA":"PF max",e->value);
+            if(!e->timed)snprintf(badge,sizeof badge,"%s%s",e->active?"Attivo | manuale":"Disattivo",e->concentration?" | C":"");
+            else if(!duration_left(e->tick,e->rounds,e->minutes))snprintf(badge,sizeof badge,"Scaduto%s",e->concentration?" | C":"");
+            else{char clock[48];effect_clock_text(e,clock,sizeof clock);snprintf(badge,sizeof badge,"%s | %s%s",clock,e->active?"attivo":"pausa",e->concentration?" | C":"");}
+            lv_obj_t *b=scene_control(text,pd_ui_icon(e->target==PD_EFFECT_ARMOR?PD_UI_SHIELD:PD_UI_HEART),caption,badge,83,159+row*48,300,44,1720+i,true);if(e->active)lv_obj_set_style_border_color(b,lv_color_hex(PD_GOLD),0);
         }
         button("<",83,305,60,44,1706,effect_page>0);button("1 round",155,305,156,44,1740,timed_effects());button(">",323,305,60,44,1707,effect_page+1<pages);
         button("Stato",83,359,144,48,1500,true);button("Aggiungi",239,359,144,48,1701,state.effect_count<PD_EFFECTS);
@@ -2782,16 +2807,13 @@ static void render_effects(void) {
         button("Indietro",83,359,144,48,1752,true);button("Anteprima",239,359,144,48,1704,true);
     } else if(page==EFFECT_CONFIRM) {
         bool valid=preview_effect(&scratch);
-        label(effect_removing?"Rimuovere l'effetto?":"Confermare l'effetto?",83,107,300,false);
-        snprintf(text,sizeof text,"Base: CA %u | PF max %u",state.armor,state.max_hp);small_label(text,83,151,300,PD_GOLD);
-        small_label("Aggiungi solo bonus non gia inclusi",83,179,300,PD_GOLD);
         const pd_effect *e=effect_removing?&state.effects[effect_index]:&effect_draft;
-        if(e->timed)snprintf(text,sizeof text,"%u %s | %s",duration_left(e->tick,e->rounds,e->minutes),duration_owned(e->timed,e->tick,e->owner),e->active?"attivo":"pausa");else strcpy(text,"Manuale");strcat(text,e->concentration?" | conc. si":" | conc. no");small_label(text,83,199,300,PD_MUTED);
+        transaction_header(pd_ui_icon(e->target==PD_EFFECT_ARMOR?PD_UI_SHIELD:PD_UI_HEART),effect_removing?"Rimuovi effetto":e->target==PD_EFFECT_ARMOR?"Bonus locale CA":"Bonus locale PF");
+        char clock[48];effect_clock_text(e,clock,sizeof clock);snprintf(text,sizeof text,"%+d | %s%s",e->value,clock,e->concentration?" | C":"");small_label(text,83,174,300,PD_GOLD);
         if(valid){
-            snprintf(text,sizeof text,"CA %u -> %u",pd_armor(&state),pd_armor(&scratch));label(text,83,219,300,false);
-            snprintf(text,sizeof text,"PF massimi %u -> %u",pd_max_hp(&state),pd_max_hp(&scratch));label(text,83,251,300,false);
-            snprintf(text,sizeof text,"PF correnti %u -> %u",state.hp,scratch.hp);label(text,83,283,300,false);
-            small_label(state.hp>scratch.hp?"PF oltre il nuovo massimo: persi":"Il massimo maggiore non cura",83,325,300,state.hp>scratch.hp?PD_DANGER:PD_MUTED);
+            delta_tile(PD_UI_SHIELD,"CA",pd_armor(&state),pd_armor(&scratch),83,199);delta_tile(PD_UI_HEART,"PF max",pd_max_hp(&state),pd_max_hp(&scratch),239,199);
+            delta_tile(PD_UI_HEART,"PF",state.hp,scratch.hp,83,267);status_tile(PD_UI_USES,"Stato",effect_removing?"Rimosso":e->active?"Attivo":"Disattivo",239,267);
+            small_label(state.hp>scratch.hp?"PF oltre il nuovo massimo: persi":"Solo bonus non gia inclusi",83,333,300,state.hp>scratch.hp?PD_DANGER:PD_MUTED);
         } else {
             bool expired=e->timed&&e->active&&!duration_left(e->tick,e->rounds,e->minutes);
             label(expired?"Durata da verificare":"Valori fuori limite",83,227,300,false);small_label(expired?"Attivo: serve almeno 1 passaggio":"CA: 1-40 | PF massimi: 1-999",83,267,300,PD_DANGER);
@@ -2800,15 +2822,12 @@ static void render_effects(void) {
         button("Indietro",83,359,144,48,1708,true);button("Conferma",239,359,144,48,1709,valid);
     } else if(page==EFFECT_ROUND) {
         pd_round_summary r={0};bool valid=preview_round(&scratch,&r);uint8_t advanced=r.effects_advanced,expired=r.effects_expired;
-        label("Avanzare 1 round?",83,107,300,true);
-        snprintf(text,sizeof text,"Effetti %u | Difese %u a round",bit_count(r.effects_advanced),bit_count(r.defences_advanced));small_label(text,83,151,300,PD_GOLD);
+        transaction_header(&theme_time,"Avanza 1 round");
+        snprintf(text,sizeof text,"%u effetti | %u difese",bit_count(r.effects_advanced),bit_count(r.defences_advanced));small_label(text,83,174,300,PD_GOLD);
         if(valid){
-            if(r.defences_advanced)snprintf(text,sizeof text,"Difese in scadenza: %u (vedi Difese)",bit_count(r.defences_expired));else{strcpy(text,"Avanzano:");for(unsigned i=0;i<PD_EFFECTS;i++)if(advanced&(1u<<i)){size_t n=strlen(text);snprintf(text+n,sizeof text-n," %u",i+1);}}small_label(text,83,171,300,PD_MUTED);
-            snprintf(text,sizeof text,"CA %u -> %u",pd_armor(&state),pd_armor(&scratch));label(text,83,193,300,false);
-            snprintf(text,sizeof text,"PF massimi %u -> %u",pd_max_hp(&state),pd_max_hp(&scratch));label(text,83,225,300,false);
-            snprintf(text,sizeof text,"PF correnti %u -> %u",state.hp,scratch.hp);label(text,83,257,300,false);
-            strcpy(text,"Scadono:");for(unsigned i=0;i<PD_EFFECTS;i++)if(expired&(1u<<i)){size_t n=strlen(text);snprintf(text+n,sizeof text-n," %u",i+1);}if(!expired)strcat(text," nessuno");small_label(text,83,299,300,PD_MINT);
-            small_label(state.hp>scratch.hp?"PF oltre il nuovo massimo: persi":"Nessuna cura automatica",83,329,300,state.hp>scratch.hp?PD_DANGER:PD_MUTED);
+            delta_tile(PD_UI_SHIELD,"CA",pd_armor(&state),pd_armor(&scratch),83,199);delta_tile(PD_UI_HEART,"PF max",pd_max_hp(&state),pd_max_hp(&scratch),239,199);
+            delta_tile(PD_UI_HEART,"PF",state.hp,scratch.hp,83,267);snprintf(text,sizeof text,"%u",bit_count(expired)+bit_count(r.defences_expired));status_tile(PD_UI_USES,"Scadono",text,239,267);
+            strcpy(text,"Scadono locali:");for(unsigned i=0;i<PD_EFFECTS;i++)if(expired&(1u<<i)){size_t n=strlen(text);snprintf(text+n,sizeof text-n," %u",i+1);}if(!expired)strcat(text," nessuno");small_label(text,83,333,300,PD_MINT);
         } else {
             label("Scadenze fuori limite",83,211,300,false);small_label("Nessun conteggio viene avanzato",83,259,300,PD_DANGER);
             small_label("Correggi gli effetti prima di proseguire",83,303,300,PD_MUTED);
@@ -2881,7 +2900,7 @@ static void render_roll_conditions(void){
         pd_condition_result effect={0};bool valid=current_condition_context(context_draft,context_ignore_draft,&effect);small_label(!valid?"Tiro non disponibile":effect.needed?"Dichiara i dati necessari":effect.automatic_failure?"Fallimento automatico: nessun dado":"Dati sufficienti per il tiro",83,309,300,PD_GOLD);small_label("Escludi effetti solo su decisione DM",83,335,300,PD_MUTED);
         button("Indietro",83,359,144,48,2231,true);lv_obj_t *use=button("Usa contesto",239,359,144,48,2235,valid&&!effect.needed);lv_obj_set_style_text_font(use,&lv_font_montserrat_16,0);return;
     }
-    if(page==CONDITION_EFFECTS){label("Effetti sui tiri",83,111,300,true);for(unsigned i=0;i<4;i++){snprintf(text,sizeof text,"%s: %s >",roll_condition_names[i],condition_effects_draft&(1u<<i)?"si":"no");button(text,83,157+i*48,300,44,2201+i,true);}button("Indietro",83,359,144,48,2205,true);button("Anteprima",239,359,144,48,2206,true);return;}
+    if(page==CONDITION_EFFECTS){label("Effetti sui tiri",83,111,300,true);small_label(condition_effects_draft==state.roll_conditions?"Impostazioni attuali":"Bozza da confermare",83,149,300,PD_GOLD);for(unsigned i=0;i<4;i++){snprintf(text,sizeof text,"%s: %s >",roll_condition_names[i],condition_effects_draft&(1u<<i)?"si":"no");lv_obj_t *b=scene_control(text,pd_condition_icon(roll_condition_names[i]),roll_condition_names[i],condition_effects_draft&(1u<<i)?"Attivo":"Disattivo",83+(i%2)*156,179+(i/2)*76,144,64,2201+i,true);if(condition_effects_draft&(1u<<i))lv_obj_set_style_border_color(b,lv_color_hex(PD_GOLD),0);}small_label("Le note non cambiano",83,331,300,PD_MUTED);button("Indietro",83,359,144,48,2205,true);button("Anteprima",239,359,144,48,2206,true);return;}
     label("Salvare gli effetti?",83,111,300,false);for(unsigned i=0;i<4;i++){snprintf(text,sizeof text,"%s: %s -> %s",roll_condition_names[i],state.roll_conditions&(1u<<i)?"si":"no",condition_effects_draft&(1u<<i)?"si":"no");small_label(text,83,169+i*38,300,PD_TEXT);}small_label("Note, durate e PF invariati",83,325,300,PD_MUTED);button("Indietro",83,359,144,48,2207,true);button("Conferma",239,359,144,48,2208,true);
 }
 static void render_number_entry(void){
