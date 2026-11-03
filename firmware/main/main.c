@@ -50,7 +50,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, KEY_PICKER, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM, POWER_HOME, POWER_OFF, ITEM_SEARCH, POWER_SEARCH, MAGIC_MANAGE, MAGIC_PREPARATION, ITEM_QUANTITY_CONFIRM, AVATAR_EDIT, SCENE_EDIT, APPEARANCE_CONFIRM, DEFENCE_SETUP, WIFI_HOME, WIFI_FORGET, REFERENCE_HOME, REFERENCE_TEXT, WIFI_LIST, WIFI_PASSWORD, WIFI_JOIN_REVIEW, WEAPON_PICKER, ITEM_CONFIG_MENU, WEAPON_SETUP, GEAR_SETUP, MAGIC_PROFILE, PLAY_CONFIRM, ATTACK_MODE, HIT_EFFECTS, HIT_SMITE, ASSET_INSTALL, SYNC_HOME, SYNC_REVIEW, SYNC_FORGET, LIBRARY_HOME, LIBRARY_CONFIRM, BEYOND_FORM, BEYOND_BUSY, BEYOND_REPORT, BEYOND_ACCOUNT, BEYOND_PAIR, BEYOND_FORGET } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, KEY_PICKER, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM, POWER_HOME, POWER_OFF, ITEM_SEARCH, POWER_SEARCH, MAGIC_MANAGE, MAGIC_PREPARATION, ITEM_QUANTITY_CONFIRM, AVATAR_EDIT, SCENE_EDIT, APPEARANCE_CONFIRM, DEFENCE_SETUP, WIFI_HOME, WIFI_FORGET, REFERENCE_HOME, REFERENCE_TEXT, WIFI_LIST, WIFI_PASSWORD, WIFI_JOIN_REVIEW, WEAPON_PICKER, ITEM_CONFIG_MENU, WEAPON_SETUP, GEAR_SETUP, MAGIC_PROFILE, PLAY_CONFIRM, ATTACK_MODE, HIT_EFFECTS, HIT_SMITE, ASSET_INSTALL, SYNC_HOME, SYNC_REVIEW, SYNC_FORGET, LIBRARY_HOME, LIBRARY_CONFIRM, BEYOND_FORM, BEYOND_BUSY, BEYOND_REPORT, BEYOND_ACCOUNT, BEYOND_PAIR, BEYOND_FORGET, BEYOND_CONNECT, BEYOND_RECOVER } page_t;
 static const pd_theme_kind page_themes[]={
     [HERO]=PD_THEME_NONE,
     [SHEET]=PD_THEME_SHEET,
@@ -151,7 +151,7 @@ static const pd_theme_kind page_themes[]={
     [WALLET_HOME]=PD_THEME_WALLET,
     [WALLET_EDIT]=PD_THEME_WALLET,
     [WALLET_CONFIRM]=PD_THEME_WALLET,
-    [BEYOND_FORM]=PD_THEME_BEYOND,[BEYOND_BUSY]=PD_THEME_BEYOND,[BEYOND_REPORT]=PD_THEME_BEYOND,[BEYOND_ACCOUNT]=PD_THEME_BEYOND,[BEYOND_PAIR]=PD_THEME_BEYOND,[BEYOND_FORGET]=PD_THEME_BEYOND,
+    [BEYOND_FORM]=PD_THEME_BEYOND,[BEYOND_BUSY]=PD_THEME_BEYOND,[BEYOND_REPORT]=PD_THEME_BEYOND,[BEYOND_ACCOUNT]=PD_THEME_BEYOND,[BEYOND_PAIR]=PD_THEME_BEYOND,[BEYOND_FORGET]=PD_THEME_BEYOND,[BEYOND_CONNECT]=PD_THEME_BEYOND,[BEYOND_RECOVER]=PD_THEME_BEYOND,
     [LIBRARY_HOME]=PD_THEME_LIBRARY,
     [LIBRARY_CONFIRM]=PD_THEME_LIBRARY,
     [HISTORY_HOME]=PD_THEME_HISTORY,
@@ -182,6 +182,7 @@ static const pd_theme_kind page_themes[]={
 PD_EXT static pd_state state,previous,pending,scratch;
 static bool undo_available,import_pending,has_roll,import_from_beyond;
 static bool beyond_local(void);
+static bool beyond_network_flow(void);
 static pd_roll result;
 static pd_dice_animation dice_animation;
 static lv_obj_t *dice_canvas;
@@ -292,7 +293,7 @@ static pd_pool item_result;
 static unsigned item_gained;
 static bool wifi_editing(void){return page==WIFI_LIST||page==WIFI_PASSWORD||page==WIFI_JOIN_REVIEW;}
 static bool appearance_editing(void){return page==AVATAR_EDIT||page==SCENE_EDIT||page==APPEARANCE_CONFIRM;}
-static bool confirmation_open(void){return beyond_local()||page==LIBRARY_CONFIRM||play_editing()||wifi_editing()||page==ASSET_INSTALL||page==KEY_PICKER||page==SYNC_REVIEW||page==SYNC_FORGET||page==WIFI_FORGET||page==DEFENCE_SETUP||appearance_editing()||page==ITEM_QUANTITY_CONFIRM||page==MAGIC_PREPARATION||page==ITEM_SEARCH||page==POWER_SEARCH||power_paused||power_off_attempted||page==POWER_OFF||page==NUMBER_ENTRY||page==VITAL_CONFIRM||page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
+static bool confirmation_open(void){return beyond_local()||beyond_network_flow()||page==LIBRARY_CONFIRM||play_editing()||wifi_editing()||page==ASSET_INSTALL||page==KEY_PICKER||page==SYNC_REVIEW||page==SYNC_FORGET||page==WIFI_FORGET||page==DEFENCE_SETUP||appearance_editing()||page==ITEM_QUANTITY_CONFIRM||page==MAGIC_PREPARATION||page==ITEM_SEARCH||page==POWER_SEARCH||power_paused||power_off_attempted||page==POWER_OFF||page==NUMBER_ENTRY||page==VITAL_CONFIRM||page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
 static pd_damage_plan damage_plan; /* First component + explicit concentration choice. */
 static pd_damage_component damage_extra[PD_DAMAGE_COMPONENTS-1],damage_part_draft;
 static pd_damage_context damage_context,damage_extra_context[PD_DAMAGE_COMPONENTS-1],damage_part_context,source_context_draft;
@@ -816,6 +817,7 @@ static void act(intptr_t action) {
     if(page==ITEM_QUANTITY_CONFIRM&&action!=4101&&action!=4102)return;
     if(page==MAGIC_PREPARATION&&action!=4002&&action!=4003)return;
     if((page==ITEM_SEARCH||page==POWER_SEARCH)&&(action<3801||action>3806)&&(action<3900||action>=3900+(intptr_t)sizeof search_keys-1))return;
+    if(beyond_network_flow()&&(action<4501||action>4507)&&(action<5000||action>5226))return;
     if((action==2300||action==2301)&&(import_pending||confirmation_open()))return;
     if(import_pending&&action!=30&&action!=31)return;
     if(page==NUMBER_ENTRY&&(action<3603||action>3619))return;
@@ -894,7 +896,7 @@ static void act(intptr_t action) {
     else if(action==4705&&page==SYNC_FORGET){if(pd_sync_forget()){sync_notice="";page=SYNC_HOME;}else sync_notice="Rimozione non confermata";}
     else if(action==4706&&page==SYNC_HOME)page=WIFI_HOME;
     else if(action==4500&&page==DEVICE_SETTINGS){beyond_wifi_return=false;wifi_notice="";page=WIFI_HOME;}
-    else if(action==4501&&page==WIFI_HOME){if(beyond_wifi_return){beyond_wifi_return=false;page=beyond_return();}else page=DEVICE_SETTINGS;}
+    else if(action==4501&&page==WIFI_HOME){if(beyond_wifi_return){beyond_wait_clear();page=beyond_return();}else page=DEVICE_SETTINGS;}
     else if((action==4502||action==4503||action==4504)&&page==WIFI_HOME){if(!pd_wifi_command(action==4502?PD_WIFI_ENABLE:action==4503?PD_WIFI_DISABLE:PD_WIFI_SETUP))wifi_notice="Richiesta occupata: riprova";else wifi_notice="Richiesta inviata";}
     else if(action==5000&&page==WIFI_HOME){
         wifi_clear_draft();wifi_keyboard=false;wifi_list_page=0;
@@ -916,7 +918,7 @@ static void act(intptr_t action) {
     else if(action==5023&&page==WIFI_PASSWORD){wifi_clear_draft();page=WIFI_LIST;}
     else if(action==5024&&page==WIFI_PASSWORD&&pd_wifi_credentials_valid(&wifi_draft)){wifi_reveal=false;wifi_focus=0;page=WIFI_JOIN_REVIEW;}
     else if(action==5025&&page==WIFI_JOIN_REVIEW){wifi_focus=0;if(wifi_draft.open){wifi_clear_draft();page=WIFI_LIST;}else page=WIFI_PASSWORD;}
-    else if(action==5026&&page==WIFI_JOIN_REVIEW){if(pd_wifi_join(&wifi_draft)){wifi_clear_draft();wifi_notice="Provo la rete: attendi l IP";page=WIFI_HOME;}else wifi_notice="Richiesta occupata o dati non validi";}
+    else if(action==5026&&page==WIFI_JOIN_REVIEW){if(pd_wifi_join(&wifi_draft)){wifi_clear_draft();wifi_notice="Provo la rete: attendi l IP";beyond_wait_started=lv_tick_get();page=WIFI_HOME;}else wifi_notice="Richiesta occupata o dati non validi";}
     else if(action==4505&&page==WIFI_HOME)page=WIFI_FORGET;
     else if(action==4506&&page==WIFI_FORGET)page=WIFI_HOME;
     else if(action==4507&&page==WIFI_FORGET){wifi_notice=pd_wifi_command(PD_WIFI_FORGET)?"Rimozione richiesta":"Richiesta occupata: riprova";page=WIFI_HOME;}
@@ -2466,9 +2468,9 @@ static void render_wifi_direct(void){
 }
 static void render_wifi(void){
     if(wifi_editing()){render_wifi_direct();return;}
-    pd_wifi_info info;pd_wifi_snapshot(&info);char text[120];
-    if(page==WIFI_FORGET){label("Dimenticare la rete?",83,111,300,false);small_label("Cancella nome rete e password Wi-Fi",83,181,300,PD_TEXT);small_label("Scheda e backup PG conservati",83,225,300,PD_GOLD);button("Indietro",83,359,144,48,4506,true);button("Conferma",239,359,144,48,4507,true);return;}
-    label(info.setup?"Configura Wi-Fi":"Wi-Fi 2,4 GHz",83,111,300,true);
+    wifi_target_count=0;pd_wifi_info info;pd_wifi_snapshot(&info);char text[120];
+    if(page==WIFI_FORGET){label("Dimenticare la rete?",83,111,300,false);small_label("Cancella nome rete e password Wi-Fi",83,181,300,PD_TEXT);small_label("Scheda e backup PG conservati",83,225,300,PD_GOLD);wifi_button("Indietro",83,359,144,48,4506,true);wifi_button("Conferma",239,359,144,48,4507,true);wifi_mark_focus();return;}
+    label(info.setup?"Configura Wi-Fi":beyond_waiting?"Wi-Fi per Beyond":"Wi-Fi 2,4 GHz",83,111,300,true);
     if(info.setup){
         small_label("1. Collega telefono/PC alla rete:",83,153,300,PD_TEXT);small_label(info.setup_ssid,83,179,300,PD_GOLD);
         snprintf(text,sizeof text,"Password: %s",info.setup_password);small_label(text,83,207,300,PD_MINT);
@@ -2477,12 +2479,13 @@ static void render_wifi(void){
         small_label((const char *const[]){"Spento: gioco offline","Connessione in corso...","Collegato alla rete","Connessione non riuscita"}[info.state<=3?info.state:3],83,155,300,PD_MINT);
         lv_obj_t *network=small_label(info.ssid[0]?info.ssid:info.configured?"Rete salvata":"Nessuna rete salvata",83,181,300,PD_TEXT);lv_label_set_long_mode(network,LV_LABEL_LONG_DOT);lv_obj_set_height(network,20);
         snprintf(text,sizeof text,"IP: %s",info.ip[0]?info.ip:"non disponibile");small_label(text,83,203,300,PD_MUTED);
-        lv_obj_t *setup=button("Cerca reti >",83,251,196,44,5000,!info.joining);lv_obj_set_style_text_font(setup,&lv_font_montserrat_16,0);button("Ponte",291,251,92,44,4700,true);
-        lv_obj_t *hotspot=button("Configura da telefono / PC",83,301,300,44,4504,!info.joining);lv_obj_set_style_text_font(hotspot,&lv_font_montserrat_16,0);
+        lv_obj_t *setup=wifi_button("Cerca reti >",83,251,196,44,5000,!info.joining);lv_obj_set_style_text_font(setup,&lv_font_montserrat_16,0);wifi_button("Ponte",291,251,92,44,4700,!beyond_network_flow());
+        lv_obj_t *hotspot=wifi_button("Configura da telefono / PC",83,301,300,44,4504,!info.joining);lv_obj_set_style_text_font(hotspot,&lv_font_montserrat_16,0);
     }
     small_label(info.error==PD_WIFI_ERROR_STORAGE?"Salvataggio rete non confermato":info.error==PD_WIFI_ERROR_UNAVAILABLE?"Wi-Fi non disponibile":info.setup_failed?"Nuova rete non salvata: riprova":info.error==PD_WIFI_ERROR_NETWORK?"Controlla rete 2,4 GHz e password":info.setup_saved&&info.state==PD_WIFI_CONNECTED?"Rete collegata e salvata":wifi_notice,83,info.setup?309:225,300,PD_GOLD);
     const char *names[]={"Indietro",info.state==PD_WIFI_OFF&&!info.setup?"Accendi":"Spegni","Dimentica"};const unsigned actions[]={4501,info.state==PD_WIFI_OFF&&!info.setup?4502:4503,4505};
-    for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names[i],83+i*104,359,92,48,actions[i],i==0||i==1?(i==0||info.configured||info.setup):info.configured);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
+    for(unsigned i=0;i<3;i++){lv_obj_t *b=wifi_button(names[i],83+i*104,359,92,48,actions[i],i==0||i==1?(i==0||info.configured||info.setup):info.configured);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
+    wifi_mark_focus();
 }
 static void render_reference(void){
     unsigned n=reference_count(),pages=(n+2)/3;if(!pages)pages=1;if(reference_page>=pages)reference_page=pages-1;
@@ -3469,7 +3472,7 @@ static void render_content(void) {
     }
 }
 #ifdef PD_UI_TEST
-static bool styled_pages[BEYOND_FORGET+1];
+static bool styled_pages[BEYOND_RECOVER+1];
 static void capture_styled_page(unsigned view);
 #endif
 /* Only page lists accept swipes. No gesture can confirm, spend or roll. */
@@ -3535,7 +3538,7 @@ static void shortcut(unsigned gesture) {
 static void screen_service(int pwr,int boot){
     input_check_service();
     bool allowed=pd_screen_keys(&display_screen,pwr,boot,lv_tick_get());
-    bool enabled=allowed&&(!import_pending||import_from_beyond)&&(!confirmation_open()||appearance_editing()||wifi_editing()||play_editing()||attack_preparing()||library_view()||beyond_local());
+    bool enabled=allowed&&(!import_pending||import_from_beyond)&&(!confirmation_open()||appearance_editing()||wifi_editing()||beyond_network_flow()||play_editing()||attack_preparing()||library_view()||beyond_local());
     unsigned gestures=pd_buttons_sample(&physical_keys,pwr,boot,lv_tick_get(),enabled);
     for(unsigned i=0;i<3;i++)if(gestures&(1u<<i)){
         if(beyond_local()){
@@ -3548,10 +3551,10 @@ static void screen_service(int pwr,int boot){
             if(i==0){if(!library_keyboard){library_keyboard=true;library_focus=0;}else if(library_target_count)library_focus=(library_focus+1)%library_target_count;library_mark_focus();}
             else if(i==1){if(!library_keyboard){library_keyboard=true;library_focus=0;library_mark_focus();}else if(library_focus<library_target_count&&!lv_obj_has_state(library_targets[library_focus],LV_STATE_DISABLED))lv_obj_send_event(library_targets[library_focus],LV_EVENT_CLICKED,NULL);}
             else act(page==LIBRARY_CONFIRM?5304:5301);
-        }else if(wifi_editing()||play_editing()||attack_preparing()){
+        }else if(wifi_editing()||beyond_network_flow()||play_editing()||attack_preparing()){
             if(i==0){if(!wifi_keyboard){wifi_keyboard=true;wifi_focus=0;}else if(wifi_target_count)wifi_focus=(wifi_focus+1)%wifi_target_count;wifi_mark_focus();}
             else if(i==1){if(!wifi_keyboard){wifi_keyboard=true;wifi_focus=0;wifi_mark_focus();}else if(wifi_focus<wifi_target_count&&!lv_obj_has_state(wifi_targets[wifi_focus],LV_STATE_DISABLED))lv_obj_send_event(wifi_targets[wifi_focus],LV_EVENT_CLICKED,NULL);}
-            else act(attack_preparing()?4002:play_editing()?6099:page==WIFI_LIST?5001:page==WIFI_PASSWORD?5023:5025);
+            else act(attack_preparing()?4002:play_editing()?6099:page==WIFI_HOME?4501:page==WIFI_FORGET?4506:page==WIFI_LIST?5001:page==WIFI_PASSWORD?5023:5025);
         }else if(appearance_editing()){
             if(i==0){if(!appearance_keyboard){appearance_keyboard=true;appearance_focus=0;}else appearance_focus=(appearance_focus+1)%appearance_target_count;appearance_mark_focus();}
             else if(i==1){if(!appearance_keyboard){appearance_keyboard=true;appearance_focus=0;appearance_mark_focus();}else if(appearance_focus<appearance_target_count){lv_obj_t *target=appearance_targets[appearance_focus];if(!lv_obj_has_state(target,LV_STATE_DISABLED))lv_obj_send_event(target,LV_EVENT_CLICKED,NULL);}}

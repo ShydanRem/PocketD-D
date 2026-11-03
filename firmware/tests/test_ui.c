@@ -13,16 +13,17 @@ const char *pd_board_library_root(void){return library_test_root;}
 uint64_t pd_library_owner(void){return 42;}
 static pd_beyond_info beyond_mock;
 static pd_beyond_candidate *beyond_result_mock;
-static char beyond_requested[16];static unsigned beyond_start_calls;
+static char beyond_requested[16];static unsigned beyond_start_calls,beyond_list_calls,beyond_link_calls;
 void pd_beyond_boot(void){}
 void pd_beyond_snapshot(pd_beyond_info *out){*out=beyond_mock;}
-bool pd_beyond_start(const char *id){if(beyond_mock.running)return false;strcpy(beyond_requested,id);beyond_start_calls++;beyond_mock=(pd_beyond_info){.phase=PD_BEYOND_HTTP,.running=true};return true;}
-void pd_beyond_cancel(void){free(beyond_result_mock);beyond_result_mock=NULL;beyond_mock=(pd_beyond_info){.phase=PD_BEYOND_FAILED,.error=PD_BEYOND_CANCELLED};}
+bool pd_beyond_start(const char *id){if(beyond_mock.running)return false;strcpy(beyond_requested,id);beyond_start_calls++;beyond_mock.phase=PD_BEYOND_HTTP;beyond_mock.running=true;return true;}
+void pd_beyond_cancel(void){free(beyond_result_mock);beyond_result_mock=NULL;beyond_mock.phase=PD_BEYOND_FAILED;beyond_mock.error=PD_BEYOND_CANCELLED;beyond_mock.running=false;}
 pd_beyond_candidate *pd_beyond_take(void){pd_beyond_candidate *out=beyond_result_mock;beyond_result_mock=NULL;return out;}
 static pd_account_row account_row_mock={.id="123456",.name="Eroe account",.level=3};
-bool pd_beyond_list(void){beyond_mock.operation=PD_BEYOND_LIST;beyond_mock.running=true;beyond_mock.phase=PD_BEYOND_HTTP;return true;}
+bool pd_beyond_list(void){beyond_list_calls++;beyond_mock.operation=PD_BEYOND_LIST;beyond_mock.running=true;beyond_mock.phase=PD_BEYOND_HTTP;return true;}
+bool pd_beyond_owned_id(const char *id){if(!beyond_mock.count||strcmp(id,account_row_mock.id))return false;pd_beyond_start(id);beyond_mock.operation=PD_BEYOND_OWNED;return true;}
 bool pd_beyond_owned(unsigned index){if(index>=beyond_mock.count)return false;pd_beyond_start(account_row_mock.id);beyond_mock.operation=PD_BEYOND_OWNED;return true;}
-bool pd_beyond_link(const pd_account_access *a,bool remember){assert(pd_account_valid(a));beyond_mock.operation=PD_BEYOND_LINK;beyond_mock.remembered=remember;beyond_mock.running=true;beyond_mock.phase=PD_BEYOND_HTTP;return true;}
+bool pd_beyond_link(const pd_account_access *a,bool remember){assert(pd_account_valid(a));beyond_link_calls++;beyond_mock.operation=PD_BEYOND_LINK;beyond_mock.remembered=remember;beyond_mock.running=true;beyond_mock.phase=PD_BEYOND_HTTP;return true;}
 bool pd_beyond_row(unsigned index,pd_account_row *out){if(index>=beyond_mock.count)return false;*out=account_row_mock;return true;}
 bool pd_beyond_forget(void){beyond_mock.configured=false;beyond_mock.count=0;return true;}
 
@@ -33,11 +34,11 @@ bool pd_board_assets_verify(const char *path,const char *sha){(void)path;(void)s
 void pd_board_assets_activate(void){pd_looks_set_file(getenv("PD_TEST_CLASS_PACK"));}
 static pd_wifi_info wifi_mock;
 static pd_wifi_scan_info scan_mock;static pd_wifi_credentials joined_mock;static bool join_rejected;static unsigned join_calls;
-static unsigned wifi_requested;
+static unsigned wifi_requested,wifi_command_calls;
 void pd_wifi_boot(void){}
 uint32_t pd_wifi_random(void){return 0;}
 void pd_wifi_snapshot(pd_wifi_info *out){*out=wifi_mock;}
-bool pd_wifi_command(unsigned command){wifi_requested=command;return true;}
+bool pd_wifi_command(unsigned command){wifi_requested=command;wifi_command_calls++;return true;}
 void pd_wifi_networks(pd_wifi_scan_info *out){*out=scan_mock;}
 bool pd_wifi_join(const pd_wifi_credentials *credentials){if(join_rejected||!pd_wifi_credentials_valid(credentials))return false;joined_mock=*credentials;join_calls++;return true;}
 bool pd_wifi_pause(bool paused){(void)paused;return true;}
@@ -1917,7 +1918,7 @@ int main(void) {
     click("Wi-Fi");assert(page==WIFI_HOME);click("Indietro");assert(page==BEYOND_FORM&&!strcmp(beyond_id,"123456"));
     click("Leggi");assert(page==BEYOND_BUSY&&beyond_mock.running&&!strcmp(beyond_requested,"123456"));bounds();screenshot("ux091-beyond-busy.ppm");
     assert(!stage_import(&original)&&!stage_backup(NULL));act(100);assert(page==BEYOND_BUSY);click("Annulla");beyond_poll();assert(page==BEYOND_FORM&&!import_pending&&!memcmp(&original,&state,sizeof state)&&save_calls==original_saves);
-    click("Leggi");beyond_mock=(pd_beyond_info){.phase=PD_BEYOND_FAILED,.error=PD_BEYOND_DENIED};beyond_poll();assert(page==BEYOND_FORM&&strstr(beyond_notice,"privato"));bounds();screenshot("ux091-beyond-denied.ppm");
+    click("Leggi");beyond_mock=(pd_beyond_info){.phase=PD_BEYOND_FAILED,.error=PD_BEYOND_DENIED};beyond_poll();assert(page==BEYOND_RECOVER&&beyond_failure==PD_BEYOND_DENIED);bounds();screenshot("ux091-beyond-denied.ppm");click("Indietro");
     click("Leggi");beyond_result_mock=calloc(1,sizeof *beyond_result_mock);assert(beyond_result_mock);beyond_result_mock->report=(pd_beyond_report){.blockers=1,.limits=1,.count=2};strcpy(beyond_result_mock->report.lines[0],"Bonus non riconciliato: conversione bloccata");strcpy(beyond_result_mock->report.lines[1],"Controlla i dati del personaggio");beyond_mock=(pd_beyond_info){.phase=PD_BEYOND_FINISHED,.error=PD_BEYOND_BLOCKED};beyond_poll();assert(page==BEYOND_REPORT&&!import_pending);bounds();screenshot("ux091-beyond-blocked.ppm");click(">");assert(beyond_note==1);click("Indietro");assert(page==BEYOND_FORM&&!memcmp(&original,&state,sizeof state)&&save_calls==original_saves);
     click("Leggi");beyond_result_mock=calloc(1,sizeof *beyond_result_mock);assert(beyond_result_mock);beyond_result_mock->state=original;strcpy(beyond_result_mock->state.name,"Sonda nativa");beyond_result_mock->state.hp=7;beyond_result_mock->state.lineage=2;beyond_result_mock->state.brightness=10;
     beyond_result_mock->report=(pd_beyond_report){.limits=2,.count=2};strcpy(beyond_result_mock->report.lines[0],"Effetti condizionali: verifica con il DM");memset(beyond_result_mock->report.lines[1],'W',160);beyond_result_mock->report.lines[1][160]=0;
@@ -1946,13 +1947,89 @@ int main(void) {
     click("Esci");assert(page==BEYOND_FORGET);bounds();screenshot("ux092-forget.ppm");click("Indietro");assert(page==BEYOND_ACCOUNT&&beyond_mock.configured);click("Esci");click("Scollega");assert(page==BEYOND_ACCOUNT&&!beyond_mock.configured&&!memcmp(&state,&before_account,sizeof state)&&save_calls==saves_before_account);
     pd_account_wipe(req,sizeof *req);free(req);beyond_mock=(pd_beyond_info){0};
     }
+    {
+    /* Autonomous request recovery: real production navigation, synthetic radio
+       and worker. No PG writes, no credential re-send, no unsolicited retries. */
+    pd_state original=state;unsigned original_saves=save_calls,original_rng=random_calls;
+    beyond_mock=(pd_beyond_info){.configured=true,.remembered=true,.listed=true,.count=1};
+    wifi_mock=(pd_wifi_info){.state=PD_WIFI_OFF,.configured=true};
+    page=LIBRARY_HOME;render();act(B_OPEN);assert(page==BEYOND_ACCOUNT);
+    unsigned requests=beyond_start_calls,commands=wifi_command_calls;
+    act(B_PICK);assert(page==BEYOND_CONNECT&&beyond_waiting&&wifi_requested==PD_WIFI_ENABLE&&wifi_command_calls==commands+1);
+    assert(!strcmp(beyond_retry_id,"123456")&&beyond_retry_operation==PD_BEYOND_OWNED);
+    bounds();screenshot("ux094-connect.ppm");assert(!stage_import(&original)&&!stage_backup(NULL));
+    beyond_poll();beyond_poll();assert(wifi_command_calls==commands+1&&beyond_start_calls==requests);
+    wifi_mock.state=PD_WIFI_CONNECTED;display_screen.touch_down=true;beyond_poll();assert(page==BEYOND_CONNECT);
+    display_screen.touch_down=false;beyond_poll();assert(page==BEYOND_BUSY&&!beyond_waiting&&!beyond_wifi_return&&beyond_start_calls==requests+1&&!strcmp(beyond_requested,"123456"));
+    beyond_mock.running=false;beyond_mock.phase=PD_BEYOND_FAILED;beyond_mock.error=PD_BEYOND_NETWORK;
+    beyond_poll();assert(page==BEYOND_RECOVER);bounds();screenshot("ux094-retry.ppm");
+    for(unsigned i=0;i<5;i++)beyond_poll();assert(beyond_start_calls==requests+1);
+    click("Riprova");assert(page==BEYOND_BUSY&&beyond_start_calls==requests+2&&beyond_mock.operation==PD_BEYOND_OWNED);
+    click("Annulla");beyond_poll();assert(page==BEYOND_ACCOUNT&&!beyond_waiting);
+    /* Leaving the network handoff cancels intent, even if Wi-Fi connects later.
+       The physical keys keep local focus and do not rewrite custom bindings. */
+    wifi_mock.state=PD_WIFI_OFF;act(B_PICK);click("Scegli rete");assert(page==WIFI_HOME&&beyond_waiting&&confirmation_open());
+    bounds();screenshot("ux094-wifi.ppm");unsigned char keys[3];memcpy(keys,state.shortcuts,3);
+    act(100);act(4700);assert(page==WIFI_HOME&&beyond_waiting);
+    physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};wifi_keyboard=false;
+    screen_service(0,0);lv_tick_inc(40);screen_service(0,0);screen_service(1,0);lv_tick_inc(40);screen_service(1,0);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);
+    assert(wifi_keyboard&&wifi_focus==0&&page==WIFI_HOME&&!memcmp(keys,state.shortcuts,3));
+    screen_service(0,1);lv_tick_inc(40);screen_service(0,1);lv_tick_inc(801);screen_service(0,1);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);
+    assert(page==BEYOND_ACCOUNT&&!beyond_waiting&&!beyond_wifi_return);
+    requests=beyond_start_calls;wifi_mock.state=PD_WIFI_CONNECTED;beyond_poll();assert(beyond_start_calls==requests);
+    /* A saved-network wait is bounded and never restarts by itself. */
+    wifi_mock.state=PD_WIFI_OFF;act(B_PICK);assert(page==BEYOND_CONNECT);lv_tick_inc(30001);beyond_poll();assert(page==BEYOND_RECOVER&&beyond_failure==PD_BEYOND_NO_WIFI&&!beyond_waiting);
+    wifi_mock.state=PD_WIFI_CONNECTED;beyond_poll();assert(beyond_start_calls==requests);click("Indietro");
+    /* No saved network: resume only after password review/join has returned to
+       Wi-Fi home, not while the user is editing or when storage is uncertain. */
+    click("ID pubblico");strcpy(beyond_id,"654321");wifi_mock=(pd_wifi_info){.state=PD_WIFI_OFF};render();
+    click("Collega e leggi");assert(page==WIFI_HOME&&beyond_waiting&&!strcmp(beyond_retry_id,"654321"));
+    strcpy(wifi_draft.ssid,"Synthetic router");strcpy(wifi_draft.password,"synthetic-password");page=WIFI_PASSWORD;render();
+    wifi_mock.state=PD_WIFI_CONNECTED;beyond_poll();assert(page==WIFI_PASSWORD&&beyond_start_calls==requests);
+    click("Avanti");assert(page==WIFI_JOIN_REVIEW);click("Collega");assert(page==WIFI_HOME&&beyond_waiting);
+    wifi_mock.joining=true;beyond_poll();assert(page==WIFI_HOME&&beyond_start_calls==requests);wifi_mock.joining=false;
+    wifi_mock.setup_failed=true;beyond_poll();assert(page==WIFI_HOME&&beyond_start_calls==requests);wifi_mock.setup_failed=false;
+    wifi_mock.error=PD_WIFI_ERROR_STORAGE;beyond_poll();assert(page==WIFI_HOME&&beyond_start_calls==requests);
+    wifi_mock.error=0;beyond_poll();assert(page==BEYOND_BUSY&&!strcmp(beyond_requested,"654321")&&beyond_start_calls==requests+1);
+    beyond_mock.running=false;beyond_mock.phase=PD_BEYOND_FAILED;beyond_mock.error=PD_BEYOND_RATE;beyond_mock.operation=PD_BEYOND_PUBLIC;
+    beyond_poll();assert(page==BEYOND_RECOVER);bounds();click("Indietro");assert(page==BEYOND_FORM&&!strcmp(beyond_id,"654321"));
+    click("Indietro");
+    /* Valid empty lists are cached as loaded. Revoked account requires relink,
+       but transport failure retains it and offers the original list request. */
+    beyond_mock=(pd_beyond_info){.configured=true,.remembered=true,.listed=true};page=LIBRARY_HOME;render();
+    unsigned lists=beyond_list_calls;act(B_OPEN);assert(page==BEYOND_ACCOUNT&&beyond_list_calls==lists);bounds();screenshot("ux094-empty.ppm");
+    click("Rileggi");assert(page==BEYOND_BUSY&&beyond_list_calls==lists+1);
+    beyond_mock.running=false;beyond_mock.phase=PD_BEYOND_FAILED;beyond_mock.error=PD_BEYOND_NETWORK;beyond_poll();assert(page==BEYOND_RECOVER);
+    click("Riprova");assert(page==BEYOND_BUSY&&beyond_list_calls==lists+2);
+    beyond_mock.running=false;beyond_mock.phase=PD_BEYOND_FAILED;beyond_mock.error=PD_BEYOND_SESSION;beyond_mock.reconnect=true;
+    beyond_poll();assert(page==BEYOND_RECOVER);bounds();screenshot("ux094-relink.ppm");
+    act(B_RETRY);assert(page==BEYOND_RECOVER&&beyond_list_calls==lists+2);
+    /* The browser can start a new confirmed association directly from the
+       recovery instructions. Its failure never offers a blind secret retry. */
+    pd_account_request *request=calloc(1,sizeof *request);assert(request);request->kind=PD_ACCOUNT_HELLO;
+    beyond_account_request(request);assert(page==BEYOND_PAIR&&beyond_pairing);click("Collega");assert(beyond_approved);
+    request->kind=PD_ACCOUNT_OFFER;strcpy(request->nonce,beyond_nonce);request->access.version=1;strcpy(request->access.user,"1234");strcpy(request->access.cookie,"synthetic-session");
+    beyond_account_request(request);assert(page==BEYOND_BUSY);beyond_mock.reconnect=false;beyond_mock.running=false;beyond_mock.phase=PD_BEYOND_FAILED;beyond_mock.error=PD_BEYOND_NETWORK;
+    beyond_poll();assert(page==BEYOND_RECOVER&&!beyond_pairing&&strstr(last_reply,"ACCOUNT FAILED"));
+    unsigned links=beyond_link_calls;act(B_RETRY);beyond_poll();assert(page==BEYOND_RECOVER&&beyond_link_calls==links);
+    pd_account_wipe(request,sizeof *request);free(request);click("Indietro");beyond_mock.reconnect=true;
+    page=LIBRARY_HOME;render();act(B_OPEN);assert(page==BEYOND_ACCOUNT&&beyond_list_calls==lists+2);
+    /* New remembered account without catalog starts one load, including Wi-Fi.
+       A cancelled wait can never import automatically later. */
+    beyond_mock=(pd_beyond_info){.configured=true,.remembered=true};wifi_mock=(pd_wifi_info){.configured=true,.state=PD_WIFI_OFF};
+    page=LIBRARY_HOME;render();act(B_OPEN);assert(page==BEYOND_CONNECT&&beyond_retry_operation==PD_BEYOND_LIST);
+    click("Annulla");assert(page==BEYOND_ACCOUNT&&!beyond_waiting);wifi_mock.state=PD_WIFI_CONNECTED;beyond_poll();assert(beyond_list_calls==lists+2);
+    assert(save_calls==original_saves&&random_calls==original_rng&&!memcmp(&original,&state,sizeof state));
+    beyond_mock=(pd_beyond_info){0};beyond_wait_clear();page=HERO;render();
+    puts("Autonomous Beyond recovery: one saved-network attempt, stable-ID retry, no retry loops, cancel and late network events, untouched password/confirmation editors, storage-error gate, local physical keys, empty loaded catalog and relink distinction passed; synthetic radio/HTTP, PG/history unchanged.");
+    }
     unsigned covered=0;
-    for(unsigned p=0;p<=BEYOND_FORGET;p++){
+    for(unsigned p=0;p<=BEYOND_RECOVER;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)BEYOND_FORGET+1);
-    assert(covered==BEYOND_FORGET+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)BEYOND_RECOVER+1);
+    assert(covered==BEYOND_RECOVER+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

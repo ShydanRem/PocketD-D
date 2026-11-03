@@ -25,7 +25,7 @@ static SemaphoreHandle_t lock;
 static pd_beyond_info info;
 static pd_beyond_candidate *candidate;
 static atomic_bool cancelled;
-static bool clock_started,has_access,remembered,account_locked,link_remember;
+static bool clock_started,has_access,remembered,account_locked,link_remember,reconnect;
 static pd_account_access account_access,link_access;
 static pd_account_catalog *catalog;
 static uint32_t runtime_started;
@@ -49,6 +49,8 @@ void pd_beyond_snapshot(pd_beyond_info *out){if(!lock){memset(out,0,sizeof *out)
     out->configured=has_access;
     out->remembered=remembered;
     out->locked=account_locked;
+    out->listed=catalog!=NULL;
+    out->reconnect=reconnect;
     out->count=catalog?catalog->count:0;
     out->partial=catalog&&catalog->partial;
     xSemaphoreGive(lock);
@@ -292,6 +294,12 @@ static void worker(void *unused){
             committed=true;
         }
     }
+    /* Failed replacement credentials must not invalidate the previous account.
+       Transport and catalog/character format errors do not require relinking.
+       An unverifiable authentication token remains an identity failure. */
+    if(operation!=PD_BEYOND_PUBLIC&&operation!=PD_BEYOND_LINK&&
+       (error==PD_BEYOND_SESSION||error==PD_BEYOND_IDENTITY))reconnect=true;
+    if(!error&&operation!=PD_BEYOND_PUBLIC)reconnect=false;
     if(!error&&next_catalog){free(catalog);
         catalog=next_catalog;
         next_catalog=NULL;
@@ -316,7 +324,7 @@ static bool start(unsigned operation,const char *id,const pd_account_access *off
     pd_beyond_boot();
     if(!lock)return false;
     xSemaphoreTake(lock,portMAX_DELAY);
-    bool busy=info.running||(operation!=PD_BEYOND_PUBLIC&&account_locked)||(operation!=PD_BEYOND_PUBLIC&&operation!=PD_BEYOND_LINK&&!has_access);
+    bool busy=info.running||(operation!=PD_BEYOND_PUBLIC&&account_locked)||(operation!=PD_BEYOND_PUBLIC&&operation!=PD_BEYOND_LINK&&(!has_access||reconnect));
     xSemaphoreGive(lock);
     if(busy)return false;
     if(!pd_sync_pause(true)){pd_sync_pause(false);
@@ -352,7 +360,15 @@ bool pd_beyond_owned(unsigned index){char id[16]={0};
     xSemaphoreTake(lock,portMAX_DELAY);
     if(catalog&&index<catalog->count)strcpy(id,catalog->rows[index].id);
     xSemaphoreGive(lock);
-    return *id&&start(PD_BEYOND_OWNED,id,NULL,false);
+    return *id&&pd_beyond_owned_id(id);
+}
+bool pd_beyond_owned_id(const char *id){
+    if(!lock||!pd_beyond_id(id))return false;
+    bool found=false;
+    xSemaphoreTake(lock,portMAX_DELAY);
+    if(catalog)for(unsigned i=0;i<catalog->count;i++)if(!strcmp(id,catalog->rows[i].id)){found=true;break;}
+    xSemaphoreGive(lock);
+    return found&&start(PD_BEYOND_OWNED,id,NULL,false);
 }
 bool pd_beyond_row(unsigned index,pd_account_row *out){if(!out||!lock)return false;
     xSemaphoreTake(lock,portMAX_DELAY);
@@ -366,7 +382,7 @@ bool pd_beyond_forget(void){if(!lock)return false;
     bool ok=!info.running&&!account_locked;
     if(ok){ok=pd_account_store_forget();
         if(ok){pd_account_wipe(&account_access,sizeof account_access);
-            has_access=remembered=false;
+            has_access=remembered=reconnect=false;
             free(catalog);
             catalog=NULL;
         }else account_locked=true;

@@ -6,6 +6,12 @@ Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixe
 Firmware e look SD dal browser; nuovo percorso Beyond autonomo via Wi-Fi, da collaudare.
 [Come pubblicare gli aggiornamenti](docs/GITHUB-PAGES.md).
 
+**v0.94 — [Beyond: connetti e riprendi dal Pocket](docs/AUTONOMIA-RECUPERO.md):**
+una richiesta collega la rete salvata o apre il Wi-Fi e riprende lo stesso PG;
+riprova esplicita, annullamento e accesso da ricollegare distinti dagli errori di
+rete. Elenco vuoto riconosciuto, memoria dell’accesso visibile e tasti locali.
+150 viste native con servizi sintetici; nuovo percorso da collaudare sull’ESP32.
+
 **v0.93 — [Pocket PC, un solo posto per collegare il dispositivo](docs/POCKET-PC.md):**
 Beyond, look SD e backup nella stessa pagina, porta riconosciuta riutilizzata,
 preparazione account automatica e sito che apre direttamente gli strumenti.

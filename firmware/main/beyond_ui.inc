@@ -1,5 +1,5 @@
 /* Beyond account pairing and native import. No credentials in PGs or UI. */
-enum {B_OPEN=5440,B_BACK,B_ERASE,B_READ,B_CANCEL,B_WIFI,B_NOTES,B_NOTES_BACK,B_PREV,B_NEXT,B_DIGIT=5450,B_ACCOUNT=5460,B_PUBLIC,B_REFRESH,B_FORGET,B_UNLINK,B_REMEMBER,B_APPROVE,B_PICK=5480,B_END=5500};
+enum {B_OPEN=5440,B_BACK,B_ERASE,B_READ,B_CANCEL,B_WIFI,B_NOTES,B_NOTES_BACK,B_PREV,B_NEXT,B_DIGIT=5450,B_ACCOUNT=5460,B_PUBLIC,B_REFRESH,B_FORGET,B_UNLINK,B_REMEMBER,B_APPROVE,B_RETRY,B_PICK=5480,B_END=5500};
 static char beyond_id[16];
 static const char *beyond_notice="Inserisci l ID di un PG pubblico";
 PD_EXT static pd_beyond_report beyond_report;
@@ -11,7 +11,14 @@ static char beyond_nonce[33],beyond_code[7];
 static uint32_t beyond_pair_started;
 static unsigned beyond_catalog_page;
 static lv_obj_t *beyond_targets[16];
-static bool beyond_local(void){return page==BEYOND_ACCOUNT||page==BEYOND_PAIR||page==BEYOND_FORGET||page==BEYOND_FORM||page==BEYOND_BUSY||page==BEYOND_REPORT||(import_pending&&import_from_beyond);
+/* Only operation/ID are retained for a retry, never source JSON or credentials. */
+static unsigned beyond_retry_operation,beyond_failure;
+static char beyond_retry_id[16];
+static bool beyond_waiting;
+static uint32_t beyond_wait_started;
+static bool beyond_request(unsigned operation,const char *id);
+static bool beyond_network_flow(void){return beyond_wifi_return;}
+static bool beyond_local(void){return page==BEYOND_ACCOUNT||page==BEYOND_PAIR||page==BEYOND_FORGET||page==BEYOND_FORM||page==BEYOND_BUSY||page==BEYOND_REPORT||page==BEYOND_CONNECT||page==BEYOND_RECOVER||(import_pending&&import_from_beyond);
 }
 static const char *beyond_error(unsigned error){
     switch(error){
@@ -31,6 +38,7 @@ static const char *beyond_error(unsigned error){
         case PD_BEYOND_IDENTITY:return "Identita o token non validi";
         case PD_BEYOND_CATALOG_ERROR:return "Elenco non riconosciuto: nessun taglio";
         case PD_BEYOND_STORAGE:return "Accesso non salvato: riavvia";
+        case PD_BEYOND_BUSY:return "Operazione occupata: riprova";
         case PD_BEYOND_ENGINE:return "Conversione non riuscita: PG conservato";
         default:return "Rete o servizio non raggiungibile";
     }
@@ -41,8 +49,8 @@ static void beyond_open(void){
     beyond_focus=0;
     beyond_keyboard=false;
     beyond_wifi_return=false;
-    pd_beyond_info account;pd_beyond_snapshot(&account);pd_wifi_info wifi;pd_wifi_snapshot(&wifi);
-    if(account.configured&&!account.count&&!account.locked&&wifi.state==PD_WIFI_CONNECTED&&!wifi.suspended&&!wifi.setup&&!wifi.joining&&pd_beyond_list()){page=BEYOND_BUSY;beyond_source_account=true;memset(&beyond_visible,0,sizeof beyond_visible);}
+    pd_beyond_info account;pd_beyond_snapshot(&account);
+    if(account.configured&&!account.listed&&!account.locked&&!account.reconnect)beyond_request(PD_BEYOND_LIST,NULL);
 }
 static void beyond_mark_focus(void){
     if(beyond_focus>=beyond_target_count)beyond_focus=0;
@@ -58,6 +66,49 @@ static lv_obj_t *beyond_control(const char *text,int x,int y,int w,int h,intptr_
     return b;
 }
 static page_t beyond_return(void){return beyond_source_account?BEYOND_ACCOUNT:BEYOND_FORM;
+}
+static bool beyond_online(const pd_wifi_info *wifi){return wifi->state==PD_WIFI_CONNECTED&&!wifi->suspended&&!wifi->setup&&!wifi->joining;}
+static void beyond_wait_clear(void){beyond_waiting=beyond_wifi_return=false;}
+static void beyond_failed(unsigned error){
+    beyond_wait_clear();beyond_failure=error;beyond_keyboard=false;beyond_focus=0;page=BEYOND_RECOVER;
+}
+static bool beyond_launch(void){
+    bool started=beyond_retry_operation==PD_BEYOND_LIST?pd_beyond_list():beyond_retry_operation==PD_BEYOND_OWNED?pd_beyond_owned_id(beyond_retry_id):pd_beyond_start(beyond_retry_id);
+    beyond_wait_clear();
+    if(started){page=BEYOND_BUSY;beyond_focus=0;beyond_keyboard=false;memset(&beyond_visible,0,sizeof beyond_visible);}
+    else beyond_failed(PD_BEYOND_BUSY);
+    return started;
+}
+static bool beyond_request(unsigned operation,const char *id){
+    if(operation!=PD_BEYOND_PUBLIC&&operation!=PD_BEYOND_LIST&&operation!=PD_BEYOND_OWNED)return false;
+    pd_beyond_info current;pd_beyond_snapshot(&current);
+    if(current.running)return false;
+    if(operation!=PD_BEYOND_LIST&&!pd_beyond_id(id))return false;
+    beyond_retry_operation=operation;beyond_retry_id[0]=0;if(id)strcpy(beyond_retry_id,id);
+    beyond_source_account=operation!=PD_BEYOND_PUBLIC;
+    if(operation!=PD_BEYOND_PUBLIC&&(!current.configured||current.reconnect||current.locked)){
+        beyond_failed(current.locked?PD_BEYOND_STORAGE:PD_BEYOND_SESSION);return false;
+    }
+    if(operation!=PD_BEYOND_LIST&&!power_storage_ready()){
+        beyond_failed(PD_BEYOND_BUSY);return false;
+    }
+    pd_wifi_info wifi;pd_wifi_snapshot(&wifi);
+    if(beyond_online(&wifi))return beyond_launch();
+    beyond_waiting=beyond_wifi_return=true;beyond_wait_started=lv_tick_get();
+    beyond_focus=0;beyond_keyboard=false;wifi_keyboard=false;wifi_focus=0;
+    /* One deliberate attempt on a saved network. No retry loop or scan without
+       a user action, and never interrupt a join/hotspot/password editor. */
+    if(wifi.configured&&wifi.error!=PD_WIFI_ERROR_STORAGE&&!wifi.suspended&&!wifi.setup&&!wifi.joining&&
+       (wifi.state==PD_WIFI_CONNECTING||pd_wifi_command(PD_WIFI_ENABLE)))page=BEYOND_CONNECT;
+    else{page=WIFI_HOME;wifi_notice="Dopo il Wi-Fi riprendo Beyond";}
+    return true;
+}
+static bool beyond_wait_poll(void){
+    if(!beyond_waiting||(page!=BEYOND_CONNECT&&page!=WIFI_HOME)||power_paused||power_off_attempted||display_screen.touch_down||import_pending)return false;
+    pd_wifi_info wifi;pd_wifi_snapshot(&wifi);
+    if(beyond_online(&wifi)&&!wifi.setup_failed&&wifi.error!=PD_WIFI_ERROR_STORAGE){beyond_launch();render();return true;}
+    if(page==BEYOND_CONNECT&&(uint32_t)(lv_tick_get()-beyond_wait_started)>30000){beyond_failed(PD_BEYOND_NO_WIFI);render();return true;}
+    return false;
 }
 static void beyond_pair_clear(void){beyond_pairing=beyond_approved=false;
     pd_account_wipe(beyond_nonce,sizeof beyond_nonce);
@@ -80,7 +131,7 @@ static void beyond_account_request(const pd_account_request *request){
         }return;
     }
     if(request->kind==PD_ACCOUNT_HELLO){
-        if(library_failed||current.running||beyond_pairing||import_pending||dice_animation.active||power_paused||power_off_attempted||(confirmation_open()&&page!=BEYOND_ACCOUNT)){reply("PDD ACCOUNT ERROR busy\n");
+        if(library_failed||current.locked||current.running||beyond_pairing||import_pending||dice_animation.active||power_paused||power_off_attempted||(confirmation_open()&&page!=BEYOND_ACCOUNT&&page!=BEYOND_RECOVER)){reply("PDD ACCOUNT ERROR busy\n");
             return;
         }
         for(unsigned i=0;i<4;i++)snprintf(beyond_nonce+i*8,9,"%08lx",(unsigned long)pd_wifi_random());
@@ -124,10 +175,19 @@ static void beyond_action(intptr_t action){
     }
     else if(action==B_PREV&&page==BEYOND_REPORT&&beyond_note)beyond_note--;
     else if(action==B_NEXT&&page==BEYOND_REPORT&&beyond_note+1<beyond_report.count)beyond_note++;
-    else if(action==B_WIFI&&(page==BEYOND_ACCOUNT||page==BEYOND_FORM)){beyond_source_account=page==BEYOND_ACCOUNT;
+    else if(action==B_WIFI&&(page==BEYOND_ACCOUNT||page==BEYOND_FORM||page==BEYOND_CONNECT||page==BEYOND_RECOVER)){
+        if(page==BEYOND_ACCOUNT||page==BEYOND_FORM)beyond_source_account=page==BEYOND_ACCOUNT;
+        if(page==BEYOND_RECOVER)beyond_waiting=true;
         beyond_wifi_return=true;
-        wifi_notice="";
+        wifi_notice=beyond_waiting?"Dopo il Wi-Fi riprendo Beyond":"";
+        wifi_keyboard=false;wifi_focus=0;
         page=WIFI_HOME;
+    }
+    else if(page==BEYOND_CONNECT||page==BEYOND_RECOVER){
+        if(action==B_BACK||action==B_CANCEL){beyond_wait_clear();page=beyond_return();}
+        else if(action==B_RETRY&&page==BEYOND_RECOVER){
+            char id[16];strcpy(id,beyond_retry_id);beyond_request(beyond_retry_operation,id[0]?id:NULL);
+        }
     }
     else if(page==BEYOND_ACCOUNT){
         if(action==B_BACK)library_open();
@@ -138,17 +198,13 @@ static void beyond_action(intptr_t action){
         else if(action==B_FORGET)page=BEYOND_FORGET;
         else if(action==B_PREV&&beyond_catalog_page)beyond_catalog_page--;
         else if(action==B_NEXT&&(beyond_catalog_page+1)*2<current.count)beyond_catalog_page++;
-        else if(action==B_REFRESH){if(pd_beyond_list()){page=BEYOND_BUSY;
-                beyond_source_account=true;
-                memset(&beyond_visible,0,sizeof beyond_visible);
-            }else beyond_notice=current.locked?"Accesso non salvato: riavvia":"Richiesta occupata: riprova";
+        else if(action==B_REFRESH){beyond_request(PD_BEYOND_LIST,NULL);
         }
         else if(action>=B_PICK&&action<B_PICK+2){if(!power_storage_ready()){beyond_notice="Prima risolvi memoria e storico";
                 return;
-            }if(pd_beyond_owned(beyond_catalog_page*2+action-B_PICK)){page=BEYOND_BUSY;
-                beyond_source_account=true;
-                memset(&beyond_visible,0,sizeof beyond_visible);
-            }else beyond_notice="Accesso non pronto: rileggi elenco";
+            }pd_account_row row;
+            if(pd_beyond_row(beyond_catalog_page*2+action-B_PICK,&row))beyond_request(PD_BEYOND_OWNED,row.id);
+            else beyond_notice="Accesso non pronto: rileggi elenco";
         }
     }else if(page==BEYOND_PAIR){
         if(action==B_BACK)beyond_pair_cancel();
@@ -178,17 +234,13 @@ static void beyond_action(intptr_t action){
             if(!power_storage_ready()){beyond_notice="Prima risolvi memoria e storico";
                 return;
             }
-            if(pd_beyond_start(beyond_id)){page=BEYOND_BUSY;
-                beyond_source_account=false;
-                beyond_focus=0;
-                beyond_keyboard=false;
-                memset(&beyond_visible,0,sizeof beyond_visible);
-            }else beyond_notice="Richiesta occupata: riprova";
+            beyond_request(PD_BEYOND_PUBLIC,beyond_id);
         }
     }else if(action==B_CANCEL&&page==BEYOND_BUSY&&!import_pending)pd_beyond_cancel();
     pd_screen_activity(&display_screen,lv_tick_get());
 }
 static void beyond_poll(void){
+    if(beyond_wait_poll())return;
     if(page==BEYOND_PAIR&&beyond_pairing&&(uint32_t)(lv_tick_get()-beyond_pair_started)>(beyond_approved?30000u:120000u)){beyond_pair_cancel();
         beyond_notice="Collegamento scaduto: riprova";
         render();
@@ -200,7 +252,7 @@ static void beyond_poll(void){
     if(!current.running){
         pd_beyond_candidate *received=pd_beyond_take();
         if(current.operation==PD_BEYOND_LINK||current.operation==PD_BEYOND_LIST){
-            if(current.phase==PD_BEYOND_FINISHED){beyond_notice=current.partial?"Elenco parziale dal servizio":"Scegli il PG da importare";
+            if(current.phase==PD_BEYOND_FINISHED){beyond_notice="";
                 beyond_catalog_page=0;
                 if(current.operation==PD_BEYOND_LINK)beyond_pair_reply("LINKED");
             }
@@ -209,6 +261,10 @@ static void beyond_poll(void){
             }
             if(current.operation==PD_BEYOND_LINK)beyond_pair_clear();
             page=BEYOND_ACCOUNT;
+            if(current.phase!=PD_BEYOND_FINISHED&&current.error!=PD_BEYOND_CANCELLED){
+                if(current.operation==PD_BEYOND_LINK){beyond_retry_operation=PD_BEYOND_LINK;beyond_retry_id[0]=0;}
+                beyond_failed(current.error);
+            }
         }else if(current.phase==PD_BEYOND_FINISHED&&received){
             beyond_report=received->report;
             beyond_note=beyond_focus=0;
@@ -217,7 +273,8 @@ static void beyond_poll(void){
                     page=beyond_return();
             }}else page=BEYOND_REPORT;
         }else{beyond_notice=beyond_error(current.error);
-            page=beyond_return();
+            if(current.error==PD_BEYOND_CANCELLED)page=beyond_return();
+            else beyond_failed(current.error);
         }
         free(received);
         render();
@@ -249,7 +306,7 @@ static void render_beyond(void){
             snprintf(text,sizeof text,"I miei PG (%u)",current.count);
             label(text,83,111,204,true);
             beyond_control("Esci",299,99,84,44,B_FORGET,!current.locked);
-            beyond_control(online?"Rileggi":"Wi-Fi",83,151,144,44,online?B_REFRESH:B_WIFI,!current.locked);
+            beyond_control(current.reconnect?"Ricollega dal PC":online?"Rileggi":"Collega Wi-Fi",83,151,144,44,B_REFRESH,!current.locked);
             beyond_control("ID pubblico",239,151,144,44,B_PUBLIC,true);
             for(unsigned i=0;i<2;i++){pd_account_row row;
                 if(!pd_beyond_row(beyond_catalog_page*2+i,&row))break;
@@ -263,10 +320,11 @@ static void render_beyond(void){
                 if(strlen(row.id)>4)tail-=4;
                 else tail=row.id;
                 snprintf(text,sizeof text,"%s%s\nLiv %u | ...%s",name,n<strlen(row.name)?"...":"",row.level,tail);
-                beyond_control(text,83,199+i*64,300,54,B_PICK+i,online&&!current.locked);
+                beyond_control(text,83,199+i*64,300,54,B_PICK+i,!current.locked&&!current.reconnect);
             }
-            if(!current.count)small_label("Premi Rileggi per caricare i PG",83,231,300,PD_TEXT);
-            small_label(current.locked?"Accesso incerto: riavvia":current.partial?"Elenco parziale dal servizio":beyond_notice,83,335,300,PD_GOLD);
+            if(!current.count)small_label(current.listed?"Nessun PG in questo account":"Premi Rileggi per caricare i PG",83,231,300,PD_TEXT);
+            snprintf(text,sizeof text,"%s | %u/%u",current.locked?"Accesso incerto: riavvia":current.reconnect?"Accesso da ricollegare":beyond_notice[0]?beyond_notice:current.partial?"Elenco parziale":current.remembered?"Accesso ricordato":"Accesso fino allo spegnimento",beyond_catalog_page+1,current.count?(current.count+1)/2:1);
+            small_label(text,83,335,300,PD_GOLD);
             beyond_control("Indietro",83,359,92,48,B_BACK,true);
             beyond_control("<",187,359,92,48,B_PREV,beyond_catalog_page>0);
             beyond_control(">",291,359,92,48,B_NEXT,(beyond_catalog_page+1)*2<current.count);
@@ -304,7 +362,30 @@ static void render_beyond(void){
         beyond_control("Cancella",83,307,144,44,B_ERASE,beyond_id[0]!=0);
         beyond_control("Wi-Fi",239,307,144,44,B_WIFI,true);
         beyond_control("Indietro",83,359,144,48,B_BACK,true);
-        beyond_control("Leggi",239,359,144,48,B_READ,online&&pd_beyond_id(beyond_id)&&power_storage_ready());
+        beyond_control(online?"Leggi":"Collega e leggi",239,359,144,48,B_READ,pd_beyond_id(beyond_id)&&power_storage_ready());
+    }else if(page==BEYOND_CONNECT){
+        label("Collego il Wi-Fi",83,111,300,true);
+        label("Uso la rete salvata",83,171,300,false);
+        small_label("Poi riprendo la richiesta Beyond",83,227,300,PD_GOLD);
+        small_label("PG e progressi restano conservati",83,273,300,PD_MINT);
+        small_label("Preferisci un altra rete?",83,315,300,PD_TEXT);
+        beyond_control("Annulla",83,359,144,48,B_BACK,true);
+        beyond_control("Scegli rete",239,359,144,48,B_WIFI,true);
+    }else if(page==BEYOND_RECOVER){
+        pd_beyond_info current;pd_beyond_snapshot(&current);
+        bool relink=beyond_failure==PD_BEYOND_SESSION||beyond_failure==PD_BEYOND_IDENTITY||(beyond_retry_operation!=PD_BEYOND_PUBLIC&&current.reconnect);
+        bool restart=beyond_failure==PD_BEYOND_STORAGE||(beyond_retry_operation!=PD_BEYOND_PUBLIC&&current.locked);
+        bool link=beyond_retry_operation==PD_BEYOND_LINK;
+        bool retry=!link&&!relink&&!restart&&beyond_failure!=PD_BEYOND_DENIED&&beyond_failure!=PD_BEYOND_NOT_FOUND;
+        label(relink?"Ricollega Beyond":restart?"Riavvia il Pocket":"Richiesta interrotta",83,111,300,true);
+        lv_obj_t *reason=small_label(beyond_error(beyond_failure),83,163,300,PD_GOLD);
+        lv_label_set_long_mode(reason,LV_LABEL_LONG_WRAP);lv_obj_set_height(reason,48);
+        const char *hint=restart?"Il salvataggio non e confermato":relink||link?"Dal PC: Apri Pocket PC > Collega Beyond":beyond_failure==PD_BEYOND_RATE?"Attendi prima di riprovare":beyond_failure==PD_BEYOND_DENIED?"Verifica privacy e accesso su Beyond":beyond_failure==PD_BEYOND_NOT_FOUND?"Controlla il PG o rileggi l elenco":!power_storage_ready()?"Prima risolvi memoria e storico":"Riprova la stessa richiesta";
+        lv_obj_t *next=small_label(hint,83,227,300,PD_TEXT);lv_label_set_long_mode(next,LV_LABEL_LONG_WRAP);lv_obj_set_height(next,48);
+        small_label("PG e progressi restano conservati",83,293,300,PD_MINT);
+        if(beyond_retry_id[0]){snprintf(text,sizeof text,"PG ...%s",beyond_retry_id+((strlen(beyond_retry_id)>4)?strlen(beyond_retry_id)-4:0));small_label(text,83,325,300,PD_MUTED);}
+        beyond_control("Indietro",83,359,retry?92:300,48,B_BACK,true);
+        if(retry){beyond_control("Wi-Fi",187,359,92,48,B_WIFI,true);beyond_control("Riprova",291,359,92,48,B_RETRY,power_storage_ready()||beyond_retry_operation==PD_BEYOND_LIST);}
     }else if(page==BEYOND_BUSY){
         pd_beyond_info current;
         pd_beyond_snapshot(&current);

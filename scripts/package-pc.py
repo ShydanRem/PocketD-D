@@ -11,6 +11,7 @@ files=[ROOT/'docs/LIBRERIA-LOCALE.md',ROOT/'docs/previews/v090-local-library.png
 for directory in ('src','scripts'):
  files += [f for f in (ROOT/directory).glob('*') if f.is_file() and f.suffix in ('.js','.json') and not f.name.endswith('.test.js')]
 files += [ROOT/'docs/POCKET-PC.md', ROOT/'docs/previews/v093-pocket-pc.png']
+files += [ROOT/'docs/AUTONOMIA-RECUPERO.md', ROOT/'docs/previews/v094-beyond-recovery.png']
 files += [ROOT/'docs/BEYOND-DISPOSITIVO.md', ROOT/'docs/previews/v091-beyond-native.png', ROOT/'docs/COLLEGAMENTO-BEYOND.md', ROOT/'docs/previews/v092-beyond-account.png']
 files += [f for folder in ('extension','tools/bridge') for f in (ROOT/folder).rglob('*') if f.is_file()]
 files += [ROOT/'dist/index.html']+[f for f in (ROOT/'dist/assets').rglob('*') if f.is_file()]
@@ -42,6 +43,7 @@ Uso pratico sul dispositivo, filtri e icone: docs/USO-PRATICO.md.
 Profilo PG, iniziativa e dotazioni: nuova importazione v20, firmware 0.78 / USB17.
 Wi-Fi: Menu > ingranaggio > Wi-Fi > Cerca reti; password sul display; vedi docs/WIFI.md.
 Beyond dal Pocket v0.91: I miei PG > ricerca > ID pubblico > Leggi > anteprima > Importa.
+Firmware v0.94: Wi-Fi e ripresa della richiesta Beyond sul Pocket, docs/AUTONOMIA-RECUPERO.md.
 Pocket PC v0.93: sito > Apri Pocket PC. Beyond, look e backup nella stessa pagina.
 Non serve piu preparare l accesso Beyond a parte; consenso iniziale, poi Collega Beyond.
 Guida: docs/POCKET-PC.md.

@@ -234,7 +234,7 @@ void pd_wifi_boot(void){
  if(requests)return;
  lock=xSemaphoreCreateMutex();entropy_lock=xSemaphoreCreateMutex();requests=xQueueCreate(3,sizeof(request));if(!lock||!entropy_lock||!requests){if(requests)vQueueDelete(requests);requests=NULL;return;}load();publish();if(xTaskCreate(service,"pdd_wifi",6144,NULL,4,NULL)!=pdPASS){vQueueDelete(requests);requests=NULL;return;}if(saved.enabled&&saved.ssid[0])pd_wifi_command(PD_WIFI_ENABLE);
 }
-void pd_wifi_snapshot(pd_wifi_info *out){if(!out)return;memset(out,0,sizeof *out);if(!lock||!requests){out->error=PD_WIFI_ERROR_UNAVAILABLE;return;}if(xSemaphoreTake(lock,pdMS_TO_TICKS(20))==pdTRUE){*out=view;xSemaphoreGive(lock);}else out->error=PD_WIFI_ERROR_UNAVAILABLE;}
+void pd_wifi_snapshot(pd_wifi_info *out){if(!out)return;memset(out,0,sizeof *out);if(!lock||!requests){out->error=PD_WIFI_ERROR_UNAVAILABLE;return;}if(xSemaphoreTake(lock,pdMS_TO_TICKS(20))==pdTRUE){*out=view;out->joining=out->joining||atomic_load(&provision_busy);xSemaphoreGive(lock);}else out->error=PD_WIFI_ERROR_UNAVAILABLE;}
 bool pd_wifi_command(unsigned command){
  if(!requests||command<1||command>PD_WIFI_SCAN_CANCEL)return false;
  if(command==PD_WIFI_SCAN&&(atomic_load(&provision_busy)||atomic_exchange(&scan_busy,true)))return false;

@@ -21,7 +21,7 @@ static int64_t declared;
 static void (*queued_worker)(void *);
 static esp_http_client_config_t captured;
 static char requested[160];
-static bool service_locked,account_mode,fail_account_store;
+static bool service_locked,account_mode,fail_account_store,deny_private;
 static unsigned auth_calls,list_calls,private_calls,account_saves;
 static pd_account_access stored_account;
 bool pd_account_store_load(pd_account_access *out){if(!pd_account_valid(&stored_account))return false;*out=stored_account;return true;}
@@ -53,13 +53,13 @@ esp_err_t esp_http_client_open(esp_http_client_handle_t h,unsigned size){assert(
 int esp_http_client_write(esp_http_client_handle_t h,const char *s,int n){assert(h==(void *)2&&n==2&&!memcmp(s,"{}",2));return 2;}
 static void header(const char *name,const char *value){esp_http_client_event_t e={.event_id=HTTP_EVENT_ON_HEADER,.user_data=captured.user_data,.header_key=name,.header_value=value};assert(captured.event_handler(&e)==ESP_OK);}
 int64_t esp_http_client_fetch_headers(esp_http_client_handle_t h){assert(h==(void *)2);if(mime)header("Content-Type",mime);if(duplicate_mime)header("Content-Type",mime);if(encoding)header("Content-Encoding",encoding);return declared;}
-int esp_http_client_get_status_code(esp_http_client_handle_t h){assert(h==(void *)2);return status_code;}
+int esp_http_client_get_status_code(esp_http_client_handle_t h){assert(h==(void *)2);return deny_private&&captured.method==HTTP_METHOD_GET&&!strstr(captured.url,"characters/list")?403:status_code;}
 int esp_http_client_read(esp_http_client_handle_t h,char *out,int capacity){assert(h==(void *)2&&capacity>0);ticks+=read_advance;if(cancel_read){cancel_read=false;pd_beyond_cancel();}size_t n=body_size-body_at;if(n>(size_t)capacity)n=capacity;if(n>137)n=137;memcpy(out,body+body_at,n);body_at+=n;return (int)n;}
 bool esp_http_client_is_complete_data_received(esp_http_client_handle_t h){assert(h==(void *)2);return complete&&body_at==body_size;}
 esp_err_t esp_http_client_close(esp_http_client_handle_t h){assert(h==(void *)2);closed++;return ESP_OK;}
 esp_err_t esp_http_client_cleanup(esp_http_client_handle_t h){assert(h==(void *)2);cleaned++;return ESP_OK;}
 static void reset(void){
-    assert(!service_locked);account_mode=false;fail_account_store=false;has_access=remembered=account_locked=false;pd_account_wipe(&account_access,sizeof account_access);pd_account_wipe(&link_access,sizeof link_access);free(catalog);catalog=NULL;
+    assert(!service_locked);account_mode=false;fail_account_store=deny_private=false;has_access=remembered=account_locked=reconnect=false;pd_account_wipe(&account_access,sizeof account_access);pd_account_wipe(&link_access,sizeof link_access);free(catalog);catalog=NULL;
     free(candidate);candidate=NULL;info=(pd_beyond_info){0};clock_started=false;atomic_store(&cancelled,false);
     body=fixture;body_size=strlen(fixture);body_at=0;declared=body_size;mime="application/json; charset=utf-8";encoding=NULL;
     ticks=0;wall=1800000000;network=complete=true;fail_open=fail_clock=fail_memory=duplicate_mime=cancel_read=cancel_resume=fail_task=sync_fail=false;
@@ -104,12 +104,26 @@ int main(int argc,char **argv){
     pd_account_row row;assert(pd_beyond_row(0,&row)&&!strcmp(row.id,"123456")&&!pd_beyond_owned(2));
     assert(pd_beyond_owned(0));queued_worker(NULL);pd_beyond_snapshot(&account_info);assert(account_info.error==0&&private_calls==1&&auth_calls==2);free(pd_beyond_take());
     assert(pd_beyond_list());queued_worker(NULL);assert(list_calls==2&&auth_calls==3);
-    status_code=401;assert(pd_beyond_list());queued_worker(NULL);pd_beyond_snapshot(&account_info);assert(account_info.error==PD_BEYOND_SESSION&&account_info.configured&&account_saves==1);status_code=200;
+    status_code=401;assert(pd_beyond_list());queued_worker(NULL);pd_beyond_snapshot(&account_info);assert(account_info.error==PD_BEYOND_SESSION&&account_info.configured&&account_info.reconnect&&account_saves==1);unsigned rejected_calls=auth_calls;assert(!pd_beyond_list()&&!pd_beyond_owned(0)&&auth_calls==rejected_calls);status_code=200;
     assert(pd_beyond_forget());pd_beyond_snapshot(&account_info);assert(!account_info.configured&&!account_info.count&&!pd_beyond_list()&&!pd_account_valid(&stored_account));
-    assert(pd_beyond_link(&own,false));queued_worker(NULL);pd_beyond_snapshot(&account_info);assert(account_info.configured&&!account_info.remembered&&!pd_account_valid(&stored_account));
-    strcpy(own.user,"9999");assert(pd_beyond_link(&own,true));queued_worker(NULL);pd_beyond_snapshot(&account_info);assert(account_info.error==PD_BEYOND_IDENTITY&&account_info.configured&&!strcmp(account_access.user,"1234")&&account_saves==1);
+    assert(pd_beyond_link(&own,false));queued_worker(NULL);pd_beyond_snapshot(&account_info);assert(account_info.configured&&!account_info.remembered&&!account_info.reconnect&&!pd_account_valid(&stored_account));
+    strcpy(own.user,"9999");assert(pd_beyond_link(&own,true));queued_worker(NULL);pd_beyond_snapshot(&account_info);assert(account_info.error==PD_BEYOND_IDENTITY&&account_info.configured&&!account_info.reconnect&&!strcmp(account_access.user,"1234")&&account_saves==1);
     strcpy(own.user,"1234");cancel_resume=true;assert(pd_beyond_link(&own,true));queued_worker(NULL);pd_beyond_snapshot(&account_info);assert(account_info.error==PD_BEYOND_CANCELLED&&account_saves==1);cancel_resume=false;
     fail_account_store=true;assert(pd_beyond_link(&own,true));queued_worker(NULL);pd_beyond_snapshot(&account_info);assert(account_info.error==PD_BEYOND_STORAGE&&account_info.locked&&!pd_beyond_list());
+    reset();account_mode=true;assert(pd_beyond_link(&own,true));queued_worker(NULL);
+    pd_beyond_snapshot(&account_info);assert(account_info.listed&&!account_info.reconnect);
+    /* A dropped connection keeps the valid account/catalog usable. */
+    fail_open=true;assert(pd_beyond_owned_id("123456"));queued_worker(NULL);pd_beyond_snapshot(&account_info);
+    assert(account_info.error==PD_BEYOND_NETWORK&&!account_info.reconnect&&account_info.count==2&&account_info.listed);
+    fail_open=false;assert(!pd_beyond_owned_id("999999")&&!pd_beyond_owned_id("https://invalid.test"));
+    assert(pd_beyond_owned_id("123456"));queued_worker(NULL);free(pd_beyond_take());
+    deny_private=true;assert(pd_beyond_owned_id("123456"));queued_worker(NULL);pd_beyond_snapshot(&account_info);
+    assert(account_info.error==PD_BEYOND_DENIED&&!account_info.reconnect&&account_info.count==2);deny_private=false;
+    /* An empty, already loaded catalog must not be treated as uninitialized. */
+    catalog->count=0;pd_beyond_snapshot(&account_info);assert(account_info.listed&&account_info.count==0);
+    assert(!pd_beyond_owned_id("123456"));assert(pd_beyond_list());queued_worker(NULL);
+    pd_beyond_snapshot(&account_info);assert(account_info.listed&&account_info.count==2);
+    assert(pd_beyond_forget());pd_beyond_snapshot(&account_info);assert(!account_info.listed&&!account_info.reconnect);
     pd_account_wipe(&own,sizeof own);free(catalog);catalog=NULL;
     puts("Account worker: synthetic auth/catalog/private requests, fixed host credential separation, subject binding, remembered/RAM-only association, owned selection, fresh authentication, forget, old-account retention, late cancellation and storage quarantine passed. No real authenticated HTTP/hardware claim.");
     free(fixture);
