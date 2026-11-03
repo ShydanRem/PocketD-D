@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **3 novembre 2026 — v0.94**. Il dispositivo è il prodotto;
+Aggiornamento del **3 novembre 2026 — v0.95**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
@@ -19,6 +19,21 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Nuovo nella v0.95
+
+[Magie: preparazione e slot](MAGIE-USO-RAPIDO.md): più magie di livello in una
+bozza, filtri, riepilogo e un solo salvataggio; trucchetti, capacità, slot e
+concentrazione conservati. Riprova, annullamento e rifiuto di bozze obsolete.
+Selettore comune ordinari/patto per magie, Punizione e cannone: livelli e saldi
+visibili, proposta del livello minimo fra entrambi i gruppi e nessuna spesa
+prima della conferma. Tasti locali e scelta dei costi coerente anche sul PC.
+
+356 test JS, suite nativa, 153 viste LVGL, ASan/UBSan e compilazione ESP32.
+Nuove prove sintetiche; nessuna nuova lettura Beyond o raccolta personale
+modificata. Formati PG/USB/backup, SD e partizioni invariati; bundle delle
+regole rigenerato e parità PC/nativo verificata. Limiti di preparazione di classe,
+magie sempre preparate e meccaniche generiche degli incantesimi restano manuali.
 
 ## Nuovo nella v0.94
 
@@ -467,13 +482,34 @@ SD non sostituisce il controllo di RAM, fluidità e salvataggi sul dispositivo.
 
 | Blocco originale | Stato al 30 ottobre | Lavoro residuo |
 | --- | --- | --- |
-| 1. Completare la scheda sul dispositivo | Coperto per il primo uso: magie/slot, utilizzi, concentrazione, riposi, dadi vita e morte sono presenti | Eccezioni, completezza dell'import e verifica dei percorsi con il PG reale |
+| 1. Completare la scheda sul dispositivo | Coperto per il primo uso: magie/slot, preparazione multipla, utilizzi, concentrazione, riposi, dadi vita e morte sono presenti | Eccezioni, completezza dell'import e verifica dei percorsi con il PG reale |
 | 2. Gestire effetti e regole | Parziale: diversi effetti sono configurabili localmente; l'import sa ricostruirne solo un sottoinsieme | Regole condizionali, proprietà speciali, ricalcolo e collegamenti automatici alle fonti |
 | 3. Prodotto fisico | Avvio, import USB, installer e SD riferiti funzionanti dall'utente | Nuovi flussi 0.85–0.89, touch/tasti, batteria, prestazioni e tenuta dei salvataggi dopo interruzioni |
 | 4. Estetica | Base del compagno e selezione di specie/classi disponibili | Espressioni dei nuovi look, ulteriori sprite/scene e rifiniture dopo visione sul display |
 
 Non assegno una percentuale unica: le funzioni riferite funzionanti sull'hardware
 sono distinte da quelle nuove ancora verificate solo tramite software.
+
+## Prossimi blocchi software, oltre alle prove hardware
+
+1. **Magie ed effetti:** profili espliciti per cure e danni degli incantesimi,
+   condizioni, durate e proprietà concesse dagli oggetti. Un testo importato non
+   equivale a un effetto eseguibile. Restano requisiti/limiti di preparazione.
+2. **Combattimento e dotazioni:** impugnature versatili/due mani, interazione con
+   gli scudi, munizioni, due armi, maestrie e altre proprietà speciali. Nessuna
+   regola dedotta soltanto dal nome dell’oggetto.
+3. **Rilettura Beyond della stessa scheda:** confrontare i dati nuovi con la copia
+   locale e riconciliare progressi, aspetto e risorse. Oggi l’importazione crea
+   una nuova copia: non esiste una fusione automatica verificata.
+4. **Autonomia e raccolta:** ulteriori collegamenti fra elenco Beyond e copie
+   locali, gestione dei duplicati e ulteriori riduzioni dei passaggi frequenti.
+   Il nuovo accesso autenticato sull’ESP32 rimane da provare; l’estensione è
+   confermata come soluzione per la prima associazione.
+5. **Rifiniture:** espressioni/animazioni dei look SD e feedback delle nuove
+   azioni. Tenere disponibili testo esplicativo e simboli comuni riconoscibili.
+
+Scrittura in tempo reale verso Beyond e collaborazione fra dispositivi restano
+blocchi distinti. Non sono dichiarati funzionanti dalla sola importazione.
 
 ## Ordine consigliato per arrivare a una prima sessione
 
