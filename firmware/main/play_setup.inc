@@ -25,7 +25,8 @@ static bool smite_cost_at(unsigned power,unsigned at,unsigned *slot,bool *pact){
  if(power>=state.magic.count||state.magic.powers[power].effect!=PD_DIVINE_SMITE_2024)return false;
  const pd_power *p=&state.magic.powers[power];
  if(!(p->flags&PD_USES_SLOT)){if(at||!pd_smite_prepare(&state,&strike,power,0,false,false,NULL,NULL))return false;*slot=0;*pact=false;return true;}
- for(unsigned k=0;k<2;k++)for(unsigned i=1;i<=9;i++)if((k?state.magic.pact:state.magic.slots)[i-1].current&&pd_smite_prepare(&state,&strike,power,i,k,false,NULL,NULL)){if(!at){*slot=i;*pact=k;return true;}at--;}
+ pd_magic_cost costs[18];unsigned count=pd_magic_costs(&state,power,costs);
+ for(unsigned i=0;i<count;i++)if(pd_smite_prepare(&state,&strike,power,costs[i].level,costs[i].pact,false,NULL,NULL)){if(!at){*slot=costs[i].level;*pact=costs[i].pact;return true;}at--;}
  return false;
 }
 static unsigned smite_at(unsigned at){for(unsigned i=0;i<state.magic.count;i++){unsigned slot;bool pact;if(smite_cost_at(i,0,&slot,&pact)){if(!at)return i;at--;}}return PD_POWERS;}
@@ -116,7 +117,7 @@ static bool play_action(intptr_t a){
   if(a==6099)page=DICE;
   else if(a==6480)attack_damage_finish(smite_target);
   else if(a==6470){unsigned at=0;while(smite_at(at)<PD_POWERS&&smite_at(at)!=smite_source)at++;unsigned next=smite_at(at+1);smite_source=next<PD_POWERS?next:smite_at(0);smite_cost_at(smite_source,0,&smite_cost,&smite_pact);}
-  else if(a==6471){unsigned at=0,slot;bool pact;while(smite_cost_at(smite_source,at,&slot,&pact)&&(slot!=smite_cost||pact!=smite_pact))at++;if(!smite_cost_at(smite_source,at+1,&smite_cost,&smite_pact))smite_cost_at(smite_source,0,&smite_cost,&smite_pact);}
+  else if(a==6471)slot_picker_begin(true);
   else if(a==6472)smite_fiend=!smite_fiend;
   else if(a==6473&&pd_on_hit_spell(&state)>=0)smite_target=!smite_target;
   else if(a==6479&&!attack_smite_finish(smite_source,smite_cost,smite_pact,smite_fiend,smite_target))play_error="Salvataggio non confermato: riprova";
@@ -218,7 +219,7 @@ static void render_play_setup(void){
   if(smite_rolled)snprintf(text,sizeof text,"Risultato da salvare");else snprintf(text,sizeof text,"%ud8 rad | azione bonus",dice);label(text,83,111,300,false);
   snprintf(text,sizeof text,"%s",p?p->name:"Punizione non disponibile");lv_obj_t *b=wifi_button(text,83,147,300,44,6470,!smite_rolled);lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_width(l,280);lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_center(l);
   if(smite_cost)snprintf(text,sizeof text,"Slot %u %s%s >",smite_cost,smite_pact?"patto":"ordinario",p&&(p->flags&PD_LIMITED)?" + uso":"");else snprintf(text,sizeof text,"Uso innato: %u >",p?p->remaining:0);
-  wifi_button(text,83,197,300,44,6471,!smite_rolled);
+  wifi_button(text,83,197,300,44,6471,!smite_rolled&&p&&(p->flags&PD_USES_SLOT));
   wifi_button(smite_fiend?"Immondo / Non morto: si":"Immondo / Non morto: no",83,247,300,44,6472,!smite_rolled);
   int rider=pd_on_hit_spell(&state);if(rider>=0)wifi_button(smite_target?"Extra bersaglio: si":"Extra bersaglio: no",83,297,300,44,6473,!smite_rolled);
   else{snprintf(text,sizeof text,smite_rolled?"Danni %d congelati: salva per continuare":"Punizione: %ud8 | azione bonus",smite_rolled?smite_frozen.total:dice);small_label(text,83,311,300,smite_rolled?PD_GOLD:PD_TEXT);}

@@ -12,6 +12,13 @@ bool pd_magic_use(pd_state *s,unsigned index,unsigned slot,bool pact);
    selection limits, consume pools, or end existing concentration/bindings.
    Rejects missing/malformed state and feature rows without mutation. */
 bool pd_magic_prepare(pd_state *s,unsigned index,bool prepared);
+/* Leveled spells only: cantrips/features must retain their existing flag.
+   Validate the entire draft before changing any flag; no class limit inferred. */
+bool pd_magic_prepare_many(pd_state *s,const uint8_t *prepared,unsigned count);
+typedef struct {uint8_t level;bool pact;uint8_t remaining;} pd_magic_cost;
+/* Legal slot costs, ascending level, ordinary before pact on a tie. This
+   enumerates payment, not casting eligibility; never consumes a resource. */
+unsigned pd_magic_costs(const pd_state *s,unsigned index,pd_magic_cost out[18]);
 bool pd_magic_recover(pd_state *s,unsigned index,int delta);
 bool pd_slot_change(pd_state *s,unsigned level,bool pact,int delta);
 void pd_end_rage(pd_state *s);

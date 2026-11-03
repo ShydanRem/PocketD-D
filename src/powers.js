@@ -57,8 +57,11 @@ export function availableSlots(state,power){
   if(!cannon&&(power.level===0||power.usesSpellSlot===false))return [];
   const minimum=cannon?1:power.level;
   const entries=[];
-  state.slots.forEach((s,i)=>{if(i+1>=minimum&&s.current>0)entries.push({value:String(i+1),label:`${i+1}° · ${s.current} ordinari`})});
-  state.extended?.pactSlots.forEach((s,i)=>{if(i+1>=minimum&&s.current>0)entries.push({value:`pact:${i+1}`,label:`${i+1}° · ${s.current} patto`})});
+  for(let level=minimum;level<=9;level++){
+    const ordinary=state.slots[level-1],pact=state.extended?.pactSlots[level-1];
+    if(ordinary.current>0)entries.push({value:String(level),label:`${level}° · ${ordinary.current} ordinari`});
+    if(pact?.current>0)entries.push({value:`pact:${level}`,label:`${level}° · ${pact.current} patto`});
+  }
   return entries;
 }
 export function upsertPower(state,input){

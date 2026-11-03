@@ -1,5 +1,7 @@
 # Equipaggiamento, magie e attacchi sul Pocket — v0.85
 
+> v0.95: [preparazione multipla e selettore diretto degli slot](MAGIE-USO-RAPIDO.md).
+
 > Aggiornamento v0.87: [scelta diretta delle varianti da Attacca](ATTACCHI-CONTESTUALI.md).
 >
 > Aggiornamento v0.86: [bonus permanenti e sintonia per tutti i PG](OGGETTI-SINTONIA.md).

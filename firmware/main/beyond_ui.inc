@@ -322,7 +322,7 @@ static void render_beyond(void){
                 snprintf(text,sizeof text,"%s%s\nLiv %u | ...%s",name,n<strlen(row.name)?"...":"",row.level,tail);
                 beyond_control(text,83,199+i*64,300,54,B_PICK+i,!current.locked&&!current.reconnect);
             }
-            if(!current.count)small_label(current.listed?"Nessun PG in questo account":"Premi Rileggi per caricare i PG",83,231,300,PD_TEXT);
+            if(!current.count)small_label(current.listed?"Nessun PG nell elenco":"Premi Rileggi per caricare i PG",83,231,300,PD_TEXT);
             snprintf(text,sizeof text,"%s | %u/%u",current.locked?"Accesso incerto: riavvia":current.reconnect?"Accesso da ricollegare":beyond_notice[0]?beyond_notice:current.partial?"Elenco parziale":current.remembered?"Accesso ricordato":"Accesso fino allo spegnimento",beyond_catalog_page+1,current.count?(current.count+1)/2:1);
             small_label(text,83,335,300,PD_GOLD);
             beyond_control("Indietro",83,359,92,48,B_BACK,true);

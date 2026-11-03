@@ -6,6 +6,12 @@ Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixe
 Firmware e look SD dal browser; nuovo percorso Beyond autonomo via Wi-Fi, da collaudare.
 [Come pubblicare gli aggiornamenti](docs/GITHUB-PAGES.md).
 
+**v0.95 — [Magie: prepara insieme e scegli lo slot](docs/MAGIE-USO-RAPIDO.md):**
+bozza di preparazione multipla, riepilogo e unico salvataggio; selettore diretto
+ordinari/patto per magie, Punizione e creazione del cannone. Proposta del livello
+minimo, saldi visibili e tasti locali, senza spesa fino alla conferma.
+356 test JS, 153 viste native e prove con personaggi sintetici; collaudo fisico separato.
+
 **v0.94 — [Beyond: connetti e riprendi dal Pocket](docs/AUTONOMIA-RECUPERO.md):**
 una richiesta collega la rete salvata o apre il Wi-Fi e riprende lo stesso PG;
 riprova esplicita, annullamento e accesso da ricollegare distinti dagli errori di

@@ -43,5 +43,36 @@ int main(void){
     assert(pd_rest_apply(&s,&(pd_rest_plan){0})&&!(s.magic.powers[0].flags&PD_PREPARED));
     assert(pd_rest_apply(&s,&(pd_rest_plan){.long_rest=true})&&!(s.magic.powers[0].flags&PD_PREPARED));
     s.hp=1000;before=s;assert(!pd_magic_prepare(&s,0,true)&&!memcmp(&s,&before,sizeof s));
+    /* Batched flags are validated before even the first entry is changed. */
+    pd_demo(&s);s.magic.available=true;s.magic.count=PD_POWERS;
+    uint8_t draft[PD_POWERS];
+    for(unsigned i=0;i<PD_POWERS;i++){
+        s.magic.powers[i]=(pd_power){.name="Synthetic batch",.level=1,.flags=PD_PREPARED|PD_CONCENTRATES};draft[i]=i%2;
+    }
+    s.magic.powers[0].level=0;draft[0]=1;
+    s.magic.powers[119]=(pd_power){.name="Feature retained",.kind=1,.maximum=2,.remaining=1};draft[119]=0;
+    s.magic.slots[0]=(pd_slot){2,3};s.magic.pact[2]=(pd_slot){1,1};s.magic.concentration=2;
+    before=expected=s;
+    for(unsigned i=1;i<119;i++)if(!draft[i])expected.magic.powers[i].flags&=~PD_PREPARED;
+    assert(pd_magic_prepare_many(&s,draft,PD_POWERS)&&!memcmp(&s,&expected,sizeof s)&&s.magic.concentration==2);
+    assert(pd_magic_prepare_many(&s,draft,PD_POWERS)&&!memcmp(&s,&expected,sizeof s));
+    for(unsigned kind=0;kind<4;kind++){
+        s=before;uint8_t invalid[PD_POWERS];memcpy(invalid,draft,sizeof draft);
+        if(kind==0)invalid[119]=1;
+        if(kind==1)invalid[118]=2;
+        if(kind==2)invalid[0]=0;
+        assert(!pd_magic_prepare_many(&s,invalid,kind==3?PD_POWERS-1:PD_POWERS)&&!memcmp(&s,&before,sizeof s));
+    }
+    assert(!pd_magic_prepare_many(NULL,draft,PD_POWERS)&&!pd_magic_prepare_many(&s,NULL,PD_POWERS));
+    /* All 18 distinct payments, sorted by level, without expense or recharging. */
+    s=before;s.magic.powers[1].level=3;s.magic.powers[1].flags|=PD_USES_SLOT;
+    for(unsigned i=0;i<9;i++){s.magic.slots[i]=(pd_slot){2,3};s.magic.pact[i]=(pd_slot){1,1};}
+    before=s;pd_magic_cost costs[18];unsigned ncost=pd_magic_costs(&s,1,costs);assert(ncost==14);
+    for(unsigned i=0;i<ncost;i++){assert(costs[i].level==3+i/2&&costs[i].pact==!!(i%2)&&costs[i].remaining==(i%2?1:2));used=s;assert(pd_magic_use(&used,1,costs[i].level,costs[i].pact));}
+    assert(!memcmp(&s,&before,sizeof s)&&!pd_magic_costs(&s,0,costs)&&!pd_magic_costs(&s,119,costs));
+    s.magic.slots[2].current=0;assert(pd_magic_costs(&s,1,costs)==13&&costs[0].level==3&&costs[0].pact);
+    s.magic.powers[119]=(pd_power){.name="Cannon",.kind=1,.effect=3,.maximum=1,.remaining=1,.recovery=2};
+    assert(!pd_magic_costs(&s,119,costs));s.magic.powers[119].remaining=0;assert(pd_magic_costs(&s,119,costs)==17);
+    s.magic.available=false;assert(!pd_magic_costs(&s,119,costs));
     printf("Preparation: %u full-state/flag/style/binding/index cases, idempotence, unchanged concentration/pools, cast gating, native maximum backup, rest preservation and atomic rejection passed\n",cases);
 }

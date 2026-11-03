@@ -74,6 +74,30 @@ bool pd_magic_prepare(pd_state *s,unsigned index,bool prepared){
     else s->magic.powers[index].flags&=~PD_PREPARED;
     return true;
 }
+bool pd_magic_prepare_many(pd_state *s,const uint8_t *prepared,unsigned count){
+    if(!s||!prepared||!pd_valid(s)||!s->magic.available||count!=s->magic.count)return false;
+    for(unsigned i=0;i<count;i++){
+        const pd_power *p=&s->magic.powers[i];
+        if(prepared[i]>1||((p->kind||!p->level)&&prepared[i]!=!!(p->flags&PD_PREPARED)))return false;
+    }
+    for(unsigned i=0;i<count;i++){
+        pd_power *p=&s->magic.powers[i];
+        if(!p->kind&&p->level){if(prepared[i])p->flags|=PD_PREPARED;else p->flags&=~PD_PREPARED;}
+    }
+    return true;
+}
+unsigned pd_magic_costs(const pd_state *s,unsigned index,pd_magic_cost out[18]){
+    if(!s||!out||!pd_valid(s)||!s->magic.available||index>=s->magic.count)return 0;
+    const pd_power *p=&s->magic.powers[index];
+    bool cannon=p->kind&&p->effect==3&&!p->remaining;
+    if(!cannon&&(p->kind||!p->level||!(p->flags&PD_USES_SLOT)))return 0;
+    unsigned count=0;
+    for(unsigned level=cannon?1:p->level;level<=9;level++)for(unsigned pool=0;pool<2;pool++){
+        unsigned remaining=(pool?s->magic.pact:s->magic.slots)[level-1].current;
+        if(remaining)out[count++]=(pd_magic_cost){.level=level,.pact=pool!=0,.remaining=remaining};
+    }
+    return count;
+}
 bool pd_magic_recover(pd_state *s,unsigned index,int delta) {
     if(!s||!s->magic.available||index>=s->magic.count)return false;
     pd_power *v=&s->magic.powers[index];if((v->flags&PD_PASSIVE)||(!v->kind&&!(v->flags&PD_LIMITED)))return false;
