@@ -43,7 +43,7 @@ void pd_theme_begin(lv_obj_t *root,pd_theme_kind kind,bool dice_tray){
     rect(root,121,24,230,47,0x091722,245,2);
     rect(root,183,68,100,2,current->accent,180,0);
     if(dice_tray){
-        lv_obj_t *tray=rect(root,69,134,328,134,PD_INK,255,6);
+        lv_obj_t *tray=rect(root,69,197,328,132,PD_INK,255,2);
         lv_obj_set_style_border_width(tray,1,0);lv_obj_set_style_border_color(tray,lv_color_hex(current->accent),0);
     }
     crest=lv_image_create(root);lv_image_set_src(crest,current->icon);lv_obj_set_pos(crest,312,31);

@@ -1,5 +1,9 @@
 # Magie sul Pocket: preparazione e slot — v0.95
 
+> v0.97: la scheda mostra emblema, preparazione, valore, costo e comando.
+> Tocca il riquadro del nome per il testo esteso; le icone in basso aprono
+> elenco, gestione e preparazione. Gli effetti manuali restano segnalati.
+
 3 novembre 2026. Funzioni comuni ai personaggi importati e alle schede già
 presenti: nessuna eccezione legata al nome del PG e nessuna reimportazione
 necessaria. Il PC rimane per installazione, associazione Beyond e configurazione.

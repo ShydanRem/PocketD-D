@@ -158,6 +158,20 @@ static void wrapped_fits(void){
         if(size.y>lv_obj_get_content_height(l)){fprintf(stderr,"Wrapped text clipped (%d > %d): %s\n",size.y,(int)lv_obj_get_content_height(l),lv_label_get_text(l));abort();}
     }
 }
+static lv_obj_t *visible_text(lv_obj_t *root,const char *text){
+    if(lv_obj_has_flag(root,LV_OBJ_FLAG_HIDDEN))return NULL;
+    if(lv_obj_check_type(root,&lv_label_class)&&!strcmp(lv_label_get_text(root),text))return root;
+    for(unsigned i=0;i<lv_obj_get_child_count(root);i++){lv_obj_t *found=visible_text(lv_obj_get_child(root,i),text);if(found)return found;}
+    return NULL;
+}
+static void wrapped_tree_fits(lv_obj_t *root){
+    if(lv_obj_has_flag(root,LV_OBJ_FLAG_HIDDEN))return;
+    if(lv_obj_check_type(root,&lv_label_class)&&lv_label_get_long_mode(root)==LV_LABEL_LONG_WRAP){
+        lv_point_t size;lv_text_get_size(&size,lv_label_get_text(root),lv_obj_get_style_text_font(root,0),0,0,lv_obj_get_content_width(root),LV_TEXT_FLAG_NONE);
+        if(size.y>lv_obj_get_content_height(root))fprintf(stderr,"Nested name clipped: %s (%d > %d)\n",lv_label_get_text(root),size.y,(int)lv_obj_get_content_height(root));assert(size.y<=lv_obj_get_content_height(root));
+    }
+    for(unsigned i=0;i<lv_obj_get_child_count(root);i++)wrapped_tree_fits(lv_obj_get_child(root,i));
+}
 static void tap(int x,int y);
 static void click(const char *name) {
     /* Existing rule scenarios now take the real touch path through home/menu/PF.
@@ -2120,6 +2134,45 @@ int main(void) {
     strcpy(state.items[state.equipped].name,"WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW");render();bounds();
     lv_indev_delete(rpg);state=original;page=HERO;render();
     puts("RPG UX: production pointer home/roll two-tap path, inline weapon spell across six abilities, prepare/cancel/save retry without slot costs, health/error status visibility, long-press without action, separate manual PF corrections, missing-weapon picker and long-name bounds passed; synthetic LVGL.");
+    }
+    {
+    /* Result UX: render the real frozen rolls; synthetic character/peripherals. */
+    pd_demo(&state);state.level=6;state.abilities[5]=18;state.magic.available=true;state.magic.count=1;
+    state.magic.powers[0]=(pd_power){.name="Colpo arcano",.effect=PD_TRUE_STRIKE_2024,.ability=5,.flags=PD_PREPARED};state.magic.concentration=0;
+    state.magic.slots[0]=(pd_slot){2,2};history_pending=history_pair_pending=history_third_pending=history_fourth_pending=history_fifth_pending=false;
+    smite_rolled=false;fail_save=fail_storage_commit=fail_history=fail_canvas=false;import_pending=false;wifi_keyboard=false;
+    display_screen=(pd_screen){0};power_paused=power_off_attempted=false;feedback.active=false;undo_available=false;
+    pd_history_reset(&history,state.history_epoch);persisted_history=history;pd_dice_idle(&dice_animation,1);page=HERO;render();
+    pd_state original=state;unsigned writes=save_calls,draws=random_calls;
+    act(81);click("Colpo arcano");random_values[0]=random_values[1]=19;click("Lancia");
+    assert(dice_animation.active&&!has_roll&&visible_text(lv_screen_active(),"--")&&!visible_text(lv_screen_active(),"CRITICO!"));
+    draws=random_calls;pd_roll fixed=result;render();render();assert(random_calls==draws&&!memcmp(&fixed,&result,sizeof fixed));click("Accelera");
+    char expected[32];snprintf(expected,sizeof expected,"%d",strike.roll.total);lv_obj_t *big=visible_text(lv_screen_active(),expected);
+    assert(big&&lv_obj_get_style_text_font(big,0)==&pd_pixel_6&&visible_text(lv_screen_active(),"CRITICO!"));
+    assert(lv_color_eq(lv_obj_get_style_text_color(big,0),lv_color_hex(PD_GOLD))&&random_calls==draws);screenshot("ux097-critical.ppm");
+    lv_indev_t *result_touch=lv_indev_create();lv_indev_set_type(result_touch,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(result_touch,probe_touch);lv_indev_set_display(result_touch,d);
+    probe_click(result_touch,310,359);assert(combat_roll==2&&dice_animation.active&&!has_roll&&visible_text(lv_screen_active(),"--"));
+    snprintf(expected,sizeof expected,"Arma %d |",dice_animation.pool.total);
+    assert(!visible_text(lv_screen_active(),"Danni totali"));draws=random_calls;unsigned journal_writes=history_save_calls;pd_weapon_damage_parts frozen=damage_parts;
+    click("Accelera");snprintf(expected,sizeof expected,"%d",damage_parts.total);assert(visible_text(lv_screen_active(),expected)&&visible_text(lv_screen_active(),"Danni totali"));screenshot("ux097-damage.ppm");
+    click("Radianti");assert(dice_animation.active&&!has_roll&&visible_text(lv_screen_active(),"--"));click("Accelera");
+    assert(visible_text(lv_screen_active(),expected)&&random_calls==draws&&history_save_calls==journal_writes&&!memcmp(&damage_parts,&frozen,sizeof frozen)&&!memcmp(&state,&original,sizeof state));screenshot("ux097-radiant.ppm");
+    act(90);assert(random_calls==draws);act(81);random_values[0]=random_values[1]=0;click("Lancia");click("Accelera");assert(!strike.hits&&visible_text(lv_screen_active(),"MANCATO"));screenshot("ux097-miss.ppm");
+    /* Natural 20 on a free die is not a critical weapon attack. */
+    act(14);random_values[0]=random_values[1]=19;click("Lancia");click("Accelera");assert(visible_text(lv_screen_active(),"20 naturale")&&!visible_text(lv_screen_active(),"CRITICO!"));screenshot("ux097-free.ppm");
+    /* Healing displays actual HP gained after the cap, not raw dice. */
+    state=original;state.hp=state.max_hp-1;act(501);click("Usa");click("Conferma");assert(combat_roll==3&&dice_animation.active&&!has_roll);draws=random_calls;
+    click("Accelera");assert(healing_gained==1&&dice_animation.pool.total>1&&state.hp==state.max_hp&&visible_text(lv_screen_active(),"+1")&&visible_text(lv_screen_active(),"PF recuperati")&&random_calls==draws);screenshot("ux097-heal.ppm");
+    /* Lost animation memory leaves the fixed numeric result available. */
+    fail_canvas=true;act(14);click("Lancia");assert(has_roll&&!dice_animation.active&&!dice_pixels&&visible_text(lv_screen_active(),"Animazione non disponibile"));fail_canvas=false;
+    state=original;state.magic.powers[0]=(pd_power){.name="Scudo",.description="Descrizione sintetica consultabile, senza applicazione automatica.",.level=1,.flags=PD_PREPARED|PD_USES_SLOT,.ability=5};page=MAGIC_DETAIL;power_index=0;cast_level=0;render();
+    pd_state before_details=state;draws=random_calls;writes=save_calls;lv_obj_update_layout(lv_screen_active());assert(visible_text(lv_screen_active(),"Effetti manuali"));screenshot("ux097-spell.ppm");
+    probe_click(result_touch,220,130);assert(page==MAGIC_TEXT);click("Indietro");assert(page==MAGIC_DETAIL);click("Lancia");assert(page==MAGIC_CONFIRM&&!memcmp(&state,&before_details,sizeof state));click("Indietro");
+    assert(random_calls==draws&&save_calls==writes&&!memcmp(&state,&before_details,sizeof state));
+    memset(state.magic.powers[0].name,'W',40);state.magic.powers[0].name[40]=0;render();lv_obj_update_layout(lv_screen_active());wrapped_tree_fits(lv_screen_active());bounds();
+    state=original;act(501);screenshot("ux097-item.ppm");memset(state.items[1].name,'W',40);state.items[1].name[40]=0;render();lv_obj_update_layout(lv_screen_active());wrapped_tree_fits(lv_screen_active());bounds();
+    lv_indev_delete(result_touch);state=original;page=HERO;render();
+    puts("Result UX: fixed hidden-in-flight/large critical/miss/free-20 values, real-pointer next damage, frozen mixed-component replay with no RNG/journal/PG writes, capped actual healing, no-canvas fallback, spell-header text/cast cancel, manual-effect disclosure and full wide-name wrapping passed; synthetic native LVGL, no hardware claim.");
     }
     unsigned covered=0;
     for(unsigned p=0;p<=MAGIC_PREPARE_CONFIRM;p++){

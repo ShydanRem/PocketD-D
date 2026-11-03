@@ -1760,6 +1760,12 @@ static lv_obj_t *icon_button(const char *name,pd_ui_icon_id icon,int x,int y,int
     lv_obj_t *b=button("",x,y,w,h,action,enabled);pd_ui_name(b,name);
     const lv_image_dsc_t *im=pd_ui_icon(icon);if(im)art(im,(w-(int)im->header.w)/2,(h-(int)im->header.h)/2,b);return b;
 }
+/* Keep the full imported name readable beside its emblem, including wide names. */
+static void emblem_name(lv_obj_t *name,const char *text,int width){
+    lv_point_t extent;lv_text_get_size(&extent,text,&lv_font_montserrat_16,0,0,width,LV_TEXT_FLAG_NONE);
+    lv_obj_set_style_text_font(name,extent.y>58?&lv_font_montserrat_14:&lv_font_montserrat_16,0);
+    lv_obj_set_size(name,width,58);lv_label_set_long_mode(name,LV_LABEL_LONG_WRAP);
+}
 /* Game command: one emblem, a short name, one useful value. Metadata and
    formulas stay in the detail view; names remain available on long press. */
 static lv_obj_t *game_choice(const char *name,const char *caption,const char *value,const lv_image_dsc_t *image,int x,int y,int w,int action,bool enabled,bool selected){
@@ -1920,7 +1926,8 @@ static void render_inventory(void) {
 }
 static void render_item(void) {
     char text[160];const pd_item *v=&state.items[item_index];
-    lv_obj_t *title=small_label(v->name,83,99,300,PD_TEXT);lv_label_set_long_mode(title,LV_LABEL_LONG_WRAP);lv_obj_set_height(title,58);
+    lv_obj_t *emblem=art(pd_item_icon(&state,item_index),85,105,lv_screen_active());lv_image_set_pivot(emblem,0,0);lv_image_set_scale(emblem,512);lv_image_set_antialias(emblem,false);
+    lv_obj_t *title=small_label(v->name,143,99,240,PD_TEXT);emblem_name(title,v->name,240);
     if(page==ITEM_CONFIRM) {
         snprintf(text,sizeof text,"Quantita %u",v->quantity);label(text,83,164,300,false);
         label("Usare una unita?",83,201,300,false);
@@ -1934,8 +1941,8 @@ static void render_item(void) {
     if(v->kind==PD_WEAPON) {
         pd_weapon_info w={0};bool available=pd_weapon_stats(&state,item_index,&w);
         if(available) {
-        snprintf(text,sizeof text,"%s: base %+d / comp. %+d",pd_abilities[v->ability],w.base,w.trained);small_label(text,83,213,300,PD_TEXT);
-        snprintf(text,sizeof text,"Attacco %+d (extra %+d)",w.attack_bonus,w.attack_extra);label(text,83,241,300,false);
+        snprintf(text,sizeof text,"%s | %s",pd_abilities[v->ability],w.trained?"Competente":"Senza competenza");small_label(text,83,213,300,PD_MUTED);
+        snprintf(text,sizeof text,"Attacco %+d",w.attack_bonus);label(text,83,239,300,true);
         snprintf(text,sizeof text,"Danni %ud%u %+d %s",v->count,v->sides,w.damage_bonus,v->damage_type);small_label(text,83,273,300,PD_GOLD);
         } else {label("Arma esaurita",83,241,300,false);small_label("Quantita zero: tiri non disponibili",83,273,300,PD_MUTED);}
         button(state.equipped==item_index?"Riponi":"Equipaggia",83,299,144,44,84,v->quantity);
@@ -2129,32 +2136,37 @@ static void render_magic_list(void) {
 }
 static void render_magic_detail(void) {
     char text[200];const pd_power *p=&state.magic.powers[power_index];choose_cost();
-    lv_obj_t *name=small_label(p->name,83,99,300,PD_TEXT);lv_label_set_long_mode(name,LV_LABEL_LONG_WRAP);lv_obj_set_height(name,58);
-    snprintf(text,sizeof text,p->kind?(p->flags&PD_PASSIVE?"Capacita informativa":"Capacita con utilizzi"):"Magia livello %u%s",p->level,p->flags&PD_CONCENTRATES?" / conc.":"");label(text,83,164,300,false);
+    lv_obj_t *card=button("",83,99,300,64,830,true);pd_ui_name(card,"Testo");lv_obj_add_flag(lv_obj_get_child(card,0),LV_OBJ_FLAG_HIDDEN);lv_obj_set_style_pad_all(card,0,0);
+    lv_obj_t *emblem=art(pd_power_icon(p),8,8,card);lv_image_set_pivot(emblem,0,0);lv_image_set_scale(emblem,512);lv_image_set_antialias(emblem,false);
+    lv_obj_t *name=lv_label_create(card);lv_label_set_text(name,p->name);lv_obj_set_pos(name,64,2);emblem_name(name,p->name,230);
+    if(p->kind)snprintf(text,sizeof text,"%s",p->flags&PD_PASSIVE?"Capacita informativa":"Capacita con utilizzi");
+    else if(!p->level)snprintf(text,sizeof text,"Trucchetto | %s | %s",pd_abilities[p->ability],p->flags&PD_PREPARED?"pronto":"da preparare");
+    else snprintf(text,sizeof text,"Lv %u | %s | %s%s",p->level,pd_abilities[p->ability],p->flags&PD_PREPARED?"Pronta":"Da preparare",p->flags&PD_CONCENTRATES?" | conc.":"");
+    lv_obj_t *meta=small_label(text,83,174,300,PD_MUTED);label_font(meta,&lv_font_montserrat_14);
     int attack,dc;
-    if(p->effect==PD_DIVINE_SMITE_2024)snprintf(text,sizeof text,"Dopo un colpo: d8 radianti, azione bonus");
-    else if(p->effect>=PD_HEX_2024)snprintf(text,sizeof text,"1d6 %s sul bersaglio colpito",p->effect==PD_HEX_2024?"necrotici":"forza");
-    else if(p->effect==PD_TRUE_STRIKE_2024){pd_weapon_info w;if(pd_true_strike_stats(&state,power_index,false,&w))snprintf(text,sizeof text,"%s | arma %+d | extra %ud6 rad",pd_abilities[p->ability],w.attack_bonus,w.radiant_dice);else snprintf(text,sizeof text,"%s | richiede arma e preparazione",pd_abilities[p->ability]);}
-    else if(pd_magic_stats(&state,power_index,&attack,&dc))snprintf(text,sizeof text,"%s | attacco %+d | CD %d%s",pd_abilities[p->ability],attack,dc,p->flags&PD_PREPARED?"":" | non preparata");
-    else snprintf(text,sizeof text,"%s | recupero %s",p->effect==1?"Effetto: Ira":p->effect==2?"Effetto a zero PF":"Effetto da gestire con il DM",(const char *const[]){"manuale","breve","lungo"}[p->recovery]);
-    small_label(text,83,198,300,PD_GOLD);
+    if(p->effect==PD_DIVINE_SMITE_2024)snprintf(text,sizeof text,"Radianti sul colpo");
+    else if(p->effect>=PD_HEX_2024)snprintf(text,sizeof text,"1d6 %s",p->effect==PD_HEX_2024?"necrotici":"forza");
+    else if(p->effect==PD_TRUE_STRIKE_2024){pd_weapon_info w;if(pd_true_strike_stats(&state,power_index,false,&w))snprintf(text,sizeof text,"Arma %+d | +%ud6 rad",w.attack_bonus,w.radiant_dice);else snprintf(text,sizeof text,"Verifica arma e preparazione");}
+    else if(pd_magic_stats(&state,power_index,&attack,&dc))snprintf(text,sizeof text,"Profilo %+d | CD %d",attack,dc);
+    else snprintf(text,sizeof text,"%s",p->effect==1?"Ira":p->effect==2?"A zero PF":"Effetti manuali");
+    lv_obj_t *stats=label(text,83,201,300,false);lv_obj_set_style_text_color(stats,lv_color_hex(PD_GOLD),0);
     cost_text(text,sizeof text);
-    if((p->effect==3&&!p->remaining)||(!p->kind&&p->level&&(p->flags&PD_USES_SLOT))) {
-        snprintf(text,sizeof text,cast_level?"Slot %u %s >":"Nessuno slot disponibile",cast_level,cast_pact?"patto":"ordinario");
-        button(text,83,224,300,44,834,cast_level>0);
-    } else label(text,83,235,300,false);
-    if(p->flags&PD_LIMITED){snprintf(text,sizeof text,"Usi innati %u/%u",p->remaining,p->maximum);small_label(text,83,274,300,PD_MUTED);}
-    else small_label(p->effect==PD_TRUE_STRIKE_2024?"Arma + magia":p->effect>=PD_HEX_2024?"Effetto sul colpo":"Effetti manuali",83,274,300,PD_MUTED);
-    icon_button("Testo",PD_UI_SHEET,83,301,52,44,830,true);
+    if((p->effect==3&&!p->remaining)||(!p->kind&&p->level&&(p->flags&PD_USES_SLOT))){
+        snprintf(text,sizeof text,cast_level?"Slot %u %s >":"Nessuno slot disponibile",cast_level,cast_pact?"patto":"ordinario");button(text,83,239,300,44,834,cast_level>0);
+    }else label(text,83,249,300,false);
+    bool manual=p->effect==0||p->effect==4||p->effect==5;
+    if(p->flags&PD_LIMITED)snprintf(text,sizeof text,"Usi %u/%u%s",p->remaining,p->maximum,manual?" | effetti manuali":"");
+    else snprintf(text,sizeof text,"%s",p->effect==PD_TRUE_STRIKE_2024?"Arma + magia":p->effect==PD_DIVINE_SMITE_2024?"Sul colpo | azione bonus":p->effect>=PD_HEX_2024?"Bersaglio e concentrazione":manual?"Effetti manuali":"");
+    lv_obj_t *note=small_label(text,83,289,300,manual?PD_GOLD:PD_MUTED);label_font(note,&lv_font_montserrat_14);
     const char *use_label=p->kind?((p->flags&PD_PASSIVE)?"Informativa":!p->remaining&&p->effect!=3?"Esaurita":p->effect==3?"Crea":p->effect==1&&state.combat.raging?"Gia attiva":p->effect==2&&state.hp?"A zero PF":p->effect==2&&state.status.available&&state.status.failures==3?"Verifica DM":"Usa"):
         state.combat.raging?"Ira attiva":!(p->flags&PD_PREPARED)?"Non preparata":(p->flags&PD_LIMITED)&&!p->remaining?"Esaurita":"Lancia";
     if(!p->kind&&!(p->flags&PD_PREPARED))use_label="Prepara";else if(p->effect==PD_DIVINE_SMITE_2024)use_label="Attacca";else if(weapon_spell_candidate(p))use_label=p->effect==PD_TRUE_STRIKE_2024?"Attacca":"Regole";
-    lv_obj_t *use=button(use_label,147,301,236,44,831,can_use_power()||(!p->kind&&!(p->flags&PD_PREPARED))||(weapon_spell_candidate(p)&&p->effect!=PD_TRUE_STRIKE_2024));lv_obj_set_style_text_font(use,&lv_font_montserrat_16,0);
+    lv_obj_t *use=button(use_label,83,315,300,44,831,can_use_power()||(!p->kind&&!(p->flags&PD_PREPARED))||(weapon_spell_candidate(p)&&p->effect!=PD_TRUE_STRIKE_2024));lv_obj_set_style_text_font(use,&lv_font_montserrat_16,0);
     if(!p->kind){
-        lv_obj_t *e=icon_button("Elenco",PD_UI_BACK,83,359,92,48,835,true),*r=icon_button("Gestisci",PD_UI_GEAR,187,359,92,48,4000,true),*prep=icon_button(p->flags&PD_PREPARED?"Togli prep.":"Prepara",PD_UI_READY,291,359,92,48,4001,true);
+        lv_obj_t *e=icon_button("Elenco",PD_UI_BACK,83,367,92,44,835,true),*r=icon_button("Gestisci",PD_UI_GEAR,187,367,92,44,4000,true),*prep=icon_button(p->flags&PD_PREPARED?"Togli prep.":"Prepara",PD_UI_READY,291,367,92,44,4001,true);
         if(p->flags&PD_PREPARED)lv_obj_set_style_border_color(prep,lv_color_hex(PD_GOLD),0);
         lv_obj_set_style_text_font(e,&lv_font_montserrat_16,0);lv_obj_set_style_text_font(r,&lv_font_montserrat_16,0);lv_obj_set_style_text_font(prep,&lv_font_montserrat_14,0);
-    }else {button("Elenco",83,359,144,48,835,true);button(weapon_spell_candidate(p)?"Regole":"Utilizzi",239,359,144,48,weapon_spell_candidate(p)?6300:839,weapon_spell_candidate(p)||!(p->flags&PD_PASSIVE));}
+    }else {button("Elenco",83,367,144,44,835,true);button(weapon_spell_candidate(p)?"Regole":"Utilizzi",239,367,144,44,weapon_spell_candidate(p)?6300:839,weapon_spell_candidate(p)||!(p->flags&PD_PASSIVE));}
 }
 static void render_magic_management(void){
     if(!state.magic.available||power_index>=state.magic.count||state.magic.powers[power_index].kind){page=MAGIC_LIST;render_magic_list();return;}
@@ -3290,6 +3302,7 @@ static void render_companion(void){
     if(avatar_sprite&&state.idle_animation)avatar_timer=lv_timer_create(avatar_frame,200,NULL);
     if(feedback.active)feedback_timer=lv_timer_create(feedback_frame,2000-age,NULL);
 }
+#include "dice_scene.inc"
 static void render_content(void) {
     /* Destroy the LVGL image/cache before freeing its pixel buffer. A root redraw
        cancels the old timer; the roll itself remains in the pure presentation state. */
@@ -3406,81 +3419,7 @@ static void render_content(void) {
     if (page==SHEET) {
         render_sheet();
     } else if (page==DICE) {
-        if(combat_roll==1) {
-            pd_weapon_info w={0};attack_weapon_info(&w);
-            snprintf(text,sizeof text,"Attacco %+d",strike_ready?strike.roll.bonus:w.attack_bonus);
-        }
-        else if(combat_roll==2&&(strike.weapon.true_strike||damage_parts.extra.count||damage_parts.smite.count))snprintf(text,sizeof text,"%s: %ud%u %+d",damage_view_smite_overflow?"Punizione 2":damage_view_smite?"Punizione":damage_view_extra?(damage_parts.extra_effect==PD_HEX_2024?"Necrotici":"Forza"):damage_view_radiant?"Radianti":"Arma",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
-        else if(combat_roll==3||combat_roll==4)snprintf(text,sizeof text,"Cura %ud%u %+d",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
-        else if(combat_roll==8)snprintf(text,sizeof text,"Iniziativa %+d",result.bonus);
-        else if(combat_roll==7)snprintf(text,sizeof text,"Ricarica %ud%u %+d",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
-        else if(combat_roll==5){if(has_roll)snprintf(text,sizeof text,"Morte: %u %+d = %d",result.natural,result.bonus,result.total);else snprintf(text,sizeof text,"Salvezza morte %+d",result.bonus);}
-        else if(combat_roll==6)snprintf(text,sizeof text,"COS %+d | CD %u",result.bonus,incoming_result.concentration_dc);
-        else if(pool_view)snprintf(text,sizeof text,"%s %ud%u %+d",dice_animation.pool.damage?"Danni":"Somma",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
-        else if(ability<0)snprintf(text,sizeof text,"d20 libero +0");else check_name(text,sizeof text,true);
-        if(!combat_roll&&!pool_view&&ability>=0) {
-            lv_obj_t *detail=button(text,83,94,300,44,70,!dice_animation.active);
-            if(check_kind==PD_SKILL)lv_obj_set_style_text_font(detail,&lv_font_montserrat_20,0);
-        } else label(text,83,105,300,true);
-        pd_check_resolution check_gate={0};pd_attack_resolution attack_gate={0};bool check_known=ability>=0&&pd_check_resolve(&state,check_kind,ability,mode,ignore_effects,roll_context,&check_gate);pd_attack_resolve(&state,mode,roll_context,ignore_effects,&attack_gate);
-        pd_weapon_info available_weapon;
-        bool allowed=combat_roll==1?attack_gate.allowed&&attack_weapon_info(&available_weapon):combat_roll>1||pool_view||ability<0||(check_known&&check_gate.allowed);
-        int effective=combat_roll==1?attack_gate.mode:pool_view?0:ability<0?mode:check_gate.mode;
-        if(!pool_view&&!has_roll&&!dice_animation.active)pd_dice_idle(&dice_animation,effective?2:1);
-        if(!pd_dice_count(&dice_animation))pd_dice_idle(&dice_animation,mode?2:1);
-        bool automatic_failure=!combat_roll&&!pool_view&&check_known&&check_gate.automatic_failure;
-        if(!automatic_failure)dice_pixels=lv_malloc(PD_DICE_PIXELS*sizeof *dice_pixels);
-        if(dice_pixels) {
-            dice_canvas=lv_canvas_create(root);lv_obj_set_pos(dice_canvas,73,138);
-            lv_canvas_set_buffer(dice_canvas,dice_pixels,PD_DICE_WIDTH,PD_DICE_HEIGHT,LV_COLOR_FORMAT_RGB565);
-            lv_obj_add_flag(dice_canvas,LV_OBJ_FLAG_CLICKABLE);
-            lv_obj_add_event_cb(dice_canvas,event,LV_EVENT_CLICKED,(void*)(intptr_t)16);
-            pd_dice_paint(&dice_animation,dice_pixels);
-            if(dice_animation.active)dice_timer=lv_timer_create(dice_frame,33,NULL);
-        } else if(dice_animation.active) {
-            /* Low memory must never hide or re-roll an outcome that already exists. */
-            pd_dice_finish(&dice_animation);has_roll=true;
-        }
-        if(has_roll) {
-            if(combat_roll==2&&(damage_parts.extra.count||damage_parts.smite.count))snprintf(text,sizeof text,"Danni totali %d",damage_parts.total);
-            else if(combat_roll==2&&strike.weapon.true_strike)snprintf(text,sizeof text,"Arma %d + rad %d = %d",damage_parts.weapon.total,damage_parts.radiant.total,damage_parts.total);
-            else if(combat_roll==1)snprintf(text,sizeof text,"%s %d / CA %u",strike.critical?"Critico!":strike.hits?"Colpito":"Mancato",strike.roll.total,strike.armor);
-            else if(combat_roll==3||combat_roll==4)snprintf(text,sizeof text,"Cura %d | PF +%u -> %u/%u",dice_animation.pool.total,healing_gained,state.hp,pd_max_hp(&state));
-            else if(combat_roll==7)snprintf(text,sizeof text,"Cariche +%u | %u/%u",recharge_gained,recharge_after,recharge_maximum);
-            else if(combat_roll==5)snprintf(text,sizeof text,"%s",(const char *const[]){result.natural==1?"1 naturale: due fallite":"Fallita","Riuscita","Stabilizzato","Tre fallimenti","20 naturale: riprendi 1 PF"}[status_outcome]);
-            else if(combat_roll==6)snprintf(text,sizeof text,"%u %+d = %d | %s",result.natural,result.bonus,result.total,incoming_result.ends_concentration?"persa":"mantenuta");
-            else if(pool_view) {
-                pd_pool *r=&dice_animation.pool;
-                if(r->damage && r->sum+r->bonus<0)snprintf(text,sizeof text,"Somma %d -> Danni 0",r->sum+r->bonus);
-                else snprintf(text,sizeof text,"%d %+d = %d",r->sum,r->bonus,r->total);
-            }
-            else if(result.count==2)snprintf(text,sizeof text,"%u / %u %+d = %d [%s]",result.dice[0],result.dice[1],result.bonus,result.total,effective>0?"Vant":"Svant");
-            else snprintf(text,sizeof text,"%u %+d = %d%s",result.dice[0],result.bonus,result.total,result.natural==20?"  -  20 naturale":"");
-        } else snprintf(text,sizeof text,"%s",!allowed?(check_gate.automatic_failure?"Fallimento automatico":(check_gate.needed||(combat_roll==1&&attack_gate.needed))?"Dichiara Contesto":"Da verificare: apri i dettagli"):dice_animation.active?"In volo...":effective>0?"Pronto: vantaggio":effective<0?"Pronto: svantaggio":"Pronto al lancio");
-        if(has_roll){decoration(80,266,306,28,PD_PANEL_LOW,2);decoration(80,266,2,28,combat_roll?PD_MINT:result.natural==20?PD_GOLD:PD_MINT,0);}
-        lv_obj_t *outcome=label(text,73,269,320,false);if(has_roll&&!combat_roll&&!pool_view)lv_obj_set_style_text_color(outcome,lv_color_hex(result.natural==20?PD_GOLD:result.natural==1?PD_DANGER:PD_TEXT),0);
-        if(automatic_failure)label("Nessun dado",73,183,320,false);
-        else if(!dice_pixels)label("Animazione non disponibile",73,183,320,false);
-        if(combat_roll==8){button("Profilo",83,296,144,44,4600,!dice_animation.active);button(dice_animation.active?"Accelera":"Fine",239,296,144,44,dice_animation.active?16:100,true);
-        } else if(combat_roll==7){
-            button("Zaino",83,296,76,44,80,!dice_animation.active);button(dice_animation.active?"Accelera":"Riepilogo",167,296,132,44,dice_animation.active?16:2180,true);button("Fine",307,296,76,44,100,!dice_animation.active);
-        } else if(combat_roll==6){
-            button("Stato",83,296,76,44,1500,!dice_animation.active);
-            button(dice_animation.active?"Accelera":"Riepilogo",167,296,132,44,dice_animation.active?16:1809,true);
-            button("Fine",307,296,76,44,100,!dice_animation.active);
-        } else if(combat_roll==2&&(strike.weapon.true_strike||damage_parts.extra.count||damage_parts.smite.count)){
-            button("Arma",83,296,76,44,85,!dice_animation.active);
-            button(dice_animation.active?"Accelera":damage_view_smite_overflow?"Dadi arma":damage_view_smite?(damage_parts.smite_overflow.count?"Altri d8":"Dadi arma"):damage_view_extra?(damage_parts.smite.count?"Punizione":"Dadi arma"):damage_view_radiant?(damage_parts.extra.count?"Extra":damage_parts.smite.count?"Punizione":"Dadi arma"):damage_parts.radiant.count?"Radianti":damage_parts.extra.count?"Extra":"Punizione",167,296,132,44,dice_animation.active?16:6422,dice_animation.active||damage_parts.radiant.count||damage_parts.extra.count||damage_parts.smite.count);
-            button("Fine",307,296,76,44,100,!dice_animation.active);
-        } else if(combat_roll) {
-            button(combat_roll==5?"Stato":combat_roll==4?"Riposo":combat_roll==3?"Zaino":"Arma",83,296,76,44,combat_roll==5?1501:combat_roll==4?911:combat_roll==3?80:85,!dice_animation.active);
-            button(dice_animation.active?"Accelera":combat_roll>=4?"Altro":"Nuovo",167,296,132,44,dice_animation.active?16:combat_roll==5?1501:combat_roll==4?910:combat_roll==3?80:81,true);
-            button(combat_roll>=4?"Fine":"Danni",307,296,76,44,combat_roll==5?100:combat_roll==4?918:90,!dice_animation.active&&(combat_roll>=4||(combat_roll==1&&has_roll&&strike_ready&&strike.hits&&!damage_used)));
-        } else {
-        button(pool_view?"Prova":mode==-1?"Svant":mode==1?"Vant":"Base",83,296,76,44,pool_view?14:15,!dice_animation.active);
-        button(dice_animation.active?"Accelera":has_roll?"Rilancia":"Lancia",167,296,132,44,13,allowed);
-        lv_obj_t *more=button(state.roll_conditions&&!pool_view&&ability>=0?"Contesto":"Altri",307,296,76,44,state.roll_conditions&&!pool_view&&ability>=0?2230:40,!dice_animation.active);if(state.roll_conditions&&!pool_view&&ability>=0)lv_obj_set_style_text_font(more,&lv_font_montserrat_16,0);
-        }
+        render_dice_game();return;
     } else {
         lv_obj_t *counter=button("Stato",83,99,92,44,1500,true);lv_obj_set_style_text_font(counter,&lv_font_montserrat_16,0);
         button("Zaino",187,99,92,44,80,true);button("Magie",291,99,92,44,800,true);
