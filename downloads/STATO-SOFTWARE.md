@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **2 novembre 2026 — v0.93**. Il dispositivo è il prodotto;
+Aggiornamento del **3 novembre 2026 — v0.94**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
@@ -19,6 +19,22 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Nuovo nella v0.94
+
+[Connessione e recupero autonomi](AUTONOMIA-RECUPERO.md): un tentativo sulla rete
+salvata, configurazione Wi-Fi nel flusso, ripresa per ID dello stesso PG e
+riprova esplicita dopo un errore. Annullare rimuove la richiesta in attesa;
+nessuna lettura interrompe editor, revisione rete o tocco. Account temporaneo e
+ricordato visibili, elenco valido vuoto distinto dal mai caricato. Errori di
+trasporto distinti dall’accesso da ricollegare; un nuovo collegamento fallito
+conserva il precedente. Nessun aggiornamento silenzioso delle schede.
+
+354 test JS, suite nativa e **150 viste LVGL**, controlli ASan/UBSan e build ESP32.
+Nuove prove con rete, HTTP e account simulati: non sono un accesso privato reale.
+Formati, bundle convertitore, partizioni e credenziali persistenti invariati.
+L’estensione rimane la soluzione scelta per l’associazione iniziale; firmware
+0.94 compatibile con il componente 0.93. PG, SD e tasti conservati.
 
 ## Nuovo nella v0.93
 
@@ -190,7 +206,7 @@ lo zaino: per le armi speciali mantenute come oggetti non vengono inventati tiri
 
 | Area | Disponibile | Cosa manca o va controllato |
 | --- | --- | --- |
-| Accesso | Lettura pubblica diretta tramite connettore PocketD-D su PC | Personaggi privati/autenticazione, lettura autonoma dal dispositivo; nessuna scrittura verso Beyond |
+| Accesso | Connettore PC; lettura/conversione nativa pubblica e percorso account/PG privati implementati | Nuovo percorso autenticato sul dispositivo da collaudare realmente; nessuna scrittura verso Beyond |
 | Creazione | Anteprima, problemi bloccanti distinti dai limiti, consenso e nuovo PG | Nessun aggiornamento automatico di una vecchia scheda con conservazione dei progressi |
 | Caratteristiche | Base, modificatori/scelte riconciliati, bonus personalizzati, massimi espliciti, valori fissati e override supportati | Origini/capacità sostitutive, altre restrizioni/formule e override numerici non riconosciuti |
 | PF e CA | Calcolati con le caratteristiche finali e gli effetti supportati; PF correnti e temporanei distinti | Profili di equipaggiamento supportati aggiornano i valori; livello e proprietà non rappresentate richiedono riconciliazione |
@@ -424,10 +440,11 @@ verificate. Prima di usare il calcolo Danni vanno verificati i tipi richiesti
 ed eventualmente dichiarati Normali. Questa verifica si può fare dal PC o
 sul dispositivo; non viene inventata dall'assenza di modificatori Beyond.
 
-Si gestisce **una scheda attiva sul dispositivo**. La raccolta di più PG resta
-sul PC. Inviare un nuovo PG e confermarlo sostituisce la copia attiva e il suo
-stato locale; le schede PC restano conservate. Prima di sostituire una copia
-con progressi importanti va acquisito il backup nativo.
+Si gestisce **una scheda attiva sul dispositivo** e una raccolta locale fino a
+32 PG su SD. Prima di un cambio/importazione viene salvata la copia uscente;
+senza SD resta un solo PG attivo. Le schede PC restano conservate. Non esiste
+ancora un aggiornamento selettivo che unisca dati Beyond freschi e progressi
+locali della medesima scheda. Conservare comunque un backup dei progressi importanti.
 
 Party/griglia/sincronizzazione fra dispositivi non fanno parte dell'attuale
 uso offline; gli strumenti PC relativi sono prototipi locali.
@@ -473,9 +490,9 @@ sono distinte da quelle nuove ancora verificate solo tramite software.
 
 Direzione del prodotto confermata: [Pocket autonomo](POCKET-AUTONOMO.md).
 L’elenco account reale è confermato dall’utente e la raccolta locale SD è nel
-codice della v0.90, da collaudare sull’hardware. Seguono conversione nativa,
-associazione protetta e importazione Beyond dal Pocket. L’elenco nel browser
-non completa questi blocchi.
+codice della v0.90, da collaudare sull’hardware. Conversione nativa, associazione e importazione
+Beyond dal Pocket sono ora nel codice delle versioni 0.91–0.94; il collaudo
+autenticato su hardware rimane distinto dall’elenco già confermato nel browser.
 
 Non serve attendere tutte le regole D&D per questa prima sessione. Servono un
 trasferimento verificato, valori confrontati e progressi recuperabili.

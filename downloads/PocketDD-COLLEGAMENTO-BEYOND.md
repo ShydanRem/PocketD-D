@@ -1,4 +1,6 @@
-> v0.93: interfaccia PC semplificata, stessa autenticazione nativa v0.92; prove reali sul dispositivo ancora da eseguire.
+> v0.94: [ripresa dopo Wi-Fi e recupero degli errori](AUTONOMIA-RECUPERO.md).
+> Interfaccia PC v0.93 e autenticazione nativa v0.92 conservate;
+> nuove prove reali sul dispositivo ancora da eseguire.
 
 # Collega Beyond al Pocket una volta
 

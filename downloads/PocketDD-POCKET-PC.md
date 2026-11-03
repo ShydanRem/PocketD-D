@@ -1,5 +1,9 @@
 # Pocket PC: scegli cosa fare, il collegamento è automatico
 
+**Firmware v0.94:** dopo l’associazione, [connessione e ripresa della richiesta
+Beyond](AUTONOMIA-RECUPERO.md) avvengono sul Pocket. La pagina e l’estensione 0.93
+restano compatibili; aggiornare il firmware conserva PG, tasti e SD.
+
 2 novembre 2026 · v0.93. Una pagina per **Beyond, look SD e backup**. La porta
 riconosciuta viene riutilizzata per le operazioni successive nella stessa pagina:
 nessuna verifica USB separata obbligatoria e nessuna preparazione manuale dell’accesso.

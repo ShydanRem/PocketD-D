@@ -2,6 +2,12 @@
 
 # Pocket autonomo: stato dell’integrazione Beyond
 
+**v0.94, 3 novembre:** [connessione e recupero sul dispositivo](AUTONOMIA-RECUPERO.md).
+Richiesta ripresa dopo il Wi-Fi, riprova per ID e accesso da ricollegare distinto
+dagli errori di rete. L’estensione resta la scelta per la prima associazione;
+nessuna lettura automatica sostituisce l’anteprima e la conferma d’importazione.
+Nuovi percorsi verificati con rete/account sintetici, da collaudare sull’ESP32.
+
 2 novembre 2026 · v0.92. Il dispositivo è il prodotto: il PC serve per
 installazione/aggiornamenti e per la prima associazione dell’account; poi il
 codice prevede scelta e importazione del PG dal Pocket tramite Wi-Fi.
