@@ -224,3 +224,52 @@ riscontro sul dispositivo fisico. La roadmap funzionale rimane conservata.
 Verifiche v0.99: 357 test JavaScript, suite nativa, 153 viste LVGL, nuovi
 scenari di sessione/stati, ASan/UBSan e compilazione ESP32. Dati sintetici;
 nessuna nuova lettura reale Beyond o modifica della raccolta personale.
+
+## v0.100: raccolta, aspetto e impostazioni
+
+Raccolta e catalogo Beyond con schede coerenti, identità e stato visibili. Il
+cambio PG mostra il suo avatar completo e valori prima della conferma; regole
+di conservazione, copie e controlli di accesso non cambiano. Personalizzazione:
+scelta diretta del campo o dello sfondo, con bozza e conferma conservate.
+Impostazioni con luminosità immediata e accessi visivi a rete, alimentazione,
+tasti e backup. Privacy e consensi non vengono rimossi per ridurre il testo.
+
+
+- **I miei PG:** nome, livello e stato della copia separati; la copia attuale ha
+  il bordo dorato. Il catalogo usa i metadati già presenti, senza aprire tutti i
+  salvataggi per disegnare le righe. Le copie non leggibili rimangono conservate.
+- **Apri e gioca:** avatar completo della copia selezionata, PF, temporanei,
+  CA e tiri salvati prima della conferma. La selezione non cambia PG; alla
+  conferma restano il checkpoint e la rilettura che rifiuta una copia SD cambiata.
+- **Beyond:** righe con nome, livello e ultime cifre dell’ID; anteprima con
+  avatar, PF, CA, temporanei e tutte le sei caratteristiche. Limiti e dati
+  manuali rimangono consultabili e la conservazione su SD è esplicita. Accesso,
+  blocchi della conversione, approvazioni e gestione dell’account non cambiano.
+- **Aspetto:** `Modifica > Campi` apre la scelta diretta di carnagione, capelli,
+  mantello, taglio, specie, silhouette, classe e sfondo. Le frecce continuano a
+  scorrere i campi. I colori fissi dei look di classe restano disabilitati;
+  PWR li salta, BOOT conferma, BOOT lungo torna dall’elenco all’editor senza
+  buttare la bozza. `Anteprima > Conferma` salva solo le scelte estetiche.
+- **Impostazioni:** luminosità in percentuale con due comandi immediati e
+  attenuazione separata; Wi-Fi, energia, tasti e backup in una griglia coerente.
+  Icone originali dedicate a rete, tasti e alimentazione. La vista non avvia
+  connessioni e non inventa una percentuale di batteria se il dato è assente.
+
+[Quattro schermate native](previews/v100-collection-setup.png), esclusivamente
+PG e periferiche sintetici. Nuovi scenari coprono puntatore, campi diretti,
+focus fisico con opzioni disabilitate, ritorno locale, annullamento, fallimento
+salvataggio e riprova, conservazione delle regole e dello storico, impostazioni
+senza chiamate radio, luminosità e nomi lunghi nelle anteprime. La raccolta
+continua a usare il filesystem reale dei test e il codec nativo; account e
+importazione usano i doppi di prova dei servizi, senza accesso reale a Beyond.
+
+La revisione UX non è dichiarata conclusa: rimangono editor avanzati di regole,
+difese, durate e configurazioni, coerenza delle schermate secondarie e riscontro
+sul dispositivo fisico. La roadmap funzionale rimane in STATO-SOFTWARE.md.
+Formati di PG, salvataggi, backup, USB e look SD compatibili.
+
+
+Verifiche v0.100: 357 test JavaScript, suite nativa completa, 153 viste LVGL,
+scenari con puntatore e tasti simulati, ASan/UBSan e compilazione ESP32 passati.
+Il controllo memoria usa il renderer host; non certifica memoria o fluidità
+sull’ESP32. Nessun account o dato reale del personaggio usato in queste prove.

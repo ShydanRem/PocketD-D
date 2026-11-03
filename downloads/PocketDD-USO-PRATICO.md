@@ -1,5 +1,7 @@
 # PocketD-D — uso pratico sul dispositivo
 
+> v0.100: [raccolta, personalizzazione diretta e impostazioni](UX-RPG.md#v0100-raccolta-aspetto-e-impostazioni).
+>
 > v0.99: [riserve dei dadi vita, condizioni ed effetti](UX-RPG.md#v099-riserve-condizioni-ed-effetti-locali).
 
 > v0.98: [dotazione rapida, conferme e riposi](UX-RPG.md#v098-equipaggiamento-conferme-e-riposi).
@@ -182,3 +184,20 @@ Negli effetti locali, **pausa**, **scaduto**, durata e **C** (concentrazione) so
 separati dal valore. **1 round** apre l’anteprima delle scadenze; non avanza nulla
 finché non confermi. CA e PF possono diminuire alla fine di un bonus: controlla
 il confronto prima/dopo. Ore e minuti sono presentati nell’unità corretta.
+
+
+## Raccolta e personalizzazione · v0.100
+
+`I miei PG` mostra livello e copia attuale. Tocca un nome, controlla avatar,
+PF e CA, poi `Apri e gioca`; `Indietro` lascia il PG attuale. La SD conserva le
+copie secondo le regole già presenti. Da Beyond consulta anche `Limiti e dati
+manuali` prima di `Importa`; senza SD la schermata avvisa della sostituzione.
+
+Per l’aspetto: `Modifica > Campi > Specie / Silhouette / Classe` oppure `Sfondo`.
+Le modifiche restano in bozza fino ad `Anteprima > Conferma`; `Annulla` le scarta.
+I look di classe hanno colori fissi. PWR seleziona, BOOT attiva, BOOT lungo torna
+indietro; nel selettore dei campi torna prima all’editor. Le assegnazioni dei
+tasti di gioco restano conservate.
+
+`Schermo` raccoglie luminosità, attenuazione e accessi a Wi-Fi, energia, tasti e
+backup. Aprirlo non accende il Wi-Fi e non modifica la scheda.
