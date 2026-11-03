@@ -177,3 +177,50 @@ impostazioni. La roadmap funzionale rimane separata e conservata.
 Verifiche v0.98: 356 test JavaScript, suite nativa, tutte le 153 viste LVGL,
 ASan/UBSan e build ESP32. Nuove prove con dati sintetici; nessuna nuova
 lettura Beyond reale o modifica della raccolta personale.
+
+## Quarta iterazione · riposo e stati
+
+Riserve dei dadi vita selezionabili direttamente dal riposo breve, con pagine
+per tutte le classi. Stato come griglia di azioni, note delle condizioni con
+icone bilingui condivise, stati sui tiri scelti esplicitamente in una bozza.
+Effetti locali: valore, attività, durata e vincolo distinti. Anteprime di modifica
+e scadenza mostrano CA, massimi e PF reali prima/dopo. Le icone non attribuiscono
+regole e il round avanza solo dopo conferma. Regole, tasti e dati rimangono compatibili.
+
+### v0.99: riserve, condizioni ed effetti locali
+
+- **Riposo breve:** pagine da tre riserve, per tutte le 20 classi/riserve del
+  modello. Toccare la riserva apre direttamente la conferma; consultazione e
+  paginazione non tirano dadi né scrivono. Il comando classico rimane disponibile.
+  Esaurimento, PF massimi, zero PF e dati assenti restano protetti.
+- **Dado vita:** quantità da spendere e PF attuali in evidenza; nessuna cura
+  anticipata. Il dado viene speso anche con cura zero. Se il salvataggio fallisce,
+  Riprova salva lo stesso risultato, senza nuova casualità.
+- **Stato:** PF, temporanei e accessi visivi a condizioni, effetti, morte e danni;
+  Tempo, Reazione e Usi rimangono accessibili. Avvelenato conserva il suo comando
+  esplicito separato dalle note.
+- **Condizioni:** catalogo condiviso PC/nativo per tutte le 15 condizioni standard,
+  in italiano e inglese, con nove nuovi glifi. Icone, nomi e livelli sono note:
+  aggiungerli non attiva penalità. L’attivazione dei quattro stati supportati sui
+  tiri resta una bozza con anteprima e conferma; le altre regole restano manuali.
+- **Effetti locali:** valore, attività/pausa, durata e vincolo C distinti. Ore e
+  minuti mostrati nell’unità corretta: 180 minuti nella vista ore sono 3h 0min.
+  Nessun timer diventa un conto alla rovescia reale: round e tempo avanzano
+  attraverso i comandi già presenti e le loro conferme.
+- **Modifica e scadenza:** CA, PF massimi e PF effettivi prima/dopo. Pause,
+  scadenze, vincoli e difese mantengono il comportamento del motore. In rosso le
+  perdite; aumentare un massimo non cura. Nessuna applicazione durante la vista.
+
+[Anteprima nativa](previews/v099-session-states.png), dati e input sintetici.
+Nuovi scenari: ultima riserva delle 20, cancel/retry senza nuovo RNG, confronto
+completo dello stato, note senza effetti automatici, classificazione bilingue,
+bozza dei tiri, timer in pausa, ore corrette e scadenza con perdita di PF/CA.
+
+La revisione continua con raccolta/importazione, personalizzazione e impostazioni.
+Gli editor avanzati di durate, difese e altri timer restano ulteriormente
+rifinibili. Nessun nuovo formato o asset SD; le nuove interazioni richiedono
+riscontro sul dispositivo fisico. La roadmap funzionale rimane conservata.
+
+Verifiche v0.99: 357 test JavaScript, suite nativa, 153 viste LVGL, nuovi
+scenari di sessione/stati, ASan/UBSan e compilazione ESP32. Dati sintetici;
+nessuna nuova lettura reale Beyond o modifica della raccolta personale.
