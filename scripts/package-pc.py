@@ -13,6 +13,7 @@ for directory in ('src','scripts'):
 files += [ROOT/'docs/POCKET-PC.md', ROOT/'docs/previews/v093-pocket-pc.png']
 files += [ROOT/'docs/AUTONOMIA-RECUPERO.md', ROOT/'docs/previews/v094-beyond-recovery.png']
 files += [ROOT/'docs/MAGIE-USO-RAPIDO.md', ROOT/'docs/previews/v095-magic-workflow.png']
+files += [ROOT/'docs/UX-RPG.md', ROOT/'docs/previews/v096-rpg-ux.png']
 files += [ROOT/'docs/BEYOND-DISPOSITIVO.md', ROOT/'docs/previews/v091-beyond-native.png', ROOT/'docs/COLLEGAMENTO-BEYOND.md', ROOT/'docs/previews/v092-beyond-account.png']
 files += [f for folder in ('extension','tools/bridge') for f in (ROOT/folder).rglob('*') if f.is_file()]
 files += [ROOT/'dist/index.html']+[f for f in (ROOT/'dist/assets').rglob('*') if f.is_file()]
@@ -44,6 +45,7 @@ Uso pratico sul dispositivo, filtri e icone: docs/USO-PRATICO.md.
 Profilo PG, iniziativa e dotazioni: nuova importazione v20, firmware 0.78 / USB17.
 Wi-Fi: Menu > ingranaggio > Wi-Fi > Cerca reti; password sul display; vedi docs/WIFI.md.
 Beyond dal Pocket v0.91: I miei PG > ricerca > ID pubblico > Leggi > anteprima > Importa.
+Firmware v0.96: prima revisione UX del dispositivo, docs/UX-RPG.md. Conserva dati.
 Firmware v0.95: preparazione multipla e selettore slot sul Pocket, docs/MAGIE-USO-RAPIDO.md.
 Firmware v0.94: Wi-Fi e ripresa della richiesta Beyond sul Pocket, docs/AUTONOMIA-RECUPERO.md.
 Pocket PC v0.93: sito > Apri Pocket PC. Beyond, look e backup nella stessa pagina.

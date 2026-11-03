@@ -46,7 +46,7 @@ static void attack_select(int power){
 static void attack_choose(void){attack_mode_page=0;page=ATTACK_MODE;wifi_focus=0;}
 static void attack_start(int power,bool choose){
  mode=0;roll_context=(pd_roll_context){0};ignore_effects=false;attack_select(power);
- if(choose&&attack_power_count())attack_choose();
+ (void)choose; /* Main attack is immediately playable; full catalog is optional. */
 }
 
 static const struct {const char *name,*damage;uint8_t count,sides,ability,flags,reach,thrown;} weapon_templates[]={
@@ -112,6 +112,16 @@ static unsigned play_changes(char lines[32][96]){
 }
 static bool play_action(intptr_t a){
  play_error="";
+ if(page==COMBAT&&a==6410){attack_select(-1);return true;}
+ if(page==COMBAT&&a==6445){
+  unsigned i=PD_POWERS;
+  if(attack_spell>=0)i=(unsigned)attack_spell;
+  else for(unsigned group=0;group<2&&i==PD_POWERS;group++)for(unsigned n=0;n<state.magic.count;n++)if(state.magic.powers[n].effect==PD_TRUE_STRIKE_2024&&(!(state.magic.powers[n].flags&PD_PREPARED))==!!group){i=n;break;}
+  if(i<state.magic.count&&state.magic.powers[i].effect==PD_TRUE_STRIKE_2024&&state.hp&&!state.combat.raging){
+   power_index=i;if(!(state.magic.powers[i].flags&PD_PREPARED)){preparation_return=COMBAT;preparation_target=true;page=MAGIC_PREPARATION;}
+   else {pd_weapon_info w;if(pd_true_strike_stats(&state,i,attack_radiant,&w))attack_select(i);}
+  }return true;
+ }
  if(page==HIT_SMITE){
   if(smite_rolled&&a!=6479)return true;
   if(a==6099)page=DICE;

@@ -49,12 +49,12 @@ static lv_obj_t *control(const char *name,int x,int y,int w,int h,companion_acti
     lv_obj_t *b=lv_button_create(surface);lv_obj_remove_style_all(b);
     lv_obj_set_pos(b,x,y);lv_obj_set_size(b,w,h);lv_obj_remove_flag(b,LV_OBJ_FLAG_SCROLLABLE);
     lv_obj_set_style_bg_color(b,lv_color_hex(color),0);lv_obj_set_style_bg_opa(b,235,0);
-    lv_obj_set_style_border_width(b,2,0);lv_obj_set_style_border_color(b,lv_color_hex(0x4f7274),0);
-    lv_obj_set_style_radius(b,6,0);lv_obj_set_style_bg_opa(b,LV_OPA_COVER,LV_STATE_PRESSED);
+    lv_obj_set_style_border_width(b,1,0);lv_obj_set_style_border_color(b,lv_color_hex(0x83918b),0);
+    lv_obj_set_style_radius(b,2,0);lv_obj_set_style_shadow_width(b,1,0);lv_obj_set_style_shadow_color(b,lv_color_hex(0x02090f),0);lv_obj_set_style_shadow_ofs_y(b,3,0);lv_obj_set_style_shadow_opa(b,220,0);lv_obj_set_style_bg_opa(b,LV_OPA_COVER,LV_STATE_PRESSED);
     lv_obj_set_style_border_color(b,lv_color_hex(IVORY),LV_STATE_PRESSED);
     lv_obj_set_style_opa(b,LV_OPA_40,LV_STATE_DISABLED);
     lv_obj_add_event_cb(b,dispatch,LV_EVENT_CLICKED,(void*)(uintptr_t)action);
-    if(name&&*name){text(b,name,3,h-24,w-6,&lv_font_montserrat_16,IVORY);pd_ui_name(b,name);}
+    if(name&&*name){if(current.page!=COMPANION_HOME)text(b,name,3,h-24,w-6,&lv_font_montserrat_16,IVORY);pd_ui_name(b,name);}
     if(target_count<sizeof targets/sizeof targets[0])targets[target_count++]=b;
     return b;
 }
@@ -74,7 +74,7 @@ static void heart(lv_obj_t *parent,int x,int y) {
 static void status(void) {
     char value[80];
     text(surface,current.name,116,34,234,&lv_font_montserrat_20,IVORY);
-    snprintf(value,sizeof value,"LIVELLO %u",current.level);
+    snprintf(value,sizeof value,"LV %u",current.level);
     text(surface,value,148,59,170,&lv_font_montserrat_16,GOLD);
     if(current.power_text){
         unsigned color=current.power_warning==2?RED:current.power_warning?GOLD:current.power_charging?MINT:IVORY;
@@ -114,15 +114,15 @@ static void home(void) {
     const pd_ui_icon_id quick_icons[]={PD_UI_ATTACK,PD_UI_MAGIC};
     const char *quick_names[]={"Arma","Magie"};
     const companion_action quick_actions[]={COMPANION_ATTACK,COMPANION_MAGIC};
-    for(unsigned i=0;i<2;i++){lv_obj_t *b=control(quick_names[i],82+236*i,232,66,72,quick_actions[i],i?0x493353:0x5b322c);sprite(b,pd_ui_icon(quick_icons[i]),17,6);}
+    for(unsigned i=0;i<2;i++){lv_obj_t *b=control(quick_names[i],82+236*i,232,66,72,quick_actions[i],i?0x392a4d:0x4a302a);lv_obj_t *im=sprite(b,pd_ui_icon(quick_icons[i]),9,12);lv_image_set_pivot(im,0,0);lv_image_set_scale(im,384);lv_image_set_antialias(im,false);}
     const lv_image_dsc_t *images[]={&companion_dock_dice,NULL,&companion_dock_pack};
     const char *names[]={"Dadi","Menu","Zaino"};
     companion_action actions[]={COMPANION_DICE,COMPANION_OPEN_MENU,COMPANION_PACK};
     for(unsigned i=0;i<3;i++) {
         lv_obj_t *b=control(names[i],92+105*i,334,72,76,actions[i],i==1?0x333b32:0x12333e);
-        if(images[i])sprite(b,images[i],12,2);
+        if(images[i])sprite(b,images[i],12,14);
         else for(int row=0;row<2;row++)for(int col=0;col<2;col++)
-            block(b,20+19*col,12+19*row,14,14,IVORY,255,2);
+            block(b,20+19*col,22+19*row,14,14,IVORY,255,0);
     }
     if(!current.storage_error&&!current.notice&&!current.paused&&current.feedback_age<2000&&(current.applied_hp||current.applied_temporary)) {
         char value[80];
@@ -146,7 +146,6 @@ static void menu(void) {
     }else text(surface,"AZIONI",149,56,160,&lv_font_montserrat_26,IVORY);
     {lv_obj_t *library=control("",99,49,44,44,COMPANION_LIBRARY,INK);sprite(library,pd_ui_icon(PD_UI_SHEET),6,6);pd_ui_name(library,"I miei PG");}
     {lv_obj_t *settings=control("",323,49,44,44,COMPANION_SETTINGS,INK);sprite(settings,pd_ui_icon(PD_UI_GEAR),6,6);pd_ui_name(settings,"Schermo e rete");}
-    text(surface,"Premi a lungo per il nome",98,94,270,&lv_font_montserrat_16,GOLD);
     const char *names[]={"Attacco","Dadi","Magie","Zaino","Riposo","Scheda"};
     const lv_image_dsc_t *images[]={pd_ui_menu_icon(PD_UI_ATTACK),pd_ui_menu_icon(PD_UI_DICE),pd_ui_menu_icon(PD_UI_MAGIC),pd_ui_menu_icon(PD_UI_PACK),pd_ui_menu_icon(PD_UI_REST),pd_ui_menu_icon(PD_UI_SHEET)};
     const unsigned colors[]={0x5b322c,0x164553,0x493353,0x54412b,0x253b57,0x284d41};
@@ -162,20 +161,34 @@ static void menu(void) {
 }
 static void vitals(void) {
     char value[80];block(surface,0,0,466,466,INK,220,0);
-    text(surface,current.storage_error?"Errore memoria":"Punti ferita",98,69,270,&lv_font_montserrat_26,IVORY);
+    text(surface,current.storage_error?"Errore memoria":current.corrections?"Correggi PF":"Vitalita",98,69,270,&lv_font_montserrat_26,IVORY);
     snprintf(value,sizeof value,"%u / %u",current.hp,current.maximum);
     text(surface,value,108,112,250,&lv_font_montserrat_32,current.hp?MINT:RED);
     snprintf(value,sizeof value,"Temporanei: %u",current.temporary);
     text(surface,value,113,159,240,&lv_font_montserrat_20,IVORY);
-    text(surface,"Colpi e cure, poi conferma",98,184,270,&lv_font_montserrat_16,GOLD);
-    const char *names[]={"Danni","Cura","Temp.","Stato","-1 PF","+1 PF","Annulla","Eroe"};
-    const companion_action actions[]={COMPANION_DAMAGE,COMPANION_HEAL,COMPANION_TEMPORARY,COMPANION_STATUS,
-        COMPANION_MINUS,COMPANION_PLUS,COMPANION_UNDO,COMPANION_OPEN_HOME};
-    for(unsigned i=0;i<8;i++){
-        lv_obj_t *b=control("",105+(i%2)*144,207+(i/2)*54,112,44,actions[i],i==0?0x4b3032:i==1||i==2?0x214c43:INK);
-        if(i<4){sprite(b,pd_ui_icon(i==0?PD_UI_SHIELD:i==1?PD_UI_HEART:i==2?PD_UI_USES:PD_UI_SHEET),4,6);text(b,names[i],38,13,72,&lv_font_montserrat_16,IVORY);}else text(b,names[i],2,11,108,&lv_font_montserrat_20,IVORY);
-        if(i==4||i==5)pd_ui_name(b,"Correzione manuale PF");
-        if((i==4&&!current.can_hurt)||((i==1||i==5)&&!current.can_heal)||(i==6&&!current.can_undo))lv_obj_add_state(b,LV_STATE_DISABLED);
+    if(!current.corrections){
+        if(current.notice)text(surface,current.notice,98,183,270,&lv_font_montserrat_16,current.storage_error?RED:GOLD);
+        const char *names[]={"Danni","Cura","Temp.","Stato"};
+        const companion_action actions[]={COMPANION_DAMAGE,COMPANION_HEAL,COMPANION_TEMPORARY,COMPANION_STATUS};
+        const pd_ui_icon_id icons[]={PD_UI_SHIELD,PD_UI_HEART,PD_UI_USES,PD_UI_SHEET};
+        for(unsigned i=0;i<4;i++){
+            lv_obj_t *b=control("",105+(i%2)*144,203+(i/2)*72,112,64,actions[i],i==0?0x4b3032:i==1?0x214c43:INK);
+            sprite(b,pd_ui_icon(icons[i]),8,16);text(b,names[i],43,23,64,&lv_font_montserrat_16,IVORY);pd_ui_name(b,names[i]);
+            if(i==1&&!current.can_heal)lv_obj_add_state(b,LV_STATE_DISABLED);
+        }
+        const char *foot[]={"Eroe","Annulla","Correggi"};
+        const companion_action actions2[]={COMPANION_OPEN_HOME,COMPANION_UNDO,COMPANION_CORRECTIONS};
+        for(unsigned i=0;i<3;i++){lv_obj_t *b=control("",83+104*i,359,92,48,actions2[i],INK);text(b,foot[i],2,16,88,&lv_font_montserrat_16,IVORY);pd_ui_name(b,foot[i]);if(i==1&&!current.can_undo)lv_obj_add_state(b,LV_STATE_DISABLED);}
+        return;
+    }
+    text(surface,"Correzione diretta, senza difese",98,184,270,&lv_font_montserrat_16,GOLD);
+    const char *names[]={"-1 PF","+1 PF","Annulla","Indietro"};
+    const companion_action actions[]={COMPANION_MINUS,COMPANION_PLUS,COMPANION_UNDO,COMPANION_CORRECTIONS};
+    for(unsigned i=0;i<4;i++){
+        lv_obj_t *b=control("",105+(i%2)*144,224+(i/2)*72,112,56,actions[i],INK);
+        text(b,names[i],2,17,108,&lv_font_montserrat_20,IVORY);
+        if(i<2)pd_ui_name(b,"Correzione manuale PF");
+        if((i==0&&!current.can_hurt)||(i==1&&!current.can_heal)||(i==2&&!current.can_undo))lv_obj_add_state(b,LV_STATE_DISABLED);
     }
 }
 static void tick(lv_timer_t *unused) {

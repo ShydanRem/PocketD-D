@@ -12,13 +12,14 @@ typedef enum {
     COMPANION_ATTACK, COMPANION_DICE, COMPANION_MAGIC, COMPANION_PACK,
     COMPANION_REST, COMPANION_SHEET, COMPANION_APPEARANCE,
     COMPANION_MINUS, COMPANION_PLUS, COMPANION_UNDO, COMPANION_RESOURCES,
-    COMPANION_HEAL, COMPANION_TEMPORARY, COMPANION_DAMAGE, COMPANION_STATUS, COMPANION_SETTINGS, COMPANION_LIBRARY
+    COMPANION_HEAL, COMPANION_TEMPORARY, COMPANION_DAMAGE, COMPANION_STATUS, COMPANION_SETTINGS, COMPANION_LIBRARY,COMPANION_CORRECTIONS
 } companion_action;
 typedef struct {
     companion_page page;
     const char *name; /* copied by LVGL during show; no borrowed text in timer */
     unsigned level, hp, maximum, temporary, armor;
     bool motion, paused, storage_error, can_undo, can_heal, can_hurt;
+    bool corrections;
     int applied_hp, applied_temporary; /* actual committed deltas, not requested amounts */
     uint32_t feedback_age; /* elapsed since commit; redraw never restarts a receipt */
     const char *notice;
