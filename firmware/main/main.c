@@ -212,7 +212,7 @@ static bool avatar_class_loaded;
 static page_t appearance_return;
 static lv_obj_t *appearance_targets[10];
 static unsigned appearance_target_count,appearance_focus;
-static bool appearance_keyboard;
+static bool appearance_keyboard,appearance_picker;
 static bool wifi_editing(void);
 static bool play_editing(void);
 static bool appearance_editing(void);
@@ -743,6 +743,7 @@ static void meter(unsigned current,unsigned maximum,int y,unsigned color) {
 }
 static lv_obj_t *button(const char *text,int x,int y,int w,int h,intptr_t action,bool enabled);
 static void transaction_header(const lv_image_dsc_t *,const char *);
+static lv_obj_t *scene_control(const char *,const lv_image_dsc_t *,const char *,const char *,int,int,int,int,int,bool);
 static void delta_tile(pd_ui_icon_id,const char *,int,int,int,int);
 static void status_tile(pd_ui_icon_id,const char *,const char *,int,int);
 static lv_obj_t *icon_button(const char *name,pd_ui_icon_id icon,int x,int y,int w,int h,intptr_t action,bool enabled);
@@ -817,6 +818,7 @@ static void act(intptr_t action) {
     if(power_paused||power_off_attempted)return;
     if(library_failed)return;
     if(appearance_editing()&&(action<4301||action>4332))return;
+    if(page==AVATAR_EDIT&&appearance_picker&&action!=4309&&action!=4304&&action!=4302&&(action<4323||action>4329))return;
     if(magic_setup_open()){magic_setup_action(action);render();return;}
     if(action==MP_OPEN&&page==MAGIC_LIST&&!import_pending&&!confirmation_open()&&!dice_animation.active){preparation_begin();render();return;}
     if(action==B_OPEN){beyond_action(action);render();return;}
@@ -1163,11 +1165,13 @@ static void act(intptr_t action) {
     }
     else if (action==31&&import_pending) { if(import_from_beyond){page=beyond_return();beyond_notice="Importazione annullata: PG conservato";}else reply("PDD CANCELLED\n");import_pending=import_from_beyond=false; }
     else if (action==50)page=APPEARANCE;
-    else if(action==4300&&page==APPEARANCE){appearance_draft=state.avatar;appearance_scene=state.scene;appearance_lineage=state.lineage;appearance_body=state.body;appearance_group=state.lineage/3;appearance_outfit=state.outfit;appearance_class_group=state.outfit/3;appearance_field=state.outfit?6:0;appearance_keyboard=false;appearance_focus=0;page=AVATAR_EDIT;}
+    else if(action==4300&&page==APPEARANCE){appearance_draft=state.avatar;appearance_scene=state.scene;appearance_lineage=state.lineage;appearance_body=state.body;appearance_group=state.lineage/3;appearance_outfit=state.outfit;appearance_class_group=state.outfit/3;appearance_field=state.outfit?6:0;appearance_keyboard=false;appearance_picker=false;appearance_focus=0;page=AVATAR_EDIT;}
     else if((action==4301||action==4303)&&page==AVATAR_EDIT){do{appearance_field=(appearance_field+(action==4301?6:1))%7;}while((appearance_outfit&&appearance_field<4)||(appearance_field==1&&!pd_species_hair(appearance_lineage)));}
     else if(action==4302&&(page==AVATAR_EDIT||page==SCENE_EDIT))page=APPEARANCE;
-    else if(action==4304&&page==AVATAR_EDIT){appearance_focus=0;page=SCENE_EDIT;}
-    else if(action==4305&&page==SCENE_EDIT){appearance_focus=0;page=AVATAR_EDIT;}
+    else if(action==4309&&(page==AVATAR_EDIT||page==SCENE_EDIT)){appearance_picker=page==SCENE_EDIT?true:!appearance_picker;page=AVATAR_EDIT;appearance_focus=0;}
+    else if(action>=4323&&action<=4329&&page==AVATAR_EDIT&&appearance_picker){unsigned field=action-4323;if((appearance_outfit&&field<4)||(field==1&&!pd_species_hair(appearance_lineage)))return;appearance_field=field;if(field==4)appearance_group=appearance_lineage/3;if(field==6)appearance_class_group=appearance_outfit/3;appearance_picker=false;appearance_focus=0;}
+    else if(action==4304&&page==AVATAR_EDIT){appearance_picker=false;appearance_focus=0;page=SCENE_EDIT;}
+    else if(action==4305&&page==SCENE_EDIT){appearance_picker=false;appearance_focus=0;page=AVATAR_EDIT;}
     else if(action==4306&&(page==AVATAR_EDIT||page==SCENE_EDIT)){appearance_return=page;appearance_focus=0;page=APPEARANCE_CONFIRM;}
     else if(action==4308&&page==APPEARANCE_CONFIRM){appearance_focus=0;page=appearance_return;}
     else if(action==4307&&page==APPEARANCE_CONFIRM){
@@ -1806,8 +1810,8 @@ static void status_tile(pd_ui_icon_id icon,const char *name,const char *value,in
 static lv_obj_t *scene_control(const char *name,const lv_image_dsc_t *icon,const char *caption,const char *badge,int x,int y,int w,int h,int action,bool enabled){
     lv_obj_t *b=button(name,x,y,w,h,action,enabled);lv_obj_t *semantic=lv_obj_get_child(b,0);lv_obj_set_size(semantic,1,1);lv_label_set_long_mode(semantic,LV_LABEL_LONG_CLIP);lv_obj_add_flag(semantic,LV_OBJ_FLAG_HIDDEN);pd_ui_name(b,lv_label_get_text(semantic));lv_obj_set_style_pad_all(b,0,0);
     lv_obj_t *im=art(icon,9,(h-32)/2,b);lv_image_set_pivot(im,0,0);lv_image_set_scale(im,32*256/icon->header.w);lv_image_set_antialias(im,false);
-    tile_label(b,caption,48,h<=48?2:10,w-54,&lv_font_montserrat_16,enabled?PD_TEXT:PD_MUTED);
-    tile_label(b,badge,48,h<=48?24:36,w-54,&lv_font_montserrat_14,PD_MUTED);return b;
+    tile_label(b,caption,48,h<=54?2:10,w-54,&lv_font_montserrat_16,enabled?PD_TEXT:PD_MUTED);
+    tile_label(b,badge,48,h<=54?24:36,w-54,&lv_font_montserrat_14,PD_MUTED);return b;
 }
 /* Game command: one emblem, a short name, one useful value. Metadata and
    formulas stay in the detail view; names remain available on long press. */
@@ -2613,13 +2617,15 @@ static void render_reference(void){
     small_label(n?"Valori e dotazioni all importazione":"Reimporta da PC per aggiungere i dati",83,325,300,PD_MUTED);button("Scheda",83,359,300,48,4601,true);
 }
 static void render_settings(void){
-    char text[120];label("Schermo",83,111,300,true);
-    snprintf(text,sizeof text,"Luminosita %u%%",state.brightness);label(text,83,155,300,false);
-    button("-10",83,193,144,44,1601,state.brightness>10);button("+10",239,193,144,44,1602,state.brightness<100);
-    snprintf(text,sizeof text,"Attenua: %s >",(const char *const[]){"mai","30 sec","60 sec","120 sec"}[state.dim_timeout]);button(text,83,251,300,44,1603,true);
-    lv_obj_t *power=button("Alimentazione >",83,303,144,44,3700,true);lv_obj_set_style_text_font(power,&lv_font_montserrat_16,0);button("Wi-Fi >",239,303,144,44,4500,true);
-    const char *names[]={"Indietro","Tasti","Backup"};const unsigned actions[]={50,850,2800};
-    for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names[i],83+i*104,359,92,48,actions[i],true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
+    char text[120];snprintf(text,sizeof text,"%u%%",state.brightness);label(text,139,109,188,true);
+    lv_obj_t *minus=button("-10",83,99,48,48,1601,state.brightness>10);lv_obj_set_style_text_font(minus,&lv_font_montserrat_16,0);lv_obj_t *plus=button("+10",335,99,48,48,1602,state.brightness<100);lv_obj_set_style_text_font(plus,&lv_font_montserrat_16,0);
+    snprintf(text,sizeof text,"Attenua: %s >",(const char *const[]){"mai","30 sec","60 sec","120 sec"}[state.dim_timeout]);button(text,83,163,300,44,1603,true);
+    pd_wifi_info wifi;pd_wifi_snapshot(&wifi);const char *connection=wifi.setup?"Hotspot":wifi.suspended?"In pausa":wifi.state==PD_WIFI_CONNECTED?"Collegato":wifi.state==PD_WIFI_CONNECTING?"Connessione":"Offline";
+    scene_control("Wi-Fi >",pd_ui_icon(PD_UI_WIFI),"Wi-Fi",connection,83,219,144,64,4500,true);
+    bool fresh=pd_power_fresh(&power_info,lv_tick_get());if(fresh&&power_info.battery&&power_info.percent_valid)snprintf(text,sizeof text,"%u%%",power_info.percent);else snprintf(text,sizeof text,"%s",fresh&&power_info.vbus?"USB":"Dati assenti");
+    scene_control("Alimentazione >",pd_ui_icon(PD_UI_POWER),"Energia",text,239,219,144,64,3700,true);
+    scene_control("Tasti",pd_ui_icon(PD_UI_KEYS),"Tasti","2 tasti",83,291,144,64,850,true);scene_control("Backup",&theme_usb,"Backup","Salvataggi",239,291,144,64,2800,true);
+    button("Indietro",83,359,300,48,50,true);
 }
 
 static lv_obj_t *wrapped_name(const char *name,int y,int height,const lv_font_t *font){
@@ -3303,6 +3309,7 @@ static void companion_event(companion_action selected,void *unused) {
 }
 static void appearance_mark_focus(void){
     if(appearance_focus>=appearance_target_count)appearance_focus=0;
+    if(appearance_picker&&page==AVATAR_EDIT)for(unsigned i=0;i<appearance_target_count&&lv_obj_has_state(appearance_targets[appearance_focus],LV_STATE_DISABLED);i++)appearance_focus=(appearance_focus+1)%appearance_target_count;
     for(unsigned i=0;i<appearance_target_count;i++){
         lv_obj_set_style_outline_width(appearance_targets[i],appearance_keyboard&&i==appearance_focus?2:0,0);
         lv_obj_set_style_outline_pad(appearance_targets[i],2,0);
@@ -3319,10 +3326,16 @@ static void render_appearance_editor(void){
     art(pd_scene_image(appearance_scene),0,0,root);
     lv_obj_t *top=decoration(0,0,466,165,PD_INK,0);lv_obj_set_style_bg_opa(top,210,0);
     lv_obj_t *bottom=decoration(0,294,466,172,PD_INK,0);lv_obj_set_style_bg_opa(bottom,205,0);
-    small_label(ui_storage_status(),91,73,284,ui_status_color(ui_storage_status()));
+    if(strcmp(ui_storage_status(),"Salvato offline"))small_label(ui_storage_status(),91,73,284,ui_status_color(ui_storage_status()));
     static const char *const fields[]={"Carnagione","Capelli","Mantello","Taglio","Specie","Silhouette","Classe"};
 
     char caption[80];
+    if(page==AVATAR_EDIT&&appearance_picker){
+        label("Scegli dettaglio",83,101,300,false);
+        if(appearance_outfit){lv_obj_t *note=small_label("Look di classe: colori fissi",83,131,300,PD_GOLD);label_font(note,&lv_font_montserrat_14);}
+        for(unsigned i=0;i<7;i++){bool enabled=!(appearance_outfit&&i<4)&&!(i==1&&!pd_species_hair(appearance_lineage));lv_obj_t *b=appearance_button(fields[i],83+(i%2)*156,151+(i/2)*48,144,44,4323+i,enabled);if(i==appearance_field)lv_obj_set_style_border_color(b,lv_color_hex(PD_GOLD),0);}
+        appearance_button("Indietro",83,359,144,48,4309,true);appearance_button("Sfondo",239,359,144,48,4304,true);appearance_mark_focus();return;
+    }
     avatar_show(&appearance_draft,185,page==SCENE_EDIT?208:175,root,4,true);
     if(page==AVATAR_EDIT){
         snprintf(caption,sizeof caption,"%s %u/7",appearance_field==0?pd_species_surface(appearance_lineage):appearance_field==3&&!pd_species_hair(appearance_lineage)?"Testa":fields[appearance_field],appearance_field+1);label(caption,83,111,204,true);
@@ -3338,12 +3351,12 @@ static void render_appearance_editor(void){
             lv_obj_t *b=appearance_button(name,83+i*104,299,92,44,4310+i,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_14,0);
             if(value==chosen[appearance_field]){lv_obj_set_style_border_color(b,lv_color_hex(PD_MINT),0);lv_obj_set_style_border_width(b,3,0);lv_obj_set_style_bg_color(b,lv_color_hex(0x244d48),0);}
         }
-        appearance_button("Annulla",83,359,144,48,4302,true);appearance_button("Anteprima",239,359,144,48,4306,true);
+        appearance_button("Campi",83,359,92,48,4309,true);appearance_button("Annulla",187,359,92,48,4302,true);appearance_button("Anteprima",291,359,92,48,4306,true);
     }else if(page==SCENE_EDIT){
         label("Sfondo",83,111,204,true);appearance_button("Avatar",299,99,84,44,4305,true);
         small_label(pd_scene_name(appearance_scene),83,151,300,PD_GOLD);
         appearance_button("<",83,263,48,48,4320,true);appearance_button(">",335,263,48,48,4321,true);
-        appearance_button("Annulla",83,359,144,48,4302,true);appearance_button("Anteprima",239,359,144,48,4306,true);
+        appearance_button("Campi",83,359,92,48,4309,true);appearance_button("Annulla",187,359,92,48,4302,true);appearance_button("Anteprima",291,359,92,48,4306,true);
     }else{
         label("Salvare l'aspetto?",83,111,300,true);small_label(pd_scene_name(appearance_scene),83,151,300,PD_GOLD);
         snprintf(caption,sizeof caption,"%s / %s",pd_species_name(appearance_lineage),pd_body_name(appearance_body));small_label(caption,83,302,300,PD_GOLD);
@@ -3410,23 +3423,22 @@ static void render_content(void) {
         button("Interrompi",83,359,300,48,4900,!asset_verifying);return;
     }
     if (import_pending&&page!=BEYOND_REPORT) {
-        label(import_from_beyond?"DA BEYOND":"COPIA DA USB",83,112,300,true);
-        avatar_show(&pending.avatar,83,151,root,2,false);
-        label(pending.name,139,151,244,true);
-        snprintf(text,sizeof text,"Liv %u  PF %u/%u  CA %u",pending.level,pending.hp,pd_max_hp(&pending),pd_armor(&pending));
-        small_label(text,139,190,244,PD_GOLD);
-        char items[8],powers[8];
-        if(pending.inventory_available)snprintf(items,sizeof items,"%u",pending.item_count);else strcpy(items,"?");
-        if(pending.magic.available)snprintf(powers,sizeof powers,"%u",pending.magic.count);else strcpy(powers,"?");
-        snprintf(text,sizeof text,"Zaino %s | magie/usi %s",items,powers);small_label(text,83,216,300,PD_GOLD);
+        char items[8],powers[8];if(pending.inventory_available)snprintf(items,sizeof items,"%u",pending.item_count);else strcpy(items,"?");if(pending.magic.available)snprintf(powers,sizeof powers,"%u",pending.magic.count);else strcpy(powers,"?");
         if(import_from_beyond){
+            lv_obj_t *name=small_label(pending.name,83,99,300,PD_TEXT);lv_label_set_long_mode(name,LV_LABEL_LONG_WRAP);lv_obj_set_height(name,58);
+            avatar_show(&pending.avatar,85,163,root,2,false);
+            snprintf(text,sizeof text,"Lv %u | Zaino %s | Poteri %s",pending.level,items,powers);lv_obj_t *meta=small_label(text,143,163,240,PD_MUTED);label_font(meta,&lv_font_montserrat_14);
+            snprintf(text,sizeof text,"PF %u/%u | CA %u",pending.hp,pd_max_hp(&pending),pd_armor(&pending));lv_obj_t *vitals=label(text,143,191,240,false);lv_point_t vitals_size;lv_text_get_size(&vitals_size,text,&lv_font_montserrat_20,0,0,240,LV_TEXT_FLAG_NONE);if(vitals_size.y>lv_font_get_line_height(&lv_font_montserrat_20))label_font(vitals,&lv_font_montserrat_16);
+            snprintf(text,sizeof text,"Temporanei %u",pending.temp_hp);small_label(text,143,219,240,PD_MUTED);
             snprintf(text,sizeof text,"FOR %u   DES %u   COS %u",pending.abilities[0],pending.abilities[1],pending.abilities[2]);small_label(text,83,239,300,PD_TEXT);
             snprintf(text,sizeof text,"INT %u   SAG %u   CAR %u",pending.abilities[3],pending.abilities[4],pending.abilities[5]);small_label(text,83,262,300,PD_TEXT);
-            beyond_target_count=0;snprintf(text,sizeof text,"Limiti e dati manuali (%u)",beyond_report.limits);
-            beyond_control(text,83,287,300,44,B_NOTES,beyond_report.count>0);
+            beyond_target_count=0;snprintf(text,sizeof text,"Limiti e dati manuali (%u)",beyond_report.limits);beyond_control(text,83,287,300,44,B_NOTES,beyond_report.count>0);
             small_label(pd_board_library_root()?"PG attuale conservato su SD":"Senza SD: sostituisce il PG",83,335,300,PD_GOLD);
             beyond_control("Annulla",83,359,144,48,31,true);beyond_control("Importa",239,359,144,48,30,true);beyond_mark_focus();return;
         }
+        label("COPIA DA USB",83,112,300,true);avatar_show(&pending.avatar,83,151,root,2,false);label(pending.name,139,151,244,true);
+        snprintf(text,sizeof text,"Liv %u  PF %u/%u  CA %u",pending.level,pending.hp,pd_max_hp(&pending),pd_armor(&pending));small_label(text,139,190,244,PD_GOLD);
+        snprintf(text,sizeof text,"Zaino %s | magie/usi %s",items,powers);small_label(text,83,216,300,PD_GOLD);
         if(pending.defences.configured){unsigned known=0;for(unsigned i=0;i<PD_DAMAGE_TYPES;i++)known+=(pending.defences.configured>>i)&1;snprintf(text,sizeof text,"Monete %s | difese %u/13",pending.wallet.available?"si":"?",known);small_label(text,83,239,300,PD_GOLD);}else small_label(pending.wallet.available?"Monete: saldo verificato":"Monete: saldo non disponibile",83,239,300,PD_GOLD);
         small_label("Sostituisce la copia locale.",83,262,300,PD_TEXT);
         small_label((state.effect_count||state.roll_conditions||local_defences()||state.reaction_spent)?"Stato/storico rimossi; PC intatto":"Nuovo storico; PC conservato",83,287,300,(state.effect_count||state.roll_conditions||local_defences()||state.reaction_spent)?PD_GOLD:PD_TEXT);
@@ -3610,7 +3622,7 @@ static void screen_service(int pwr,int boot){
         }else if(appearance_editing()){
             if(i==0){if(!appearance_keyboard){appearance_keyboard=true;appearance_focus=0;}else appearance_focus=(appearance_focus+1)%appearance_target_count;appearance_mark_focus();}
             else if(i==1){if(!appearance_keyboard){appearance_keyboard=true;appearance_focus=0;appearance_mark_focus();}else if(appearance_focus<appearance_target_count){lv_obj_t *target=appearance_targets[appearance_focus];if(!lv_obj_has_state(target,LV_STATE_DISABLED))lv_obj_send_event(target,LV_EVENT_CLICKED,NULL);}}
-            else act(page==APPEARANCE_CONFIRM?4308:4302);
+            else act(page==APPEARANCE_CONFIRM?4308:appearance_picker&&page==AVATAR_EDIT?4309:4302);
         }else shortcut(i);
     }
     if(page==INPUT_CHECK_KEYS&&pd_input_check_keys(&input_check,pwr,boot,lv_tick_get(),allowed))input_check_refresh();

@@ -320,7 +320,8 @@ static void render_beyond(void){
                 if(strlen(row.id)>4)tail-=4;
                 else tail=row.id;
                 snprintf(text,sizeof text,"%s%s\nLiv %u | ...%s",name,n<strlen(row.name)?"...":"",row.level,tail);
-                beyond_control(text,83,199+i*64,300,54,B_PICK+i,!current.locked&&!current.reconnect);
+                char detail[64];snprintf(detail,sizeof detail,"Lv %u | ...%s",row.level,tail);
+                lv_obj_t *card=scene_control(text,pd_ui_icon(PD_UI_SHEET),row.name,detail,83,199+i*64,300,54,B_PICK+i,!current.locked&&!current.reconnect&&!library_failed);if(beyond_target_count<16)beyond_targets[beyond_target_count++]=card;
             }
             if(!current.count)small_label(current.listed?"Nessun PG nell elenco":"Premi Rileggi per caricare i PG",83,231,300,PD_TEXT);
             snprintf(text,sizeof text,"%s | %u/%u",current.locked?"Accesso incerto: riavvia":current.reconnect?"Accesso da ricollegare":beyond_notice[0]?beyond_notice:current.partial?"Elenco parziale":current.remembered?"Accesso ricordato":"Accesso fino allo spegnimento",beyond_catalog_page+1,current.count?(current.count+1)/2:1);

@@ -1895,9 +1895,9 @@ int main(void) {
     assert(pd_library_save(&fixture_library,1,other,other_history,NULL)==PD_LIBRARY_OK);
     state.brightness=80;state.shortcuts[0]=2;pd_avatar active_avatar=state.avatar;unsigned library_rng=random_calls,library_writes=save_calls;
     tap(121,71);assert(page==LIBRARY_HOME&&library_catalog.count==2);bounds();
-    {lv_area_t a,b;lv_obj_get_coords(lv_obj_get_child(library_targets[0],0),&a);lv_obj_get_coords(lv_obj_get_child(library_targets[0],1),&b);assert(a.y2<b.y1);}
-    screenshot("ux090-library.ppm");
-    assert(save_calls==library_writes&&random_calls==library_rng);click("Mira delle stelle");assert(page==LIBRARY_CONFIRM&&pending.hp==7&&state.history_epoch==100);bounds();screenshot("ux090-open-pg.ppm");
+    {lv_area_t a,b;lv_obj_get_coords(lv_obj_get_child(library_targets[0],2),&a);lv_obj_get_coords(lv_obj_get_child(library_targets[0],3),&b);assert(a.y2<b.y1);assert(b.y2<lv_obj_get_y2(library_targets[0]));}
+    screenshot("ux090-library.ppm");screenshot("ux100-library.ppm");
+    assert(save_calls==library_writes&&random_calls==library_rng);click("Mira delle stelle");assert(page==LIBRARY_CONFIRM&&pending.hp==7&&state.history_epoch==100);bounds();assert(avatar_lineage==pending.lineage&&avatar_body==pending.body&&avatar_outfit==pending.outfit);screenshot("ux090-open-pg.ppm");screenshot("ux100-open-pg.ppm");
     assert(!stage_import(other)&&!stage_backup(NULL));act(100);assert(page==LIBRARY_CONFIRM);click("Indietro");assert(page==LIBRARY_HOME&&save_calls==library_writes);
     /* A card copy changed since preview is refused, not silently replaced. */
     click("Mira delle stelle");other->hp=8;assert(pd_library_save(&fixture_library,1,other,other_history,NULL)==PD_LIBRARY_OK);click("Apri e gioca");assert(page==LIBRARY_CONFIRM&&state.history_epoch==100&&strstr(library_notice,"Copia cambiata"));click("Indietro");
@@ -1938,7 +1938,7 @@ int main(void) {
     click("Leggi");beyond_result_mock=calloc(1,sizeof *beyond_result_mock);assert(beyond_result_mock);beyond_result_mock->report=(pd_beyond_report){.blockers=1,.limits=1,.count=2};strcpy(beyond_result_mock->report.lines[0],"Bonus non riconciliato: conversione bloccata");strcpy(beyond_result_mock->report.lines[1],"Controlla i dati del personaggio");beyond_mock=(pd_beyond_info){.phase=PD_BEYOND_FINISHED,.error=PD_BEYOND_BLOCKED};beyond_poll();assert(page==BEYOND_REPORT&&!import_pending);bounds();screenshot("ux091-beyond-blocked.ppm");click(">");assert(beyond_note==1);click("Indietro");assert(page==BEYOND_FORM&&!memcmp(&original,&state,sizeof state)&&save_calls==original_saves);
     click("Leggi");beyond_result_mock=calloc(1,sizeof *beyond_result_mock);assert(beyond_result_mock);beyond_result_mock->state=original;strcpy(beyond_result_mock->state.name,"Sonda nativa");beyond_result_mock->state.hp=7;beyond_result_mock->state.lineage=2;beyond_result_mock->state.brightness=10;
     beyond_result_mock->report=(pd_beyond_report){.limits=2,.count=2};strcpy(beyond_result_mock->report.lines[0],"Effetti condizionali: verifica con il DM");memset(beyond_result_mock->report.lines[1],'W',160);beyond_result_mock->report.lines[1][160]=0;
-    beyond_mock=(pd_beyond_info){.phase=PD_BEYOND_FINISHED,.error=PD_BEYOND_READY};beyond_poll();assert(import_pending&&import_from_beyond&&pending.hp==7&&state.hp==original.hp&&!strcmp(last_reply,"PDD ERROR busy\n"));bounds();screenshot("ux091-beyond-preview.ppm");
+    beyond_mock=(pd_beyond_info){.phase=PD_BEYOND_FINISHED,.error=PD_BEYOND_READY};beyond_poll();assert(import_pending&&import_from_beyond&&pending.hp==7&&state.hp==original.hp&&!strcmp(last_reply,"PDD ERROR busy\n"));bounds();wrapped_fits();assert(avatar_lineage==pending.lineage&&avatar_body==pending.body&&avatar_outfit==pending.outfit);screenshot("ux091-beyond-preview.ppm");screenshot("ux100-import.ppm");
     click("Limiti e dati manuali (2)");assert(page==BEYOND_REPORT&&import_pending);click(">");wrapped_fits();bounds();screenshot("ux091-beyond-notes.ppm");click("Indietro");assert(import_pending&&page==BEYOND_BUSY);
     physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};beyond_keyboard=false;screen_service(0,0);lv_tick_inc(40);screen_service(0,0);screen_service(1,0);lv_tick_inc(40);screen_service(1,0);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);assert(beyond_keyboard&&beyond_focus==0&&import_pending&&state.hp==original.hp);
     click("Importa");assert(page==HERO&&!import_pending&&!import_from_beyond&&state.hp==7&&state.lineage==2&&state.brightness==original.brightness&&state.history_epoch>original.history_epoch&&!history.count&&!undo_available);assert(save_calls==original_saves+1&&random_calls==original_rng&&!strcmp(last_reply,"PDD ERROR busy\n"));act(30);assert(save_calls==original_saves+1&&state.hp==7);
@@ -1959,7 +1959,7 @@ int main(void) {
     pd_account_request *req=calloc(1,sizeof *req);assert(req);req->kind=PD_ACCOUNT_HELLO;beyond_account_request(req);assert(page==BEYOND_PAIR&&beyond_pairing&&!beyond_approved);bounds();screenshot("ux092-pair.ppm");
     click("Ricorda accesso: SI");assert(!beyond_remember);click("Collega");assert(beyond_approved&&strstr(last_reply,"ACCOUNT ACCEPT"));
     req->kind=PD_ACCOUNT_OFFER;strcpy(req->nonce,beyond_nonce);req->access.version=1;strcpy(req->access.user,"1234");strcpy(req->access.cookie,"synthetic-session");beyond_account_request(req);assert(page==BEYOND_BUSY&&beyond_mock.operation==PD_BEYOND_LINK);
-    beyond_mock.running=false;beyond_mock.phase=PD_BEYOND_FINISHED;beyond_mock.configured=true;beyond_mock.count=1;beyond_mock.error=0;req->kind=PD_ACCOUNT_CANCEL;beyond_account_request(req);assert(page==BEYOND_BUSY&&beyond_pairing);beyond_poll();assert(page==BEYOND_ACCOUNT&&!beyond_pairing&&strstr(last_reply,"ACCOUNT LINKED"));bounds();screenshot("ux092-account.ppm");
+    beyond_mock.running=false;beyond_mock.phase=PD_BEYOND_FINISHED;beyond_mock.configured=true;beyond_mock.count=1;beyond_mock.error=0;req->kind=PD_ACCOUNT_CANCEL;beyond_account_request(req);assert(page==BEYOND_BUSY&&beyond_pairing);beyond_poll();assert(page==BEYOND_ACCOUNT&&!beyond_pairing&&strstr(last_reply,"ACCOUNT LINKED"));bounds();screenshot("ux092-account.ppm");screenshot("ux100-account.ppm");
     click("Esci");assert(page==BEYOND_FORGET);bounds();screenshot("ux092-forget.ppm");click("Indietro");assert(page==BEYOND_ACCOUNT&&beyond_mock.configured);click("Esci");click("Scollega");assert(page==BEYOND_ACCOUNT&&!beyond_mock.configured&&!memcmp(&state,&before_account,sizeof state)&&save_calls==saves_before_account);
     pd_account_wipe(req,sizeof *req);free(req);beyond_mock=(pd_beyond_info){0};
     }
@@ -2234,6 +2234,32 @@ int main(void) {
     probe_click(session_touch,233,277);assert(page==EFFECT_EDIT&&effect_index==2);click("Attivo: no");click("Anteprima");assert(page==EFFECT_CONFIRM&&pd_armor(&scratch)==17);screenshot("ux099-effect-confirm.ppm");before=state;writes=save_calls;click("Indietro");assert(!memcmp(&state,&before,sizeof state)&&save_calls==writes&&random_calls==draws);
     lv_indev_delete(session_touch);page=HERO;render();
     puts("Advanced session UX: 20 direct paged hit-die pools/original index, frozen save retry/single RNG, depleted/full HP guards, all fifteen bilingual condition glyphs, note/rule separation, explicit draft/save retry, read-only round preview/cancel, paused timers and negative HP/AC expiry passed with synthetic LVGL.");
+    }
+    {
+    /* Collection/setup UX: real production pointer and key paths, synthetic PG.
+       No radio/account call or gameplay write is caused by consultation. */
+    pd_demo(&state);state.shortcuts[0]=14;state.shortcuts[1]=4;state.shortcuts[2]=13;state.outfit=9;
+    history_pending=import_pending=library_failed=history_quarantined=fail_save=false;pd_history_reset(&history,state.history_epoch);pd_dice_idle(&dice_animation,1);display_screen=(pd_screen){0};physical_keys=(pd_buttons){0};
+    pd_board_assets_refresh();pd_state before=state;pd_history before_history=history;unsigned writes=save_calls,draws=random_calls,joins=join_calls,commands=wifi_command_calls,requests=beyond_start_calls;
+    lv_indev_t *setup_touch=lv_indev_create();assert(setup_touch);lv_indev_set_type(setup_touch,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(setup_touch,probe_touch);lv_indev_set_display(setup_touch,d);
+    act(50);click("Modifica");assert(appearance_field==6&&avatar_class_loaded);probe_click(setup_touch,129,383);assert(appearance_picker);bounds();screenshot("ux100-fields.ppm");
+    act(4323);act(4310);assert(appearance_picker&&appearance_field==6&&!memcmp(&state,&before,sizeof state)); /* fixed colors and stray choice */
+    physical_keys=(pd_buttons){0};appearance_keyboard=false;probe_key_gesture(0,100);assert(appearance_keyboard&&appearance_focus==4);probe_key_gesture(1,100);assert(!appearance_picker&&appearance_field==4);probe_click(setup_touch,129,383);assert(appearance_picker);probe_key_gesture(1,900);assert(!appearance_picker&&page==AVATAR_EDIT); /* back only one level */
+    probe_click(setup_touch,129,383);probe_click(setup_touch,311,269);assert(!appearance_picker&&appearance_field==5);click("Femminile");
+    probe_click(setup_touch,129,383);probe_click(setup_touch,155,317);assert(appearance_field==6&&!appearance_picker&&appearance_class_group==3);click("Ladro");
+    probe_click(setup_touch,129,383);probe_click(setup_touch,155,269);assert(appearance_field==4);click("Altre");click("Gnomo");assert(appearance_lineage==4&&appearance_body==1);bounds();screenshot("ux100-avatar.ppm");
+    probe_click(setup_touch,129,383);probe_click(setup_touch,311,383);assert(page==SCENE_EDIT&&!appearance_picker);click(">");bounds();screenshot("ux100-scene.ppm");
+    assert(!memcmp(&state,&before,sizeof state)&&!memcmp(&history,&before_history,sizeof history)&&save_calls==writes&&random_calls==draws&&join_calls==joins&&wifi_command_calls==commands&&beyond_start_calls==requests);
+    click("Anteprima");for(unsigned i=0;i<3;i++)shortcut(i);assert(page==APPEARANCE_CONFIRM&&!stage_import(&before));fail_save=true;click("Conferma");assert(page==APPEARANCE_CONFIRM&&!memcmp(&state,&before,sizeof state));fail_save=false;click("Conferma");assert(page==APPEARANCE&&state.lineage==4&&state.body==1&&state.outfit==9&&state.scene==1&&save_calls==writes+2&&random_calls==draws);
+    before.lineage=4;before.body=1;before.scene=1;assert(!memcmp(&state,&before,sizeof state));
+    /* Settings are read-only until a preference is explicitly changed. */
+    writes=save_calls;act(1600);bounds();screenshot("ux100-settings.ppm");render();assert(!memcmp(&state,&before,sizeof state)&&save_calls==writes&&random_calls==draws&&wifi_command_calls==commands&&join_calls==joins);
+    probe_click(setup_touch,107,123);before.brightness-=10;assert(!memcmp(&state,&before,sizeof state)&&save_calls==writes+1);probe_click(setup_touch,359,123);before.brightness+=10;assert(!memcmp(&state,&before,sizeof state)&&save_calls==writes+2);
+    probe_click(setup_touch,155,251);assert(page==WIFI_HOME&&join_calls==joins&&wifi_command_calls==commands);act(4501);act(1600);probe_click(setup_touch,311,251);assert(page==POWER_HOME);click("Indietro");act(1600);probe_click(setup_touch,155,323);assert(page==KEY_SETTINGS&&!memcmp(state.shortcuts,before.shortcuts,3));act(1600);probe_click(setup_touch,311,323);assert(page==BACKUP_HOME&&save_calls==writes+2&&random_calls==draws&&!memcmp(&history,&before_history,sizeof history));
+    /* Very wide imported names fit both explicit previews, no hidden acceptance. */
+    pending=state;memset(pending.name,'W',40);pending.name[40]=0;page=LIBRARY_CONFIRM;library_notice[0]=0;render();bounds();wrapped_fits();screenshot("ux100-long-preview.ppm");page=HERO;render();assert(stage_import_from(&pending,true));bounds();wrapped_fits();click("Annulla");assert(!import_pending&&!memcmp(&state,&before,sizeof state)&&save_calls==writes+2&&random_calls==draws);
+    lv_indev_delete(setup_touch);page=HERO;render();
+    puts("Collection/setup UX: real pointer direct species/body/class/scene, fixed-color/stray-action guards, disabled key focus and local back, read-only drafts/history/radio, failed-save cosmetic-only retry, settings shortcuts/brightness and long-name previews passed; synthetic LVGL, no hardware/account access claim.");
     }
     unsigned covered=0;
     for(unsigned p=0;p<=MAGIC_PREPARE_CONFIRM;p++){

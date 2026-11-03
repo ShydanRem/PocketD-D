@@ -102,24 +102,20 @@ static void library_mark_focus(void){
 static void render_library(void){
     char text[120];library_target_count=0;
     if(page==LIBRARY_CONFIRM){
-        label("Apri questo PG?",83,111,300,true);label(pending.name,83,155,300,false);
-        snprintf(text,sizeof text,"Liv. %u | PF %u/%u +%u | CA %u",pending.level,pending.hp,pd_max_hp(&pending),pending.temp_hp,pd_armor(&pending));small_label(text,83,195,300,PD_GOLD);
-        snprintf(text,sizeof text,"Aspetto, risorse e %u tiri salvati",backup_history.count);small_label(text,83,231,300,PD_TEXT);
-        small_label("Il PG attuale resta nella raccolta",83,267,300,PD_MINT);
-        lv_obj_t *notice=small_label(library_notice,83,303,300,PD_DANGER);lv_label_set_long_mode(notice,LV_LABEL_LONG_WRAP);lv_obj_set_height(notice,40);
+        lv_obj_t *name=small_label(pending.name,83,99,300,PD_TEXT);lv_label_set_long_mode(name,LV_LABEL_LONG_WRAP);lv_obj_set_height(name,58);
+        snprintf(text,sizeof text,"Lv %u",pending.level);small_label(text,83,163,144,PD_GOLD);avatar_show(&pending.avatar,99,179,lv_screen_active(),4,false);
+        if(pending.temp_hp)snprintf(text,sizeof text,"%u/%u +%u",pending.hp,pd_max_hp(&pending),pending.temp_hp);else snprintf(text,sizeof text,"%u/%u",pending.hp,pd_max_hp(&pending));status_tile(PD_UI_HEART,"PF",text,239,175);snprintf(text,sizeof text,"%u",pd_armor(&pending));status_tile(PD_UI_SHIELD,"CA",text,239,243);
+        if(!library_notice[0]){snprintf(text,sizeof text,"%u tiri salvati",backup_history.count);small_label(text,83,311,144,PD_MUTED);small_label("Copia sulla SD",239,311,144,PD_MINT);}
+        else{lv_obj_t *notice=small_label(library_notice,83,311,300,PD_DANGER);lv_label_set_long_mode(notice,LV_LABEL_LONG_WRAP);lv_obj_set_height(notice,40);}
         library_control("Indietro",83,359,144,48,5304,!library_failed);library_control("Apri e gioca",239,359,144,48,5305,!library_failed&&power_storage_ready());
     }else{
         label("I miei PG",83,111,244,true);
         lv_obj_t *notice=small_label(library_notice,83,153,300,PD_GOLD);lv_label_set_long_mode(notice,LV_LABEL_LONG_WRAP);lv_obj_set_height(notice,38);
         for(unsigned i=0;i<3&&library_page*3+i<library_catalog.count;i++){
             const pd_library_entry *e=library_catalog.entries+library_page*3+i;bool known=e->status==PD_LIBRARY_OK||e->status==PD_LIBRARY_RECOVERED;
-            lv_obj_t *b=library_control(known?e->name:"Copia non leggibile",83,195+52*i,300,44,5310+i,known);
-            lv_obj_set_style_pad_all(b,0,0);
-            lv_obj_t *name=lv_obj_get_child(b,0);lv_label_set_long_mode(name,LV_LABEL_LONG_DOT);lv_obj_set_width(name,272);lv_obj_set_height(name,19);lv_obj_align(name,LV_ALIGN_TOP_LEFT,12,1);lv_obj_set_style_text_align(name,LV_TEXT_ALIGN_LEFT,0);
-            lv_obj_t *detail=lv_label_create(b);lv_obj_set_style_text_font(detail,&lv_font_montserrat_16,0);lv_label_set_long_mode(detail,LV_LABEL_LONG_DOT);lv_obj_set_size(detail,272,19);lv_obj_set_style_text_align(detail,LV_TEXT_ALIGN_LEFT,0);
-            if(known)snprintf(text,sizeof text,"Livello %u%s%s",e->level,e->owner==library.owner&&e->epoch==state.history_epoch?" | Attuale":"",e->status==PD_LIBRARY_RECOVERED?" | Copia recuperata":"");
-            else snprintf(text,sizeof text,"Copia %u | conservata sulla SD",e->slot);
-            lv_label_set_text(detail,text);lv_obj_align(detail,LV_ALIGN_TOP_LEFT,12,23);
+            if(known)snprintf(text,sizeof text,"Lv %u%s%s",e->level,e->owner==library.owner&&e->epoch==state.history_epoch?" | Attuale":"",e->status==PD_LIBRARY_RECOVERED?" | Recuperata":"");else snprintf(text,sizeof text,"Copia %u | conservata",e->slot);
+            lv_obj_t *b=scene_control(known?e->name:"Copia non leggibile",pd_ui_icon(PD_UI_HOME),known?e->name:"Copia non leggibile",text,83,195+52*i,300,44,5310+i,known);if(library_target_count<7)library_targets[library_target_count++]=b;
+            if(known&&e->owner==library.owner&&e->epoch==state.history_epoch)lv_obj_set_style_border_color(b,lv_color_hex(PD_GOLD),0);
         }
         library_control("Indietro",83,359,92,48,5301,true);library_control("<",187,359,92,48,5302,library_page>0);library_control(">",291,359,92,48,5303,(library_page+1)*3<library_catalog.count);
         if(library_target_count<7)library_targets[library_target_count++]=icon_button("Importa da Beyond",PD_UI_SEARCH,335,99,48,44,5440,true);
