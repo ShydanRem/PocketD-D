@@ -68,11 +68,66 @@ i confini circolari e i bersagli di almeno 44 px delle 153 viste.
 [Anteprima nativa con personaggio sintetico](previews/v096-rpg-ux.png).
 Non è una fotografia dell’ESP32 e non dimostra touch o fluidità fisici.
 
-Da rivedere subito dopo: risultati e azioni successive al tiro, selezione e
-lancio magie, equipaggiamento/uso degli oggetti, riposi/stato. Raccolta, aspetto,
+Dopo la prima iterazione restavano risultati e azioni successive al tiro,
+selezione e lancio magie, equipaggiamento/uso degli oggetti, riposi/stato.
+La seconda iterazione qui sotto copre i risultati e le schede di gioco;
+equipaggiamento, conferme, riposi e stato restano da ripensare. Raccolta, aspetto,
 importazione e impostazioni seguono nella stessa revisione, non vengono
 considerati terminati dal solo cambiamento del tema.
 
 Controlli della release: 356 test JavaScript, suite nativa e 153 viste LVGL,
 ASan/UBSan e compilazione ESP32. Nessuna nuova lettura Beyond reale o modifica
 alla raccolta personale; le nuove prove usano solo dati sintetici.
+
+## Seconda iterazione · risultati e schede di gioco
+
+Obiettivo: distinguere risultato, significato e prossima azione. Numero centrale
+in carattere pixel originale a 48 px; critico oro, colpo mancato rosso, cure verde.
+Il 20 naturale di una prova resta un 20 naturale: non viene chiamato critico o
+successo automatico. Con bonus e due dadi si conservano i valori del tiro fissato.
+Durante il volo il risultato rimane nascosto. Dadi animati sotto il numero,
+comando successivo principale e navigazione secondaria per icone con nome su
+pressione prolungata. Nessun nuovo tiro al termine dell’animazione o navigando.
+
+Nelle schede magia/oggetto l’emblema identifica la voce prima della lettura.
+Per le magie: nome, preparazione, valore utile, costo, azione; testo esteso
+apribile dalla scheda. Costi e limiti manuali restano espliciti. Regole e roadmap
+funzionale non cambiano. La home approvata della v0.96 rimane il riferimento.
+
+### v0.97: comportamento e limiti
+
+- Risultato numerico a 48 px, sopra i dadi. L’esito compare al termine del volo;
+  toccare il dado o Accelera termina l’animazione dello stesso risultato.
+- Dopo un colpo riuscito **Danni** è l’azione principale. Un mancato propone
+  il nuovo attacco. Le componenti radianti, Hex/Marchio e Punizione mantengono
+  il totale aggregato; cambiare componente non tira di nuovo e non registra
+  copie nello storico.
+- Cure e ricariche mostrano il guadagno effettivo dopo il limite massimo.
+  Se non c’è memoria per l’animazione, il numero e l’esito restano visibili.
+- Navigazione secondaria con le stesse icone di Eroe, Scheda, Storico e Usi.
+  Pressione prolungata per il nome; tasti configurabili conservati.
+- Scheda magia: emblema, nome completo, preparazione, attacco/CD o effetto,
+  costo e comando. Tocca il nome per leggere il testo. **Effetti manuali**
+  resta esplicito per le magie prive di automazione; l’icona non concede regole.
+- Emblemi anche nelle schede oggetto. I nomi larghi adattano il carattere senza
+  coprire i valori. Scudo ridisegnato nello stesso catalogo nativo/PC per renderlo
+  più distinto dal teschio.
+
+[Quattro schermate native](previews/v097-result-ux.png), PG e tiri sintetici.
+La cura mostrata è un guadagno limitato dai PF massimi, non il valore grezzo dei
+dadi. La nuova verifica attraversa gli eventi pointer del firmware, confronta
+risultati e stato completo, conta RNG e scritture e verifica anche i nomi larghi
+nei componenti figli. Nessun accesso Beyond reale o raccolta personale usati.
+
+La v0.97 non introduce nuovi formati, risorse SD o regole e non chiude la revisione
+UI. Non serve reimportare il PG né reinstallare il componente PC; aggiorna il
+firmware conservando i dati. Nuova resa e interazioni da valutare sul dispositivo.
+
+Per una magia senza modello d’effetto, **Profilo** indica il bonus di attacco
+magico e la CD dell’origine da incantatore. Non implica che quella magia
+richieda un attacco o un TS: **Effetti manuali** resta visibile e i dettagli
+della magia stabiliscono quali valori siano pertinenti.
+
+Verifica della v0.97: 356 test JavaScript, suite nativa, tutte le 153 viste
+LVGL e nuovi scenari dei risultati, ASan/UBSan e compilazione ESP32. Le prove
+software non attestano fluidità o risposta del touch sul display fisico.

@@ -1,5 +1,7 @@
 # PocketD-D — uso pratico sul dispositivo
 
+> Aggiornamento v0.97: [risultati, dadi e schede di gioco](UX-RPG.md#seconda-iterazione--risultati-e-schede-di-gioco).
+
 > Aggiornamento v0.96: [revisione UX del dispositivo](UX-RPG.md), prima iterazione.
 
 > Aggiornamento v0.92: [collegamento account e scelta dei PG Beyond](COLLEGAMENTO-BEYOND.md). Nuovo percorso da collaudare realmente.
@@ -123,3 +125,20 @@ USB adesso. Ulteriori aggiustamenti alla disposizione potranno seguire l’uso
 sull’AMOLED reale.
 
 ![UI nativa su PC con personaggi sintetici](previews/v080-practical-device.png)
+
+## Risultato del tiro · v0.97
+
+Numero grande in alto, esito sotto e dadi al centro. Prima della fine del volo il
+numero non viene anticipato. **Accelera** o il tocco sul dado rivelano lo stesso
+tiro. Dopo un colpo riuscito **Danni** è il comando principale; dopo un mancato,
+**Nuovo** apre un altro attacco. Non vengono ritirati automaticamente i dadi.
+
+Per danni con più componenti il numero grande resta il totale complessivo;
+la riga sopra identifica la componente visualizzata. **Radianti / Extra /
+Punizione / Dadi arma** cambiano la vista dello stesso tiro. Cure e cariche
+mostrano la quantità effettivamente guadagnata, anche quando il tiro supera il
+massimo. I dettagli del tiro rimangono nello **Storico**.
+
+In basso: icone Eroe, Scheda, Storico e Usi, con nome su pressione prolungata.
+Nella scheda magia tocca il riquadro del nome per leggere il testo esteso.
+**Effetti manuali** significa che le conseguenze vanno ancora gestite con il DM.

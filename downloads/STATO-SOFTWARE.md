@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **3 novembre 2026 — v0.96**. Il dispositivo è il prodotto;
+Aggiornamento del **3 novembre 2026 — v0.97**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
@@ -19,6 +19,25 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Seconda iterazione UX · v0.97
+
+[Direzione, avanzamento e anteprima](UX-RPG.md). Il risultato del tiro diventa
+l’elemento principale: numero pixel a 48 px, esito e prossima azione distinti.
+Critico, mancato, cure effettive e danni totali delle componenti sono leggibili
+senza ricostruire una frase. Prima della fine del volo il risultato resta nascosto;
+la navigazione fra componenti conserva esattamente dadi e storico. Il 20 naturale
+di una prova non diventa un critico o successo automatico.
+
+Schede magia e oggetto con emblemi più presenti; magia ordinata per nome,
+preparazione, valore, costo e comando, testo esteso apribile dal nome. Gli effetti
+non automatizzati restano dichiarati manuali. Nomi larghi interamente leggibili;
+scudo distinto dal teschio nel catalogo comune. Home v0.96 conservata.
+
+Nessun nuovo formato, scrittura Beyond, JSON reale o modifica delle schede
+personali. Continuano a mancare la revisione delle conferme, equipaggiamento,
+riposi/stato e poi raccolta/aspetto/impostazioni. Valutazione estetica e collaudo
+fisico restano distinti dalle prove software; la revisione non è dichiarata conclusa.
 
 ## Priorità attuale: UX del dispositivo · v0.96
 

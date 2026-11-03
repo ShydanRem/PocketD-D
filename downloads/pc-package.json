@@ -1,28 +1,28 @@
 {
   "version": 1,
   "filename": "PocketDD-PC.zip",
-  "size": 62051379,
-  "sha256": "4b3acf91c6cb5be845d50fc8ed9848017abf320b4fcd21f23b23d2d4111db186",
+  "size": 62427471,
+  "sha256": "65f90dc65ba16661a5562b208b1872d25e7afac571af5b42a8066321a139d3ef",
   "parts": [
     {
       "path": "PocketDD-PC.part0.bin",
       "size": 16777216,
-      "sha256": "19d3a36f0e1de5c47d9ee1198a9318be97c8fa86bb0680cae90c14512c5d914d"
+      "sha256": "6127cc0f982008ece3517fe4a6ad1835d0f11a9b4c8f753c4ff117e1e6231dc0"
     },
     {
       "path": "PocketDD-PC.part1.bin",
       "size": 16777216,
-      "sha256": "1cf0dd842803ce205125541b34784a1b076d241041ddb1d8c647a01ced536ed0"
+      "sha256": "8903542fa5c6031e08826a93197d781922a99213d3340ea82b97ba8d69fc5bff"
     },
     {
       "path": "PocketDD-PC.part2.bin",
       "size": 16777216,
-      "sha256": "d2929bc9efa2951b469878141df3ad4075ed1df8d2d3e602fdff40b6657465c1"
+      "sha256": "322ce6cd504b41b4e4c4594a0088beb16f6561fc23b712e8d7628ab57e1ee382"
     },
     {
       "path": "PocketDD-PC.part3.bin",
-      "size": 11719731,
-      "sha256": "db1c473242ecd73c0dd436147afee5cc50f6400925b35cbfad3a9abb83431ad0"
+      "size": 12095823,
+      "sha256": "761e76b28c559c20de9936f83461c8d911fe166b33749453193cbba4984c22a5"
     }
   ]
 }
