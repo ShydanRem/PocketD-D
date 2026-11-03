@@ -1,5 +1,7 @@
 # PocketD-D — uso pratico sul dispositivo
 
+> Aggiornamento v0.96: [revisione UX del dispositivo](UX-RPG.md), prima iterazione.
+
 > Aggiornamento v0.92: [collegamento account e scelta dei PG Beyond](COLLEGAMENTO-BEYOND.md). Nuovo percorso da collaudare realmente.
 >
 > Aggiornamento v0.91: [lettura e conversione Beyond sul Pocket via Wi-Fi](BEYOND-DISPOSITIVO.md), per ID pubblico; nuovo percorso da collaudare sull’hardware.
@@ -25,13 +27,13 @@ con dati sintetici, non fotografie né prove del touch fisico.
 
 ## Le azioni della home
 
-- **Spada / Arma:** apre l’attacco con l’arma attiva. Se il PG ha varianti con arma,
-  propone attacco normale oppure magia, con bonus e dadi. Senza varianti va
-  direttamente all’attacco normale. Se manca l’arma, apre scelta/configurazione;
+- **Spada / Arma:** apre direttamente l’attacco con l’arma attiva. Se il PG ha una variante
+  numerica compatibile, arma e magia sono nella stessa schermata. **Varianti**
+  apre il catalogo completo delle origini e degli effetti contestuali. Se manca l’arma, apre scelta/configurazione;
   non tira e non equipaggia automaticamente.
 - **Libro / Magie:** apre magie e capacità. Dadi e zaino rimangono nel dock.
 - **Cuore e PF:** apre Danni, Cura, temporanei e stato. Danni e Cura sono nella
-  prima riga. Le correzioni manuali −1/+1 sono più in basso: non applicano tutte
+  prima riga. Le correzioni manuali −1/+1 sono in **Correggi**: non applicano tutte
   le difese e non sostituiscono il percorso Danni.
 - **Quattro riquadri:** apre il menu. L’ingranaggio del menu porta a Schermo,
   da cui si raggiungono rete, tasti, alimentazione e backup. Rimane disponibile
@@ -50,9 +52,10 @@ con dati sintetici, non fotografie né prove del touch fisico.
 | Tornare alla home da zaino o magie | Menu → Eroe: 2 tap | Icona Eroe: 1 tap |
 | Pagine successive delle liste | Freccia per ogni pagina | Freccia oppure swipe laterale |
 
-Questi conteggi terminano alla destinazione indicata. Dalla v0.87 un PG con
-varianti con arma richiede un tap ulteriore per scegliere normale/magia; la scelta
-mostra i valori senza passare dalla lista generale degli incantesimi. Aprire un attacco non
+Questi conteggi terminano alla destinazione indicata. Dalla v0.96 l’attacco
+ordinario richiede due tap dalla home al tiro, anche con varianti disponibili.
+La scelta rapida di una magia compatibile aggiunge un tap nella stessa schermata;
+altre origini ed effetti restano in **Varianti**. Aprire un attacco non
 significa averlo tirato; aprire una magia non significa spenderne lo slot.
 Anteprima, scelta dei costi e conferma restano nei percorsi che modificano il PG.
 

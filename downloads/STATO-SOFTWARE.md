@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **3 novembre 2026 — v0.95**. Il dispositivo è il prodotto;
+Aggiornamento del **3 novembre 2026 — v0.96**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
@@ -19,6 +19,27 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Priorità attuale: UX del dispositivo · v0.96
+
+La roadmap funzionale rimane conservata; per richiesta dell’utente la priorità
+è la revisione dell’esperienza complessiva, fino a una direzione soddisfacente.
+[Direzione e avanzamento](UX-RPG.md). La v0.96 è la prima iterazione, non la
+conclusione della revisione né una nuova approvazione estetica dell’utente.
+
+Home con icone più grandi e nomi su pressione prolungata, avatar e scene
+conservati. Attacco ordinario in un tap dalla home, lancio nel successivo;
+variante con arma selezionabile nella stessa schermata e preparazione nel
+percorso. Senza arma si apre la scelta, non lo zaino. Correzioni manuali PF
+separate dalle azioni comuni. Tema condiviso più netto, riepiloghi di zaino e
+magie più compatti; stato «Salvato offline» nascosto, errori ancora visibili.
+
+I tasti configurabili, le regole, i formati, le partizioni e i dati personali
+rimangono compatibili. Non occorre reimportare i PG o reinstallare i look SD.
+Le catture sono del renderer nativo con PG sintetico; collaudo fisico e
+giudizio estetico dell’utente rimangono distinti dai controlli software.
+356 test JS, suite nativa, 153 viste LVGL, ASan/UBSan e compilazione ESP32.
+Nessuna nuova lettura Beyond reale o modifica della raccolta personale.
 
 ## Nuovo nella v0.95
 

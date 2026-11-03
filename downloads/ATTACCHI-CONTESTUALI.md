@@ -1,4 +1,4 @@
-# Attacco normale o con magia — v0.87
+# Attacco normale o con magia — aggiornato v0.96
 
 > Aggiornamento v0.89: [Punizione Divina 2024 e slot ibridi](PUNIZIONE-DIVINA.md).
 
@@ -10,19 +10,19 @@ o modificare la SD: basta aggiornare il firmware dalla pagina GitHub Pages.
 
 ## Dal tavolo al tiro
 
-1. Tocca **Attacca** sulla home, oppure **Attacco** dalla scheda dell'arma.
-2. Se il PG possiede varianti con arma riconosciute, scegli **Attacco normale**
-   oppure la magia: per esempio **True Strike / Colpo Accurato 2024**. Ogni voce
-   mostra l'icona condivisa e i valori dell'attacco: caratteristica, bonus, dadi
-   arma e dadi radianti aggiuntivi. Le origini con caratteristiche diverse
+1. Tocca la **spada** sulla home, oppure **Attacco** dalla scheda dell'arma.
+2. Si apre direttamente l’attacco ordinario. Se il PG possiede varianti
+   numeriche con arma riconosciute, seleziona **Arma** oppure la magia
+   nella stessa schermata: per esempio **True Strike / Colpo Accurato 2024**. Il riepilogo mostra bonus e danni correnti;
+   tocca la scheda dell’arma per i dettagli. **Varianti** apre il catalogo completo. Le origini con caratteristiche diverse
    rimangono scelte distinte; non si usa la caratteristica di un altro incantesimo.
 3. Regola eventualmente CA bersaglio, vantaggio o contesto e premi **Lancia**.
    Dopo il tiro per colpire, **Danni** tira e registra le componenti pertinenti.
 
 Senza varianti con arma si apre direttamente l'attacco ordinario, senza menu extra.
 Se manca l'arma, si sceglie/configura prima quella e poi si sceglie l'attacco.
-Il pulsante **Varianti** permette di cambiare modalità dalla schermata dell'arma.
-Se torni indietro dal selettore iniziale rientri nella schermata da cui eri partito.
+Il pulsante **Varianti** permette di scegliere altre origini, effetti sul colpo
+e proprietà della variante. Tornando indietro dal catalogo si rientra nell’attacco.
 
 ## Preparazione e disponibilità
 
