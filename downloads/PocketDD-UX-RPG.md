@@ -131,3 +131,49 @@ della magia stabiliscono quali valori siano pertinenti.
 Verifica della v0.97: 356 test JavaScript, suite nativa, tutte le 153 viste
 LVGL e nuovi scenari dei risultati, ASan/UBSan e compilazione ESP32. Le prove
 software non attestano fluidità o risposta del touch sul display fisico.
+
+## Terza iterazione · azioni e recuperi
+
+Confronti prima/dopo a tessere con icona per equipaggiamento, costi e riposi.
+Il comando nello zaino apre una bozza: nessuna applicazione senza conferma.
+I dettagli completi restano disponibili nella stessa anteprima. Riposo lungo:
+scelta diretta fra manuale, 2014 e 2024; nessuna edizione dedotta dal PG.
+Perdita di PF, concentrazione, bonus senza sintonia ed errori restano visibili.
+Questa iterazione mantiene regole, tasti configurabili e protezioni delle bozze.
+
+### v0.98: equipaggiamento, conferme e riposi
+
+- **Zaino:** l’icona della tunica apre direttamente la bozza Equipaggia/Riponi
+  per armi e profili di oggetto noti. Il bordo oro segnala la dotazione attiva.
+  Dal proprio elenco filtrato: un tap sull’icona, uno su Conferma, ritorno
+  all’elenco. Quantità zero e profili assenti non diventano equipaggiabili.
+- **Confronto dotazione:** CA, PF massimi/attuali, attacco e caratteristica o
+  bonus danni; tutti gli altri effetti sono in Dettagli. La perdita di PF/CA
+  o bonus attacco appare in rosso. Nessuna cura implicita aumentando i PF massimi.
+  Sintonia e configurazione rimangono esplicite; nessun effetto dedotto dal disegno.
+- **Magia:** prima/dopo di slot, utilizzi finiti, PF e concentrazione. Dettagli
+  mostra anche CA e PF massimi quando termina un effetto vincolato. Slot e uso
+  innato possono essere entrambi costi, senza sommarli o spendere in anticipo.
+- **Consumabile:** quantità che verrà spesa, dadi o effetti manuali, PF attuali;
+  nessun tiro di anteprima. Un salvataggio fallito conserva il risultato fissato.
+- **Riposo lungo:** tre scelte dirette Manuale/2014/2024; cambiare regola scarta
+  soltanto la selezione dei dadi da recuperare nella bozza. Il PG non cambia.
+- **Riposo:** riepilogo PF, dadi vita e slot separati ordinari/patto. Utilizzi,
+  cariche ed effetti terminati rimangono nei dettagli. Un massimo temporaneo che
+  finisce può ridurre i PF: si mostra il numero reale, anche quando diminuisce.
+  Dati non importati restano «Non disponibili», senza falsi zeri.
+
+[Anteprima del renderer](previews/v098-transaction-ux.png), solo dati sintetici.
+Le verifiche percorrono i controlli pointer del firmware, controllano l’identità
+originale della riga filtrata, i due tap, annullamento, retry di salvataggio,
+dettagli senza scritture/RNG, protezione dei tasti e dell’importazione, edizioni
+esplicite, costi combinati e variazioni reali di PF/CA/concentrazione. I tasti
+personali e i formati restano conservati. Nuove interazioni da provare fisicamente.
+
+Questa iterazione non chiude l’intera revisione: restano le viste avanzate di
+riposo/dadi vita, condizioni ed effetti, poi raccolta, importazione, aspetto e
+impostazioni. La roadmap funzionale rimane separata e conservata.
+
+Verifiche v0.98: 356 test JavaScript, suite nativa, tutte le 153 viste LVGL,
+ASan/UBSan e build ESP32. Nuove prove con dati sintetici; nessuna nuova
+lettura Beyond reale o modifica della raccolta personale.

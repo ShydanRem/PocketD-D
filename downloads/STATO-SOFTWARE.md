@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **3 novembre 2026 — v0.97**. Il dispositivo è il prodotto;
+Aggiornamento del **3 novembre 2026 — v0.98**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
@@ -19,6 +19,33 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Terza iterazione UX · v0.98
+
+[Confronti prima/dopo e immagini](UX-RPG.md#v098-equipaggiamento-conferme-e-riposi).
+Equipaggia/Riponi direttamente dallo zaino per armi e profili noti, con bozza,
+conferma e ritorno allo stesso elenco filtrato. Confronto dei valori principali;
+tutti gli effetti rimangono nei dettagli. Quantità zero e profili assenti sono
+protetti. Sintonia, adozione dei bonus importati e nuove configurazioni rimangono
+esplicite, senza inferenze da icone o nomi.
+
+Conferma magia con slot, utilizzi, PF e concentrazione reali prima/dopo; dettagli
+per perdita di CA e massimi. Consumabili con quantità e dadi chiari, senza tiro
+anticipato. Riposi con riepilogo, regola dadi vita scelta direttamente e dati
+assenti dichiarati non disponibili. Il riepilogo mostra anche una riduzione dei
+PF causata dalla fine di un massimo temporaneo, anziché presentarla come cura.
+
+Nuove prove native con PG sintetici, annullamento, salvataggio fallito/riprova,
+dettagli senza RNG o scritture, tasti/import protetti e confronti di stato completo.
+Nuovo collaudo fisico distinto. Formati, partizioni, PG e risorse SD conservati;
+nessuna lettura Beyond reale o modifica della raccolta personale in questa attività.
+Restano le viste avanzate di riposo, condizioni/effetti, raccolta, aspetto e
+impostazioni; la revisione UX e la roadmap funzionale non sono dichiarate concluse.
+
+
+Verifiche v0.98: 356 test JavaScript, suite nativa, tutte le 153 viste LVGL,
+ASan/UBSan e build ESP32. Nuove prove con dati sintetici; nessuna nuova
+lettura Beyond reale o modifica della raccolta personale.
 
 ## Seconda iterazione UX · v0.97
 

@@ -1,5 +1,7 @@
 # PocketD-D — uso pratico sul dispositivo
 
+> v0.98: [dotazione rapida, conferme e riposi](UX-RPG.md#v098-equipaggiamento-conferme-e-riposi).
+
 > Aggiornamento v0.97: [risultati, dadi e schede di gioco](UX-RPG.md#seconda-iterazione--risultati-e-schede-di-gioco).
 
 > Aggiornamento v0.96: [revisione UX del dispositivo](UX-RPG.md), prima iterazione.
@@ -142,3 +144,21 @@ massimo. I dettagli del tiro rimangono nello **Storico**.
 In basso: icone Eroe, Scheda, Storico e Usi, con nome su pressione prolungata.
 Nella scheda magia tocca il riquadro del nome per leggere il testo esteso.
 **Effetti manuali** significa che le conseguenze vanno ancora gestite con il DM.
+
+## Dotazione e recuperi · v0.98
+
+Nello zaino, la **tunica** accanto a un’arma o a un oggetto con profilo apre
+Equipaggia/Riponi. Il bordo dorato indica la dotazione attiva. Controlla i valori
+prima/dopo e premi **Conferma**: ritorni allo stesso elenco. Toccare il nome
+continua ad aprire la scheda. Oggetti senza profilo si configurano dalla scheda;
+non acquisiscono bonus solo perché l’icona sembra un’armatura.
+
+**Dettagli / Riepilogo** cambia solo la vista della bozza. **Indietro** la annulla;
+nessuna risorsa viene consumata. La conferma di una magia distingue slot ordinari
+e patto, eventuali utilizzi innati, PF e concentrazione. Se sostituisce una magia
+che sostiene bonus, i dettagli mostrano anche CA e massimi risultanti.
+
+Nel riposo lungo scegli direttamente **Manuale**, **2014** o **2024** per i dadi
+vita. La scelta 2014 mantiene la selezione esplicita dei dadi da recuperare.
+Cambiando regola si azzera quella selezione nella bozza. Il riepilogo separa
+slot ordinari e patto; i dati assenti restano indicati come non disponibili.
