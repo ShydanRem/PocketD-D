@@ -66,6 +66,7 @@ try:
   page.goto(url+'personalizzazione.html');page.get_by_role('link',name='← PocketD-D',exact=True).click();assert page.url==url
   assert not errors,errors;assert all(u.startswith(url) or u.startswith('blob:'+url) for u in requests),requests
   page.goto(url+'#firmware-tools');expect(page.locator('.firmware-tools')).to_have_attribute('open','');expect(page.locator('#status')).to_contain_text('Firmware pronto')
+  page.reload();expect(page.locator('.firmware-tools')).to_have_attribute('open','');expect(page.locator('#status')).to_contain_text('Firmware pronto')
   missing=browser.new_context();missing.add_init_script("Object.defineProperty(navigator,'serial',{value:{requestPort:async()=>{throw new DOMException('cancel','NotFoundError')}}});")
   fallback=missing.new_page();fallback.goto(url);fallback.locator('[data-open-pocket]').click();expect(fallback.locator('[data-helper-help]')).to_be_visible();expect(fallback.locator('[data-helper-status]')).to_contain_text('prima volta');missing.close()
   browser.close()

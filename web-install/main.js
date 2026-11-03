@@ -49,7 +49,13 @@ button.addEventListener('click',async()=>{
     window.removeEventListener('beforeunload',unload);busy=false;document.querySelector('[data-sd-root]').inert=false;announce('busy',false);for(const el of document.querySelectorAll('input'))el.disabled=false;ready();
   }
 });
-if(guided)prepare();else{message('Apri Installa / aggiorna per preparare il firmware.');document.querySelector('.firmware-tools').addEventListener('toggle',event=>{if(event.target.open&&!prepared&&!busy)prepare();});if(location.hash==='#firmware-tools')document.querySelector('.firmware-tools').open=true;}
+if(guided)prepare();else{
+  message('Apri Installa / aggiorna per preparare il firmware.');
+  document.querySelector('.firmware-tools').addEventListener('toggle',event=>{if(event.target.open&&!prepared&&!busy)prepare();});
+  const openFirmwareFromHash=()=>{if(location.hash==='#firmware-tools')document.querySelector('.firmware-tools').open=true;};
+  window.addEventListener('hashchange',openFirmwareFromHash);
+  openFirmwareFromHash();
+}
 
 const pcLink=document.querySelector('[download="PocketDD-PC.zip"]');
 if(pcLink)pcLink.addEventListener('click',async event=>{event.preventDefault();if(pcLink.getAttribute('aria-disabled')==='true')return;const status=document.querySelector('#pc-download-status');pcLink.setAttribute('aria-disabled','true');status.textContent='Preparo il download…';try{const data=await preparePcPackage(new URL('./downloads/pc-package.json',location.href),{fetcher:url=>fetch(url,{signal:AbortSignal.timeout(90000),cache:'no-store'}),onProgress:n=>status.textContent=`Scarico e verifico il pacchetto · ${n}%`});const url=URL.createObjectURL(new Blob([data],{type:'application/zip'})),a=document.createElement('a');a.href=url;a.download='PocketDD-PC.zip';a.click();setTimeout(()=>URL.revokeObjectURL(url),60000);status.textContent='Pacchetto verificato. Estrai tutto lo ZIP e apri Avvia-PocketDD.cmd.';}catch(error){status.textContent=/^(Pacchetto|Descrizione|Download|Verifica)/.test(error.message??'')?error.message:'Download non riuscito. Ricarica la pagina e riprova.';}finally{pcLink.removeAttribute('aria-disabled');}});
