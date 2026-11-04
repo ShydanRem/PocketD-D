@@ -1,5 +1,6 @@
 # PocketD-D — uso pratico sul dispositivo
 
+> v0.106: [ingresso Beyond e account](UX-RPG.md#v0106-ingresso-beyond-e-collegamento-account).
 > v0.105: [rete, ponte e backup](UX-RPG.md#v0105-rete-ponte-e-backup).
 > v0.104: [consultazione e registro](UX-RPG.md#v0104-consultazione-e-registro).
 > v0.103: [turni, tempo e riferimenti](UX-RPG.md#v0103-turni-tempo-e-riferimenti).
@@ -333,3 +334,30 @@ PWR seleziona e BOOT attiva il comando locale. BOOT lungo chiude prima i dettagl
 poi torna indietro. Le scorciatoie personali rimangono memorizzate; durante il
 ripristino vengono invece applicate quelle presenti nella copia, come indicato
 nell'anteprima.
+
+
+## Il primo PG da Beyond · v0.106
+
+Apri I miei PG e scegli Beyond, oppure l'icona d'importazione in alto. Nella
+raccolta vuota il comando Beyond è anche una scheda grande. La SD serve per
+conservare più PG; con una sola scheda puoi iniziare anche senza.
+
+Scegli I miei PG per la prima associazione tramite Pocket PC: la guida riassume
+estensione, accesso Beyond e confronto del codice. Sul Pocket verifica le sei
+cifre e scegli se ricordare l'accesso. L'avviso sulla memoria non cifrata resta
+sul display; con la modalità temporanea il vecchio accesso salvato viene rimosso
+al completamento del collegamento. Ricollega riapre la guida quando serve una
+nuova associazione. Per un PG pubblico scegli invece PG pubblico e inserisci
+il numero finale del link, poi Leggi. Non serve collegare l'account.
+
+Controlla i valori in anteprima e apri Limiti e dati manuali. Il rapporto mostra
+blocchi e limiti separati e, quando disponibile, il codice HTTP della richiesta.
+HTTP 200 non certifica formato o valori e non permette di saltare un blocco.
+«+ altre» indica note ulteriori rispetto a quelle disponibili sul display.
+I testi estesi restano estratti. Conferma Importa soltanto dopo il confronto
+con la scheda sorgente. Senza SD sostituisce il PG attuale; con la raccolta SD
+viene prima conservata la scheda uscente. Annulla lascia tutto come prima.
+
+PWR seleziona e BOOT attiva; i controlli disabilitati vengono saltati. BOOT lungo
+chiude prima la guida, poi torna indietro. La consultazione non cambia tasti,
+preferenze o registro. L'importazione conserva le impostazioni del dispositivo.

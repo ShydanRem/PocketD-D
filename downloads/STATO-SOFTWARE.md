@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **4 novembre 2026 — v0.105**. Il dispositivo è il prodotto;
+Aggiornamento del **4 novembre 2026 — v0.106**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
@@ -19,6 +19,19 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Undicesima iterazione UX · v0.106
+
+[Ingresso Beyond e collegamento account](UX-RPG.md#v0106-ingresso-beyond-e-collegamento-account).
+Importazione evidente anche nella raccolta vuota, scelta account/ID pubblico,
+guida su richiesta e ricollegamento senza una lettura destinata a fallire.
+Codice in pixel, scelta di memoria e avvisi sullo stesso schermo. Elenco con
+indici stabili; blocchi e limiti distinti dal codice HTTP, senza ereditare lo
+stato della richiesta precedente. Un HTTP 200 non sblocca una conversione
+bloccata. Nomi lunghi e note larghe leggibili; controlli disabilitati saltati
+dai tasti locali. Protocollo, convertitore e conservazione dei PG non cambiano.
+Nessuna nuova prova reale di login ESP32, PG privati o scrittura su Beyond.
+Restano percorsi secondari e riscontro complessivo della UI sull'hardware.
 
 ## Decima iterazione UX · v0.105
 

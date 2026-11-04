@@ -1,3 +1,7 @@
+> v0.106: il primo ingresso distingue account e ID pubblico; il rapporto separa
+> HTTP, blocchi e limiti. [Percorso attuale](USO-PRATICO.md#il-primo-pg-da-beyond--v0106).
+> La revisione UI non aggiunge una nuova lettura reale né completa la conversione D&D.
+
 > v0.92: [collegamento account e scelta dei propri PG](COLLEGAMENTO-BEYOND.md) ora implementati; nuovo percorso autenticato da collaudare sull’hardware. Il documento sotto descrive la release pubblica v0.91.
 
 # Beyond direttamente sul Pocket

@@ -558,3 +558,72 @@ nome massimo, quattro confronti del ripristino, dettagli senza scritture o RNG,
 fallimento storico, ripristino esatto e scadenza invariata. Wi-Fi, USB e NVS
 usano doppi di prova; SD/codec sono verificati anche nelle suite esistenti.
 Nessuna nuova lettura reale Beyond, scrittura sull'account o prova fisica.
+
+
+## v0.106: ingresso Beyond e collegamento account
+
+- **Primo ingresso nella raccolta:** se non ci sono schede elencate, Beyond
+  diventa un comando grande e riconoscibile. L'assenza della SD è descritta
+  come modalità a scheda singola, non come un requisito per iniziare. Non si
+  avvia un assistente obbligatorio all'accensione e non si cancellano dati.
+- **Due percorsi:** I miei PG richiede il primo collegamento dal PC; PG pubblico
+  usa l'ID numerico senza associare l'account. La guida PC compare soltanto
+  quando richiesta e riassume estensione, accesso e confronto del codice.
+  Aprirla non esegue letture, autenticazioni o salvataggi.
+- **Ricollegamento:** il comando Ricollega apre direttamente la guida, invece
+  di effettuare una richiesta destinata a tornare in errore. La guida è
+  disponibile anche nel recupero di un accesso scaduto o di un collegamento
+  fallito. Accetta un nuovo confronto dal PC; non ripete le credenziali del
+  tentativo precedente e non avvia un recupero Wi-Fi improprio dell'operazione
+  LINK. Se l'accesso è incerto per la memoria, resta richiesto il riavvio.
+- **Consenso sul display:** codice a sei cifre in pixel e scelta Ricorda accesso
+  nello stesso schermo. L'avviso sulla memoria non cifrata resta visibile prima
+  di collegare; la modalità temporanea dichiara la rimozione del vecchio accesso
+  salvato. Non si cambia la politica di memoria o il protocollo: confronto entro
+  due minuti e invio entro trenta secondi dalla conferma restano quelli esistenti.
+- **Elenco:** due PG per pagina, livello e suffisso ID per distinguere omonimi;
+  le pagine sono ricondotte all'intervallo valido se il conteggio cambia. La
+  scelta passa sempre dall'ID stabile della riga sorgente. Elenco parziale,
+  accesso ricordato/temporaneo e accesso da ricollegare restano distinti.
+- **Lettura:** il messaggio segue la fase effettiva del servizio: preparazione,
+  lettura, conversione o annullamento. Prima dell'avvio non viene già annunciata
+  una conversione. Non si inventano percentuali o valori del personaggio.
+- **Esito e limiti:** numero di blocchi e numero di limiti separati; HTTP appare
+  solo se il servizio ha fornito il codice per quella lettura. Una nuova richiesta
+  azzera il dato precedente, evitando di ereditare un 200 vecchio. Un HTTP 200
+  con conversione bloccata resta bloccato e non offre Importa. Il codice HTTP
+  non prova il formato della risposta o la correttezza dei valori convertiti.
+  Il verdetto rimane quello del convertitore e dei controlli nativi esistenti.
+- **Note:** fino a sessantaquattro voci disponibili, con indicazione delle
+  ulteriori note non visualizzate. La dimensione del testo si adatta alla singola
+  voce, conservando i centosessanta byte già ricevuti anche nel caso di caratteri
+  molto larghi. I testi sorgente estesi rimangono estratti: nessuna espansione
+  di descrizioni o rimozione dei limiti d'importazione concordati.
+- **Anteprima:** sei caratteristiche, PF, CA, temporanei e conteggi rimangono
+  visibili prima della conferma. Nome fino a quarantotto caratteri leggibile
+  anche con glifi larghi. Restano espliciti i limiti e l'effetto sul PG attuale:
+  senza SD viene sostituito, con raccolta SD si conserva la scheda uscente.
+- **Tasti e icone:** PWR/BOOT navigano scelte, guida, codice, elenco e note;
+  saltano i controlli disabilitati. BOOT lungo chiude la guida prima di uscire.
+  Nuovi glifi originali per account e accesso protetto. Nessun file SD aggiuntivo.
+
+[Quattro viste native](previews/v106-beyond-entry.png), con personaggi, account,
+codici, risposte del servizio e input sintetici. La schermata con HTTP 200
+bloccato è un caso di prova del renderer e non una nuova lettura reale.
+La revisione non completa le regole mancanti del convertitore, la sincronizzazione
+in tempo reale o il collaudo di account privati sull'ESP32. La roadmap funzionale
+rimane in STATO-SOFTWARE.md; restano percorsi meno frequenti e una revisione
+complessiva della praticità sul dispositivo.
+
+
+Verifiche v0.106, 4 novembre 2026: 357 test JavaScript, suite nativa completa,
+153 viste LVGL, ASan/UBSan e compilazione ESP32 passati. La suite comprende
+74 casi di confronto della conversione nativa/PC, 67 accettati con record
+identici e 7 bloccati, tutti sintetici. Scenari UI nuovi: raccolta senza SD,
+scelte con puntatore, guida senza richieste o scritture, accesso incerto,
+ricollegamento senza replay, nuovo confronto dal PC, consenso ricordato/temporaneo,
+controllo della nonce, ID stabile e pagina ricondotta, HTTP 200 con conversione
+bloccata, HTTP assente non ereditato, sei caratteristiche esatte, nome massimo,
+nota da 160 byte larghi, controlli disabilitati saltati, ulteriori note dichiarate
+e una sola conferma d'importazione con preferenze conservate. Nessun nuovo
+collaudo fisico, accesso Beyond reale o modifica della raccolta personale.

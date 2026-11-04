@@ -1,3 +1,7 @@
+> v0.106: [scelta account/ID, guida e confronto del codice](UX-RPG.md#v0106-ingresso-beyond-e-collegamento-account).
+> Ricollega apre la guida PC; codice HTTP e blocchi di conversione restano distinti.
+> Le nuove schermate sono verificate con dati sintetici, non con un login ESP32 reale.
+
 > v0.94: [ripresa dopo Wi-Fi e recupero degli errori](AUTONOMIA-RECUPERO.md).
 > Interfaccia PC v0.93 e autenticazione nativa v0.92 conservate;
 > nuove prove reali sul dispositivo ancora da eseguire.
@@ -34,7 +38,7 @@ rimuovere un collegamento già salvato. [Guida Pocket PC](POCKET-PC.md).
 
 ## Uso autonomo
 
-Pocket → **I miei PG → lente** apre Beyond. Se l’accesso è ricordato ma l’elenco
+Pocket → **I miei PG → Beyond** (nella raccolta vuota) oppure l’icona d’importazione apre Beyond. Se l’accesso è ricordato ma l’elenco
 non è in RAM, si prova a caricarlo quando il Wi-Fi è pronto. Altrimenti **Rileggi**
 carica/aggiorna l’elenco. Scegli il nome, attendi lettura/conversione, controlla
 caratteristiche, PF, CA e limiti, quindi **Importa**. Non serve lasciare il PC,
