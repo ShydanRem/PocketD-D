@@ -1,5 +1,6 @@
 # PocketD-D — uso pratico sul dispositivo
 
+> v0.104: [consultazione e registro](UX-RPG.md#v0104-consultazione-e-registro).
 > v0.103: [turni, tempo e riferimenti](UX-RPG.md#v0103-turni-tempo-e-riferimenti).
 >
 > v0.102: [danni misti, riduzioni e spese](UX-RPG.md#v0102-danni-misti-riduzioni-e-spese).
@@ -277,3 +278,28 @@ a un riposo e non fa avanzare round o turni.
 PWR sposta il focus, BOOT attiva, BOOT lungo torna indietro. Nel tastierino il
 focus raggiunge anche Cancella e Anteprima quando il nome è pieno. Menu ed Eroe
 permettono di uscire dalle viste principali senza applicare una proposta.
+
+
+## Consultare e ritrovare un tiro · v0.104
+
+Scheda → Profilo PG mostra i dati descrittivi importati, con icone per gruppo.
+Cerca accetta parte del nome; Mostra applica, Indietro annulla la digitazione.
+La ricerca del profilo è distinta da quelle di magie e zaino. Le descrizioni
+sono fotografie dell'importazione. L'iniziativa può essere lanciata dal suo
+dettaglio, con i controlli sulle condizioni già presenti.
+
+Dal registro scegli Tutti, d20, Danni o Recuperi e apri una voce. Il risultato
+è quello archiviato: puoi sfogliare tutte le facce senza un nuovo lancio.
+Nuovo tiro apre la preparazione di un altro tiro. Il registro conserva venti
+voci, contando separatamente le parti di un danno misto.
+
+Se compare «Registro: tiro da salvare», apri il registro e premi Riprova prima
+di spegnere. Il tiro resta in cima anche cambiando filtro; Parte > scorre le
+componenti in attesa. Scarta rinuncia solo alla registrazione, dopo conferma:
+non ripristina PF o utilizzi già spesi. Un errore di salvataggio della scheda
+resta un messaggio separato e ha priorità. Il tiro ancora in memoria si perde
+in caso di spegnimento senza aver risolto l'attesa.
+
+PWR scorre i comandi locali, BOOT li attiva e BOOT lungo torna indietro. La
+consultazione permette di usare Menu ed Eroe; ricerca e conferma Scarta
+proteggono la bozza fino all'uscita esplicita.
