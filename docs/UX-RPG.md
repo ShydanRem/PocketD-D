@@ -390,3 +390,55 @@ Verifiche v0.102, 4 novembre 2026: 357 test JavaScript, suite nativa completa,
 ESP32 passati. Archivio e GitHub Pages verificati prima della pubblicazione.
 Prove sintetiche: non dimostrano touch, fluidità o radio del dispositivo fisico.
 Nessuna nuova lettura Beyond o modifica della raccolta personale.
+
+
+## v0.103: turni, tempo e riferimenti
+
+- **Turni e reazione:** griglia con reazione, inizio e fine del proprio turno,
+  riferimenti A/B/C. Quattro nuovi glifi originali; stato della reazione visibile
+  prima di scegliere. Usarla manualmente annota solo la reazione, senza lanciare
+  una magia, avanzare timer o spendere altre risorse.
+- **Altri turni:** riferimento selezionato riconoscibile, nome completo con
+  altezza adattata e comandi Inizio/Fine distinti. Ogni comando mostra quanti
+  timer avanzerebbe in quella fase, dal motore esistente. A/B/C restano identità
+  stabili, i nomi sono soltanto alias locali e non riassegnano i timer.
+- **Tempo trascorso:** valori diretti 1/10 minuti, 1/4/8/24 ore e regolazione
+  fine. Le scelte cambiano solo la quantità da proporre. Il tempo è dichiarato
+  dall’utente: non è un orologio reale e avanzare otto ore non esegue un riposo.
+- **Anteprime coerenti:** CA, PF massimi, PF effettivi e reazione prima/dopo;
+  numero di timer che avanzano e scadono. Le perdite di PF oltre il nuovo massimo
+  sono esplicite. Timer, reazione, recuperi e pause mantengono il motore esistente.
+  Nessun effetto o conteggio viene applicato durante la consultazione.
+- **Scadenze:** righe con icona e fonte per effetti, difese e riduzioni. I timer
+  espressi in ore mostrano ore e minuti in entrambi i valori, anche quando il
+  residuo scende sotto un’ora; le scadenze sono evidenziate. I timer in pausa
+  non avanzano e non sono inseriti fra quelli modificati.
+- **Tasti:** navigazione locale estesa a turni, tempo, scadenze e nomi dei
+  riferimenti. Anche il tastierino da 17 comandi conserva tutti i pulsanti di
+  fondo; opzioni disabilitate saltate, BOOT lungo torna indietro. Le assegnazioni
+  personali restano conservate. Menu ed Eroe permettono di uscire esplicitamente
+  dalle viste principali; anteprime e modifica del nome restano protette.
+
+Il proprio inizio turno ripristina la reazione. Fine turno, A/B/C e tempo
+trascorso non la ripristinano. Round, proprio turno, turno altrui e minuti/ore
+restano quattro percorsi distinti; non si deducono l’uno dall’altro. I riferimenti
+non costituiscono una gestione automatica dell’iniziativa o dei bersagli.
+
+[Quattro viste native](previews/v103-turn-time.png), con PG e input sintetici.
+Scenari nuovi: comandi touch, tutti i valori rapidi, conteggi di inizio/fine,
+ambito proprio/A/B/C su effetti/difese/riduzioni, annullamento, riprova del
+salvataggio, ore con minuti residui, timer in pausa, perdita di PF alla scadenza,
+nessuna scrittura per operazioni senza variazioni, nome massimo e PWR/BOOT fino
+ai comandi di fondo; stato, risorse, storico e casualità confrontati.
+
+La revisione continua con consultazione, storico, messaggi e altre viste
+secondarie; serve anche il riscontro sul dispositivo. Nessun nuovo formato,
+asset SD richiesto o automatismo di regole. La roadmap funzionale resta in
+STATO-SOFTWARE.md e non viene considerata conclusa dalla revisione grafica.
+
+
+Verifiche v0.103, 4 novembre 2026: 357 test JavaScript, suite nativa completa,
+153 viste LVGL, nuovi scenari con puntatore e tasti, ASan/UBSan e compilazione
+ESP32 passati. Immagini native con PG sintetici; nuove interazioni, touch e
+fluidità restano da valutare sul dispositivo. Nessuna nuova lettura Beyond o
+modifica della raccolta personale.
