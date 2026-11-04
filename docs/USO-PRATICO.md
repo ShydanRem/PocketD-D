@@ -1,5 +1,7 @@
 # PocketD-D — uso pratico sul dispositivo
 
+> v0.101: [editor di effetti, difese e timer](UX-RPG.md#v0101-editor-di-effetti-difese-e-timer).
+>
 > v0.100: [raccolta, personalizzazione diretta e impostazioni](UX-RPG.md#v0100-raccolta-aspetto-e-impostazioni).
 >
 > v0.99: [riserve dei dadi vita, condizioni ed effetti](UX-RPG.md#v099-riserve-condizioni-ed-effetti-locali).
@@ -201,3 +203,26 @@ tasti di gioco restano conservate.
 
 `Schermo` raccoglie luminosità, attenuazione e accessi a Wi-Fi, energia, tasti e
 backup. Aprirlo non accende il Wi-Fi e non modifica la scheda.
+
+
+## Modificatori, difese e durate · v0.101
+
+In `Effetti > Aggiungi` scegli direttamente CA o PF massimi. Cambiare bersaglio
+azzera il modificatore; selezionare lo stesso lo conserva. Il numero e il
+confronto sono una bozza: applica con `Anteprima > Conferma`.
+
+Le difese hanno quattro riquadri: Resiste, Debole, Immune e Base verificata
+oppure stato dell’Extra. Le proprietà possono coesistere. `Con regola` richiede
+le condizioni indicate in `Regole`: tocca la condizione e scegli direttamente
+quella corretta. Prima di salvare, `Dettagli` mostra anche le fonti separate.
+
+In `Durata` tocca il tipo per scegliere Manuale, Round, Inizio/Fine turno,
+Minuti o Ore. Riselezionare il tipo attuale conserva quantità e soggetto; un
+tipo diverso ricomincia dalla quantità iniziale e dal proprio turno. Usa i tre
+valori rapidi o i comandi fini. Ore conserva la precisione al minuto. La stessa
+scelta è disponibile nei dettagli dei profili di riduzione.
+
+PWR sposta il focus, BOOT attiva, BOOT lungo torna indietro. I comandi di gioco
+assegnati ai tasti non partono mentre lavori nell’editor. Tornare dal selettore
+non salva; anteprima e conferma restano necessarie. Il trascorrere del tempo
+continua a richiedere i comandi espliciti del menu Stato/Effetti.
