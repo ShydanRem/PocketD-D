@@ -1,7 +1,7 @@
 /* Beyond account pairing and native import. No credentials in PGs or UI. */
-enum {B_OPEN=5440,B_BACK,B_ERASE,B_READ,B_CANCEL,B_WIFI,B_NOTES,B_NOTES_BACK,B_PREV,B_NEXT,B_DIGIT=5450,B_ACCOUNT=5460,B_PUBLIC,B_REFRESH,B_FORGET,B_UNLINK,B_REMEMBER,B_APPROVE,B_RETRY,B_PICK=5480,B_END=5500};
+enum {B_OPEN=5440,B_BACK,B_ERASE,B_READ,B_CANCEL,B_WIFI,B_NOTES,B_NOTES_BACK,B_PREV,B_NEXT,B_DIGIT=5450,B_ACCOUNT=5460,B_PUBLIC,B_REFRESH,B_FORGET,B_UNLINK,B_REMEMBER,B_APPROVE,B_RETRY,B_GUIDE,B_GUIDE_BACK,B_PICK=5480,B_END=5500};
 static char beyond_id[16];
-static const char *beyond_notice="Inserisci l ID di un PG pubblico";
+static const char *beyond_notice="Numero alla fine del link Beyond";
 PD_EXT static pd_beyond_report beyond_report;
 static pd_beyond_info beyond_visible;
 static unsigned beyond_note,beyond_focus,beyond_target_count;
@@ -9,7 +9,9 @@ static bool beyond_keyboard,beyond_wifi_return,beyond_source_account;
 static bool beyond_pairing,beyond_approved,beyond_remember=true;
 static char beyond_nonce[33],beyond_code[7];
 static uint32_t beyond_pair_started;
-static unsigned beyond_catalog_page;
+static unsigned beyond_catalog_page,beyond_report_http;
+static bool beyond_guide;
+static page_t beyond_guide_owner=HERO;
 static lv_obj_t *beyond_targets[16];
 /* Only operation/ID are retained for a retry, never source JSON or credentials. */
 static unsigned beyond_retry_operation,beyond_failure;
@@ -53,7 +55,9 @@ static void beyond_open(void){
     if(account.configured&&!account.listed&&!account.locked&&!account.reconnect)beyond_request(PD_BEYOND_LIST,NULL);
 }
 static void beyond_mark_focus(void){
+    if(!beyond_target_count)return;
     if(beyond_focus>=beyond_target_count)beyond_focus=0;
+    for(unsigned i=0;i<beyond_target_count&&lv_obj_has_state(beyond_targets[beyond_focus],LV_STATE_DISABLED);i++)beyond_focus=(beyond_focus+1)%beyond_target_count;
     for(unsigned i=0;i<beyond_target_count;i++){lv_obj_set_style_outline_color(beyond_targets[i],lv_color_hex(PD_GOLD),0);
         lv_obj_set_style_outline_pad(beyond_targets[i],2,0);
         lv_obj_set_style_outline_width(beyond_targets[i],beyond_keyboard&&i==beyond_focus?2:0,0);
@@ -74,7 +78,7 @@ static void beyond_failed(unsigned error){
 }
 static bool beyond_launch(void){
     bool started=beyond_retry_operation==PD_BEYOND_LIST?pd_beyond_list():beyond_retry_operation==PD_BEYOND_OWNED?pd_beyond_owned_id(beyond_retry_id):pd_beyond_start(beyond_retry_id);
-    beyond_wait_clear();
+    beyond_wait_clear();beyond_report_http=0;
     if(started){page=BEYOND_BUSY;beyond_focus=0;beyond_keyboard=false;memset(&beyond_visible,0,sizeof beyond_visible);}
     else beyond_failed(PD_BEYOND_BUSY);
     return started;
@@ -166,6 +170,11 @@ static void beyond_action(intptr_t action){
     if(!beyond_local())return;
     pd_beyond_info current;
     pd_beyond_snapshot(&current);
+    if(beyond_guide&&(page==BEYOND_ACCOUNT||page==BEYOND_RECOVER)){
+        if(action==B_GUIDE_BACK||action==B_BACK){beyond_guide=false;return;}
+        if(action!=B_WIFI||page!=BEYOND_ACCOUNT)return;
+    }
+    if(action==B_GUIDE&&!current.locked&&(page==BEYOND_ACCOUNT||page==BEYOND_RECOVER)){beyond_guide=true;beyond_focus=0;return;}
     if(action==B_NOTES&&import_from_beyond&&import_pending){beyond_note=0;
         beyond_focus=0;
         page=BEYOND_REPORT;
@@ -193,7 +202,7 @@ static void beyond_action(intptr_t action){
         if(action==B_BACK)library_open();
         else if(action==B_PUBLIC){beyond_source_account=false;
             page=BEYOND_FORM;
-            beyond_notice="Inserisci l ID di un PG pubblico";
+            beyond_notice="Numero alla fine del link Beyond";
         }
         else if(action==B_FORGET)page=BEYOND_FORGET;
         else if(action==B_PREV&&beyond_catalog_page)beyond_catalog_page--;
@@ -223,7 +232,7 @@ static void beyond_action(intptr_t action){
         if(action>=B_DIGIT&&action<B_DIGIT+10){unsigned digit=action-B_DIGIT;
             if(n<15&&(n||digit)){beyond_id[n]='0'+digit;
                 beyond_id[n+1]=0;
-                beyond_notice="Inserisci l ID di un PG pubblico";
+                beyond_notice="Numero alla fine del link Beyond";
         }}
         else if(action==B_ERASE){if(n)beyond_id[n-1]=0;
         }
@@ -266,7 +275,7 @@ static void beyond_poll(void){
                 beyond_failed(current.error);
             }
         }else if(current.phase==PD_BEYOND_FINISHED&&received){
-            beyond_report=received->report;
+            beyond_report=received->report;beyond_report_http=current.http;
             beyond_note=beyond_focus=0;
             beyond_keyboard=false;
             if(current.error==PD_BEYOND_READY){if(!stage_import_from(&received->state,true)&&page==BEYOND_BUSY){beyond_notice="Memoria o SD non pronte: PG conservato";
@@ -283,130 +292,4 @@ static void beyond_poll(void){
     if(current.phase!=beyond_visible.phase){beyond_visible=current;
         render();
     }
-}
-static void render_beyond(void){
-    char text[96];
-    beyond_target_count=0;
-    if(page==BEYOND_ACCOUNT){
-        pd_beyond_info current;
-        pd_beyond_snapshot(&current);
-        pd_wifi_info wifi;
-        pd_wifi_snapshot(&wifi);
-        bool online=wifi.state==PD_WIFI_CONNECTED&&!wifi.suspended&&!wifi.setup&&!wifi.joining;
-        if(!current.configured){
-            label("Collega Beyond",83,111,300,true);
-            label("Apri l estensione Pocket",83,167,300,false);
-            small_label("Dal PC: Collega Pocket",83,207,300,PD_GOLD);
-            small_label("Conferma il codice sul display",83,247,300,PD_TEXT);
-            small_label(beyond_notice,83,281,300,PD_GOLD);
-            beyond_control("Wi-Fi",83,307,144,44,B_WIFI,true);
-            beyond_control("PG pubblico",239,307,144,44,B_PUBLIC,true);
-            beyond_control("Indietro",83,359,300,48,B_BACK,true);
-        }else{
-            snprintf(text,sizeof text,"I miei PG (%u)",current.count);
-            label(text,83,111,204,true);
-            beyond_control("Esci",299,99,84,44,B_FORGET,!current.locked);
-            beyond_control(current.reconnect?"Ricollega dal PC":online?"Rileggi":"Collega Wi-Fi",83,151,144,44,B_REFRESH,!current.locked);
-            beyond_control("ID pubblico",239,151,144,44,B_PUBLIC,true);
-            for(unsigned i=0;i<2;i++){pd_account_row row;
-                if(!pd_beyond_row(beyond_catalog_page*2+i,&row))break;
-                char name[25];
-                size_t n=strlen(row.name);
-                if(n>24)n=24;
-                while(n&&((unsigned char)row.name[n]&0xc0)==0x80)n--;
-                memcpy(name,row.name,n);
-                name[n]=0;
-                const char *tail=row.id+strlen(row.id);
-                if(strlen(row.id)>4)tail-=4;
-                else tail=row.id;
-                snprintf(text,sizeof text,"%s%s\nLiv %u | ...%s",name,n<strlen(row.name)?"...":"",row.level,tail);
-                char detail[64];snprintf(detail,sizeof detail,"Lv %u | ...%s",row.level,tail);
-                lv_obj_t *card=scene_control(text,pd_ui_icon(PD_UI_SHEET),row.name,detail,83,199+i*64,300,54,B_PICK+i,!current.locked&&!current.reconnect&&!library_failed);if(beyond_target_count<16)beyond_targets[beyond_target_count++]=card;
-            }
-            if(!current.count)small_label(current.listed?"Nessun PG nell elenco":"Premi Rileggi per caricare i PG",83,231,300,PD_TEXT);
-            snprintf(text,sizeof text,"%s | %u/%u",current.locked?"Accesso incerto: riavvia":current.reconnect?"Accesso da ricollegare":beyond_notice[0]?beyond_notice:current.partial?"Elenco parziale":current.remembered?"Accesso ricordato":"Accesso fino allo spegnimento",beyond_catalog_page+1,current.count?(current.count+1)/2:1);
-            small_label(text,83,335,300,PD_GOLD);
-            beyond_control("Indietro",83,359,92,48,B_BACK,true);
-            beyond_control("<",187,359,92,48,B_PREV,beyond_catalog_page>0);
-            beyond_control(">",291,359,92,48,B_NEXT,(beyond_catalog_page+1)*2<current.count);
-        }
-    }else if(page==BEYOND_PAIR){
-        pd_wifi_info wifi;
-        pd_wifi_snapshot(&wifi);
-        bool online=wifi.state==PD_WIFI_CONNECTED&&!wifi.suspended&&!wifi.setup&&!wifi.joining;
-        label("Confronta il codice",83,111,300,true);
-        label(beyond_code,83,151,300,true);
-        lv_obj_t *note=small_label(beyond_approved?"Attendo l accesso dal browser":beyond_remember?"Accesso nella memoria non cifrata. Chi legge la flash puo recuperarlo.":"Accesso solo fino allo spegnimento. Il vecchio accesso salvato sara rimosso.",83,195,300,PD_TEXT);
-        lv_label_set_long_mode(note,LV_LABEL_LONG_WRAP);
-        lv_obj_set_height(note,92);
-        beyond_control(beyond_remember?"Ricorda accesso: SI":"Ricorda accesso: NO",83,291,300,44,B_REMEMBER,!beyond_approved);
-        small_label(online?"PG e backup restano separati":"Collega prima il Wi-Fi e riprova",83,335,300,PD_GOLD);
-        beyond_control("Annulla",83,359,144,48,B_BACK,true);
-        beyond_control("Collega",239,359,144,48,B_APPROVE,online&&!beyond_approved);
-    }else if(page==BEYOND_FORGET){
-        label("Scollegare Beyond?",83,111,300,true);
-        label("Rimuove l accesso dal Pocket",83,171,300,false);
-        small_label("Schede e progressi conservati",83,231,300,PD_MINT);
-        small_label("Il browser resta collegato",83,271,300,PD_TEXT);
-        beyond_control("Indietro",83,359,144,48,B_BACK,true);
-        beyond_control("Scollega",239,359,144,48,B_UNLINK,true);
-    }else if(page==BEYOND_FORM){
-        pd_wifi_info wifi;
-        pd_wifi_snapshot(&wifi);
-        bool online=wifi.state==PD_WIFI_CONNECTED&&!wifi.suspended&&!wifi.setup&&!wifi.joining;
-        label("PG pubblico",83,111,300,true);
-        label(beyond_id[0]?beyond_id:"ID del PG su Beyond",83,151,300,false);
-        small_label(online||library_failed?beyond_notice:"Collega prima il Wi-Fi",83,181,300,PD_GOLD);
-        for(unsigned i=0;i<10;i++){char digit[2]={(char)('0'+i),0};
-            beyond_control(digit,83+(i%5)*62,205+(i/5)*52,52,44,B_DIGIT+i,strlen(beyond_id)<15&&(i!=0||beyond_id[0]));
-        }
-        beyond_control("Cancella",83,307,144,44,B_ERASE,beyond_id[0]!=0);
-        beyond_control("Wi-Fi",239,307,144,44,B_WIFI,true);
-        beyond_control("Indietro",83,359,144,48,B_BACK,true);
-        beyond_control(online?"Leggi":"Collega e leggi",239,359,144,48,B_READ,pd_beyond_id(beyond_id)&&power_storage_ready());
-    }else if(page==BEYOND_CONNECT){
-        label("Collego il Wi-Fi",83,111,300,true);
-        label("Uso la rete salvata",83,171,300,false);
-        small_label("Poi riprendo la richiesta Beyond",83,227,300,PD_GOLD);
-        small_label("PG e progressi restano conservati",83,273,300,PD_MINT);
-        small_label("Preferisci un altra rete?",83,315,300,PD_TEXT);
-        beyond_control("Annulla",83,359,144,48,B_BACK,true);
-        beyond_control("Scegli rete",239,359,144,48,B_WIFI,true);
-    }else if(page==BEYOND_RECOVER){
-        pd_beyond_info current;pd_beyond_snapshot(&current);
-        bool relink=beyond_failure==PD_BEYOND_SESSION||beyond_failure==PD_BEYOND_IDENTITY||(beyond_retry_operation!=PD_BEYOND_PUBLIC&&current.reconnect);
-        bool restart=beyond_failure==PD_BEYOND_STORAGE||(beyond_retry_operation!=PD_BEYOND_PUBLIC&&current.locked);
-        bool link=beyond_retry_operation==PD_BEYOND_LINK;
-        bool retry=!link&&!relink&&!restart&&beyond_failure!=PD_BEYOND_DENIED&&beyond_failure!=PD_BEYOND_NOT_FOUND;
-        label(relink?"Ricollega Beyond":restart?"Riavvia il Pocket":"Richiesta interrotta",83,111,300,true);
-        lv_obj_t *reason=small_label(beyond_error(beyond_failure),83,163,300,PD_GOLD);
-        lv_label_set_long_mode(reason,LV_LABEL_LONG_WRAP);lv_obj_set_height(reason,48);
-        const char *hint=restart?"Il salvataggio non e confermato":relink||link?"Dal PC: Apri Pocket PC > Collega Beyond":beyond_failure==PD_BEYOND_RATE?"Attendi prima di riprovare":beyond_failure==PD_BEYOND_DENIED?"Verifica privacy e accesso su Beyond":beyond_failure==PD_BEYOND_NOT_FOUND?"Controlla il PG o rileggi l elenco":!power_storage_ready()?"Prima risolvi memoria e storico":"Riprova la stessa richiesta";
-        lv_obj_t *next=small_label(hint,83,227,300,PD_TEXT);lv_label_set_long_mode(next,LV_LABEL_LONG_WRAP);lv_obj_set_height(next,48);
-        small_label("PG e progressi restano conservati",83,293,300,PD_MINT);
-        if(beyond_retry_id[0]){snprintf(text,sizeof text,"PG ...%s",beyond_retry_id+((strlen(beyond_retry_id)>4)?strlen(beyond_retry_id)-4:0));small_label(text,83,325,300,PD_MUTED);}
-        beyond_control("Indietro",83,359,retry?92:300,48,B_BACK,true);
-        if(retry){beyond_control("Wi-Fi",187,359,92,48,B_WIFI,true);beyond_control("Riprova",291,359,92,48,B_RETRY,power_storage_ready()||beyond_retry_operation==PD_BEYOND_LIST);}
-    }else if(page==BEYOND_BUSY){
-        pd_beyond_info current;
-        pd_beyond_snapshot(&current);
-        label(current.operation==PD_BEYOND_LINK?"Collego Beyond":current.operation==PD_BEYOND_LIST?"Leggo i tuoi PG":"Leggo Beyond",83,111,300,true);
-        label(current.phase==PD_BEYOND_CANCELLING?"Annullamento...":current.phase==PD_BEYOND_CLOCK?"Controllo l orologio":current.phase==PD_BEYOND_HTTP?(current.operation==PD_BEYOND_LIST||current.operation==PD_BEYOND_LINK?"Verifico accesso ed elenco":"Scarico la scheda"):"Converto il personaggio",83,171,300,false);
-        small_label("Il PG attuale resta conservato",83,231,300,PD_MINT);
-        small_label("Nessuna modifica su Beyond",83,271,300,PD_TEXT);
-        small_label("Attendi oppure annulla",83,311,300,PD_MUTED);
-        beyond_control("Annulla",83,359,300,48,B_CANCEL,current.phase!=PD_BEYOND_CANCELLING);
-    }else{
-        label(beyond_report.blockers?"Import bloccato":"Limiti e dati manuali",83,111,300,false);
-        unsigned total=beyond_report.blockers+beyond_report.limits;
-        snprintf(text,sizeof text,"Voce %u/%u%s",beyond_report.count?beyond_note+1:0,beyond_report.count,total>beyond_report.count?" | altre note in estratto":"");
-        small_label(text,83,151,300,PD_GOLD);
-        lv_obj_t *body=small_label(beyond_report.count?beyond_report.lines[beyond_note]:"Nessuna nota aggiuntiva",83,177,300,PD_TEXT);
-        lv_label_set_long_mode(body,LV_LABEL_LONG_WRAP);
-        lv_obj_set_height(body,180);
-        beyond_control("Indietro",83,359,92,48,B_NOTES_BACK,true);
-        beyond_control("<",187,359,92,48,B_PREV,beyond_note>0);
-        beyond_control(">",291,359,92,48,B_NEXT,beyond_note+1<beyond_report.count);
-    }
-    beyond_mark_focus();
 }

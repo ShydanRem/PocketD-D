@@ -222,6 +222,7 @@ static void rules_preset(unsigned);
 static intptr_t rules_back(void);
 static lv_obj_t *wrapped_name(const char *,int,int,const lv_font_t *);
 static bool impact_menu_allowed(void);
+static void render_beyond(void);
 static void wifi_mark_focus(void);
 static lv_obj_t *wifi_button(const char *,int,int,int,int,int,bool);
 static void impact_open(unsigned),impact_picker_action(intptr_t),render_impact_picker(void);
@@ -2480,6 +2481,7 @@ static void render_death_damage(void){
     button("Indietro",83,359,144,48,3001,true);button("Conferma",239,359,144,48,3004,r.allowed);
 }
 #include "connection_ui.inc"
+#include "beyond_views.inc"
 static void render_power(void){
     char text[120];bool fresh=pd_power_fresh(&power_info,lv_tick_get()),ready=power_storage_ready(),battery=pd_power_battery_only(&power_info,lv_tick_get());
     if(page==POWER_OFF){
@@ -3327,7 +3329,7 @@ static void render_content(void) {
     if (import_pending&&page!=BEYOND_REPORT) {
         char items[8],powers[8];if(pending.inventory_available)snprintf(items,sizeof items,"%u",pending.item_count);else strcpy(items,"?");if(pending.magic.available)snprintf(powers,sizeof powers,"%u",pending.magic.count);else strcpy(powers,"?");
         if(import_from_beyond){
-            lv_obj_t *name=small_label(pending.name,83,99,300,PD_TEXT);lv_label_set_long_mode(name,LV_LABEL_LONG_WRAP);lv_obj_set_height(name,58);
+            lv_obj_t *name=small_label(pending.name,83,99,300,PD_TEXT);emblem_name(name,pending.name,300);
             avatar_show(&pending.avatar,85,163,root,2,false);
             snprintf(text,sizeof text,"Lv %u | Zaino %s | Poteri %s",pending.level,items,powers);lv_obj_t *meta=small_label(text,143,163,240,PD_MUTED);label_font(meta,&lv_font_montserrat_14);
             snprintf(text,sizeof text,"PF %u/%u | CA %u",pending.hp,pd_max_hp(&pending),pd_armor(&pending));lv_obj_t *vitals=label(text,143,191,240,false);lv_point_t vitals_size;lv_text_get_size(&vitals_size,text,&lv_font_montserrat_20,0,0,240,LV_TEXT_FLAG_NONE);if(vitals_size.y>lv_font_get_line_height(&lv_font_montserrat_20))label_font(vitals,&lv_font_montserrat_16);
@@ -3457,6 +3459,7 @@ static void list_swipe(lv_event_t *event){
 }
 static void render(void){
     static int last_page=-1;
+    if(beyond_guide_owner!=page){beyond_guide=false;beyond_guide_owner=page;}
     if(connection_owner!=page){connection_details=false;connection_owner=page;}
     if(rules_panel&&rules_panel_owner!=page)rules_panel=0;
     render_content();
@@ -3514,7 +3517,7 @@ static void screen_service(int pwr,int boot){
             if(library_failed)continue;
             if(i==0){if(!beyond_keyboard){beyond_keyboard=true;beyond_focus=0;}else if(beyond_target_count)beyond_focus=(beyond_focus+1)%beyond_target_count;beyond_mark_focus();}
             else if(i==1){if(!beyond_keyboard){beyond_keyboard=true;beyond_focus=0;beyond_mark_focus();}else if(beyond_focus<beyond_target_count&&!lv_obj_has_state(beyond_targets[beyond_focus],LV_STATE_DISABLED))lv_obj_send_event(beyond_targets[beyond_focus],LV_EVENT_CLICKED,NULL);}
-            else act(page==BEYOND_REPORT?B_NOTES_BACK:import_pending?31:page==BEYOND_BUSY?B_CANCEL:B_BACK);
+            else act(beyond_guide?B_GUIDE_BACK:page==BEYOND_REPORT?B_NOTES_BACK:import_pending?31:page==BEYOND_BUSY?B_CANCEL:B_BACK);
         }else if(library_view()){
             if(library_failed)continue;
             if(i==0){if(!library_keyboard){library_keyboard=true;library_focus=0;}else if(library_target_count)library_focus=(library_focus+1)%library_target_count;library_mark_focus();}

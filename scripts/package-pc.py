@@ -13,7 +13,7 @@ for directory in ('src','scripts'):
 files += [ROOT/'docs/POCKET-PC.md', ROOT/'docs/previews/v093-pocket-pc.png']
 files += [ROOT/'docs/AUTONOMIA-RECUPERO.md', ROOT/'docs/previews/v094-beyond-recovery.png']
 files += [ROOT/'docs/MAGIE-USO-RAPIDO.md', ROOT/'docs/previews/v095-magic-workflow.png']
-files += [ROOT/'docs/UX-RPG.md', ROOT/'docs/previews/v096-rpg-ux.png', ROOT/'docs/previews/v097-result-ux.png', ROOT/'docs/previews/v098-transaction-ux.png', ROOT/'docs/previews/v099-session-states.png', ROOT/'docs/previews/v100-collection-setup.png', ROOT/'docs/previews/v101-rule-editors.png', ROOT/'docs/previews/v102-incoming-hits.png', ROOT/'docs/previews/v103-turn-time.png', ROOT/'docs/previews/v104-reference-history.png', ROOT/'docs/previews/v105-connections-backup.png']
+files += [ROOT/'docs/UX-RPG.md', ROOT/'docs/previews/v096-rpg-ux.png', ROOT/'docs/previews/v097-result-ux.png', ROOT/'docs/previews/v098-transaction-ux.png', ROOT/'docs/previews/v099-session-states.png', ROOT/'docs/previews/v100-collection-setup.png', ROOT/'docs/previews/v101-rule-editors.png', ROOT/'docs/previews/v102-incoming-hits.png', ROOT/'docs/previews/v103-turn-time.png', ROOT/'docs/previews/v104-reference-history.png', ROOT/'docs/previews/v105-connections-backup.png', ROOT/'docs/previews/v106-beyond-entry.png']
 files += [ROOT/'docs/BEYOND-DISPOSITIVO.md', ROOT/'docs/previews/v091-beyond-native.png', ROOT/'docs/COLLEGAMENTO-BEYOND.md', ROOT/'docs/previews/v092-beyond-account.png']
 files += [f for folder in ('extension','tools/bridge') for f in (ROOT/folder).rglob('*') if f.is_file()]
 files += [ROOT/'dist/index.html']+[f for f in (ROOT/'dist/assets').rglob('*') if f.is_file()]
@@ -45,7 +45,7 @@ Uso pratico sul dispositivo, filtri e icone: docs/USO-PRATICO.md.
 Profilo PG, iniziativa e dotazioni: nuova importazione v20, firmware 0.78 / USB17.
 Wi-Fi: Menu > ingranaggio > Wi-Fi > Cerca reti; password sul display; vedi docs/WIFI.md.
 Beyond dal Pocket v0.91: I miei PG > ricerca > ID pubblico > Leggi > anteprima > Importa.
-Firmware v0.105: rete, ponte e backup con anteprime prima/dopo, docs/UX-RPG.md.
+Firmware v0.106: ingresso Beyond, codice e guida account, blocchi distinti da HTTP, docs/UX-RPG.md.
 Firmware v0.102: danni misti, riduzioni e spese leggibili, docs/UX-RPG.md.
 Firmware v0.101: editor diretti di effetti, difese e timer, docs/UX-RPG.md.
 Firmware v0.100: raccolta, aspetto diretto e impostazioni visive, docs/UX-RPG.md.

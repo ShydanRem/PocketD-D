@@ -1,22 +1,33 @@
 # Da zero al tuo eroe — PocketD-D
 
-**v0.93:** apri il sito → **Collega Pocket / Apri Pocket PC**. Beyond, look SD e
-backup sono nella stessa pagina; la porta riconosciuta viene riutilizzata. Per
-Beyond non serve più preparare l’accesso a parte. [Guida rapida](POCKET-PC.md).
+**Percorso attuale · v0.106**
 
-**v0.92:** [collegamento account al Pocket](COLLEGAMENTO-BEYOND.md), con codice USB,
-memoria opzionale ed elenco sul display. Nuovo percorso autenticato da collaudare realmente.
+1. Dal [sito](https://shydanrem.github.io/PocketD-D/) installa o aggiorna il
+   firmware. Per un aggiornamento scegli **Conserva dati**. I look sulla SD
+   possono essere installati dalla stessa pagina, senza scaricare il pacchetto PC.
+2. Sul Pocket apri **Menu → ingranaggio → Wi-Fi → Cerca reti**, scegli la rete
+   e inserisci la password. Il gioco resta disponibile offline.
+3. Apri **I miei PG → Beyond** nella raccolta vuota, oppure l'icona d'importazione.
+   **I miei PG** guida al primo collegamento dal PC; **PG pubblico** accetta l'ID
+   numerico finale del link senza associare l'account.
+4. Verifica caratteristiche, PF, CA e limiti nell'anteprima, poi **Importa**.
+   Senza SD viene sostituita la scheda attiva; con la raccolta SD si conserva
+   prima il PG uscente. **Annulla** conserva lo stato attuale.
 
-**v0.91:** è presente un primo percorso di importazione **direttamente sul Pocket
-tramite Wi-Fi**, per PG pubblici con ID numerico: [guida](BEYOND-DISPOSITIVO.md).
-Lettura/conversione verificate su PC, nuovo percorso da collaudare sull’hardware;
-associazione dell’account e PG privati sul Pocket restano successivi.
+Per associare l'account la prima volta apri **Pocket PC** dal sito: l'estensione
+Chrome/Edge e il confronto del codice rimangono necessari. Se scegli di ricordare
+l'accesso, i successivi import dal Pocket non richiedono PC o ponte accesi
+finché l'accesso resta valido.
+Le nuove funzioni Wi-Fi/account sull'ESP32 restano da collaudare realmente:
+[stato software e prove](STATO-SOFTWARE.md). L'elenco nell'estensione è già stato
+confermato dall'utente; questa è una verifica distinta.
 
-Per **aggiornare il firmware o installare i look sulla SD**, basta la pagina
-web in Chrome/Edge con il Pocket collegato via USB: nessun pacchetto da
-riscaricare. [GitHub Pages e attivazione iniziale](GITHUB-PAGES.md).
+[Guida account](COLLEGAMENTO-BEYOND.md) · [Importazione pubblica](BEYOND-DISPOSITIVO.md)
+· [Uso pratico](USO-PRATICO.md).
 
-I passaggi seguenti servono per l’**importazione Beyond tramite connettore locale**.
+## Alternativa: importazione dal PC locale
+
+Questi passaggi servono per l’**importazione Beyond tramite connettore locale**.
 Su **Windows x64**, usa Chrome o Edge e il pacchetto PC completo. Node.js e
 firmware sono inclusi: non serve installare Node, Python, npm o compilare.
 

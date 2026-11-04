@@ -14,7 +14,7 @@ static void library_yield(void *unused){(void)unused;
 }
 static bool library_ready(void){
     const char *root=pd_board_library_root();
-    if(!root){snprintf(library_notice,sizeof library_notice,"Inserisci una SD per conservare piu PG");return false;}
+    if(!root){snprintf(library_notice,sizeof library_notice,"Una scheda sul Pocket; piu PG con SD");return false;}
     uint64_t owner=pd_library_owner();
     if(!owner){snprintf(library_notice,sizeof library_notice,"Identita non salvata: riavvia");return false;}
     if(!pd_library_init(&library,root,owner,library_yield,NULL)){snprintf(library_notice,sizeof library_notice,"SD non scrivibile: PG attuale conservato");return false;}
@@ -116,6 +116,10 @@ static void render_library(void){
             if(known)snprintf(text,sizeof text,"Lv %u%s%s",e->level,e->owner==library.owner&&e->epoch==state.history_epoch?" | Attuale":"",e->status==PD_LIBRARY_RECOVERED?" | Recuperata":"");else snprintf(text,sizeof text,"Copia %u | conservata",e->slot);
             lv_obj_t *b=scene_control(known?e->name:"Copia non leggibile",pd_ui_icon(PD_UI_HOME),known?e->name:"Copia non leggibile",text,83,195+52*i,300,44,5310+i,known);if(library_target_count<7)library_targets[library_target_count++]=b;
             if(known&&e->owner==library.owner&&e->epoch==state.history_epoch)lv_obj_set_style_border_color(b,lv_color_hex(PD_GOLD),0);
+        }
+        if(!library_catalog.count){
+            lv_obj_t *entry=scene_control("Importa da Beyond",pd_ui_icon(PD_UI_LINK),"Beyond","Account o ID pubblico",83,211,300,64,5440,!library_failed);if(library_target_count<7)library_targets[library_target_count++]=entry;
+            small_label("Wi-Fi dal Pocket | USB dal PC",83,311,300,PD_MUTED);
         }
         library_control("Indietro",83,359,92,48,5301,true);library_control("<",187,359,92,48,5302,library_page>0);library_control(">",291,359,92,48,5303,(library_page+1)*3<library_catalog.count);
         if(library_target_count<7)library_targets[library_target_count++]=icon_button("Importa da Beyond",PD_UI_SEARCH,335,99,48,44,5440,true);
