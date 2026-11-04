@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **4 novembre 2026 — v0.104**. Il dispositivo è il prodotto;
+Aggiornamento del **4 novembre 2026 — v0.105**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
@@ -19,6 +19,20 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Decima iterazione UX · v0.105
+
+[Rete, ponte e backup](UX-RPG.md#v0105-rete-ponte-e-backup).
+Rete con comandi diretti e dettagli di SSID/IP/radio. Ponte con stati distinti,
+contatori dichiarati e accesso diretto al portale di abbinamento. Backup con
+confronti PF/massimi/temporanei/CA, contenuto della copia e ambito del ripristino
+espliciti. PWR/BOOT estesi a questi percorsi; dettagli e annullamento non scrivono
+la scheda né rinnovano la richiesta USB. Il ripristino conserva rete e
+associazioni e applica le preferenze del backup; gli altri PG su SD restano
+conservati. Nessun nuovo formato o automatismo di sincronizzazione.
+La conferma Wi-Fi non prova l'accesso Beyond e i contatori del ponte non sono
+un nuovo collaudo delle scritture sull'account. Restano importazione/account,
+primi passi e altre viste secondarie da uniformare, oltre al riscontro fisico.
 
 ## Nona iterazione UX · v0.104
 

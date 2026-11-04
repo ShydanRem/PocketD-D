@@ -1,5 +1,6 @@
 # PocketD-D — uso pratico sul dispositivo
 
+> v0.105: [rete, ponte e backup](UX-RPG.md#v0105-rete-ponte-e-backup).
 > v0.104: [consultazione e registro](UX-RPG.md#v0104-consultazione-e-registro).
 > v0.103: [turni, tempo e riferimenti](UX-RPG.md#v0103-turni-tempo-e-riferimenti).
 >
@@ -303,3 +304,32 @@ in caso di spegnimento senza aver risolto l'attesa.
 PWR scorre i comandi locali, BOOT li attiva e BOOT lungo torna indietro. La
 consultazione permette di usare Menu ed Eroe; ricerca e conferma Scarta
 proteggono la bozza fino all'uscita esplicita.
+
+
+## Rete e copie · v0.105
+
+In Wi-Fi scegli Cerca reti per inserire la password sul dispositivo. PC / Tel.
+apre l'hotspot come alternativa. Tocca lo stato della rete per leggere nome
+completo, IP e presenza di una rete in memoria. Una connessione riuscita non
+basta se il salvataggio della rete riporta un errore.
+
+Ponte apre il collegamento sperimentale al PC: Abbina richiede direttamente il
+portale. Il login Beyond e la configurazione del ponte restano sul PC; sul
+Pocket confronta tutte le trentadue cifre mostrate prima di confermare.
+In coda e Osservati sono i contatori del ponte. In caso di esito incerto,
+controlla la scheda Beyond sul PC prima di ripetere l'azione. Per l'importazione
+autonoma usa il percorso Beyond del personaggio, distinto dal ponte.
+
+Per una copia completa apri Backup nell'app PC e richiedi Crea copia oppure
+Ripristina. Il Pocket mostra l'anteprima. Dettagli elenca contenuti e limiti;
+Riepilogo torna ai valori. Il ripristino sostituisce scheda attiva e registro,
+comprese preferenze di aspetto, tasti e schermo. Gli altri PG su SD restano
+conservati; senza SD rimane la scheda singola. Rete e associazioni non vengono
+caricate dal file. Annulla conserva lo stato attuale. La richiesta scade dopo
+due minuti, anche se stai consultando i dettagli. Dopo Invia conserva il file
+ricevuto sul PC: il Pocket non può confermare che tu lo abbia salvato su disco.
+
+PWR seleziona e BOOT attiva il comando locale. BOOT lungo chiude prima i dettagli,
+poi torna indietro. Le scorciatoie personali rimangono memorizzate; durante il
+ripristino vengono invece applicate quelle presenti nella copia, come indicato
+nell'anteprima.

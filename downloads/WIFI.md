@@ -1,14 +1,17 @@
-# Wi-Fi sul dispositivo — v0.84
+# Wi-Fi sul dispositivo — v0.105
 
 Wi-Fi **2,4 GHz** opzionale. La scheda funziona offline. Il firmware parte con
 radio spenta se non è stata salvata e abilitata una rete. Wi-Fi collegato non
 prova una sincronizzazione. Dalla v0.79 è disponibile il [ponte sperimentale
 Beyond](PONTE-BEYOND.md), con abbinamento separato e conferma sul display;
-l’importazione autonoma dal dispositivo resta successiva.
+importazione autonoma e raccolta account Beyond hanno percorsi separati: vedi
+[Importazione dal dispositivo](BEYOND-DISPOSITIVO.md) e
+[Collegamento account](COLLEGAMENTO-BEYOND.md). Per i collaudi reali consulta
+[Stato software](STATO-SOFTWARE.md).
 
 ## Configurazione direttamente dal Pocket
 
-Con firmware **0.84** non serve un telefono o il PC per scegliere la rete:
+Dalla versione **0.84** non serve un telefono o il PC per scegliere la rete:
 
 1. **Menu → ingranaggio → Wi-Fi → Cerca reti** (oppure Aspetto → Schermo → Wi-Fi).
 2. Attendi la ricerca e tocca la tua rete. Le reti sono ordinate per segnale,
@@ -25,7 +28,7 @@ Con firmware **0.84** non serve un telefono o il PC per scegliere la rete:
 Annulla elimina la password in bozza. La rete precedente resta memorizzata se
 la prova fallisce; se era abilitata viene riprovata. Senza una rete precedente
 abilitata e senza portale aperto, una prova fallita spegne la radio.
-SSID nascosti: usa **Hotspot** o **Configura da telefono / PC** per inserirli
+SSID nascosti: usa **Hotspot** o **PC / Tel.** per inserirli
 manualmente. Il ponte Beyond si abbina ancora dal portale separato.
 
 Tasti nella ricerca/tastiera/conferma: PWR breve scorre il controllo evidenziato,
@@ -37,7 +40,7 @@ Tutti i bersagli hanno altezza minima 44 px e restano entro il cerchio.
 
 ## Configurazione alternativa da telefono o PC
 
-1. Sul Pocket: **Aspetto → Schermo → Wi-Fi → Configura da telefono / PC**.
+1. Sul Pocket: **Menu → ingranaggio → Wi-Fi → PC / Tel.**.
 2. Sul telefono/PC connettiti alla rete **PocketDD-…**. La password temporanea
    è sul display. Se il telefono segnala assenza di Internet, resta connesso.
 3. Apri **http://192.168.4.1** nel browser. Inserisci SSID e password della
@@ -118,3 +121,19 @@ leak detector escluso per i limiti dell’ambiente. Nessun test usa reti persona
 Sul tuo hardware restano da verificare ricerca, collegamento, password errata, riavvio,
 sospensione/risveglio, dimentica rete e consumo. Non sostituiscono il collaudo
 USB/SD e persistenza del PG: l’utente ha riferito riuscita la prima importazione, gli altri controlli restano aperti.
+
+
+## Comandi e dettagli · v0.105
+
+La schermata principale separa stato della rete, ricerca, hotspot e ponte PC.
+Tocca lo stato per SSID completo, IP, radio e rete memorizzata. Gli errori di
+salvataggio hanno precedenza sulla conferma «Rete collegata e salvata».
+PWR/BOOT funzionano anche nella schermata principale e nella conferma Dimentica;
+BOOT lungo chiude prima i dettagli. Il focus locale salta i controlli disabilitati.
+
+Ponte → Abbina richiede direttamente l'hotspot; non conferma da solo né la
+connessione né l'abbinamento. Se il comando è rifiutato, il display mostra la
+richiesta occupata. I nove stati del ponte restano distinti dal collegamento
+Wi-Fi. Una nuova scheda grafica o un contatore non costituiscono una prova di
+scrittura su Beyond. Dimentica rimuove solo la rete, conservando scheda, backup
+PG e associazioni.
