@@ -43,7 +43,7 @@ int main(void){
     memcpy(out,saved,sizeof out);assert(!pd_search_query(out,"123456789012345678901")&&!memcmp(out,saved,sizeof out));
     for(unsigned value=0;value<256;value++)if(value<32||value>126){char query[]={'A',(char)value,'B',0};if(!value)continue;assert(!pd_search_query(out,query)&&!memcmp(out,saved,sizeof out));}
     assert(!pd_search_query(NULL,"x")&&!pd_search_query(out,NULL));
-    assert(!pd_catalog_count(NULL,0,"")&&!pd_catalog_count(&s,4,"")&&!pd_catalog_count(&s,0,NULL));
+    assert(!pd_catalog_count(NULL,0,"")&&!pd_catalog_count(&s,5,"")&&!pd_catalog_count(&s,0,NULL));
     s.inventory_available=false;expect(PD_CATALOG_ITEMS,"",NULL,0);s.inventory_available=true;s.item_count=61;expect(PD_CATALOG_ITEMS,"",NULL,0);
     s.magic.available=false;expect(PD_CATALOG_POWERS,"",NULL,0);s.magic.available=true;s.magic.count=121;expect(PD_CATALOG_POWERS,"",NULL,0);
     s=before;memset(s.items[59].name,'W',40);s.items[59].name[40]=0;expect(PD_CATALOG_ITEMS,"WWWWWWWWWWWWWWWWWWWW",(unsigned[]){59},1);
@@ -76,5 +76,14 @@ int main(void){
     assert(pd_catalog_filtered_index(&s,PD_CATALOG_SPELLS,"two",PD_CATALOG_READY,0)==2);
     s.combat.raging=true;assert(pd_catalog_filtered_count(&s,PD_CATALOG_POWERS,"",PD_CATALOG_READY)==2);
     assert(!pd_catalog_filtered_count(&s,PD_CATALOG_ITEMS,"",PD_CATALOG_READY)&&!pd_catalog_filtered_count(&s,PD_CATALOG_POWERS,"",PD_CATALOG_POUCH)&&pd_catalog_filtered_index(&s,PD_CATALOG_POWERS,"",99,0)==-1);
-    printf("Catalog: %u case/substring/original-index checks, 60 items/120 powers, type intersections, duplicate/depleted rows, literal spaces/punctuation and bounded query normalization passed\n",cases);
+    /* Reference snapshots share the query matcher but never leak into casts or
+       readiness; duplicate names still resolve to their original source rows. */
+    pd_demo(&s);s.magic.available=true;s.magic.count=120;for(unsigned i=0;i<120;i++)s.magic.powers[i]=(pd_power){.name="Ordinary spell",.flags=PD_PREPARED};s.magic.powers[1]=(pd_power){.name="Light reference",.kind=1,.effect=4,.flags=PD_PASSIVE};
+    s.magic.powers[119]=(pd_power){.name="Light reference",.kind=1,.effect=5,.flags=PD_PASSIVE};before=s;
+    expect(PD_CATALOG_REFERENCE," LiGhT ",(unsigned[]){1,119},2);
+    assert(pd_catalog_index(&s,PD_CATALOG_POWERS,"Light reference",0)==-1);
+    assert(!pd_catalog_filtered_count(&s,PD_CATALOG_REFERENCE,"",PD_CATALOG_READY));
+    assert(!pd_catalog_filtered_count(&s,PD_CATALOG_REFERENCE,"",PD_CATALOG_POUCH));
+    assert(!memcmp(&s,&before,sizeof s));s.magic.available=false;expect(PD_CATALOG_REFERENCE,"",NULL,0);
+    printf("Catalog: %u case/substring/original-index checks, 60 items/120 powers, reference isolation, type intersections, duplicate/depleted rows, literal spaces/punctuation and bounded query normalization passed\n",cases);
 }

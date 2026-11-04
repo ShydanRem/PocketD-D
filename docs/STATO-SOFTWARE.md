@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **4 novembre 2026 — v0.103**. Il dispositivo è il prodotto;
+Aggiornamento del **4 novembre 2026 — v0.104**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
@@ -19,6 +19,19 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Nona iterazione UX · v0.104
+
+[Consultazione e registro](UX-RPG.md#v0104-consultazione-e-registro).
+Profilo con icone per gruppo e ricerca indipendente; iniziativa distinta dalle
+voci di sola lettura. Registro con filtri, risultati leggibili e facce originali.
+Un tiro in attesa rimane visibile attraverso i filtri, fino a cinque componenti:
+riprova atomica e rinuncia esplicita senza annullare l'azione di gioco. Avviso
+del registro separato dagli errori della scheda, che mantengono la precedenza.
+PWR/BOOT disponibili anche nella consultazione e nei tastierini di ricerca.
+Le descrizioni del profilo restano fotografie; nessun nuovo automatismo D&D,
+formato persistente o asset SD necessario. Restano altre viste secondarie,
+collegamenti e messaggi da uniformare e il riscontro sul dispositivo.
 
 ## Ottava iterazione UX · v0.103
 

@@ -30,14 +30,17 @@ static bool matches_filter(const pd_state *s,bool items,unsigned i,unsigned filt
     return !(p->flags&PD_USES_SLOT)||!p->level||slot_available(s,p->level);
 }
 static unsigned scan(const pd_state *s,unsigned catalog,const char *text,unsigned filter,unsigned position,int *index){
-    char query[PD_SEARCH_BYTES];if(!s||catalog>PD_CATALOG_POWERS||!pd_search_query(query,text))return 0;
+    char query[PD_SEARCH_BYTES];if(!s||catalog>PD_CATALOG_REFERENCE||!pd_search_query(query,text))return 0;
     bool items=catalog==PD_CATALOG_ITEMS;unsigned count=items?s->item_count:s->magic.count;
-    if(filter>PD_CATALOG_POUCH||(filter==PD_CATALOG_READY&&items)||(filter==PD_CATALOG_POUCH&&!items))return 0;
+    if(filter>PD_CATALOG_POUCH||(filter==PD_CATALOG_READY&&items)||(filter==PD_CATALOG_POUCH&&!items)||(catalog==PD_CATALOG_REFERENCE&&filter!=PD_CATALOG_ALL))return 0;
     if((items?(!s->inventory_available||count>PD_ITEMS):(!s->magic.available||count>PD_POWERS)))return 0;
     unsigned found=0;
     for(unsigned i=0;i<count;i++){
-        if(!items&&(s->magic.powers[i].effect==4||s->magic.powers[i].effect==5))continue;
-        if(!items&&catalog!=PD_CATALOG_POWERS&&s->magic.powers[i].kind!=(catalog==PD_CATALOG_FEATURES))continue;
+        if(!items){
+            bool reference=s->magic.powers[i].effect==4||s->magic.powers[i].effect==5;
+            if(reference!=(catalog==PD_CATALOG_REFERENCE))continue;
+            if(catalog!=PD_CATALOG_POWERS&&catalog!=PD_CATALOG_REFERENCE&&s->magic.powers[i].kind!=(catalog==PD_CATALOG_FEATURES))continue;
+        }
         if(!matches_filter(s,items,i,filter))continue;
         if(!contains(items?s->items[i].name:s->magic.powers[i].name,query))continue;
         if(index&&found==position)*index=(int)i;

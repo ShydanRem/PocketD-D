@@ -1,7 +1,7 @@
 #pragma once
 #include "pocketdd.h"
 #define PD_SEARCH_BYTES 21
-enum { PD_CATALOG_ITEMS,PD_CATALOG_SPELLS,PD_CATALOG_FEATURES,PD_CATALOG_POWERS };
+enum { PD_CATALOG_ITEMS,PD_CATALOG_SPELLS,PD_CATALOG_FEATURES,PD_CATALOG_POWERS,PD_CATALOG_REFERENCE };
 enum { PD_CATALOG_ALL,PD_CATALOG_READY,PD_CATALOG_POUCH };
 /* ASCII literal substring, case-insensitive, at most 20 characters. Trim outer
    spaces and display uppercase; empty means all. Invalid input preserves out.

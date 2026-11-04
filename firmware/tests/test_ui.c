@@ -1099,11 +1099,11 @@ int main(void) {
     click("Storico");act(2700);assert(page==HISTORY_DETAIL);screenshot("history-detail.ppm");bounds();
     effects_calls=random_calls;effects_saves=save_calls;unsigned journal_writes=history_save_calls;render();bounds();assert(random_calls==effects_calls&&save_calls==effects_saves&&history_save_calls==journal_writes);
     pd_history rebooted;assert(pd_history_store_load(state.history_epoch,&rebooted)&&!memcmp(&history,&rebooted,sizeof history));
-    click("Dadi");fail_history=true;click("Lancia");assert(history_pending&&history.count==1&&dice_animation.active);pd_history_entry pending_roll=history_unsaved;click("Accelera");screenshot("history-unsaved-roll.ppm");
+    click("Nuovo tiro");fail_history=true;click("Lancia");assert(history_pending&&history.count==1&&dice_animation.active);pd_history_entry pending_roll=history_unsaved;click("Accelera");screenshot("history-unsaved-roll.ppm");
     effects_calls=random_calls;effects_saves=save_calls;act(13);assert(page==HISTORY_HOME&&random_calls==effects_calls&&save_calls==effects_saves&&history_pending);screenshot("history-pending.ppm");bounds();
     act(1);assert(history_pending&&random_calls==effects_calls);effects_saves=save_calls;pd_state unchanged=state;assert(!stage_import(&unchanged));act(2609);assert(page==HISTORY_DETAIL);screenshot("history-unsaved-detail.ppm");bounds();
     click("Riprova");assert(history_pending&&random_calls==effects_calls&&history.count==1);fail_history=false;click("Riprova");assert(!history_pending&&history.count==2&&history.entries[0].total==pending_roll.total&&!memcmp(history.entries[0].dice,pending_roll.dice,18)&&random_calls==effects_calls&&save_calls==effects_saves);
-    act(2700);click("Dadi");fail_history=true;click("Lancia");click("Accelera");click("Storico");click("Scarta");assert(page==HISTORY_DISCARD);screenshot("history-discard.ppm");bounds();
+    act(2700);click("Nuovo tiro");fail_history=true;click("Lancia");click("Accelera");click("Storico");click("Scarta");assert(page==HISTORY_DISCARD);screenshot("history-discard.ppm");bounds();
     shortcut(0);act(100);assert(page==HISTORY_DISCARD&&history_pending);click("Indietro");assert(history_pending);click("Scarta");click("Scarta");assert(!history_pending&&history.count==2&&!memcmp(&state,&unchanged,sizeof state));fail_history=false;
     /* All eighteen faces, wide imported names and pagination fit the display. */
     pd_pool eighteen={.count=18,.sides=20,.sum=360,.bonus=60,.total=420,.damage=true};for(unsigned i=0;i<18;i++)eighteen.dice[i]=20;
@@ -2341,6 +2341,54 @@ int main(void) {
     memset(state.turn_names[1],'W',PD_TURN_NAME_BYTES-1);state.turn_names[1][PD_TURN_NAME_BYTES-1]=0;before=state;act(1500);click("Reazione");click("Altri turni");click("B");char owner_label[80];snprintf(owner_label,sizeof owner_label,"B: %s >",state.turn_names[1]);click(owner_label);assert(page==TURN_NAME_EDIT&&rules_target_count==17);bounds();wrapped_tree_fits(lv_screen_active());physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};rules_keyboard=false;probe_key_gesture(0,100);assert(rules_focus==1);probe_key_gesture(0,100);assert(rules_focus==14);probe_key_gesture(0,100);assert(rules_focus==15);probe_key_gesture(1,100);assert(strlen(name_draft)==PD_TURN_NAME_BYTES-2&&!memcmp(&state,&before,sizeof state));probe_key_gesture(1,900);assert(page==EXTERNAL_TURN_HOME&&!memcmp(&state,&before,sizeof state));click("Indietro");click("Menu");assert(page==HOME_MENU&&save_calls==writes&&random_calls==draws&&!memcmp(&history,&before_history,sizeof history));
     lv_indev_delete(clock_touch);page=HERO;render();
     puts("Turn/time UX: real pointer six presets, own/external start/end isolation across all timer families, reaction refresh only on own start, readonly named previews/cancel and failed-save retry, hour/minute units, paused timers, negative HP cap expiry, zero-change no-write, 17 name controls and local key/back with unchanged bindings/history/RNG passed; synthetic LVGL, no hardware claim.");
+    }
+    /* v0.104: real reference search and filtered frozen history, no game edits. */
+    {
+    pd_demo(&state);page=HERO;import_pending=false;history_pending=history_pair_pending=history_third_pending=history_fourth_pending=history_fifth_pending=false;fail_save=fail_history=false;pd_dice_idle(&dice_animation,1);display_screen=(pd_screen){0};physical_keys=(pd_buttons){0};
+    state.magic.available=true;state.magic.count=7;
+    for(unsigned i=0;i<7;i++)state.magic.powers[i]=(pd_power){.name="Reference",.description="Snapshot imported from Beyond. Check changes with your DM.",.kind=1,.flags=PD_PASSIVE|PD_PREPARED,.effect=4,.level=1};
+    const char *reference_names[]={"Profilo","Movimento","Sensi e passivi","Lingue","Strumenti","Movimento speciale"};for(unsigned i=0;i<6;i++){strcpy(state.magic.powers[i].name,reference_names[i]);state.magic.powers[i].level=i==5?1:i;}
+    state.magic.powers[6]=(pd_power){.name="Iniziativa",.description="Bonus importato +4. Le condizioni attuali si applicano al tiro.",.kind=1,.flags=PD_PASSIVE|PD_PREPARED,.effect=5,.level=6,.attack_modifier=4};
+    assert(pd_valid(&state));reference_query[0]=0;strcpy(power_query,"SPELL");strcpy(item_query,"ITEM");
+    pd_state before=state;pd_history_reset(&history,state.history_epoch);pd_history before_history=history;
+    unsigned writes=save_calls,draws=random_calls,journal_writes=history_save_calls;
+    history_filter=0;history_return=HERO;page=HISTORY_HOME;fail_history=true;render();assert(visible_text(lv_screen_active(),"Storico non salvato"));fail_history=false;
+    page=SHEET;render();click("Profilo PG >");assert(!confirmation_open()&&reference_count()==7);screenshot("ux104-reference.ppm");
+    click("Cerca");assert(page==POWER_SEARCH&&search_reference&&rules_target_count>=17);click_paged("M");click_paged("O");click_paged("V");screenshot("ux104-search.ppm");click("Mostra");assert(page==REFERENCE_HOME&&reference_count()==2&&reference_at(0)==1&&reference_at(1)==5&&!strcmp(reference_query,"MOV"));screenshot("ux104-filtered-profile.ppm");
+    click("Movimento speciale");assert(page==REFERENCE_TEXT&&power_index==5&&!confirmation_open());click("Indietro");click("Cerca");click("Azzera");click("Indietro");assert(!strcmp(reference_query,"MOV")&&reference_count()==2);
+    click("Cerca");click("Azzera");click("Mostra");click_paged("Iniziativa");assert(page==REFERENCE_TEXT&&power_index==6);screenshot("ux104-initiative.ppm");assert(random_calls==draws&&!memcmp(&state,&before,sizeof state)&&save_calls==writes&&history_save_calls==journal_writes);
+    /* A 40-byte wide name remains fully readable in the detail, and readonly
+       browsing still permits the ordinary Menu/Home commands. */
+    memset(state.magic.powers[6].name,'W',40);state.magic.powers[6].name[40]=0;before=state;render();wrapped_tree_fits(lv_screen_active());bounds();click("Menu");assert(page==HOME_MENU);act(101);act(4600);click("Cerca");assert(search_reference);click("Indietro");click("Scheda");act(800);click("Cerca*");assert(!search_reference&&!strcmp(search_draft,"SPELL"));click("Indietro");assert(!strcmp(power_query,"SPELL")&&!strcmp(item_query,"ITEM"));
+    /* All 20 saved records: filtered navigation maps to original indices. */
+    for(unsigned i=0;i<20;i++){
+        pd_history_entry e={.kind=(unsigned[]){PD_H_DAMAGE,PD_H_ATTACK,PD_H_HEAL,PD_H_FREE}[i%4],.count=1,.sides=i%4==1?20:6,.dice={i%6+1},.total=(int)(i%6+1)};
+        snprintf(e.label,sizeof e.label,"Tiro sintetico %u",i+1);strcpy(e.note,"Valore congelato; nessun nuovo lancio");assert(pd_history_append(&history,&e));
+    }
+    persisted_history=history;history_filter=0;before_history=history;act(100);act(2600);screenshot("ux104-history.ppm");
+    lv_indev_t *touch=lv_indev_create();lv_indev_set_type(touch,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(touch,probe_touch);
+    probe_click(touch,272,181);assert(history_filter==2&&history_saved_count()==5&&history_saved_at(0)==3);screenshot("ux104-filtered-history.ppm");probe_click(touch,230,233);assert(page==HISTORY_DETAIL&&history_index==3);screenshot("ux104-roll.ppm");click("Elenco");click(">");assert(history_page==1);unsigned original=history_saved_at(3);probe_click(touch,230,233);assert(page==HISTORY_DETAIL&&history_index==original);click("Elenco");click("d20");assert(!history_page&&history_saved_count()==5);click("Recuperi");assert(history_saved_count()==5);click("Tutti");
+    /* Six dice per page, 18 total, full-width imported source, no reroll. */
+    history.entries[0]=(pd_history_entry){.sequence=history.entries[0].sequence,.kind=PD_H_FREE,.count=18,.sides=20,.bonus=60,.total=420};memset(history.entries[0].label,'W',40);history.entries[0].label[40]=0;memset(history.entries[0].note,'W',48);history.entries[0].note[48]=0;for(unsigned i=0;i<18;i++)history.entries[0].dice[i]=20;
+    act(2700);wrapped_tree_fits(lv_screen_active());click(">");click(">");assert(history_dice_page==2&&visible_text(lv_screen_active(),"D18: 20"));screenshot("ux104-wide-roll.ppm");click("Elenco");before_history=history;
+    assert(!memcmp(&state,&before,sizeof state)&&save_calls==writes&&random_calls==draws&&history_save_calls==journal_writes);
+    /* A five-part failed history write is pinned even under an unrelated filter,
+       all components remain frozen, retry is atomic and never spends again. */
+    history_unsaved=(pd_history_entry){.label="Danni arma",.note="Danni gia risolti; PF bersaglio invariati",.kind=PD_H_DAMAGE,.count=1,.sides=6,.dice={3},.total=3};
+    history_unsaved_extra=history_unsaved_third=history_unsaved_fourth=history_unsaved_fifth=history_unsaved;
+    strcpy(history_unsaved_extra.label,"True Strike");strcpy(history_unsaved_third.label,"Extra");strcpy(history_unsaved_fourth.label,"Punizione");strcpy(history_unsaved_fifth.label,"Punizione extra");
+    history_pending=history_pair_pending=history_third_pending=history_fourth_pending=history_fifth_pending=true;fail_history=true;render();click("Recuperi");assert(history_visible_count()==6&&named_control("Da registrare: Danni arma"));screenshot("ux104-pending.ppm");
+    assert(!strcmp(ui_storage_status(),"Registro: tiro da salvare")&&ui_status_color(ui_storage_status())==PD_GOLD);click("Da registrare: Danni arma");screenshot("ux104-pending-detail.ppm");
+    for(unsigned i=0;i<5;i++){assert(history_index==PD_HISTORY_LIMIT+i);bounds();wrapped_tree_fits(lv_screen_active());click("Parte >");}assert(history_index==PD_HISTORY_LIMIT);
+    click("Riprova");assert(history_pending&&!memcmp(&history,&before_history,sizeof history)&&history_save_calls==journal_writes+1);fail_history=false;click("Riprova");assert(!history_pending&&history.count==20&&history_save_calls==journal_writes+2&&!strcmp(history.entries[0].label,"Punizione extra")&&!strcmp(history.entries[4].label,"Danni arma"));
+    before_history=history;click("Danni");assert(history_saved_count()==8);/* Three retained old entries plus five newly committed parts. */
+    history_pending=true;render();click("Scarta");screenshot("ux104-discard.ppm");assert(confirmation_open());click("Indietro");assert(history_pending);click("Scarta");click("Scarta");assert(!history_pending&&!memcmp(&history,&before_history,sizeof history)&&!memcmp(&state,&before,sizeof state)&&save_calls==writes&&random_calls==draws);
+    /* Local keys cover filters, rows, search and explicit back. Bindings persist. */
+    physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};rules_keyboard=false;probe_key_gesture(1,100);assert(rules_keyboard&&page==HISTORY_HOME);probe_key_gesture(1,900);assert(page==HERO);
+    act(101);act(4600);click("Cerca");physical_keys=(pd_buttons){0};rules_keyboard=false;probe_key_gesture(1,100);assert(rules_keyboard);probe_key_gesture(1,900);assert(page==REFERENCE_HOME);probe_key_gesture(1,900);assert(page==SHEET);
+    assert(!memcmp(&state,&before,sizeof state)&&save_calls==writes&&random_calls==draws&&!memcmp(&history,&before_history,sizeof history));
+    lv_indev_delete(touch);reference_query[0]=power_query[0]=item_query[0]=0;history_filter=0;page=HERO;render();
+    puts("Reference/history UX: literal query/cancel isolation, original-index filters, 20 saved records, frozen 18 dice, full names, five pending components pinned/retry/discard, local keys, readonly menu and unchanged PG/bindings/RNG passed; synthetic LVGL, no hardware claim.");
     }
     unsigned covered=0;
     for(unsigned p=0;p<=MAGIC_PREPARE_CONFIRM;p++){

@@ -442,3 +442,56 @@ Verifiche v0.103, 4 novembre 2026: 357 test JavaScript, suite nativa completa,
 ESP32 passati. Immagini native con PG sintetici; nuove interazioni, touch e
 fluidità restano da valutare sul dispositivo. Nessuna nuova lettura Beyond o
 modifica della raccolta personale.
+
+
+## v0.104: consultazione e registro
+
+- **Profilo importato:** tre schede per pagina, icone coerenti con il gruppo
+  sorgente: profilo, movimento, sensi/passivi, lingue, strumenti, dotazioni e
+  iniziativa. Movimento, occhio e fumetto sono tre nuovi glifi originali.
+  Le voci da leggere indicano «Consultazione»; l'iniziativa indica «tiro» e
+  richiede comunque il comando Lancia e le verifiche di contesto esistenti.
+- **Ricerca:** Cerca filtra il nome o parte del nome con lo stesso tastierino
+  dello zaino. Mostra applica; Indietro annulla la bozza. Il filtro del profilo
+  è indipendente da quelli di magie e oggetti, conserva gli indici originali
+  e si azzera quando viene adottata una nuova scheda. Nomi completi e testo
+  paginato rimangono consultabili nel dettaglio.
+- **Registro:** filtri diretti Tutti, d20, Danni e Recuperi. d20 comprende i
+  record con dado a venti facce, anche liberi; Recuperi comprende cure, dadi
+  vita e ricariche. Le righe separano fonte, totale e numero del record. La
+  cronologia conserva il limite esistente di venti voci e non combina i valori
+  delle componenti di un colpo in un totale inventato.
+- **Dettaglio:** risultato numerico in pixel, nome completo fino a quaranta
+  caratteri, formula, tipo, modalità e sei facce effettive per pagina. Nuovo
+  tiro apre la preparazione: consultare o sfogliare non lancia nuovi dadi.
+  Un venti archiviato non viene etichettato automaticamente come critico.
+- **Tiro in attesa:** resta fissato in cima, anche se escluso dal filtro.
+  Fino a cinque parti possono essere sfogliate senza rilancio. «Registro: tiro
+  da salvare» è un avviso giallo distinto dagli errori della scheda, che
+  mantengono la precedenza. Riprova registra tutte le parti insieme; Scarta
+  richiede conferma e rinuncia soltanto alla voce, senza annullare PF, spese o
+  altre azioni già salvate. Prima di spegnere occorre risolvere l'attesa: il
+  tiro non ancora registrato risiede in memoria e non sopravvive alla perdita
+  di alimentazione.
+- **Tasti:** PWR seleziona, BOOT attiva e BOOT lungo torna indietro anche in
+  profilo, testo, registro, filtri e ricerca. La consultazione lascia disponibili
+  Menu ed Eroe; la bozza di ricerca e la conferma Scarta restano protette.
+  Le assegnazioni personali dei tasti vengono conservate.
+
+[Quattro viste native](previews/v104-reference-history.png), con dati e input
+sintetici. Il profilo resta una fotografia dell'importazione: movimento, sensi,
+lingue e dotazioni descrittive non diventano nuovi automatismi di regole.
+Nessun formato di scheda o registro è cambiato; i look SD esistenti restano
+compatibili. Restano da rivedere altre viste secondarie, messaggi di
+installazione/collegamento e coerenza dell'intero percorso: la revisione UX
+non è conclusa. La roadmap funzionale rimane in STATO-SOFTWARE.md.
+
+
+Verifiche v0.104, 4 novembre 2026: 357 test JavaScript, suite nativa completa,
+153 viste LVGL, scenari con puntatore e tasti, ASan/UBSan e compilazione ESP32
+passati. Ricerca e filtri confrontati con gli indici originali, nomi da quaranta
+caratteri e note da quarantotto, tutte le diciotto facce, riprova fallita/riuscita
+con cinque parti, rinuncia senza annullamento e assenza di scritture alla scheda
+o nuovi numeri casuali durante la consultazione. Le immagini sono catture del
+renderer reale con dati sintetici. Nessuna nuova prova fisica USB/Wi-Fi, lettura
+reale Beyond o modifica della raccolta personale.

@@ -216,7 +216,7 @@ static bool appearance_keyboard,appearance_picker;
 static bool wifi_editing(void);
 static bool play_editing(void);
 static bool appearance_editing(void);
-static bool rules_editing(void),rules_picker_open(void);
+static bool rules_editing(void),rules_navigating(void),rules_picker_open(void);
 static void rules_open(unsigned),rules_picker_action(intptr_t),rules_focus_refresh(void),rules_mark_focus(void);
 static void rules_preset(unsigned);
 static intptr_t rules_back(void);
@@ -254,7 +254,8 @@ static unsigned recharge_gained,recharge_before,recharge_after,recharge_maximum,
 static char recharge_name[PD_ITEM_NAME_BYTES];
 static bool pouch_view,ready_view;
 static unsigned inventory_page,item_index,target_armor=15,healing_gained;
-static char item_query[PD_SEARCH_BYTES],power_query[PD_SEARCH_BYTES],search_draft[PD_SEARCH_BYTES];
+static char item_query[PD_SEARCH_BYTES],power_query[PD_SEARCH_BYTES],reference_query[PD_SEARCH_BYTES],search_draft[PD_SEARCH_BYTES];
+static bool search_reference;
 static unsigned search_key_page;
 static const char search_keys[]="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 '-.+/";
 static unsigned search_pages(void){return (sizeof search_keys-2)/12+1;}
@@ -542,6 +543,14 @@ static void report_diagnostics(void){
     message[start+size]='\n';message[start+size+1]=0;reply(message);
 }
 static unsigned history_page,history_index,history_dice_page;
+static unsigned history_filter;
+/* Filters only map the saved list. A pending multi-part roll stays pinned. */
+static bool history_matches(const pd_history_entry *e){
+    return !history_filter||(history_filter==1&&e->sides==20)||(history_filter==2&&e->kind==PD_H_DAMAGE)||(history_filter==3&&(e->kind==PD_H_HEAL||e->kind==PD_H_HIT_DIE||e->kind==PD_H_RECHARGE));
+}
+static unsigned history_saved_count(void){unsigned n=0;for(unsigned i=0;i<history.count;i++)if(history_matches(&history.entries[i]))n++;return n;}
+static unsigned history_saved_at(unsigned position){for(unsigned i=0;i<history.count;i++)if(history_matches(&history.entries[i])){if(!position)return i;position--;}return PD_HISTORY_LIMIT;}
+static unsigned history_visible_count(void){return history_saved_count()+(history_pending?1:0);}
 static page_t history_return=HERO;
 static bool journal_flush(void){
     if(!history_pending)return true;
@@ -598,7 +607,7 @@ static const char *ui_storage_status(void){
     if(smite_rolled)return "Errore salvataggio: riprova";
     const char *status=pd_storage_status();
     if(strstr(status,"Errore"))return status;
-    if(history_pending)return "Tiro non registrato";
+    if(history_pending)return "Registro: tiro da salvare";
     unsigned warning=pd_power_warning(&power_info,lv_tick_get());
     if(warning&& !strcmp(status,"Salvato offline")){static char low[48];snprintf(low,sizeof low,warning==2?"Batteria %u%%: collega USB":"Batteria bassa: %u%%",power_info.percent);return low;}
     return status;
@@ -606,14 +615,14 @@ static const char *ui_storage_status(void){
 static unsigned ui_status_color(const char *status){
     if(strstr(status,"Errore"))return PD_DANGER;
     if(strstr(status,"Batteria"))return pd_power_warning(&power_info,lv_tick_get())==2?PD_DANGER:PD_GOLD;
-    return strstr(status,"Recuperata")||strstr(status,"Layout")?PD_GOLD:PD_MUTED;
+    return strstr(status,"Registro:")||strstr(status,"Recuperata")||strstr(status,"Layout")?PD_GOLD:PD_MUTED;
 }
 static void invalidate_strike(void) {
     strike_ready=false;
     if(combat_roll) {combat_roll=0;pool_view=false;has_roll=false;ability=-1;pd_dice_idle(&dice_animation,1);}
 }
 static void adopt_pending_state(void){
-    clear_damage_reductions();pouch_view=ready_view=false;item_query[0]=power_query[0]=search_draft[0]=0;magic_page=0;state=pending;item_rolled=false;rest_active=false;hit_rolled=false;combat_roll=0;strike_ready=false;inventory_page=0;item_index=0;undo_available=false;resource_index=0;has_roll=false;ability=-1;mode=0;page=HERO;pool_view=false;dice_setup=false;die_picker=false;pd_dice_idle(&dice_animation,1);
+    clear_damage_reductions();pouch_view=ready_view=false;item_query[0]=power_query[0]=reference_query[0]=search_draft[0]=0;search_reference=false;magic_page=0;state=pending;item_rolled=false;rest_active=false;hit_rolled=false;combat_roll=0;strike_ready=false;inventory_page=0;item_index=0;undo_available=false;resource_index=0;has_roll=false;ability=-1;mode=0;page=HERO;pool_view=false;dice_setup=false;die_picker=false;pd_dice_idle(&dice_animation,1);
 }
 static void apply(pd_state *next) {
     if (pd_storage_save(next)) { previous=state; undo_available=true; state=*next;invalidate_strike(); }
@@ -799,8 +808,8 @@ static void input_check_action(intptr_t action){
     pd_screen_activity(&display_screen,lv_tick_get());render();
 }
 static unsigned reference_page;
-static unsigned reference_count(void){unsigned n=0;for(unsigned i=0;i<state.magic.count;i++)if((state.magic.powers[i].effect==4||state.magic.powers[i].effect==5))n++;return n;}
-static unsigned reference_at(unsigned n){for(unsigned i=0;i<state.magic.count;i++)if((state.magic.powers[i].effect==4||state.magic.powers[i].effect==5)){if(!n)return i;n--;}return PD_POWERS;}
+static unsigned reference_count(void){return pd_catalog_count(&state,PD_CATALOG_REFERENCE,reference_query);}
+static unsigned reference_at(unsigned n){int index=pd_catalog_index(&state,PD_CATALOG_REFERENCE,reference_query,n);return index<0?PD_POWERS:(unsigned)index;}
 static const char *wifi_notice="";
 static pd_wifi_credentials wifi_draft;
 static unsigned wifi_list_page,wifi_key_mode,wifi_key_page,wifi_focus,wifi_target_count;
@@ -989,9 +998,10 @@ static void act(intptr_t action) {
         if(!pd_item_quantity_set(&next,item_index,number_value)||!memcmp(&next,&state,sizeof state))return;
         if(pd_storage_save(&next)){previous=state;undo_available=true;state=next;invalidate_strike();page=ITEM_DETAIL;}
     }
-    else if(action==3800&&(page==INVENTORY||page==MAGIC_LIST)){
+    else if(action==3800&&(page==INVENTORY||page==MAGIC_LIST||page==REFERENCE_HOME)){
         bool items=page==INVENTORY;if(items?!state.inventory_available:!state.magic.available)return;
-        memcpy(search_draft,items?item_query:power_query,sizeof search_draft);search_key_page=0;page=items?ITEM_SEARCH:POWER_SEARCH;
+        search_reference=page==REFERENCE_HOME;
+        memcpy(search_draft,items?item_query:search_reference?reference_query:power_query,sizeof search_draft);search_key_page=0;page=items?ITEM_SEARCH:POWER_SEARCH;
     }
     else if((page==ITEM_SEARCH||page==POWER_SEARCH)&&action>=3900&&action<3900+(intptr_t)sizeof search_keys-1){
         unsigned n=strlen(search_draft);if(n<PD_SEARCH_BYTES-1){search_draft[n]=search_keys[action-3900];search_draft[n+1]=0;}
@@ -1001,8 +1011,8 @@ static void act(intptr_t action) {
         else if(action==3802&&search_key_page+1<search_pages())search_key_page++;
         else if(action==3803){unsigned n=strlen(search_draft);if(n)search_draft[n-1]=0;}
         else if(action==3804)search_draft[0]=0;
-        else if(action==3805)page=page==ITEM_SEARCH?INVENTORY:MAGIC_LIST;
-        else if(action==3806){bool items=page==ITEM_SEARCH;if(!pd_search_query(items?item_query:power_query,search_draft))return;if(items)inventory_page=0;else magic_page=0;page=items?INVENTORY:MAGIC_LIST;}
+        else if(action==3805)page=page==ITEM_SEARCH?INVENTORY:search_reference?REFERENCE_HOME:MAGIC_LIST;
+        else if(action==3806){bool items=page==ITEM_SEARCH;if(!pd_search_query(items?item_query:search_reference?reference_query:power_query,search_draft))return;if(items)inventory_page=0;else if(search_reference)reference_page=0;else magic_page=0;page=items?INVENTORY:search_reference?REFERENCE_HOME:MAGIC_LIST;}
     }
 
     else if(action==3700&&page==DEVICE_SETTINGS){power_notice="";page=POWER_HOME;pd_board_power(&power_info,lv_tick_get(),true);}
@@ -1069,7 +1079,8 @@ static void act(intptr_t action) {
     }
     else if(action==2600){if(page!=HISTORY_HOME&&page!=HISTORY_DETAIL)history_return=page;history_page=0;page=HISTORY_HOME;}
     else if(action==2601&&page==HISTORY_HOME&&history_page)history_page--;
-    else if(action==2602&&page==HISTORY_HOME&&(history_page+1)*3<history.count+(history_pending?1u:0u))history_page++;
+    else if(action==2602&&page==HISTORY_HOME&&(history_page+1)*3<history_visible_count())history_page++;
+    else if(action>=2620&&action<2624&&page==HISTORY_HOME){history_filter=action-2620;history_page=0;}
     else if(action==2603&&(page==HISTORY_HOME||page==HISTORY_DETAIL)){journal_flush();page=HISTORY_HOME;history_page=0;}
     else if(action==2604&&page==HISTORY_HOME)page=history_return;
     else if(action==2605&&page==HISTORY_DETAIL)page=HISTORY_HOME;
@@ -1935,8 +1946,8 @@ static lv_obj_t *search_button(const char *text,int x,int y,int width,bool enabl
     return b;
 }
 static void render_search(void){
-    bool items=page==ITEM_SEARCH;unsigned catalog=items?PD_CATALOG_ITEMS:magic_filter==2?PD_CATALOG_POWERS:magic_filter==1?PD_CATALOG_FEATURES:PD_CATALOG_SPELLS;
-    char text[100];snprintf(text,sizeof text,"Cerca %u/%u | %u voci",search_key_page+1,search_pages(),pd_catalog_filtered_count(&state,catalog,search_draft,items?(pouch_view?PD_CATALOG_POUCH:PD_CATALOG_ALL):(ready_view?PD_CATALOG_READY:PD_CATALOG_ALL)));small_label(text,139,113,188,PD_TEXT);
+    bool items=page==ITEM_SEARCH;unsigned catalog=items?PD_CATALOG_ITEMS:search_reference?PD_CATALOG_REFERENCE:magic_filter==2?PD_CATALOG_POWERS:magic_filter==1?PD_CATALOG_FEATURES:PD_CATALOG_SPELLS;
+    char text[100];snprintf(text,sizeof text,"Cerca %u/%u | %u voci",search_key_page+1,search_pages(),pd_catalog_filtered_count(&state,catalog,search_draft,items?(pouch_view?PD_CATALOG_POUCH:PD_CATALOG_ALL):(!search_reference&&ready_view?PD_CATALOG_READY:PD_CATALOG_ALL)));small_label(text,139,113,188,PD_TEXT);
     button("<",83,99,48,44,3801,search_key_page>0);button(">",335,99,48,44,3802,search_key_page+1<search_pages());
     lv_obj_t *query=small_label(search_draft[0]?search_draft:"Nome o parte del nome",83,149,216,PD_GOLD);lv_label_set_long_mode(query,LV_LABEL_LONG_WRAP);lv_obj_set_height(query,40);
     lv_obj_t *clear=button("Azzera",307,147,76,44,3804,search_draft[0]!=0);lv_obj_set_style_text_font(clear,&lv_font_montserrat_16,0);
@@ -2026,56 +2037,7 @@ static void render_item(void) {
         if(v->charges.maximum){lv_obj_t *b=button("Cariche",291,359,92,48,2160,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
     }else{button("Zaino",83,359,v->charges.maximum?144:300,48,80,true);if(v->charges.maximum)button("Cariche",239,359,144,48,2160,true);}
 }
-static void render_history(void){
-    char text[160];
-    if(page==HISTORY_DISCARD){
-        label("Scarta dal registro?",83,111,300,true);
-        small_label("Il tiro non sara registrato.",83,180,300,PD_GOLD);
-        small_label("PF e usi salvati restano invariati.",83,214,300,PD_TEXT);
-        small_label("Non e un annullamento di gioco.",83,248,300,PD_MUTED);
-        button("Indietro",83,359,144,48,2607,true);button("Scarta",239,359,144,48,2608,true);return;
-    }
-    if(page==HISTORY_HOME){
-        unsigned total=history.count+(history_pending?1:0),pages=(total+2)/3;if(!pages)pages=1;
-        if(history_page>=pages)history_page=pages-1;
-        snprintf(text,sizeof text,"Storico %u/%u",history_page+1,pages);label(text,139,111,188,false);
-        button("<",83,99,48,44,2601,history_page>0);button(">",335,99,48,44,2602,history_page+1<pages);
-        if(!total){label("Nessun tiro registrato",83,183,300,false);small_label(pd_history_store_status(),83,232,300,PD_MUTED);}
-        for(unsigned row=0;row<3;row++){
-            unsigned index=history_page*3+row;if(index>=total)break;
-            bool unsaved=history_pending&&!index;unsigned saved=index-(history_pending?1:0);
-            const pd_history_entry *e=unsaved?&history_unsaved:&history.entries[saved];
-            if(unsaved)snprintf(text,sizeof text,"Da registrare: %s",e->label);
-            else snprintf(text,sizeof text,"#%u %s = %d",(unsigned)e->sequence,e->label,e->total);
-            lv_obj_t *b=button(text,83,155+row*49,300,44,unsaved?2609:2700+saved,true);
-            lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_width(l,288);lv_obj_set_height(l,lv_font_get_line_height(&lv_font_montserrat_16));lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_center(l);
-        }
-        snprintf(text,sizeof text,"%u salvati%s",history.count,history_pending?(history_fifth_pending?" | 1 tiro (5 parti) in attesa":history_fourth_pending?" | 1 tiro (4 parti) in attesa":history_third_pending?" | 1 tiro (3 parti) in attesa":history_pair_pending?" | 1 tiro (2 parti) in attesa":" | 1 non registrato"):" | ultime 20 voci");small_label(text,83,308,300,history_pending?PD_GOLD:PD_MUTED);
-        if(history_pending){
-            small_label("Da salvare prima di spegnere",83,332,300,PD_GOLD);
-            const char *names[]={"Riprova","Scarta","Indietro"};const unsigned actions[]={2603,2606,2604};
-            for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names[i],83+i*104,359,92,48,actions[i],true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
-        }else button("Indietro",83,359,300,48,2604,true);
-        return;
-    }
-    bool unsaved=history_index>=PD_HISTORY_LIMIT;
-    if((unsaved&&(!history_pending||(history_index>PD_HISTORY_LIMIT+(history_fifth_pending?4:history_fourth_pending?3:history_third_pending?2:history_pair_pending?1:0))))||(!unsaved&&history_index>=history.count)){page=HISTORY_HOME;render_history();return;}
-    const pd_history_entry *e=unsaved?(history_index==PD_HISTORY_LIMIT?&history_unsaved:history_index==PD_HISTORY_LIMIT+1?&history_unsaved_extra:history_index==PD_HISTORY_LIMIT+2?&history_unsaved_third:history_index==PD_HISTORY_LIMIT+3?&history_unsaved_fourth:&history_unsaved_fifth):&history.entries[history_index];
-    unsigned pages=(e->count+5)/6;if(history_dice_page>=pages)history_dice_page=pages-1;
-    snprintf(text,sizeof text,unsaved?"Non registrato":"Tiro #%u",(unsigned)e->sequence);label(text,139,111,188,false);
-    button("<",83,99,48,44,2610,history_dice_page>0);button(">",335,99,48,44,2611,history_dice_page+1<pages);
-    lv_obj_t *name=small_label(e->label,83,148,300,PD_TEXT);lv_label_set_long_mode(name,LV_LABEL_LONG_WRAP);lv_obj_set_height(name,57);
-    snprintf(text,sizeof text,"%ud%u %+d = %d",e->count,e->sides,e->bonus,e->total);small_label(text,83,208,300,PD_GOLD);
-    const char *kinds[]={"Libero","Prova","Abilita","Salvezza","Attacco","Danni","Cura","Dado vita","Morte","Concentrazione","Ricarica"};
-    snprintf(text,sizeof text,"%s | %s",kinds[e->kind],e->mode>0?"vantaggio":e->mode<0?"svantaggio":e->sides==20&&e->count==1?"base":"somma");small_label(text,83,231,300,PD_MUTED);
-    for(unsigned row=0;row<6;row++){
-        unsigned i=history_dice_page*6+row;if(i>=e->count)break;
-        snprintf(text,sizeof text,"D%u: %u",i+1,e->dice[i]);small_label(text,83+(row%3)*104,258+(row/3)*23,92,PD_TEXT);
-    }
-    lv_obj_t *note=small_label(e->note,83,300,300,PD_MUTED);lv_label_set_long_mode(note,LV_LABEL_LONG_WRAP);lv_obj_set_height(note,57);
-    if(unsaved&&history_pair_pending){button("Elenco",83,359,92,48,2605,true);button(history_third_pending?"Parte >":history_index==PD_HISTORY_LIMIT?(strstr(history_unsaved_extra.label,"True Strike")?"Radiante":"Extra"):"Arma",187,359,92,48,6423,true);button("Riprova",291,359,92,48,2603,true);}
-    else{button("Elenco",83,359,144,48,2605,true);button(unsaved?"Riprova":"Dadi",239,359,144,48,unsaved?2603:14,true);}
-}
+#include "history_ui.inc"
 static void render_wallet(void){
     char text[160];
     if(page==WALLET_HOME){
@@ -2256,12 +2218,13 @@ static void render_magic_management(void){
 static void render_magic_text(void) {
     const pd_power *p=&state.magic.powers[power_index];char chunk[PD_POWER_TEXT_BYTES];
     unsigned starts[16]={0},lengths[16]={0},pages=0;size_t at=0,total=strlen(p->description);
+    int body_height=page==REFERENCE_TEXT?(p->effect==5&&state.roll_conditions?102:120):138;
     do {
         size_t take=0,last_space=0;lv_point_t size={0};
         while(at+take<total) {
             chunk[take]=p->description[at+take];chunk[++take]=0;
             lv_text_get_size(&size,chunk,&lv_font_montserrat_16,0,0,300,LV_TEXT_FLAG_NONE);
-            if(size.y>(page==REFERENCE_TEXT&&p->effect==5&&state.roll_conditions?120:138)){take--;break;}
+            if(size.y>body_height){take--;break;}
             if(chunk[take-1]==' ')last_space=take;
         }
         if(at+take<total&&last_space>take/2)take=last_space;
@@ -2272,10 +2235,10 @@ static void render_magic_text(void) {
     if(text_page>=pages)text_page=pages-1;
     char heading[80];snprintf(heading,sizeof heading,"Testo %u/%u",text_page+1,pages);label(heading,139,111,188,false);
     button("<",83,99,48,44,846,text_page>0);button(">",335,99,48,44,847,text_page+1<pages);
-    small_label(p->name,83,151,300,PD_GOLD);
+    if(page==REFERENCE_TEXT){lv_obj_t *name=wrapped_name(p->name,145,48,&lv_font_montserrat_14);lv_obj_set_style_text_color(name,lv_color_hex(PD_GOLD),0);}else small_label(p->name,83,151,300,PD_GOLD);
     memcpy(chunk,p->description+starts[text_page],lengths[text_page]);chunk[lengths[text_page]]=0;
-    lv_obj_t *body=small_label(chunk[0]?chunk:"Nessuna descrizione disponibile",83,183,300,PD_TEXT);
-    lv_label_set_long_mode(body,LV_LABEL_LONG_WRAP);lv_obj_set_height(body,page==REFERENCE_TEXT&&p->effect==5&&state.roll_conditions?120:138);lv_obj_set_style_text_align(body,LV_TEXT_ALIGN_LEFT,0);
+    lv_obj_t *body=small_label(chunk[0]?chunk:"Nessuna descrizione disponibile",83,page==REFERENCE_TEXT?201:183,300,PD_TEXT);
+    lv_label_set_long_mode(body,LV_LABEL_LONG_WRAP);lv_obj_set_height(body,body_height);lv_obj_set_style_text_align(body,LV_TEXT_ALIGN_LEFT,0);
     if(!(page==REFERENCE_TEXT&&p->effect==5&&state.roll_conditions))small_label(page==REFERENCE_TEXT?"Fotografia all importazione":p->flags&PD_EXCERPT?"Estratto: testo completo sul PC":"Testo personale; effetti al tavolo",83,325,300,PD_MUTED);
     if(page==REFERENCE_TEXT&&p->effect==5){pd_check_resolution gate;bool valid=pd_check_resolve(&state,PD_CHECK,1,mode,ignore_effects,roll_context,&gate)&&gate.allowed;
         const char *names[]={"Elenco",mode>0?"Vant":mode<0?"Svant":"Base",state.roll_conditions?"Contesto":"Lancia"};const unsigned actions[]={4604,4606,state.roll_conditions?2230:4605};
@@ -2629,8 +2592,15 @@ static void render_wifi(void){
 static void render_reference(void){
     unsigned n=reference_count(),pages=(n+2)/3;if(!pages)pages=1;if(reference_page>=pages)reference_page=pages-1;
     char text[80];snprintf(text,sizeof text,"Profilo PG %u/%u",reference_page+1,pages);label(text,139,111,188,false);button("<",83,99,48,44,4602,reference_page>0);button(">",335,99,48,44,4603,reference_page+1<pages);
-    for(unsigned i=0;i<3;i++){unsigned index=reference_at(reference_page*3+i);if(index>=state.magic.count)break;lv_obj_t *b=button(state.magic.powers[index].name,83,159+i*52,300,44,4610+i,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
-    small_label(n?"Valori e dotazioni all importazione":"Reimporta da PC per aggiungere i dati",83,325,300,PD_MUTED);button("Scheda",83,359,300,48,4601,true);
+    snprintf(text,sizeof text,reference_query[0]?"%u voci | %s":"%u voci importate",n,reference_query);small_label(text,83,148,300,reference_query[0]?PD_GOLD:PD_MUTED);
+    if(!n){wrapped_name(reference_query[0]?"Nessun nome trovato":"Nessun dato di consultazione",205,60,&lv_font_montserrat_16);}
+    for(unsigned i=0;i<3;i++){
+        unsigned index=reference_at(reference_page*3+i);if(index>=state.magic.count)break;const pd_power *p=&state.magic.powers[index];
+        const pd_ui_icon_id icons[]={PD_UI_SHEET,PD_UI_MOVEMENT,PD_UI_SENSES,PD_UI_LANGUAGES,PD_UI_GEAR,PD_UI_PACK,PD_UI_DICE};
+        scene_control(p->name,pd_ui_icon(icons[p->level<7?p->level:0]),p->name,p->effect==5?"Iniziativa | tiro":"Consultazione",83,177+i*52,300,48,4610+i,true);
+    }
+    small_label("Fotografia all importazione",83,335,300,PD_MUTED);
+    button("Scheda",83,359,144,48,4601,true);lv_obj_t *find=button("Cerca",239,359,144,48,3800,state.magic.available);art(pd_ui_icon(PD_UI_SEARCH),6,8,find);
 }
 static void render_settings(void){
     char text[120];snprintf(text,sizeof text,"%u%%",state.brightness);label(text,139,109,188,true);
@@ -3514,7 +3484,7 @@ static void list_swipe(lv_event_t *event){
     else if(page==MAGIC_LIST){if(forward?(magic_page+1)*3<visible_powers():magic_page>0)action=forward?806:805;}
     else if(page==SHEET&&sheet_tab==1){if(forward?skill_page<5:skill_page>0)action=forward?64:63;}
     else if(page==LIBRARY_HOME){if(forward?(library_page+1)*3<library_catalog.count:library_page>0)action=forward?5303:5302;}
-    else if(page==HISTORY_HOME){if(forward?(history_page+1)*3<history.count+(history_pending?1u:0u):history_page>0)action=forward?2602:2601;}
+    else if(page==HISTORY_HOME){if(forward?(history_page+1)*3<history_visible_count():history_page>0)action=forward?2602:2601;}
     if(action){lv_indev_wait_release(input);act(action);}
 }
 static void render(void){
@@ -3568,7 +3538,7 @@ static void shortcut(unsigned gesture) {
 static void screen_service(int pwr,int boot){
     input_check_service();
     bool allowed=pd_screen_keys(&display_screen,pwr,boot,lv_tick_get());
-    bool enabled=allowed&&(!import_pending||import_from_beyond)&&(!confirmation_open()||appearance_editing()||rules_editing()||magic_setup_open()||wifi_editing()||beyond_network_flow()||play_editing()||attack_preparing()||library_view()||beyond_local());
+    bool enabled=allowed&&(!import_pending||import_from_beyond)&&(!confirmation_open()||appearance_editing()||rules_navigating()||magic_setup_open()||wifi_editing()||beyond_network_flow()||play_editing()||attack_preparing()||library_view()||beyond_local());
     unsigned gestures=pd_buttons_sample(&physical_keys,pwr,boot,lv_tick_get(),enabled);
     for(unsigned i=0;i<3;i++)if(gestures&(1u<<i)){
         if(beyond_local()){
@@ -3585,7 +3555,7 @@ static void screen_service(int pwr,int boot){
             if(i==0){if(!wifi_keyboard){wifi_keyboard=true;wifi_focus=0;}else if(wifi_target_count)wifi_focus=(wifi_focus+1)%wifi_target_count;wifi_mark_focus();}
             else if(i==1){if(!wifi_keyboard){wifi_keyboard=true;wifi_focus=0;wifi_mark_focus();}else if(wifi_focus<wifi_target_count&&!lv_obj_has_state(wifi_targets[wifi_focus],LV_STATE_DISABLED))lv_obj_send_event(wifi_targets[wifi_focus],LV_EVENT_CLICKED,NULL);}
             else act(magic_setup_open()?magic_setup_back():attack_preparing()?4002:play_editing()?6099:page==WIFI_HOME?4501:page==WIFI_FORGET?4506:page==WIFI_LIST?5001:page==WIFI_PASSWORD?5023:5025);
-        }else if(rules_editing()){
+        }else if(rules_navigating()){
             if(i==0){if(!rules_keyboard){rules_keyboard=true;rules_focus=0;}else if(rules_target_count)rules_focus=(rules_focus+1)%rules_target_count;rules_mark_focus();}
             else if(i==1){if(!rules_keyboard){rules_keyboard=true;rules_focus=0;rules_mark_focus();}else if(rules_focus<rules_target_count&&!lv_obj_has_state(rules_targets[rules_focus],LV_STATE_DISABLED))lv_obj_send_event(rules_targets[rules_focus],LV_EVENT_CLICKED,NULL);}
             else act(rules_picker_open()?5820:rules_back());
