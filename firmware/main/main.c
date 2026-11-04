@@ -220,6 +220,9 @@ static bool rules_editing(void),rules_picker_open(void);
 static void rules_open(unsigned),rules_picker_action(intptr_t),rules_focus_refresh(void),rules_mark_focus(void);
 static void rules_preset(unsigned);
 static intptr_t rules_back(void);
+static bool impact_menu_allowed(void);
+static void impact_open(unsigned),impact_picker_action(intptr_t),render_impact_picker(void);
+static void render_impact_confirm(const pd_damage_event_summary *);
 static unsigned avatar_scale;
 PD_EXT _Alignas(4) static uint8_t avatar_data[PD_LOOK_LARGE_BYTES];
 static lv_image_dsc_t avatar_image={
@@ -394,11 +397,6 @@ static const char *cost_name(const pd_reduction_profile *p){return pd_reduction_
 static unsigned cost_current(const pd_reduction_profile *p){return pd_reduction_cost_current(&state,pd_profile_cost(p,profile_cost_row).kind,pd_profile_cost(p,profile_cost_row).index);}
 static bool cost_used(unsigned kind,unsigned index){
     for(unsigned row=0;row<PD_PROFILE_COSTS;row++){pd_cost other=pd_profile_cost(&profile_draft,row);if(row!=profile_cost_row&&other.kind==kind&&other.index==index)return true;}return false;
-}
-static void cost_next(void){
-    pd_cost selected=pd_profile_cost(&profile_draft,profile_cost_row);unsigned kind=selected.kind,index=selected.index;
-    do{if(!kind){kind=PD_COST_COUNTER;index=0;}else if(++index>=(kind==PD_COST_COUNTER?PD_RESOURCES:kind==PD_COST_POWER?PD_POWERS:kind==PD_COST_ITEM?PD_ITEMS:9)){kind=(kind+1)%PD_COST_COUNT;index=0;}}while(kind&&(!pd_reduction_cost_max(&state,kind,index)||cost_used(kind,index)));
-    pd_profile_cost_set(&profile_draft,profile_cost_row,(pd_cost){kind,index,kind?1:0});
 }
 
 static bool context_relevant(unsigned bit){return bit==PD_CONTEXT_SIGHT?(combat_roll!=1&&check_kind!=PD_SAVE&&(state.roll_conditions&PD_BLINDED)):(combat_roll==1||check_kind!=PD_SAVE)&&(state.roll_conditions&PD_FRIGHTENED);}
@@ -755,7 +753,7 @@ static void frame(void) {
     pd_theme_kind kind=import_pending?(import_from_beyond?PD_THEME_BEYOND:PD_THEME_IMPORT):page==NUMBER_ENTRY&&number_target==NUMBER_ITEM?PD_THEME_PACK:page_themes[page];
     pd_theme_begin(lv_screen_active(),kind,page==DICE&&!dice_setup&&!import_pending);
     const pd_theme_spec *theme=pd_theme_get(kind);assert(theme);
-    lv_obj_t *menu=icon_button("Menu",PD_UI_MENU,126,27,54,44,2300,!import_pending&&!confirmation_open()&&!dice_animation.active);
+    lv_obj_t *menu=icon_button("Menu",PD_UI_MENU,126,27,54,44,2300,!import_pending&&(!confirmation_open()||impact_menu_allowed())&&!dice_animation.active);
     lv_obj_set_style_text_font(menu,&lv_font_montserrat_16,0);
     pd_theme_hide_crest();
     lv_obj_t *home=icon_button("Torna all'eroe",PD_UI_HOME,298,27,44,44,100,!import_pending&&!confirmation_open()&&!dice_animation.active);lv_obj_set_style_bg_opa(home,LV_OPA_COVER,0);
@@ -844,7 +842,7 @@ static void act(intptr_t action) {
     if(page==MAGIC_PREPARATION&&action!=4002&&action!=4003)return;
     if((page==ITEM_SEARCH||page==POWER_SEARCH)&&(action<3801||action>3806)&&(action<3900||action>=3900+(intptr_t)sizeof search_keys-1))return;
     if(beyond_network_flow()&&(action<4501||action>4507)&&(action<5000||action>5226))return;
-    if((action==2300||action==2301)&&(import_pending||confirmation_open()))return;
+    if((action==2300||action==2301)&&(import_pending||(confirmation_open()&&!(action==2300&&impact_menu_allowed()))))return;
     if(import_pending&&action!=30&&action!=31)return;
     if(page==NUMBER_ENTRY&&(action<3603||action>3619))return;
     if(page==VITAL_CONFIRM&&action!=3620&&action!=3621)return;
@@ -873,6 +871,7 @@ static void act(intptr_t action) {
     if(page==DEATH_ROLL_SETUP&&(action<3101||action>3106))return;
     if(page==DAMAGE_DEATH&&action!=1930&&(action<3001||action>3004))return;
     if(page==PAYMENT_CHOICE&&(action<3501||action>3504))return;
+    if(action==7004&&page==DAMAGE_CONFIRM){impact_open(7);render();return;}
     if(page==DAMAGE_CONFIRM&&action!=3500&&action!=3000&&action!=1804&&action!=1805&&action!=1806&&action!=1807&&action!=1860&&action!=1930&&action!=2021&&action!=2117)return;
     if(page==DAMAGE_TYPES&&action!=2050&&(action<1931||action>1933))return;
     if(page==DAMAGE_REDUCTION&&action!=2060&&(action<2042||action>2048))return;
@@ -1267,7 +1266,7 @@ static void act(intptr_t action) {
     }
     else if(action==1600)page=DEVICE_SETTINGS;
     else if(action==1800){damage_plan=(pd_damage_plan){.amount=1};damage_extra_count=0;damage_context=(pd_damage_context){0};memset(damage_extra_context,0,sizeof damage_extra_context);damage_part_page=0;clear_damage_reductions();page=DAMAGE_HOME;}
-    else if(action==1801&&page==DAMAGE_HOME){damage_plan.type=(damage_plan.type+1)%PD_DAMAGE_TYPES;damage_plan.concentration=0;}
+    else if(action==1801&&page==DAMAGE_HOME)impact_open(3);
     else if(action==1802&&page==DAMAGE_HOME){defence_page=damage_plan.type/3;page=DEFENCE_LIST;}
     else if(action==1803&&(page==DAMAGE_HOME||page==DAMAGE_PARTS)){damage_plan.concentration=0;damage_confirm_return=page;page=DAMAGE_CONFIRM;}
     else if(action==1804&&page==DAMAGE_CONFIRM)page=damage_confirm_return;
@@ -1342,7 +1341,7 @@ static void act(intptr_t action) {
     else if(action==1903&&page==DAMAGE_PARTS&&(damage_part_page+1)*3<damage_extra_count+1)damage_part_page++;
     else if(action==1904&&page==DAMAGE_PARTS)page=DAMAGE_HOME;
     else if(action>=1910&&action<1910+PD_DAMAGE_COMPONENTS&&page==DAMAGE_PARTS&&action-1910<damage_extra_count+1){damage_part_index=action-1910;damage_part_draft=damage_part_index?damage_extra[damage_part_index-1]:(pd_damage_component){damage_plan.type,damage_plan.amount};damage_part_context=damage_part_index?damage_extra_context[damage_part_index-1]:damage_context;damage_part_reduction=damage_reductions[damage_part_index];page=DAMAGE_PART_EDIT;}
-    else if(action==1920&&page==DAMAGE_PART_EDIT)damage_part_draft.type=(damage_part_draft.type+1)%PD_DAMAGE_TYPES;
+    else if(action==1920&&page==DAMAGE_PART_EDIT)impact_open(3);
     else if(action>=1921&&action<=1924&&page==DAMAGE_PART_EDIT){int amount=(int)damage_part_draft.amount+(const int[]){-10,-1,1,10}[action-1921];damage_part_draft.amount=amount<1?1:amount>9999?9999:amount;}
     else if(action==1925&&page==DAMAGE_PART_EDIT){
         if(!damage_part_index){damage_plan.type=damage_part_draft.type;damage_plan.amount=damage_part_draft.amount;damage_context=damage_part_context;}
@@ -1374,7 +1373,7 @@ static void act(intptr_t action) {
         reduction_return=page;reduction_profile_draft=damage_profile;memcpy(reduction_allocation_draft,damage_allocation,sizeof damage_allocation);memcpy(reduction_drafts,damage_reductions,sizeof damage_reductions);reduction_drafts[PD_DAMAGE_COMPONENTS]=damage_reduction_after;
         reduction_target=page==DAMAGE_PART_EDIT?damage_part_index:PD_DAMAGE_COMPONENTS;if(page==DAMAGE_PART_EDIT)reduction_drafts[reduction_target]=damage_part_reduction;page=DAMAGE_REDUCTION;
     }
-    else if(action==2042&&page==DAMAGE_REDUCTION&&reduction_return!=DAMAGE_PART_EDIT)reduction_target=reduction_target==PD_DAMAGE_COMPONENTS?0:reduction_target==damage_extra_count?PD_DAMAGE_COMPONENTS:reduction_target+1;
+    else if(action==2042&&page==DAMAGE_REDUCTION&&reduction_return!=DAMAGE_PART_EDIT)impact_open(4);
     else if(action>=2043&&action<=2046&&page==DAMAGE_REDUCTION){int value=(int)reduction_drafts[reduction_target]+(const int[]){-10,-1,1,10}[action-2043];reduction_drafts[reduction_target]=value<0?0:value>9999?9999:value;}
     else if(action==2047&&page==DAMAGE_REDUCTION)page=reduction_return;
     else if(action==2048&&page==DAMAGE_REDUCTION){
@@ -1414,7 +1413,7 @@ static void act(intptr_t action) {
     else if(action==2086&&page==PROFILE_CONFIRM)profile_confirm_tab=(profile_confirm_tab+1)%4;
     else if(action==2087&&page==PROFILE_CONFIRM)page=PROFILE_EDIT;
     else if(action==2088&&page==PROFILE_CONFIRM){if(!preview_profile(&next))return;bool changed=memcmp(&next,&state,sizeof state)!=0;if(!changed||pd_storage_save(&next)){if(changed){previous=state;undo_available=true;state=next;invalidate_strike();}damage_plan.concentration=0;damage_payment_choice=0;page=PROFILE_LIST;}}
-    else if(action==2089&&page==PROFILE_ALLOCATE)allocation_row=(allocation_row+1)%(damage_extra_count+1);
+    else if(action==2089&&page==PROFILE_ALLOCATE&&!state.reductions[profile_index].stage)impact_open(4);
     else if(action==2091&&page==PROFILE_IMPACT)page=DAMAGE_MATH;
     else if(action==2090&&page==DAMAGE_MATH&&damage_details.profile){profile_impact_row=0;page=PROFILE_IMPACT;}
     else if(action==2089&&page==PROFILE_IMPACT&&!damage_details.profile_snapshot.stage)profile_impact_row=(profile_impact_row+1)%damage_details.profile_count;
@@ -1427,7 +1426,7 @@ static void act(intptr_t action) {
         if(!pd_damage_event_preview(&state,&e,&r)||!r.profile||r.profile_snapshot.payment!=PD_PAYMENT_CHOOSE||!pd_profile_cost(&r.profile_snapshot,row).kind||r.costs[row].missing||r.costs[row].unavailable)return;
         damage_payment_choice=row+1;damage_plan.concentration=0;page=DAMAGE_CONFIRM;
     }
-    else if(action==2101&&page==PROFILE_COST&&profile_cost_editing)cost_next();
+    else if(action==2101&&page==PROFILE_COST&&profile_cost_editing)impact_open(5);
     else if(action==2102&&page==PROFILE_COST&&profile_cost_editing&&pd_profile_cost(&profile_draft,profile_cost_row).kind){profile_number_cost=true;profile_number_rounds=false;page=PROFILE_NUMBER;}
     else if(action==2103&&page==PROFILE_COST&&profile_cost_editing)profile_draft.reaction=!profile_draft.reaction;
     else if(action==2104&&page==PROFILE_COST)page=profile_cost_editing?PROFILE_DETAILS:PROFILE_VIEW;
@@ -1835,6 +1834,7 @@ static lv_obj_t *game_choice(const char *name,const char *caption,const char *va
     if(selected){lv_obj_set_style_border_color(b,lv_color_hex(PD_GOLD),0);lv_obj_set_style_bg_color(b,lv_color_hex(0x243936),0);}
     return b;
 }
+#include "impact_ui.inc"
 static void render_dice_setup(void) {
     char text[80];
     if(die_picker) {
@@ -2986,18 +2986,18 @@ static void render_damage(void) {
     if(page==ITEM_CHARGES||page==ITEM_CHARGE_CONFIRM){render_item_charges();return;}
     char text[180];
     if(page==DAMAGE_HOME){
-        label("Danni ricevuti",83,111,204,false);lv_obj_t *reduce=button("Riduci",299,99,84,44,2040,true);lv_obj_set_style_text_font(reduce,&lv_font_montserrat_16,0);snprintf(text,sizeof text,"Tipo: %s >",pd_damage_name(damage_plan.type));button(text,83,157,300,44,1801,true);
+        label("Danni ricevuti",83,111,204,false);lv_obj_t *reduce=button("Riduci",299,99,84,44,2040,true);lv_obj_set_style_text_font(reduce,&lv_font_montserrat_16,0);snprintf(text,sizeof text,"Tipo: %s >",pd_damage_name(damage_plan.type));scene_control(text,pd_damage_icon(damage_plan.type),pd_damage_name(damage_plan.type),"Scegli tipo",83,157,300,44,1801,true);
         if(damage_extra_count)snprintf(text,sizeof text,"1/%u: %u danni >",damage_extra_count+1,damage_plan.amount);else snprintf(text,sizeof text,"%u %s >",damage_plan.amount,damage_plan.amount==1?"danno":"danni");button(text,83,203,300,44,3602,true);
         const char *names[]={"-10","-1","+1","+10"};for(unsigned i=0;i<4;i++)button(names[i],83+i*78,251,66,44,1840+i,i<2?damage_plan.amount>1:damage_plan.amount<9999);
-        lv_obj_t *parts=button("Componenti",83,305,144,44,1900,true);lv_obj_set_style_text_font(parts,&lv_font_montserrat_16,0);lv_obj_t *def=button("Difese per tipo",239,305,144,44,1802,true);lv_obj_set_style_text_font(def,&lv_font_montserrat_16,0);button("Stato",83,359,144,48,1500,true);button("Anteprima",239,359,144,48,1803,true);
+        snprintf(text,sizeof text,"%u %s",damage_extra_count+1,damage_extra_count?"parti":"parte");scene_control("Componenti",pd_ui_icon(PD_UI_ATTACK),"Parti",text,83,305,144,44,1900,true);snprintf(text,sizeof text,"%u/13 tipi",bit_count(state.defences.configured));scene_control("Difese per tipo",pd_ui_icon(PD_UI_SHIELD),"Difese",text,239,305,144,44,1802,true);button("Stato",83,359,144,48,1500,true);button("Anteprima",239,359,144,48,1803,true);
     } else if(page==DAMAGE_PARTS){
         unsigned count=damage_extra_count+1,pages=(count+2)/3;if(damage_part_page>=pages)damage_part_page=pages-1;
         label("Componenti del colpo",83,99,300,true);snprintf(text,sizeof text,"Un solo colpo | %u/%u parti",count,PD_DAMAGE_COMPONENTS);small_label(text,83,133,300,PD_GOLD);
-        pd_damage_event event=current_damage_event();for(unsigned row=0;row<3;row++){unsigned i=damage_part_page*3+row;if(i>=count)break;snprintf(text,sizeof text,"%u. %s: %u",i+1,pd_damage_name(event.components[i].type),event.components[i].amount);lv_obj_t *b=button(text,83,159+row*48,300,44,1910+i,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
+        pd_damage_event event=current_damage_event();for(unsigned row=0;row<3;row++){unsigned i=damage_part_page*3+row;if(i>=count)break;snprintf(text,sizeof text,"%u. %s: %u",i+1,pd_damage_name(event.components[i].type),event.components[i].amount);char caption[64],badge[64];snprintf(caption,sizeof caption,"%u. %s",i+1,pd_damage_name(event.components[i].type));snprintf(badge,sizeof badge,"%u danni | riduz. %u",event.components[i].amount,damage_reductions[i]);scene_control(text,pd_damage_icon(event.components[i].type),caption,badge,83,159+row*48,300,44,1910+i,true);}
         button("<",83,305,60,44,1902,damage_part_page>0);button("Anteprima",155,305,156,44,1803,true);button(">",323,305,60,44,1903,damage_part_page+1<pages);
         button("Indietro",83,359,144,48,1904,true);button("Aggiungi",239,359,144,48,1901,count<PD_DAMAGE_COMPONENTS);
     } else if(page==DAMAGE_PART_EDIT){
-        snprintf(text,sizeof text,"Componente %u",damage_part_index+1);label(text,83,111,204,false);lv_obj_t *reduce=button("Riduci",299,99,84,44,2041,true);lv_obj_set_style_text_font(reduce,&lv_font_montserrat_16,0);snprintf(text,sizeof text,"Tipo: %s >",pd_damage_name(damage_part_draft.type));button(text,83,157,300,44,1920,true);
+        snprintf(text,sizeof text,"Componente %u",damage_part_index+1);label(text,83,111,204,false);lv_obj_t *reduce=button("Riduci",299,99,84,44,2041,true);lv_obj_set_style_text_font(reduce,&lv_font_montserrat_16,0);snprintf(text,sizeof text,"Tipo: %s >",pd_damage_name(damage_part_draft.type));scene_control(text,pd_damage_icon(damage_part_draft.type),pd_damage_name(damage_part_draft.type),"Scegli tipo",83,157,300,44,1920,true);
         snprintf(text,sizeof text,"%u danni >",damage_part_draft.amount);button(text,83,203,300,44,3602,true);const char *names[]={"-10","-1","+1","+10"};for(unsigned i=0;i<4;i++)button(names[i],83+i*78,251,66,44,1921+i,i<2?damage_part_draft.amount>1:damage_part_draft.amount<9999);
         const char *actions[]={"Rimuovi","Fonte","Difese"};const unsigned codes[]={1927,2020,1928};for(unsigned i=0;i<3;i++){lv_obj_t *b=button(actions[i],83+i*104,305,92,44,codes[i],i|| (damage_extra_count&&damage_part_index<=damage_extra_count));lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
         button("Indietro",83,359,144,48,1926,true);button("Usa parte",239,359,144,48,1925,true);
@@ -3104,7 +3104,7 @@ static void render_damage(void) {
         button("Indietro",83,359,144,48,2035,true);button("Conferma",239,359,144,48,1817,valid);
     } else if(page==DAMAGE_REDUCTION){
         label("Riduzioni",83,111,204,false);lv_obj_t *profiles=button("Profili",299,99,84,44,2060,reduction_return!=DAMAGE_PART_EDIT);lv_obj_set_style_text_font(profiles,&lv_font_montserrat_16,0);bool after=reduction_target==PD_DAMAGE_COMPONENTS;
-        if(after)strcpy(text,"Dopo: intero colpo >");else{pd_damage_event event=current_damage_event();unsigned type=reduction_return==DAMAGE_PART_EDIT?damage_part_draft.type:event.components[reduction_target].type;snprintf(text,sizeof text,"Prima: %u %s >",reduction_target+1,pd_damage_name(type));}lv_obj_t *target=button(text,83,157,300,44,2042,reduction_return!=DAMAGE_PART_EDIT);lv_obj_set_style_text_font(target,&lv_font_montserrat_16,0);
+        if(after)strcpy(text,"Dopo: intero colpo >");else{pd_damage_event event=current_damage_event();unsigned type=reduction_return==DAMAGE_PART_EDIT?damage_part_draft.type:event.components[reduction_target].type;snprintf(text,sizeof text,"Prima: %u %s >",reduction_target+1,pd_damage_name(type));}scene_control(text,after?pd_ui_icon(PD_UI_RESIST):pd_damage_icon(reduction_return==DAMAGE_PART_EDIT?damage_part_draft.type:current_damage_event().components[reduction_target].type),after?"Intero colpo":pd_damage_name(reduction_return==DAMAGE_PART_EDIT?damage_part_draft.type:current_damage_event().components[reduction_target].type),after?"Dopo le difese":"Prima delle difese",83,157,300,44,2042,reduction_return!=DAMAGE_PART_EDIT);
         snprintf(text,sizeof text,"Sottrai %u",reduction_drafts[reduction_target]);label(text,83,215,300,true);
         const char *names[]={"-10","-1","+1","+10"};for(unsigned i=0;i<4;i++)button(names[i],83+i*78,251,66,44,2043+i,i<2?reduction_drafts[reduction_target]>0:reduction_drafts[reduction_target]<9999);
         small_label(after?"Una volta, dopo tutte le difese":"Prima delle difese della parte",83,307,300,PD_GOLD);if(reduction_profile_draft&&reduction_return!=DAMAGE_PART_EDIT)snprintf(text,sizeof text,"Profilo %u pronto | Usa valori",reduction_profile_draft);else strcpy(text,"Eccedenze ignorate; minimo zero");small_label(text,83,335,300,PD_MUTED);
@@ -3224,10 +3224,12 @@ static void render_damage(void) {
         button("<",83,359,60,48,time?2151:2126,*detail>0);button("Riepilogo",155,359,156,48,time?2150:2125,true);button(">",323,359,60,48,time?2152:2127,*detail+1<pages);
     } else if(page==DAMAGE_CONTEXT){
         label("Fonte del danno",83,103,300,true);snprintf(text,sizeof text,"Parte %u | ? = da verificare",damage_part_index+1);small_label(text,83,135,300,PD_GOLD);
-        const char *names[]={"Magico","Attacco","Argentato","Adamantio"};for(unsigned i=0;i<4;i++){unsigned bit=1u<<i;snprintf(text,sizeof text,"%s: %s",names[i],!(source_context_draft.known&bit)?"?":source_context_draft.values&bit?"si":"no");button(text,83,159+i*48,300,44,2024+i,true);}
+        const char *names[]={"Magico","Attacco","Argentato","Adamantio"};const pd_ui_icon_id icons[]={PD_UI_MAGIC,PD_UI_ATTACK,PD_UI_SILVER,PD_UI_ADAMANTINE};for(unsigned i=0;i<4;i++){unsigned bit=1u<<i;const char *answer=!(source_context_draft.known&bit)?"?":source_context_draft.values&bit?"si":"no";snprintf(text,sizeof text,"%s: %s",names[i],!(source_context_draft.known&bit)?"?":answer);scene_control(text,pd_ui_icon(icons[i]),names[i],answer,83+(i%2)*156,159+(i/2)*76,144,64,2024+i,true);}
+        small_label("? resta un dato non dichiarato",83,325,300,PD_GOLD);
         button("Indietro",83,359,144,48,2022,true);button("Usa fonte",239,359,144,48,2023,true);
     } else if(page==DAMAGE_CONFIRM){
         pd_damage_event event=current_damage_event();pd_damage_event_summary report;if(!pd_damage_event_preview(&state,&event,&report))return;pd_damage_summary r=report.total;
+        if(r.configured){render_impact_confirm(&report);return;}
         if(report.profile&&report.profile_snapshot.payment==PD_PAYMENT_CHOOSE){render_alternative_damage(&report);return;}
         if(damage_extra_count||has_reductions(&report)){label("Conferma colpo",83,111,228,false);lv_obj_t *b=button("Tipi",323,99,60,44,1930,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);if(has_reductions(&report))snprintf(text,sizeof text,"Prima -%u | dopo -%u | vedi Tipi",report.reduction_before,report.reduction_after);else snprintf(text,sizeof text,"%u parti | %u gruppi",event.count,report.count);small_label(text,83,149,300,PD_GOLD);}
         else{label("Confermare i danni?",83,103,300,true);snprintf(text,sizeof text,"%s | %s",pd_damage_name(damage_plan.type),defence_caption(r.configured,r.flags));small_label(text,83,137,300,PD_GOLD);}

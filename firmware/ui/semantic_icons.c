@@ -15,3 +15,9 @@ const lv_image_dsc_t *pd_power_icon(const pd_power *p){if(!p)return &sem_scroll;
 unsigned pd_item_setup_hint(const pd_state *s,unsigned index){if(!s||index>=s->item_count)return 0;const lv_image_dsc_t *im=find(0,s->items[index].name);return im==&sem_sword||im==&sem_axe||im==&sem_bow||im==&sem_hammer||im==&sem_staff?1:im==&sem_armor||im==&sem_shield?2:0;}
 
 const lv_image_dsc_t *pd_condition_icon(const char *name){const lv_image_dsc_t *im=name?find(3,name):NULL;return im?im:&sem_scroll;}
+
+const lv_image_dsc_t *pd_damage_icon(unsigned type){
+ static const lv_image_dsc_t *const icons[]={&sem_hammer,&sem_pierce,&sem_axe,&sem_acid,&sem_ice,&sem_fire,&sem_blast,&sem_bolt,&sem_skull,&sem_poison,&sem_eye,&sem_sun,&sem_wave};
+ _Static_assert(sizeof icons/sizeof icons[0]==PD_DAMAGE_TYPES,"Damage glyph IDs must match the engine");
+ return type<PD_DAMAGE_TYPES?icons[type]:&sem_shield;
+}

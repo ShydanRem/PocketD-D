@@ -9,3 +9,6 @@ unsigned pd_item_setup_hint(const pd_state *state,unsigned index);
 
 /* Display classification only: notes never enable mechanical conditions. */
 const lv_image_dsc_t *pd_condition_icon(const char *name);
+
+/* Exact engine damage-type IDs; imagery never declares a defence or source. */
+const lv_image_dsc_t *pd_damage_icon(unsigned type);

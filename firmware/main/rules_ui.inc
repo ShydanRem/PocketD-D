@@ -1,8 +1,9 @@
 /* Native draft controls only. No rule inference, RNG, storage or radio calls. */
 static bool rules_editing(void){
-    return page==EFFECT_CONFIRM||page==DEFENCE_CONFIRM||page==DEFENCE_RULE_REVIEW||page==DEFENCE_GRANT_REVIEW||page==EFFECT_EDIT||page==EFFECT_DURATION||page==EFFECT_LINK||page==DEFENCE_EDIT||page==DEFENCE_TEMPORARY||page==DEFENCE_DURATION||page==DEFENCE_LINK||page==DEFENCE_RULE||page==PROFILE_DETAILS||page==PROFILE_NUMBER;
+    return page==DAMAGE_HOME||page==DAMAGE_PARTS||page==DAMAGE_PART_EDIT||page==DAMAGE_REDUCTION||page==DAMAGE_CONTEXT||page==DAMAGE_CONFIRM||page==DAMAGE_TYPES||page==DAMAGE_MATH||page==PAYMENT_CHOICE||page==PROFILE_LIST||page==PROFILE_VIEW||page==PROFILE_ALLOCATE||page==PROFILE_IMPACT||page==PROFILE_COST||page==PROFILE_COST_IMPACT||page==CONCENTRATION_SETUP||page==EFFECT_CONFIRM||page==DEFENCE_CONFIRM||page==DEFENCE_RULE_REVIEW||page==DEFENCE_GRANT_REVIEW||page==EFFECT_EDIT||page==EFFECT_DURATION||page==EFFECT_LINK||page==DEFENCE_EDIT||page==DEFENCE_TEMPORARY||page==DEFENCE_DURATION||page==DEFENCE_LINK||page==DEFENCE_RULE||page==PROFILE_DETAILS||page==PROFILE_NUMBER;
 }
 static bool rules_picker_open(void){return rules_panel&&rules_panel_owner==page&&rules_editing();}
+static bool impact_menu_allowed(void){return (page==DAMAGE_HOME||page==DAMAGE_PARTS)&&!rules_picker_open();}
 static bool rules_duration_fields(bool **timed,uint8_t **tick,uint8_t **rounds,uint16_t **minutes,uint8_t **owner){
     if(page==EFFECT_DURATION){*timed=&effect_draft.timed;*tick=&effect_draft.tick;*rounds=&effect_draft.rounds;*minutes=&effect_draft.minutes;*owner=&effect_draft.owner;}
     else if(page==DEFENCE_DURATION){*timed=&defence_temporary_draft.timed;*tick=&defence_temporary_draft.tick;*rounds=&defence_temporary_draft.rounds;*minutes=&defence_temporary_draft.minutes;*owner=&defence_temporary_draft.owner;}
@@ -24,6 +25,7 @@ static void rules_open(unsigned panel){
     if(panel==2)rules_picker_page=*rules_selected()/3;
 }
 static void rules_picker_action(intptr_t action){
+    if(rules_panel>=3){impact_picker_action(action);return;}
     if(action==5820){rules_panel=0;rules_focus=0;return;}
     if(rules_panel==1&&action>=5821&&action<=5826){
         bool *timed;uint8_t *tick,*rounds,*owner;uint16_t *minutes;
@@ -47,7 +49,7 @@ static void rules_preset(unsigned index){
     unsigned value=rules_preset_value(*tick,index);if(*tick>=PD_TICK_MINUTES)*minutes=value;else *rounds=value;
 }
 static intptr_t rules_back(void){
-    switch(page){case EFFECT_CONFIRM:return 1708;case DEFENCE_CONFIRM:return 1816;case DEFENCE_RULE_REVIEW:return 2014;case DEFENCE_GRANT_REVIEW:return 2035;case EFFECT_EDIT:return 1700;case EFFECT_DURATION:return 1716;case EFFECT_LINK:return 1752;case DEFENCE_EDIT:return 1814;case DEFENCE_TEMPORARY:return 1875;case DEFENCE_DURATION:return 1879;case DEFENCE_LINK:return 1885;case DEFENCE_RULE:return 2002;case PROFILE_DETAILS:return 2080;case PROFILE_NUMBER:return 2085;default:return 0;}
+    switch(page){case DAMAGE_HOME:return 1500;case DAMAGE_PARTS:return 1904;case DAMAGE_PART_EDIT:return 1926;case DAMAGE_REDUCTION:return 2047;case DAMAGE_CONTEXT:return 2022;case DAMAGE_CONFIRM:return 1804;case DAMAGE_TYPES:return 1931;case DAMAGE_MATH:return 2051;case PAYMENT_CHOICE:return 3501;case PROFILE_LIST:return 2064;case PROFILE_VIEW:return 2066;case PROFILE_ALLOCATE:return 2085;case PROFILE_IMPACT:return 2091;case PROFILE_COST:return 2104;case PROFILE_COST_IMPACT:return 2106;case CONCENTRATION_SETUP:return 1861;case EFFECT_CONFIRM:return 1708;case DEFENCE_CONFIRM:return 1816;case DEFENCE_RULE_REVIEW:return 2014;case DEFENCE_GRANT_REVIEW:return 2035;case EFFECT_EDIT:return 1700;case EFFECT_DURATION:return 1716;case EFFECT_LINK:return 1752;case DEFENCE_EDIT:return 1814;case DEFENCE_TEMPORARY:return 1875;case DEFENCE_DURATION:return 1879;case DEFENCE_LINK:return 1885;case DEFENCE_RULE:return 2002;case PROFILE_DETAILS:return 2080;case PROFILE_NUMBER:return 2085;default:return 0;}
 }
 static void rules_mark_focus(void){
     if(!rules_target_count)return;
@@ -59,12 +61,13 @@ static void rules_focus_refresh(void){
     rules_target_count=0;
     if(!rules_editing()){rules_keyboard=false;return;}
     if(rules_focus_owner!=page){rules_focus_owner=page;rules_focus=0;}
-    lv_obj_t *root=lv_screen_active();
+    lv_obj_t *root=lv_screen_active();lv_obj_update_layout(root);
     for(unsigned i=0;i<lv_obj_get_child_count(root);i++){lv_obj_t *b=lv_obj_get_child(root,i);if(lv_obj_check_type(b,&lv_button_class)&&lv_obj_get_y(b)>=99&&rules_target_count<16)rules_targets[rules_target_count++]=b;}
     rules_mark_focus();
 }
 static void rules_selected_style(lv_obj_t *b,bool selected){if(selected){lv_obj_set_style_border_color(b,lv_color_hex(PD_MINT),0);lv_obj_set_style_border_width(b,2,0);lv_obj_set_style_bg_color(b,lv_color_hex(0x244d48),0);}}
 static void render_rules_picker(void){
+    if(rules_panel>=3){render_impact_picker();return;}
     char text[80];
     if(rules_panel==1){
         label("Quando finisce?",83,105,300,false);
