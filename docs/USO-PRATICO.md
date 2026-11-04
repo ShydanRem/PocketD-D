@@ -1,5 +1,6 @@
 # PocketD-D — uso pratico sul dispositivo
 
+> v0.107: [rifinitura finale e checklist sul dispositivo](RESTYLE-CHECK.md).
 > v0.106: [ingresso Beyond e account](UX-RPG.md#v0106-ingresso-beyond-e-collegamento-account).
 > v0.105: [rete, ponte e backup](UX-RPG.md#v0105-rete-ponte-e-backup).
 > v0.104: [consultazione e registro](UX-RPG.md#v0104-consultazione-e-registro).
@@ -361,3 +362,28 @@ viene prima conservata la scheda uscente. Annulla lascia tutto come prima.
 PWR seleziona e BOOT attiva; i controlli disabilitati vengono saltati. BOOT lungo
 chiude prima la guida, poi torna indietro. La consultazione non cambia tasti,
 preferenze o registro. L'importazione conserva le impostazioni del dispositivo.
+
+
+## Borsello, contatori e tasti · v0.107
+
+Nel borsello apri il metallo e tocca Saldo per digitare il numero. La prima cifra
+sostituisce la proposta; Usa numero modifica solo la bozza, Annulla la conserva
+com'era prima dell'inserimento. Passo offre nove quantità per + e -. Anteprima
+mostra i cinque tagli prima/dopo; Conferma li salva insieme. Il saldo non importato
+rimane sconosciuto finché non lo imposti e confermi. Nessun cambio automatico.
+
+In Usi, Contatori apre la scelta diretta; il numero nella riga conserva l'indice
+originale. Nessun utilizzo viene speso nella selezione. Le correzioni -1/+1
+restano esplicite. Menu ed Eroe permettono di lasciare il selettore.
+
+Tasti torna alla pagina da cui lo hai aperto. Nel selettore una scelta salva
+l'assegnazione; Indietro annulla. Spento disabilita l'azione del gesto in gioco,
+mentre i menu locali restano navigabili con PWR/BOOT. PWR lungo resta riservato
+all'alimentazione. I tastierini numerici supportano selezione con PWR, attivazione
+con BOOT e annullamento con BOOT lungo.
+
+In Collaudo usa Tocco o Tasti. I conteggi sono osservazioni, non certificati:
+N.d. significa lettura non disponibile. Durante Prova tasti BOOT lungo viene
+misurato: per uscire tocca Indietro oppure attendi due minuti. Durante Prova tocco
+i tasti possono usare Azzera/Indietro, senza simulare alcun bersaglio.
+[Checklist finale sull'hardware](RESTYLE-CHECK.md#checklist-sul-pocket).

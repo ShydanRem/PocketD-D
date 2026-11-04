@@ -222,6 +222,9 @@ static void rules_preset(unsigned);
 static intptr_t rules_back(void);
 static lv_obj_t *wrapped_name(const char *,int,int,const lv_font_t *);
 static bool impact_menu_allowed(void);
+static bool secondary_action(intptr_t);
+static void render_key_controls(void),render_resource_picker(void);
+static void connection_note(const char *,int,int,unsigned);
 static void render_beyond(void);
 static void wifi_mark_focus(void);
 static lv_obj_t *wifi_button(const char *,int,int,int,int,int,bool);
@@ -293,6 +296,9 @@ static page_t preparation_return=MAGIC_DETAIL;
 static bool attack_preparing(void){return page==MAGIC_PREPARATION&&(preparation_return==ATTACK_MODE||preparation_return==COMBAT);}
 static const char *const shortcut_names[]={"Spento","Eroe","Scheda","Dadi","Zaino","Magie","Lancia","Riposi","Stato","Schermo","Effetti","Round","Danni","Storico","Aspetto"};
 static unsigned key_gesture,key_page;
+static page_t key_return=APPEARANCE;
+static bool resource_picker;
+static unsigned resource_picker_page;
 static void shortcut(unsigned gesture);
 static bool can_use_power(void);
 static pd_rest_plan rest_plan;
@@ -312,7 +318,7 @@ static unsigned item_gained;
 static bool wifi_editing(void){return page==WIFI_LIST||page==WIFI_PASSWORD||page==WIFI_JOIN_REVIEW;}
 static bool wifi_local(void){return wifi_editing()||page==WIFI_HOME||page==WIFI_FORGET;}
 static bool appearance_editing(void){return page==AVATAR_EDIT||page==SCENE_EDIT||page==APPEARANCE_CONFIRM;}
-static bool confirmation_open(void){return rules_editing()||magic_setup_open()||beyond_local()||beyond_network_flow()||page==LIBRARY_CONFIRM||play_editing()||wifi_editing()||page==ASSET_INSTALL||page==KEY_PICKER||page==SYNC_REVIEW||page==SYNC_FORGET||page==WIFI_FORGET||page==DEFENCE_SETUP||appearance_editing()||page==ITEM_QUANTITY_CONFIRM||page==MAGIC_PREPARATION||page==ITEM_SEARCH||page==POWER_SEARCH||power_paused||power_off_attempted||page==POWER_OFF||page==NUMBER_ENTRY||page==VITAL_CONFIRM||page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
+static bool confirmation_open(void){return (page==RESOURCES&&resource_picker)||rules_editing()||magic_setup_open()||beyond_local()||beyond_network_flow()||page==LIBRARY_CONFIRM||play_editing()||wifi_editing()||page==ASSET_INSTALL||page==KEY_PICKER||page==SYNC_REVIEW||page==SYNC_FORGET||page==WIFI_FORGET||page==DEFENCE_SETUP||appearance_editing()||page==ITEM_QUANTITY_CONFIRM||page==MAGIC_PREPARATION||page==ITEM_SEARCH||page==POWER_SEARCH||power_paused||power_off_attempted||page==POWER_OFF||page==NUMBER_ENTRY||page==VITAL_CONFIRM||page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
 static pd_damage_plan damage_plan; /* First component + explicit concentration choice. */
 static pd_damage_component damage_extra[PD_DAMAGE_COMPONENTS-1],damage_part_draft;
 static pd_damage_context damage_context,damage_extra_context[PD_DAMAGE_COMPONENTS-1],damage_part_context,source_context_draft;
@@ -476,7 +482,9 @@ static TickType_t import_started;
 PD_EXT static char line[PD_PACKET_MAX+1];
 #endif
 static pd_wallet wallet_draft,wallet_origin;
-static unsigned wallet_page,wallet_coin,wallet_step;
+static unsigned wallet_page,wallet_coin,wallet_step,wallet_panel;
+static uint32_t wallet_number;
+static bool wallet_number_fresh;
 static const uint32_t wallet_steps[]={1,10,100,1000,10000,100000,1000000,10000000,100000000};
 static const char *const coin_names[]={"Rame","Argento","Electrum","Oro","Platino"};
 static const char *const coin_units[]={"MR","MA","ME","MO","MP"};
@@ -774,7 +782,11 @@ static void frame(void) {
     lv_obj_set_style_text_font(menu,&lv_font_montserrat_16,0);
     pd_theme_hide_crest();
     lv_obj_t *home=icon_button("Torna all'eroe",PD_UI_HOME,298,27,44,44,100,!import_pending&&(!confirmation_open()||impact_menu_allowed())&&!dice_animation.active);lv_obj_set_style_bg_opa(home,LV_OPA_COVER,0);
-    lv_obj_t *title=label(page==WIFI_HOME||page==WIFI_FORGET||wifi_editing()||page==SYNC_HOME||page==SYNC_REVIEW||page==SYNC_FORGET?"Rete":theme->title,187,36,110,false);
+    const char *heading=page==WIFI_HOME||page==WIFI_FORGET||wifi_editing()||page==SYNC_HOME||page==SYNC_REVIEW||page==SYNC_FORGET?"Rete":theme->title;
+    lv_point_t heading_size;const lv_font_t *heading_font=&lv_font_montserrat_20;
+    lv_text_get_size(&heading_size,heading,heading_font,0,0,1000,LV_TEXT_FLAG_NONE);
+    if(heading_size.x>110){heading_font=&lv_font_montserrat_16;lv_text_get_size(&heading_size,heading,heading_font,0,0,1000,LV_TEXT_FLAG_NONE);if(heading_size.x>110)heading_font=&lv_font_montserrat_14;}
+    lv_obj_t *title=label(heading,187,27+(44-heading_font->line_height)/2,110,false);label_font(title,heading_font);
     lv_obj_set_style_text_color(title,lv_color_hex(theme->accent),0);
     const char *status=ui_storage_status();
     unsigned c=ui_status_color(status);
@@ -836,6 +848,7 @@ static void act(intptr_t action) {
     if(input_check_open())return;
     if(power_paused||power_off_attempted)return;
     if(library_failed)return;
+    if(secondary_action(action)){feedback.active=false;pd_screen_activity(&display_screen,lv_tick_get());render();return;}
     if(rules_picker_open()){rules_picker_action(action);render();return;}
     if(action>=5800&&action<=5812&&rules_editing()){
         if((action==5800||action==5801)&&page==EFFECT_EDIT){unsigned target=action-5800;if(effect_draft.target!=target){effect_draft.target=target;effect_draft.value=0;}}
@@ -867,7 +880,7 @@ static void act(intptr_t action) {
     if(page==BACKUP_SEND_CONFIRM&&action!=2801&&action!=2802&&action!=2810)return;
     if(page==BACKUP_RESTORE_CONFIRM&&action!=2801&&action!=2803&&action!=2810)return;
     if(page==HISTORY_DISCARD&&action!=2607&&action!=2608)return;
-    if(page==WALLET_EDIT&&(action<2404||action>2410))return;
+    if(page==WALLET_EDIT&&(action<2404||action>2410)&&action!=2415)return;
     if(page==WALLET_CONFIRM&&action!=2411&&action!=2412&&action!=2409)return;
     if(page==MAGIC_STOP&&action!=852&&action!=853)return;
     if(page==MAGIC_CONFIRM&&action!=832&&action!=833&&action!=5604)return;
@@ -1112,7 +1125,8 @@ static void act(intptr_t action) {
     else if(action==2405&&page==WALLET_EDIT&&wallet_coin+1<PD_COINS)wallet_coin++;
     else if(action==2406&&page==WALLET_EDIT&&wallet_draft.coins[wallet_coin]>=wallet_steps[wallet_step])wallet_draft.coins[wallet_coin]-=wallet_steps[wallet_step];
     else if(action==2407&&page==WALLET_EDIT&&wallet_draft.coins[wallet_coin]<=PD_COIN_MAX-wallet_steps[wallet_step])wallet_draft.coins[wallet_coin]+=wallet_steps[wallet_step];
-    else if(action==2408&&page==WALLET_EDIT)wallet_step=(wallet_step+1)%9;
+    else if(action==2408&&page==WALLET_EDIT)wallet_panel=1;
+    else if(action==2415&&page==WALLET_EDIT){wallet_number=wallet_draft.coins[wallet_coin];wallet_number_fresh=true;wallet_panel=2;}
     else if(action==2409&&(page==WALLET_EDIT||page==WALLET_CONFIRM))page=WALLET_HOME;
     else if(action==2410&&page==WALLET_EDIT)page=WALLET_CONFIRM;
     else if(action==2412&&page==WALLET_CONFIRM)page=WALLET_EDIT;
@@ -1269,7 +1283,8 @@ static void act(intptr_t action) {
     else if(action==846&&text_page)text_page--;
     else if(action==847)text_page++;
     else if(action==848||action==849){if(pd_magic_recover(&next,power_index,action==848?-1:1))apply(&next);}
-    else if(action==850)page=KEY_SETTINGS;
+    else if(action==850){if(page!=KEY_SETTINGS&&page!=KEY_PICKER&&!input_check_open())key_return=page;page=KEY_SETTINGS;}
+    else if(action==863&&page==KEY_SETTINGS)page=key_return;
     else if(action==851)page=MAGIC_SLOTS;
     else if(action==852&&page==MAGIC_STOP){
         if(stop_rage)pd_end_rage(&next);else pd_concentration_end(&next);
@@ -2048,48 +2063,6 @@ static void render_item(void) {
     }else{button("Zaino",83,359,v->charges.maximum?144:300,48,80,true);if(v->charges.maximum)button("Cariche",239,359,144,48,2160,true);}
 }
 #include "history_ui.inc"
-static void render_wallet(void){
-    char text[160];
-    if(page==WALLET_HOME){
-        snprintf(text,sizeof text,"Borsello %u/2",wallet_page+1);label(text,139,111,188,false);
-        button("<",83,99,48,44,2401,state.wallet.available&&wallet_page>0);button(">",335,99,48,44,2402,state.wallet.available&&wallet_page<1);
-        if(!state.wallet.available){
-            label("Saldo non disponibile",83,173,300,false);
-            small_label("Monete non ancora verificate",83,215,300,PD_GOLD);
-            button("Configura saldo",83,261,300,48,2403,true);
-            small_label("Nessun saldo inventato",83,319,300,PD_MUTED);
-        }else{
-            for(unsigned row=0;row<3;row++){
-                unsigned i=wallet_page*3+row;if(i>=PD_COINS)break;
-                snprintf(text,sizeof text,"%s: %u %s",coin_names[i],(unsigned)state.wallet.coins[i],coin_units[i]);
-                button(text,83,155+row*49,300,44,2500+i,true);
-            }
-            snprintf(text,sizeof text,"Equiv. rame: %llu MR",(unsigned long long)pd_wallet_copper(&state.wallet));small_label(text,83,302,300,PD_GOLD);
-            small_label("Nessun cambio automatico",83,325,300,PD_MUTED);
-        }
-        lv_obj_t *undo=button("Annulla monete",83,359,144,48,2414,wallet_can_undo());lv_obj_set_style_text_font(undo,&lv_font_montserrat_16,0);
-        button("Zaino",239,359,144,48,80,true);return;
-    }
-    if(page==WALLET_EDIT){
-        snprintf(text,sizeof text,"%s (%s)",coin_names[wallet_coin],coin_units[wallet_coin]);label(text,139,111,188,false);
-        button("<",83,99,48,44,2404,wallet_coin>0);button(">",335,99,48,44,2405,wallet_coin+1<PD_COINS);
-        snprintf(text,sizeof text,"%u",(unsigned)wallet_draft.coins[wallet_coin]);label(text,83,161,300,true);
-        small_label("Nuovo saldo da confermare",83,196,300,PD_GOLD);
-        snprintf(text,sizeof text,"Passo: %u >",(unsigned)wallet_steps[wallet_step]);button(text,83,223,300,44,2408,true);
-        button("-",83,279,144,44,2406,wallet_draft.coins[wallet_coin]>=wallet_steps[wallet_step]);
-        button("+",239,279,144,44,2407,wallet_draft.coins[wallet_coin]<=PD_COIN_MAX-wallet_steps[wallet_step]);
-        small_label("Altri tagli: frecce in alto",83,326,300,PD_MUTED);
-        button("Annulla",83,359,144,48,2409,true);button("Anteprima",239,359,144,48,2410,true);return;
-    }
-    label("Conferma borsello",83,111,300,true);
-    for(unsigned i=0;i<PD_COINS;i++){
-        if(wallet_origin.available)snprintf(text,sizeof text,"%s %u -> %u",coin_units[i],(unsigned)wallet_origin.coins[i],(unsigned)wallet_draft.coins[i]);
-        else snprintf(text,sizeof text,"%s ? -> %u",coin_units[i],(unsigned)wallet_draft.coins[i]);
-        small_label(text,83,153+i*32,300,wallet_origin.coins[i]!=wallet_draft.coins[i]||!wallet_origin.available?PD_GOLD:PD_TEXT);
-    }
-    small_label(wallet_origin.available?"Salva tutti i tagli insieme":"Crea un saldo locale verificato",83,327,300,PD_MUTED);
-    button("Indietro",83,359,144,48,2412,true);button("Conferma",239,359,144,48,2411,!wallet_same(&wallet_draft,&state.wallet)&&wallet_same(&wallet_origin,&state.wallet));
-}
 static void render_combat(void) {
     pd_weapon_info w;char text[160];
     if(!attack_weapon_info(&w)){label("Attacco non disponibile",83,111,300,false);small_label("Verifica arma, preparazione e stato",83,211,300,PD_GOLD);button("Scegli attacco",83,279,300,44,6402,true);button("Arma",83,359,300,48,6403,true);return;}
@@ -2305,34 +2278,7 @@ static void render_magic_other(void) {
         label("Utilizzi manuali",83,159,300,true);snprintf(text,sizeof text,"%u / %u",p->remaining,p->maximum);label(text,83,205,300,true);
         button("-1",83,257,144,44,848,p->remaining>0);button("+1",239,257,144,44,849,p->remaining<p->maximum);
         small_label("Recupero: verifica con il DM",83,319,300,PD_MUTED);button("Indietro",83,359,300,48,833,true);
-    } else if(page==KEY_PICKER) {
-        const char *gestures[]={"PWR breve","BOOT breve","BOOT lungo"};
-        const lv_image_dsc_t *icons[]={&theme_gear,&theme_hero,&theme_sheet,&theme_dice,&theme_pack,&theme_magic,&theme_dice,&theme_rest,&theme_heart,&theme_sun,&theme_notes,&theme_time,&theme_shield,&theme_notes,&theme_hero};
-        snprintf(text,sizeof text,"Scegli: %s",gestures[key_gesture]);label(text,83,111,300,false);
-        for(unsigned row=0;row<6;row++){
-            unsigned i=key_page*6+row;if(i>=15)break;
-            lv_obj_t *b=button(shortcut_names[i],83+(row%2)*156,159+(row/2)*56,144,48,4810+i,true);
-            lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);art(icons[i],4,7,b);
-            lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_width(l,102);lv_obj_align(l,LV_ALIGN_LEFT_MID,36,0);
-            if(i==state.shortcuts[key_gesture])lv_obj_set_style_border_color(b,lv_color_hex(PD_GOLD),0);
-        }
-        small_label("Tocca per salvare; Indietro annulla",83,327,300,PD_MUTED);
-        button("Indietro",83,359,144,48,4802,true);
-        icon_button("Pagina precedente",PD_UI_BACK,239,359,56,48,4800,key_page>0);
-        snprintf(text,sizeof text,"%u/3",key_page+1);small_label(text,298,375,27,PD_TEXT);
-        icon_button("Pagina successiva",PD_UI_NEXT,327,359,56,48,4801,key_page<2);
-    } else if(page==KEY_SETTINGS) {
-        label("Tasti configurabili",83,111,300,true);
-        const char *gestures[]={"PWR breve","BOOT breve","BOOT lungo"};
-        const lv_image_dsc_t *icons[]={&theme_gear,&theme_hero,&theme_sheet,&theme_dice,&theme_pack,&theme_magic,&theme_dice,&theme_rest,&theme_heart,&theme_sun,&theme_notes,&theme_time,&theme_shield,&theme_notes,&theme_hero};
-        for(unsigned i=0;i<3;i++) {
-            snprintf(text,sizeof text,"%s: %s",gestures[i],shortcut_names[state.shortcuts[i]]);
-            lv_obj_t *b=button(text,83,157+i*54,300,48,860+i,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);
-            art(icons[state.shortcuts[i]],6,7,b);
-            lv_obj_t *l=lv_obj_get_child(b,0);lv_obj_set_width(l,246);lv_label_set_long_mode(l,LV_LABEL_LONG_DOT);lv_obj_align(l,LV_ALIGN_LEFT_MID,44,0);
-        }
-        small_label(input_check_notice,83,326,300,PD_GOLD);button("Indietro",83,359,144,48,50,true);button("Collaudo",239,359,144,48,2900,true);
-    }
+    } else if(page==KEY_PICKER||page==KEY_SETTINGS)render_key_controls();
 }
 
 static void render_rest(void) {
@@ -2413,8 +2359,9 @@ static const int input_target_centers[PD_INPUT_CHECK_TARGETS][2]={{233,170},{328
 static void input_check_refresh(void){
     for(unsigned i=0;i<3;i++)if(input_check_counts[i]){
         bool available=input_check.available[i?1:0];
-        if(available)lv_label_set_text_fmt(input_check_counts[i],"Ricevuti: %u",input_check.counts[i]);
-        else lv_label_set_text(input_check_counts[i],"Lettura non disponibile");
+        if(available)lv_label_set_text_fmt(input_check_counts[i],"%u",input_check.counts[i]);
+        else lv_label_set_text(input_check_counts[i],"N.d.");
+        lv_obj_set_style_text_font(input_check_counts[i],available?&lv_font_montserrat_26:&lv_font_montserrat_14,0);
         lv_obj_set_style_text_color(input_check_counts[i],lv_color_hex(!available?PD_GOLD:input_check.counts[i]?PD_MINT:PD_MUTED),0);
     }
 }
@@ -2422,13 +2369,11 @@ static void render_input_check(void){
     char text[100];memset(input_check_counts,0,sizeof input_check_counts);
     if(page==INPUT_CHECK_HOME){
         label("Collaudo comandi",83,111,300,true);
-        small_label("Prove locali; scheda conservata",83,153,300,PD_MUTED);
-        button("Prova tocco",83,187,300,44,2901,true);
-        button("Prova tasti",83,243,300,44,2902,true);
+        scene_control("Prova tocco",pd_ui_icon(PD_UI_TOUCH),"Tocco","5 bersagli",83,159,144,64,2901,true);
+        scene_control("Prova tasti",pd_ui_icon(PD_UI_KEYS),"Tasti","3 gesti",239,159,144,64,2902,true);
         unsigned seen=0;for(unsigned i=0;i<3;i++)seen+=input_check.counts[i]>0;
-        snprintf(text,sizeof text,"Tocco %u/5 | gesti osservati %u/3",input_check.touched,seen);
-        small_label(text,83,299,300,PD_MINT);
-        small_label("Ogni prova si chiude dopo 2 minuti",83,326,300,PD_GOLD);
+        snprintf(text,sizeof text,"%u/5",input_check.touched);status_tile(PD_UI_TOUCH,"Tocchi",text,83,231);snprintf(text,sizeof text,"%u/3",seen);status_tile(PD_UI_KEYS,"Gesti",text,239,231);
+        small_label("Ogni prova dura 2 minuti",83,309,300,PD_MUTED);small_label("PWR lungo: alimentazione",83,333,300,PD_GOLD);
         button("Esci",83,359,300,48,2904,true);
     }else if(page==INPUT_CHECK_TOUCH){
         if(input_check.touched<PD_INPUT_CHECK_TARGETS)snprintf(text,sizeof text,"Tocca il bersaglio %u/5",input_check.touched+1);
@@ -2446,12 +2391,11 @@ static void render_input_check(void){
         label("Prova i tasti",83,111,300,true);
         const char *names[]={"PWR breve","BOOT breve","BOOT lungo"};
         for(unsigned i=0;i<3;i++){
-            snprintf(text,sizeof text,"%s: %s",names[i],shortcut_names[state.shortcuts[i]]);
-            small_label(text,83,157+i*54,300,PD_TEXT);
-            input_check_counts[i]=label("",83,179+i*54,300,false);
+            lv_obj_t *box=decoration(83,153+i*64,300,56,0x122b38,2);lv_obj_set_style_pad_all(box,0,0);art(pd_ui_icon(PD_UI_KEYS),7,16,box);
+            tile_label(box,names[i],42,5,164,&lv_font_montserrat_16,PD_TEXT);tile_label(box,shortcut_names[state.shortcuts[i]],42,31,164,&lv_font_montserrat_14,PD_MUTED);
+            tile_label(box,"Ricevuti",216,1,76,&lv_font_montserrat_14,PD_MUTED);input_check_counts[i]=tile_label(box,"",216,19,76,&lv_font_montserrat_26,PD_TEXT);lv_obj_set_style_text_align(input_check_counts[i],LV_TEXT_ALIGN_CENTER,0);
         }
-        input_check_refresh();
-        small_label("Rilascia prima del prossimo gesto",83,326,300,PD_GOLD);
+        input_check_refresh();connection_note("Esci col tocco o attendi 2 minuti",339,16,PD_GOLD);
         button("Azzera",83,359,144,48,2902,true);button("Indietro",239,359,144,48,2903,true);
     }
 }
@@ -2482,6 +2426,7 @@ static void render_death_damage(void){
 }
 #include "connection_ui.inc"
 #include "beyond_views.inc"
+#include "secondary_ui.inc"
 static void render_power(void){
     char text[120];bool fresh=pd_power_fresh(&power_info,lv_tick_get()),ready=power_storage_ready(),battery=pd_power_battery_only(&power_info,lv_tick_get());
     if(page==POWER_OFF){
@@ -3326,6 +3271,7 @@ static void render_content(void) {
         small_label("Scheda e progressi conservati",83,321,300,PD_MUTED);
         button("Interrompi",83,359,300,48,4900,!asset_verifying);return;
     }
+    if(page==RESOURCES&&resource_picker){render_resource_picker();return;}
     if (import_pending&&page!=BEYOND_REPORT) {
         char items[8],powers[8];if(pending.inventory_available)snprintf(items,sizeof items,"%u",pending.item_count);else strcpy(items,"?");if(pending.magic.available)snprintf(powers,sizeof powers,"%u",pending.magic.count);else strcpy(powers,"?");
         if(import_from_beyond){
@@ -3414,13 +3360,13 @@ static void render_content(void) {
         lv_obj_t *counter=button("Stato",83,99,92,44,1500,true);lv_obj_set_style_text_font(counter,&lv_font_montserrat_16,0);
         button("Zaino",187,99,92,44,80,true);button("Magie",291,99,92,44,800,true);
         if(state.resource_count) {
-            pd_resource *r=&state.resources[resource_index];label(r->name,83,158,300,false);
+            if(resource_index>=state.resource_count)resource_index=0;
+            pd_resource *r=&state.resources[resource_index];wrapped_name(r->name,151,48,&lv_font_montserrat_14);
             snprintf(text,sizeof text,"%u / %u",r->current,r->maximum);
-            art(&theme_crystal,113,191,root);
-            lv_obj_t *value=label(text,155,194,228,true);label_font(value,&pd_pixel_4);
+            lv_obj_t *value=label(text,83,201,300,true);label_font(value,&pd_pixel_4);
             lv_obj_set_style_text_color(value,lv_color_hex(PD_VIOLET),0);meter(r->current,r->maximum,235,PD_VIOLET);
             button("-1",83,247,144,44,20,r->current>0);button("+1",239,247,144,44,21,r->current<r->maximum);
-            button("Prossimo",83,299,144,44,22,state.resource_count>1);button("Riposi",239,299,144,44,900,true);
+            scene_control("Contatori",pd_ui_icon(PD_UI_USES),"Contatori","Scegli",83,299,144,44,5750,state.resource_count>1);button("Riposi",239,299,144,44,900,true);
         } else {label("Nessun contatore importato",83,194,300,false);button("Riposi",83,299,300,44,900,true);}
     }
     const char *nav[]={"Eroe","Scheda","Dadi","Usi"};
@@ -3459,6 +3405,8 @@ static void list_swipe(lv_event_t *event){
 }
 static void render(void){
     static int last_page=-1;
+    if(page!=WALLET_EDIT)wallet_panel=0;
+    if(page!=RESOURCES)resource_picker=false;
     if(beyond_guide_owner!=page){beyond_guide=false;beyond_guide_owner=page;}
     if(connection_owner!=page){connection_details=false;connection_owner=page;}
     if(rules_panel&&rules_panel_owner!=page)rules_panel=0;

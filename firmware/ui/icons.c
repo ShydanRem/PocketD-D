@@ -5,9 +5,10 @@
 #include "companion/companion_assets.h"
 #include "control_icons.inc"
 const lv_image_dsc_t *pd_ui_icon(pd_ui_icon_id id){
- static const lv_image_dsc_t *const icons[]={&menu,&back,&next,&search,&ready,&pouch,&undo,&theme_sword,&theme_dice,&theme_magic,&theme_pack,&theme_rest,&theme_sheet,&theme_heart,&theme_shield,&theme_crystal,&theme_gear,&theme_hero,&wear,&wireless,&keys,&energy,&resist,&weak,&immune,&silver,&adamantine,&reaction,&start_turn,&end_turn,&subjects,&movement,&senses,&languages,&theme_usb,&bridge_link,&desktop,&account,&access_lock};
+ static const lv_image_dsc_t *const icons[]={&menu,&back,&next,&search,&ready,&pouch,&undo,&theme_sword,&theme_dice,&theme_magic,&theme_pack,&theme_rest,&theme_sheet,&theme_heart,&theme_shield,&theme_crystal,&theme_gear,&theme_hero,&wear,&wireless,&keys,&energy,&resist,&weak,&immune,&silver,&adamantine,&reaction,&start_turn,&end_turn,&subjects,&movement,&senses,&languages,&theme_usb,&bridge_link,&desktop,&account,&access_lock,&coin_copper,&coin_silver,&coin_electrum,&coin_gold,&coin_platinum,&theme_notes,&theme_time,&touch_target};
  return (unsigned)id<PD_UI_COUNT?icons[id]:NULL;
 }
+const lv_image_dsc_t *pd_ui_coin_icon(unsigned coin){return coin<5?pd_ui_icon((pd_ui_icon_id)(PD_UI_COPPER+coin)):NULL;}
 const lv_image_dsc_t *pd_ui_menu_icon(pd_ui_icon_id id){
  switch(id){case PD_UI_ATTACK:return &companion_sword;case PD_UI_DICE:return &companion_dice;case PD_UI_MAGIC:return &companion_magic;case PD_UI_PACK:return &companion_pack;case PD_UI_REST:return &companion_rest;case PD_UI_SHEET:return &companion_sheet;default:return pd_ui_icon(id);}
 }

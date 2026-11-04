@@ -164,6 +164,11 @@ static lv_obj_t *visible_text(lv_obj_t *root,const char *text){
     for(unsigned i=0;i<lv_obj_get_child_count(root);i++){lv_obj_t *found=visible_text(lv_obj_get_child(root,i),text);if(found)return found;}
     return NULL;
 }
+static unsigned visible_count(lv_obj_t *root,const char *text){
+    if(lv_obj_has_flag(root,LV_OBJ_FLAG_HIDDEN))return 0;
+    unsigned count=lv_obj_check_type(root,&lv_label_class)&&!strcmp(lv_label_get_text(root),text);
+    for(unsigned i=0;i<lv_obj_get_child_count(root);i++)count+=visible_count(lv_obj_get_child(root,i),text);return count;
+}
 static void wrapped_tree_fits(lv_obj_t *root){
     if(lv_obj_has_flag(root,LV_OBJ_FLAG_HIDDEN))return;
     if(lv_obj_check_type(root,&lv_label_class)&&lv_label_get_long_mode(root)==LV_LABEL_LONG_WRAP){
@@ -1084,7 +1089,7 @@ int main(void) {
     /* Maximum amounts remain readable; a forged + at the cap cannot overflow. */
     for(unsigned i=0;i<5;i++)state.wallet.coins[i]=PD_COIN_MAX;wallet_page=0;render();screenshot("wallet-maximum.ppm");
     click("Rame: 999999999 MR");effects_before=state;act(2407);assert(wallet_draft.coins[0]==PD_COIN_MAX&&!memcmp(&state,&effects_before,sizeof state));
-    for(unsigned i=0;i<8;i++)act(2408);click("-");assert(wallet_draft.coins[0]==899999999);act(2409);assert(state.wallet.coins[0]==PD_COIN_MAX);
+    click("Passo: 1 >");click("100 mln");click("-");assert(wallet_draft.coins[0]==899999999);act(2409);assert(state.wallet.coins[0]==PD_COIN_MAX);
     /* USB import explicitly replaces local money only after confirmation. */
     pd_demo(&pending);pending.wallet=(pd_wallet){.available=true,.coins={1,2,3,42,5}};pd_state wallet_import=pending;
     state.shortcuts[0]=12;state.shortcuts[1]=4;state.shortcuts[2]=5;
@@ -1207,7 +1212,7 @@ int main(void) {
     probe_key_sample(0,0,0);probe_key_sample(0,0,31);probe_key_sample(0,1,0);probe_key_sample(0,1,31);
     click("Indietro");click("Esci");assert(page==KEY_SETTINGS&&input_check.mode==PD_INPUT_IDLE);
     probe_key_sample(0,1,1000);probe_key_sample(0,0,0);probe_key_sample(0,0,31);assert(page==KEY_SETTINGS);
-    probe_key_gesture(1,100);assert(page==INVENTORY); /* A fresh gesture works again. */
+    act(100);probe_key_gesture(1,100);assert(page==INVENTORY); /* A fresh gameplay gesture works again. */
     for(unsigned view=0;view<3;view++){
         act(850);click("Collaudo");
         if(view==1)click("Prova tocco");if(view==2)click("Prova tasti");
@@ -1705,7 +1710,7 @@ int main(void) {
     for(unsigned i=0;i<8;i++){snprintf(manual_import.resources[i].name,sizeof manual_import.resources[i].name,"Riserva manuale %u",i+1);manual_import.resources[i].maximum=i==7?999:50;manual_import.resources[i].current=i==7?999:35;}
     assert(pd_valid(&manual_import)&&stage_import(&manual_import));click("Conferma");assert(state.resource_count==8);act(103);resource_index=0;render();bounds();screenshot("manual-counter-first.ppm");
     effects_before=state;effects_saves=save_calls;effects_calls=random_calls;fail_save=true;click("-1");assert(!memcmp(&state,&effects_before,sizeof state));screenshot("manual-counter-save-error.ppm");fail_save=false;click("-1");assert(state.resources[0].current==34&&save_calls==effects_saves+2&&random_calls==effects_calls);act(100);click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));
-    act(103);for(unsigned i=0;i<7;i++)click("Prossimo");assert(resource_index==7);bounds();screenshot("manual-counter-last.ppm");click("-1");assert(state.resources[7].current==998);click("+1");assert(state.resources[7].current==999);click("Prossimo");assert(!resource_index);
+    act(103);click("Contatori");click(">");click("Riserva manuale 8");assert(resource_index==7);bounds();screenshot("manual-counter-last.ppm");click("-1");assert(state.resources[7].current==998);click("+1");assert(state.resources[7].current==999);click("Contatori");click("<");click("Riserva manuale 1");assert(!resource_index);
     click("Magie");click("Capacita");tap(233,222);assert(page==MAGIC_DETAIL);screenshot("manual-counter-note.ppm");effects_before=state;act(831);assert(!memcmp(&state,&effects_before,sizeof state)&&state.resources[0].current==35);
     puts("Manual counters UI: 8 generic slots, exact source balances, passive ability separation, failed-save retry, undo, last slot/999 boundary and no RNG passed; synthetic, no physical USB");
     /* Paid creation consumes a selected slot only, with normal modal/save protections. */
@@ -2471,6 +2476,39 @@ int main(void) {
     click("Importa");assert(page==HERO&&!import_pending&&state.hp==7&&!memcmp(state.abilities,scores,6)&&state.brightness==before.brightness&&!memcmp(state.shortcuts,before.shortcuts,3)&&state.history_epoch>before.history_epoch&&save_calls==writes+1&&random_calls==draws);act(30);assert(save_calls==writes+1);
     lv_indev_delete(touch);beyond_mock=(pd_beyond_info){0};beyond_guide=false;page=HERO;render();
     puts("Beyond entry UX: no-SD direct import card, real pointer routes, guide with no requests/writes, relink guidance without HTTP retry, recovery handshake and no credential replay, visible persistent/temporary consent and nonce guards, original stable ID/clamped page, HTTP200 with blocked conversion, absent HTTP not inherited, six exact scores/full name/160-byte notes, disabled local focus, partial report counts and one explicit import preserving device preferences passed; synthetic worker/LVGL, no real Beyond/USB/RF claim.");
+    }
+    /* v0.107: close secondary UX gaps with frozen drafts and local key paths. */
+    {
+    pd_demo(&state);state.hp=12;state.shortcuts[0]=14;state.shortcuts[1]=4;state.shortcuts[2]=13;state.wallet=(pd_wallet){.available=true,.coins={123,45,7,12,3}};state.resource_count=8;
+    for(unsigned i=0;i<8;i++){snprintf(state.resources[i].name,sizeof state.resources[i].name,"Riserva %u",i+1);state.resources[i].current=i+2;state.resources[i].maximum=50;}
+    page=HERO;import_pending=import_from_beyond=history_pending=history_pair_pending=history_third_pending=history_fourth_pending=history_fifth_pending=history_quarantined=library_failed=smite_rolled=false;
+    fail_save=fail_storage_commit=fail_history=false;input_check_notice="PWR lungo: alimentazione";wallet_panel=0;resource_picker=false;library_test_root=NULL;pd_dice_idle(&dice_animation,1);display_screen=(pd_screen){0};physical_keys=(pd_buttons){0};pd_history_reset(&history,state.history_epoch);persisted_history=history;
+    pd_state before=state;pd_history before_history=history;unsigned writes=save_calls,draws=random_calls,journal_writes=history_save_calls;
+    for(unsigned i=0;i<5;i++){assert(pd_ui_coin_icon(i));for(unsigned j=0;j<i;j++)assert(memcmp(pd_ui_coin_icon(i)->data,pd_ui_coin_icon(j)->data,pd_ui_coin_icon(i)->data_size));}assert(!pd_ui_coin_icon(5));
+    act(80);click("Monete");screenshot("ux107-wallet.ppm");click("Rame: 123 MR");screenshot("ux107-wallet-edit.ppm");
+    lv_indev_t *touch=lv_indev_create();lv_indev_set_type(touch,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(touch,probe_touch);
+    probe_click(touch,230,181);assert(wallet_panel==2);for(const char *n="987654321";*n;n++){char key[2]={*n,0};click(key);}act(2449);assert(wallet_number==987654321&&wallet_draft.coins[0]==123&&state.wallet.coins[0]==123);bounds();screenshot("ux107-wallet-number.ppm");click("Annulla");assert(!wallet_panel&&wallet_draft.coins[0]==123);
+    click("Inserisci saldo");for(const char *n="123456789";*n;n++){char key[2]={*n,0};click(key);}click("Usa numero");assert(wallet_draft.coins[0]==123456789&&state.wallet.coins[0]==123);click("Anteprima");screenshot("ux107-wallet-preview.ppm");
+    assert(save_calls==writes&&!memcmp(&state,&before,sizeof state));fail_save=true;click("Conferma");assert(page==WALLET_CONFIRM&&!memcmp(&state,&before,sizeof state));fail_save=false;click("Conferma");assert(page==WALLET_HOME&&state.wallet.coins[0]==123456789&&state.wallet.coins[1]==45&&save_calls==writes+2&&wallet_can_undo());click("Annulla monete");assert(!memcmp(&state,&before,sizeof state));
+    for(unsigned i=0;i<5;i++)state.wallet.coins[i]=PD_COIN_MAX;before=state;writes=save_calls;wallet_page=0;render();click("Rame: 999999999 MR");click("Passo: 1 >");assert(wallet_panel==1);screenshot("ux107-wallet-steps.ppm");act(2407);assert(wallet_draft.coins[0]==PD_COIN_MAX);click("100 mln");click("-");assert(wallet_draft.coins[0]==899999999);click("Inserisci saldo");click("0");click("Usa numero");click("Anteprima");bounds();assert(visible_count(lv_screen_active(),"999999999")==9&&visible_text(lv_screen_active(),"0"));screenshot("ux107-wallet-max.ppm");click("Indietro");
+    click("Passo: 100000000 >");physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};rules_keyboard=false;probe_key_gesture(1,100);assert(rules_keyboard&&wallet_panel==1);probe_key_gesture(1,900);assert(!wallet_panel&&page==WALLET_EDIT);probe_key_gesture(1,900);assert(page==WALLET_HOME&&!memcmp(&state,&before,sizeof state)&&save_calls==writes);
+    /* Selecting a shortcut saves once, failed NVS keeps the old assignment,
+       and even a disabled gameplay PWR can still operate the settings menu. */
+    act(1600);click("Tasti");assert(key_return==DEVICE_SETTINGS&&page==KEY_SETTINGS&&rules_target_count==5);screenshot("ux107-keys.ppm");click("PWR breve: Aspetto");screenshot("ux107-key-picker.ppm");while(key_page)click("Pagina precedente");fail_save=true;click("Spento");assert(page==KEY_PICKER&&state.shortcuts[0]==14);fail_save=false;click("Spento");assert(page==KEY_SETTINGS&&state.shortcuts[0]==0&&state.shortcuts[1]==4&&state.shortcuts[2]==13&&save_calls==writes+2);
+    before=state;writes=save_calls;physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};rules_keyboard=false;probe_key_gesture(0,100);probe_key_gesture(1,100);assert(page==KEY_PICKER);probe_key_gesture(1,900);assert(page==KEY_SETTINGS);probe_key_gesture(1,900);assert(page==DEVICE_SETTINGS&&!memcmp(&state,&before,sizeof state));
+    /* Test modes never become fake hardware passes or invoke game commands. */
+    click("Tasti");click("Collaudo");assert(page==INPUT_CHECK_HOME);screenshot("ux107-input-home.ppm");physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};rules_keyboard=false;probe_key_gesture(1,100);probe_key_gesture(1,100);assert(page==INPUT_CHECK_TOUCH&&rules_target_count==2&&!input_check.touched);
+    probe_key_gesture(0,100);assert(!input_check.touched);probe_click(touch,233,170);assert(input_check.touched==1);probe_key_gesture(1,900);assert(page==INPUT_CHECK_HOME);click("Prova tasti");assert(page==INPUT_CHECK_KEYS&&!rules_navigating());probe_key_sample(0,0,0);probe_key_sample(0,0,31);probe_key_sample(0,0,31);
+    probe_key_gesture(0,100);probe_key_gesture(1,100);probe_key_gesture(1,900);assert(page==INPUT_CHECK_KEYS&&input_check.counts[0]==1&&input_check.counts[1]==1&&input_check.counts[2]==1);screenshot("ux107-input-keys.ppm");assert(save_calls==writes&&random_calls==draws&&!memcmp(&state,&before,sizeof state));click("Indietro");click("Esci");assert(page==KEY_SETTINGS);click("Indietro");assert(page==DEVICE_SETTINGS);
+    /* Original generic counter index 7, including duplicate wide names, can be
+       chosen directly without a spend; Menu exits the picker explicitly. */
+    memset(state.resources[6].name,'W',PD_RESOURCE_BYTES-1);state.resources[6].name[PD_RESOURCE_BYTES-1]=0;strcpy(state.resources[7].name,state.resources[6].name);before=state;act(103);resource_index=0;render();click("Contatori");assert(resource_picker&&confirmation_open()&&!stage_import(&before));screenshot("ux107-resources.ppm");click("Menu");assert(page==HOME_MENU&&!resource_picker&&!memcmp(&state,&before,sizeof state));act(103);click("Contatori");click(">");probe_sample(touch,311,183,false,40);probe_click(touch,311,183);assert(!resource_picker&&page==RESOURCES&&resource_index==7);bounds();wrapped_tree_fits(lv_screen_active());screenshot("ux107-resource-wide.ppm");assert(save_calls==writes&&random_calls==draws&&!memcmp(&state,&before,sizeof state));click("-1");assert(state.resources[7].current==before.resources[7].current-1&&state.resources[6].current==before.resources[6].current&&save_calls==writes+1);
+    /* The existing health keypad also gets local select/activate/back, with no
+       healing before its existing preview/confirmation path. */
+    before=state;writes=save_calls;act(100);act(2301);click("Cura");assert(page==NUMBER_ENTRY);physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};rules_keyboard=false;probe_key_gesture(1,100);probe_key_gesture(1,100);assert(page==NUMBER_ENTRY&&number_value==1);probe_key_gesture(1,900);assert(page==HOME_VITALS&&!memcmp(&state,&before,sizeof state)&&save_calls==writes&&random_calls==draws&&history_save_calls==journal_writes&&!memcmp(&history,&before_history,sizeof history));
+    act(50);bounds();lv_obj_t *heading=visible_text(lv_screen_active(),pd_theme_get(page_themes[APPEARANCE])->title);assert(heading&&lv_obj_get_width(heading)==110&&lv_obj_get_y(heading)>=27&&lv_obj_get_y(heading)+lv_obj_get_height(heading)<=71);screenshot("ux107-heading.ppm");assert(!memcmp(&state,&before,sizeof state)&&save_calls==writes&&random_calls==draws);
+    lv_indev_delete(touch);page=HERO;render();
+    puts("Final secondary UX: five distinct metal glyphs, real pointer bounded nine-digit coin draft/cancel, no overflow, all-five preview/max digits, failed-save retry/exact undo, direct step and local back, all shortcut IDs/device return/no lost binding after failure, local settings with PWR disabled, diagnostic pointer-only targets/raw three gestures/no shortcut side effects, direct counter8/duplicate names/no spend until command, explicit picker exit and health keypad back with unchanged history/RNG passed; synthetic LVGL, physical usability still to check.");
     }
     unsigned covered=0;
     for(unsigned p=0;p<=MAGIC_PREPARE_CONFIRM;p++){
