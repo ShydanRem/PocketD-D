@@ -330,3 +330,63 @@ Verifiche v0.101, 4 novembre 2026: 357 test JavaScript, suite nativa completa,
 compilazione ESP32 passati. Dati sintetici; nuove interazioni e fluidità da
 valutare sul dispositivo. Nessuna nuova lettura reale Beyond o modifica della
 raccolta personale.
+
+
+## v0.102: danni misti, riduzioni e spese
+
+- **Tipo di danno:** selettore di tutti i 13 tipi del motore, sei per pagina,
+  senza attraversare i tipi intermedi. Icone dedicate e coerenti nel selettore,
+  nelle parti e nelle riduzioni; quattro nuovi glifi originali. Le indicazioni
+  della difesa distinguono normale, non verificata e condizionale. Non concedono
+  proprietà o dichiarano l’origine del colpo.
+- **Parti:** nome, icona e quantità leggibili separatamente. L’aggiunta e modifica
+  conservano gli indici originali e la conferma del singolo componente. L’intero
+  evento rimane un solo colpo; arrotondamenti per tipo e una sola prova di
+  concentrazione mantengono le regole esistenti.
+- **Fonte del danno:** griglia per magico, attacco, argento e adamantio. `?` resta
+  sconosciuto e non diventa `no`; due nuovi glifi per i materiali. Annullare non
+  modifica la dichiarazione già usata dal colpo.
+- **Riduzioni:** scegli direttamente la parte prima delle sue difese oppure
+  l’intero colpo dopo le difese. La stessa scelta diretta serve ad assegnare il
+  budget dei profili: niente scorrimento obbligato fra le parti. Nessuna spesa
+  o applicazione entrando nei selettori o premendo `Usa valori`.
+- **Fonte della spesa:** scelta per famiglia (nessuna, contatori, poteri, slot
+  ordinari, patto, cariche), poi voce con nome e saldo. Restano gli indici
+  originali, anche potere 120 e oggetto 60. Non si propongono doppioni delle
+  altre due righe. Una fonte esaurita può essere configurata, ma resta bloccata
+  all’applicazione; il selettore non ripristina risorse. Riselezionare la stessa
+  fonte conserva la quantità; una fonte diversa parte da costo 1.
+- **Anteprima del colpo:** quattro riquadri per danno effettivo, PF, temporanei e
+  costi. `Tipi` conserva raggruppamento, conto completo, profilo e ricevute. I
+  dati mancanti continuano a bloccare l’applicazione senza mostrare un totale
+  parziale come valido. Morte e concentrazione restano passaggi espliciti.
+- **Spese nello stesso percorso:** saldo prima/dopo per le tre fonti e reazione
+  separata; per costi alternativi si può cambiare fonte prima del colpo. Il
+  riepilogo segnala che un costo può essere dovuto anche a danno azzerato.
+  Applicazione del danno e pagamento restano un’unica conferma atomica.
+- **PWR/BOOT:** navigazione locale estesa a colpo, parti, fonte, riduzioni,
+  selezione dei costi e relative anteprime. Le bozze non vengono rimpiazzate da
+  nuove importazioni o scorciatoie di gioco. Saldi, tasti personali e storico
+  non cambiano mentre si consulta o si annulla. La scelta dei tasti viene raccolta
+  dopo il calcolo del layout, così anche i selettori appena aperti sono
+  immediatamente navigabili. Menu resta disponibile nelle viste principali
+  del colpo per uscire esplicitamente dalla bozza.
+
+[Quattro viste native](previews/v102-incoming-hits.png), con dati e input
+sintetici. Scenari nuovi: 13 tipi e glifi distinti, colpo con resistenza e
+vulnerabilità e temporanei, confronti con il motore, annullamento, salvataggio
+fallito/riprovato, ultima parte del colpo, ultimi indici di poteri/oggetti,
+doppioni rifiutati, quantità della stessa fonte conservata, tre spese e reazione
+anche con danno zero, una sola applicazione e comandi fisici locali.
+
+Non è la conclusione dell’intera revisione UX: restano turni e tempo, messaggi e
+schermate secondarie da uniformare e riscontro sul dispositivo. La selezione
+fra molti costi è paginata; non introduce ancora ricerca testuale. Nessun nuovo
+formato, asset SD richiesto o automatismo di regole. Roadmap funzionale conservata.
+
+
+Verifiche v0.102, 4 novembre 2026: 357 test JavaScript, suite nativa completa,
+153 viste LVGL, nuovi scenari con puntatore e tasti, ASan/UBSan e compilazione
+ESP32 passati. Archivio e GitHub Pages verificati prima della pubblicazione.
+Prove sintetiche: non dimostrano touch, fluidità o radio del dispositivo fisico.
+Nessuna nuova lettura Beyond o modifica della raccolta personale.

@@ -1,5 +1,7 @@
 # PocketD-D — uso pratico sul dispositivo
 
+> v0.102: [danni misti, riduzioni e spese](UX-RPG.md#v0102-danni-misti-riduzioni-e-spese).
+>
 > v0.101: [editor di effetti, difese e timer](UX-RPG.md#v0101-editor-di-effetti-difese-e-timer).
 >
 > v0.100: [raccolta, personalizzazione diretta e impostazioni](UX-RPG.md#v0100-raccolta-aspetto-e-impostazioni).
@@ -226,3 +228,29 @@ PWR sposta il focus, BOOT attiva, BOOT lungo torna indietro. I comandi di gioco
 assegnati ai tasti non partono mentre lavori nell’editor. Tornare dal selettore
 non salva; anteprima e conferma restano necessarie. Il trascorrere del tempo
 continua a richiedere i comandi espliciti del menu Stato/Effetti.
+
+
+## Colpi e risorse · v0.102
+
+In `Danni` tocca il tipo e sceglilo direttamente. `Parti` apre le componenti del
+medesimo colpo; per ogni parte puoi modificare quantità, fonte e difese. Nella
+fonte `?` significa dato non ancora dichiarato: non equivale a `no`.
+
+In `Riduci` tocca il bersaglio per scegliere una parte prima delle difese o
+l’intero colpo dopo. Nei profili lo stesso comando sceglie la parte a cui
+assegnare budget. `Usa valori` prepara il colpo; non applica danni o spese.
+
+Per configurare un costo: profilo > Modifica > Dettagli > Costi > Fonte, scegli
+la famiglia e poi la risorsa per nome. I saldi sono visibili. Una voce esaurita
+non viene ricaricata; le fonti già presenti nelle altre righe sono escluse.
+Selezionare di nuovo la stessa fonte conserva il costo impostato.
+
+L’anteprima mostra danno effettivo, PF, temporanei e `Costi >`. Tocca quest’ultimo
+per vedere tutti i saldi prima/dopo e la reazione. Con costi alternativi puoi
+scegliere `Altra fonte`. Se il profilo lo prevede, la spesa è dovuta anche quando
+il danno effettivo è zero. `Tipi` conserva il conto completo. Solo la conferma
+finale applica il colpo e addebita le risorse; concentrazione e morte mantengono
+le proprie conferme.
+
+PWR sceglie, BOOT attiva, BOOT lungo torna indietro nei nuovi percorsi. Le
+scorciatoie di gioco e le importazioni non sostituiscono la bozza in corso.

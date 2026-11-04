@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **4 novembre 2026 — v0.101**. Il dispositivo è il prodotto;
+Aggiornamento del **4 novembre 2026 — v0.102**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
@@ -19,6 +19,17 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Settima iterazione UX · v0.102
+
+[Danni misti, riduzioni e spese](UX-RPG.md#v0102-danni-misti-riduzioni-e-spese).
+Tredici tipi con icone coerenti e scelta diretta. Parti leggibili, dichiarazione
+esplicita di fonte e materiali, selezione diretta della parte da ridurre o a cui
+assegnare budget. Costi scelti per famiglia e voce, conservando indici e vincoli.
+Anteprima a riquadri con danni, PF, temporanei e accesso alle spese prima/dopo.
+Nessun costo anticipato; danni e spese restano una conferma atomica, anche se il
+profilo richiede pagamento a danno zero. Turni, tempo e viste secondarie seguono
+nella stessa revisione; nessuna nuova prova Beyond o hardware dichiarata.
 
 ## Sesta iterazione UX · v0.101
 
