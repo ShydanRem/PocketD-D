@@ -20,6 +20,7 @@
 #include "checks.h"
 #include "combat.h"
 #include "magic.h"
+#include "spell_roll.h"
 #include "buttons.h"
 #include "input_check.h"
 #include "rest.h"
@@ -50,7 +51,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, KEY_PICKER, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM, POWER_HOME, POWER_OFF, ITEM_SEARCH, POWER_SEARCH, MAGIC_MANAGE, MAGIC_PREPARATION, ITEM_QUANTITY_CONFIRM, AVATAR_EDIT, SCENE_EDIT, APPEARANCE_CONFIRM, DEFENCE_SETUP, WIFI_HOME, WIFI_FORGET, REFERENCE_HOME, REFERENCE_TEXT, WIFI_LIST, WIFI_PASSWORD, WIFI_JOIN_REVIEW, WEAPON_PICKER, ITEM_CONFIG_MENU, WEAPON_SETUP, GEAR_SETUP, MAGIC_PROFILE, PLAY_CONFIRM, ATTACK_MODE, HIT_EFFECTS, HIT_SMITE, ASSET_INSTALL, SYNC_HOME, SYNC_REVIEW, SYNC_FORGET, LIBRARY_HOME, LIBRARY_CONFIRM, BEYOND_FORM, BEYOND_BUSY, BEYOND_REPORT, BEYOND_ACCOUNT, BEYOND_PAIR, BEYOND_FORGET, BEYOND_CONNECT, BEYOND_RECOVER, MAGIC_COST_PICKER, MAGIC_PREPARE_LIST, MAGIC_PREPARE_CONFIRM } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, KEY_PICKER, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM, POWER_HOME, POWER_OFF, ITEM_SEARCH, POWER_SEARCH, MAGIC_MANAGE, MAGIC_PREPARATION, ITEM_QUANTITY_CONFIRM, AVATAR_EDIT, SCENE_EDIT, APPEARANCE_CONFIRM, DEFENCE_SETUP, WIFI_HOME, WIFI_FORGET, REFERENCE_HOME, REFERENCE_TEXT, WIFI_LIST, WIFI_PASSWORD, WIFI_JOIN_REVIEW, WEAPON_PICKER, ITEM_CONFIG_MENU, WEAPON_SETUP, GEAR_SETUP, MAGIC_PROFILE, PLAY_CONFIRM, ATTACK_MODE, HIT_EFFECTS, HIT_SMITE, ASSET_INSTALL, SYNC_HOME, SYNC_REVIEW, SYNC_FORGET, LIBRARY_HOME, LIBRARY_CONFIRM, BEYOND_FORM, BEYOND_BUSY, BEYOND_REPORT, BEYOND_ACCOUNT, BEYOND_PAIR, BEYOND_FORGET, BEYOND_CONNECT, BEYOND_RECOVER, MAGIC_COST_PICKER, MAGIC_PREPARE_LIST, MAGIC_PREPARE_CONFIRM, SPELL_METHOD, SPELL_FORMULA, SPELL_REVIEW, SPELL_RECEIPT } page_t;
 static const pd_theme_kind page_themes[]={
     [HERO]=PD_THEME_NONE,
     [SHEET]=PD_THEME_SHEET,
@@ -152,6 +153,7 @@ static const pd_theme_kind page_themes[]={
     [WALLET_EDIT]=PD_THEME_WALLET,
     [WALLET_CONFIRM]=PD_THEME_WALLET,
     [BEYOND_FORM]=PD_THEME_BEYOND,[BEYOND_BUSY]=PD_THEME_BEYOND,[BEYOND_REPORT]=PD_THEME_BEYOND,[BEYOND_ACCOUNT]=PD_THEME_BEYOND,[BEYOND_PAIR]=PD_THEME_BEYOND,[BEYOND_FORGET]=PD_THEME_BEYOND,[BEYOND_CONNECT]=PD_THEME_BEYOND,[BEYOND_RECOVER]=PD_THEME_BEYOND,
+    [SPELL_METHOD]=PD_THEME_MAGIC,[SPELL_FORMULA]=PD_THEME_MAGIC,[SPELL_REVIEW]=PD_THEME_MAGIC,[SPELL_RECEIPT]=PD_THEME_MAGIC,
     [MAGIC_COST_PICKER]=PD_THEME_MAGIC,[MAGIC_PREPARE_LIST]=PD_THEME_MAGIC,[MAGIC_PREPARE_CONFIRM]=PD_THEME_MAGIC,
     [LIBRARY_HOME]=PD_THEME_LIBRARY,
     [LIBRARY_CONFIRM]=PD_THEME_LIBRARY,
@@ -185,6 +187,7 @@ static bool undo_available,import_pending,has_roll,import_from_beyond;
 static bool beyond_local(void);
 static bool beyond_network_flow(void);
 static bool magic_setup_open(void);
+static bool spell_roll_open(void);
 static void slot_picker_begin(bool smite);
 static pd_roll result;
 static pd_dice_animation dice_animation;
@@ -318,7 +321,7 @@ static unsigned item_gained;
 static bool wifi_editing(void){return page==WIFI_LIST||page==WIFI_PASSWORD||page==WIFI_JOIN_REVIEW;}
 static bool wifi_local(void){return wifi_editing()||page==WIFI_HOME||page==WIFI_FORGET;}
 static bool appearance_editing(void){return page==AVATAR_EDIT||page==SCENE_EDIT||page==APPEARANCE_CONFIRM;}
-static bool confirmation_open(void){return (page==RESOURCES&&resource_picker)||rules_editing()||magic_setup_open()||beyond_local()||beyond_network_flow()||page==LIBRARY_CONFIRM||play_editing()||wifi_editing()||page==ASSET_INSTALL||page==KEY_PICKER||page==SYNC_REVIEW||page==SYNC_FORGET||page==WIFI_FORGET||page==DEFENCE_SETUP||appearance_editing()||page==ITEM_QUANTITY_CONFIRM||page==MAGIC_PREPARATION||page==ITEM_SEARCH||page==POWER_SEARCH||power_paused||power_off_attempted||page==POWER_OFF||page==NUMBER_ENTRY||page==VITAL_CONFIRM||page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
+static bool confirmation_open(void){return spell_roll_open()||(page==RESOURCES&&resource_picker)||rules_editing()||magic_setup_open()||beyond_local()||beyond_network_flow()||page==LIBRARY_CONFIRM||play_editing()||wifi_editing()||page==ASSET_INSTALL||page==KEY_PICKER||page==SYNC_REVIEW||page==SYNC_FORGET||page==WIFI_FORGET||page==DEFENCE_SETUP||appearance_editing()||page==ITEM_QUANTITY_CONFIRM||page==MAGIC_PREPARATION||page==ITEM_SEARCH||page==POWER_SEARCH||power_paused||power_off_attempted||page==POWER_OFF||page==NUMBER_ENTRY||page==VITAL_CONFIRM||page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
 static pd_damage_plan damage_plan; /* First component + explicit concentration choice. */
 static pd_damage_component damage_extra[PD_DAMAGE_COMPONENTS-1],damage_part_draft;
 static pd_damage_context damage_context,damage_extra_context[PD_DAMAGE_COMPONENTS-1],damage_part_context,source_context_draft;
@@ -842,6 +845,7 @@ static const char *sync_notice="";
 #include "beyond_ui.inc"
 #include "play_setup.inc"
 #include "magic_setup.inc"
+#include "spell_roll_ui.inc"
 static void act(intptr_t action) {
     if(page!=MAGIC_DETAIL&&page!=MAGIC_CONFIRM&&page!=MAGIC_PREPARATION&&page!=MAGIC_TEXT&&page!=MAGIC_MANAGE&&page!=MAGIC_COST_PICKER)attack_cast_power=-1;
     if(action>=2900&&action<2913){input_check_action(action);return;}
@@ -857,6 +861,11 @@ static void act(intptr_t action) {
     }
     if(appearance_editing()&&(action<4301||action>4332))return;
     if(page==AVATAR_EDIT&&appearance_picker&&action!=4309&&action!=4304&&action!=4302&&(action<4323||action>4329))return;
+    if(spell_roll_open()){feedback.active=false;if(action==SR_COMMIT)feedback_capture(&feedback_before);spell_action(action);if(action==SR_COMMIT&&page==DICE)feedback_prepare();pd_screen_activity(&display_screen,lv_tick_get());render();return;}
+    if(page==DICE&&combat_roll==9&&spell_saved&&!dice_animation.active){
+        if(action==SR_RECEIPT){spell_details=false;page=SPELL_RECEIPT;render();return;}
+        if(action==SR_DONE){page=MAGIC_DETAIL;render();return;}
+    }
     if(magic_setup_open()){magic_setup_action(action);render();return;}
     if(action==MP_OPEN&&page==MAGIC_LIST&&!import_pending&&!confirmation_open()&&!dice_animation.active){preparation_begin();render();return;}
     if(action==B_OPEN){beyond_action(action);render();return;}
@@ -1263,7 +1272,7 @@ static void act(intptr_t action) {
         if(state.magic.powers[power_index].effect!=PD_TRUE_STRIKE_2024){profile_setup_begin();}
         else if(can_use_power()){if(state.equipped==PD_NO_WEAPON){picker_return=MAGIC_DETAIL;pending_attack_spell=power_index;picker_page=0;weapon_from_attack=true;page=WEAPON_PICKER;}else attack_start(power_index,false);}
     }
-    else if(action==831&&page==MAGIC_DETAIL&&can_use_power()){cast_details=false;page=MAGIC_CONFIRM;}
+    else if(action==831&&page==MAGIC_DETAIL&&can_use_power()){if(spell_generic())spell_begin();else{cast_details=false;page=MAGIC_CONFIRM;}}
     else if(action==5604&&page==MAGIC_CONFIRM)cast_details=!cast_details;
     else if(action==832&&page==MAGIC_CONFIRM) {
         if(!pd_magic_use(&next,power_index,cast_level,cast_pact))return;
@@ -3237,6 +3246,7 @@ static void render_companion(void){
     if(avatar_sprite&&state.idle_animation)avatar_timer=lv_timer_create(avatar_frame,200,NULL);
     if(feedback.active)feedback_timer=lv_timer_create(feedback_frame,2000-age,NULL);
 }
+#include "spell_roll_views.inc"
 #include "dice_scene.inc"
 static void render_content(void) {
     /* Destroy the LVGL image/cache before freeing its pixel buffer. A root redraw
@@ -3261,6 +3271,7 @@ static void render_content(void) {
     if(!import_pending&&appearance_editing()){render_appearance_editor();return;}
     frame();
     if(rules_picker_open()){render_rules_picker();return;}
+    if(spell_roll_open()){render_spell_roll();return;}
     if(play_editing()){render_play_setup();return;}
     if(page==ASSET_INSTALL){
         label("Look sulla microSD",83,115,300,true);
@@ -3386,7 +3397,7 @@ static void render_content(void) {
     }
 }
 #ifdef PD_UI_TEST
-static bool styled_pages[MAGIC_PREPARE_CONFIRM+1];
+static bool styled_pages[SPELL_RECEIPT+1];
 static void capture_styled_page(unsigned view);
 #endif
 /* Only page lists accept swipes. No gesture can confirm, spend or roll. */

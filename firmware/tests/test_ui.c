@@ -127,7 +127,7 @@ static void bounds(void) {
             if(other==l||(!lv_obj_check_type(other,&lv_label_class)&&!lv_obj_check_type(other,&lv_button_class)))continue;
             lv_area_t b;lv_obj_get_coords(other,&b);
             if(!(a.x2<b.x1||a.x1>b.x2||a.y2<b.y1||a.y1>b.y2)) {
-                fprintf(stderr,"Text overlaps a field/control: %s\n",lv_label_get_text(l));abort();
+                fprintf(stderr,"Text overlaps a field/control page%u: [%s] at %d,%d,%d,%d / %d,%d,%d,%d\n",page,lv_label_get_text(l),a.x1,a.y1,a.x2,a.y2,b.x1,b.y1,b.x2,b.y2);abort();
             }
         }
     }
@@ -264,10 +264,50 @@ static void type_search(const char *text){
         char caption[2]={c,0};click(c==' '?"Spazio":caption);
     }
 }
+static void test_spell_flow(void){
+    /* Explicit spells: generic source, original index119, no imported formula
+       guessed. Costs + self heal commit once; retry keeps all faces frozen. */
+    {
+    pd_demo(&state);state.hp=10;state.max_hp=30;state.temp_hp=7;state.magic=(pd_magic){.available=true,.count=PD_POWERS};
+    for(unsigned i=0;i<PD_POWERS;i++)state.magic.powers[i]=(pd_power){.name="Synthetic generic spell",.flags=PD_PREPARED};
+    state.magic.powers[119]=(pd_power){.name="WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW",.level=1,.ability=5,.flags=PD_PREPARED|PD_USES_SLOT|PD_LIMITED,.maximum=2,.remaining=1};
+    state.abilities[5]=16;state.magic.slots[0]=(pd_slot){2,2};state.magic.pact[1]=(pd_slot){1,1};assert(pd_valid(&state));
+    pd_history_reset(&history,state.history_epoch);history_pending=false;history_pair_pending=history_third_pending=history_fourth_pending=history_fifth_pending=false;undo_available=false;power_paused=power_off_attempted=library_failed=false;fail_save=fail_history=fail_storage_commit=history_quarantined=false;
+    dice_animation.active=false;page=HERO;act(1119);pd_state before=state;unsigned draws=random_calls,writes=save_calls,journals=history_save_calls;
+    click("Lancia");assert(page==SPELL_METHOD&&confirmation_open()&&!stage_import(&before)&&!stage_backup(NULL));bounds();screenshot("spell108-method.ppm");
+    for(unsigned i=0;i<3;i++)shortcut(i);act(100);act(1118);act(2900);assert(page==SPELL_METHOD&&random_calls==draws&&save_calls==writes&&!memcmp(&state,&before,sizeof state));
+    click("Cura me");assert(page==SPELL_FORMULA);click("Dado d6");bounds();screenshot("spell108-dice.ppm");click("d8");click("Dadi +");click("CAR +3");assert(spell_plan.count==2&&spell_plan.sides==8&&spell_plan.bonus==3);bounds();screenshot("spell108-formula.ppm");
+    physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};rules_keyboard=false;probe_key_gesture(1,900);assert(page==SPELL_METHOD);click("Cura me");click("Rivedi");assert(page==SPELL_REVIEW&&spell_plan.count==2);bounds();screenshot("spell108-review.ppm");
+    click("Dettagli");bounds();wrapped_tree_fits(lv_screen_active());click("Riepilogo");click("Modifica");click("Indietro");click("Indietro");assert(page==MAGIC_DETAIL&&random_calls==draws&&save_calls==writes&&history_save_calls==journals&&!memcmp(&state,&before,sizeof state));
+    /* Stale state before entropy rejects the cast and still allows back. */
+    click("Lancia");click("Danni");click("Rivedi");state.hp--;pd_state stale=state;act(SR_COMMIT);assert(page==SPELL_REVIEW&&random_calls==draws&&save_calls==writes&&!memcmp(&state,&stale,sizeof state));click("Modifica");click("Indietro");click("Indietro");state=before;strcpy(state.magic.powers[119].name,"Ristoro di prova");before=state;
+    /* Retry saves the exact first draw; queued commands, shortcuts and imports
+       cannot cancel, reroll, switch source or commit only half the transaction. */
+    render();click("Lancia");screenshot("spell108-method.ppm");click("Cura me");click("Dado d6");click("d8");click("Dadi +");click("CAR +3");screenshot("spell108-formula.ppm");click("Rivedi");screenshot("spell108-review.ppm");random_values[0]=random_values[1]=7;fail_storage_commit=true;click("Tira e salva");
+    assert(page==SPELL_REVIEW&&spell_rolled&&spell_result.total==19&&spell_gained==19&&random_calls==draws+2&&save_calls==writes+1&&!memcmp(&state,&before,sizeof state)&&history_save_calls==journals);pd_pool frozen=spell_result;pd_state frozen_candidate=spell_candidate;bounds();screenshot("spell108-retry.ppm");
+    act(SR_EDIT);act(SR_BACK);act(100);act(832);act(SR_MORE);act(SR_RECEIPT);for(unsigned i=0;i<3;i++)shortcut(i);assert(page==SPELL_REVIEW&&spell_rolled&&!stage_import(&before)&&!stage_backup(NULL)&&random_calls==draws+2&&!memcmp(&state,&before,sizeof state));
+    fail_storage_commit=false;click("Riprova");assert(page==DICE&&combat_roll==9&&dice_animation.active&&!has_roll&&state.hp==29&&state.temp_hp==7&&state.magic.slots[0].current==1&&!state.magic.powers[119].remaining&&random_calls==draws+2&&save_calls==writes+2&&history_save_calls==journals+1&&history.entries[0].kind==PD_H_HEAL&&!memcmp(&spell_result,&frozen,sizeof frozen)&&!memcmp(&state,&frozen_candidate,sizeof state));screenshot("spell108-flight.ppm");
+    act(SR_RECEIPT);act(SR_DONE);act(SR_COMMIT);assert(page==DICE&&dice_animation.active&&random_calls==draws+2);click("Accelera");assert(has_roll&&visible_text(lv_screen_active(),"PF recuperati"));bounds();screenshot("spell108-result.ppm");
+    act(13);assert(random_calls==draws+2);click("Riepilogo");assert(page==SPELL_RECEIPT);bounds();screenshot("spell108-receipt.ppm");click("Dettagli");click("Riepilogo");act(SR_COMMIT);assert(page==SPELL_RECEIPT&&random_calls==draws+2&&save_calls==writes+2);click("Magia");act(100);click("Annulla");assert(!memcmp(&state,&before,sizeof state));
+    /* Ordinary/pact payments stay explicit, and another target's cure never
+       modifies local HP. Failed history retains the original roll separately. */
+    act(1119);click("Slot 1 ordinario >");click("Patto");click("L2: 1/1");assert(cast_level==2&&cast_pact);click("Lancia");click("Cura altri");click("Rivedi");fail_history=true;click("Tira e salva");assert(page==DICE&&history_pending&&state.hp==10&&state.magic.pact[1].current==0&&state.magic.slots[0].current==2&&!state.magic.powers[119].remaining);pd_pool external=spell_result;click("Accelera");click("Magia");draws=random_calls;writes=save_calls;act(1000);click("Lancia");click("Danni");click("Rivedi");act(SR_COMMIT);assert(page==SPELL_REVIEW&&!spell_rolled&&random_calls==draws&&save_calls==writes);click("Modifica");click("Indietro");click("Indietro");act(2600);fail_history=false;act(2603);assert(!history_pending&&history.entries[0].total==external.total);
+    /* Free cantrip damage is a journaled result, no state write and no target
+       damage applied. A canvas allocation failure still reveals the fixed roll. */
+    act(1000);before=state;writes=save_calls;draws=random_calls;click("Lancia");click("Danni");click("Bonus -");click("Bonus -");click("Bonus -");click("Bonus -");click("Bonus -");click("Bonus -");click("Bonus -");click("Rivedi");random_values[0]=random_values[1]=0;fail_canvas=true;click("Tira e salva");fail_canvas=false;
+    assert(page==DICE&&combat_roll==9&&has_roll&&!dice_animation.active&&spell_result.total==0&&history.entries[0].kind==PD_H_DAMAGE&&history.entries[0].floor_zero&&!memcmp(&state,&before,sizeof state)&&save_calls==writes&&random_calls==draws+1);act(13);assert(random_calls==draws+1);click("Magia");
+    /* Cap, no source inference, explicit preparation gates and selection do not
+       draw. The already-supported special profiles cannot use this helper. */
+    state.hp=pd_max_hp(&state);act(1000);click("Lancia");assert(lv_obj_has_state(named_control("Cura me"),LV_STATE_DISABLED));click("Indietro");
+    pd_demo(&state);page=HERO;combat_roll=0;spell_saved=false;render();
+    puts("Explicit spell UI: last source index/long name, formula/dice/ability/local keys, cancel/stale draft, guarded import/backups, frozen save retry, one cost+healing commit/exact undo, pact vs ordinary, other-target no local healing, pending history no new RNG, cantrip no NVS, zero floor, canvas fallback, result/receipt without re-roll passed; synthetic only.");
+    }
+}
 int main(void) {
     lv_init();lv_display_t *d=lv_display_create(466,466);static uint16_t buffer[466*40];
     lv_display_set_buffers(d,buffer,NULL,sizeof buffer,LV_DISPLAY_RENDER_MODE_PARTIAL);lv_display_set_flush_cb(d,paint);
     pd_demo(&state);render();bounds();screenshot("hero.ppm");
+    if(getenv("PD_TEST_SPELL_ONLY")){test_spell_flow();return 0;}
     pd_state animated_before=state;unsigned idle_saves=save_calls,idle_rng=random_calls;
     assert(avatar_timer&&avatar_sprite&&!dice_timer);
     for(int frame=0;frame<16;frame++) {
@@ -522,19 +562,19 @@ int main(void) {
     click("Scudo sintetico");assert(page==MAGIC_DETAIL&&cast_level==1&&!cast_pact);click("Slot 1 ordinario >");assert(page==MAGIC_COST_PICKER);click("Patto");act(MC_LEVEL);assert(page==MAGIC_DETAIL&&cast_level==1&&cast_pact);screenshot("magic-detail.ppm");
     click("Testo");assert(page==MAGIC_TEXT);screenshot("magic-text.ppm");click(">");assert(text_page==1);click("Indietro");
     static pd_state before_magic;before_magic=state;unsigned magic_saves=save_calls;calls=random_calls;
-    click("Lancia");assert(page==MAGIC_CONFIRM&&!memcmp(&state,&before_magic,sizeof state)&&save_calls==magic_saves&&random_calls==calls);screenshot("magic-confirm.ppm");
-    shortcut(0);assert(page==MAGIC_CONFIRM&&!memcmp(&state,&before_magic,sizeof state));click("Indietro");click("Lancia");click("Conferma");
+    click("Lancia");click("Solo costo");assert(page==MAGIC_CONFIRM&&!memcmp(&state,&before_magic,sizeof state)&&save_calls==magic_saves&&random_calls==calls);screenshot("magic-confirm.ppm");
+    shortcut(0);assert(page==MAGIC_CONFIRM&&!memcmp(&state,&before_magic,sizeof state));click("Indietro");click("Lancia");click("Solo costo");click("Conferma");
     assert(page==MAGIC_DETAIL&&state.magic.concentration==2&&!state.magic.pact[0].current&&state.magic.slots[0].current==2&&random_calls==calls);
     click("Elenco");click("Risorse");click("Usi");click("Eroe");click("Annulla");assert(!state.magic.concentration&&state.magic.pact[0].current==1);
-    click("Usi");click("Magie");click("Scudo sintetico");click("Lancia");click("Conferma");click("Elenco");click("Risorse");screenshot("magic-status.ppm");
+    click("Usi");click("Magie");click("Scudo sintetico");click("Lancia");click("Solo costo");click("Conferma");click("Elenco");click("Risorse");screenshot("magic-status.ppm");
     click("Concentrazione: termina");assert(page==MAGIC_STOP);shortcut(0);assert(page==MAGIC_STOP);click("Conferma");assert(!state.magic.concentration);
     click("Slot ordinari / patto");assert(page==MAGIC_SLOTS);screenshot("magic-slots.ppm");unsigned slot_before=state.magic.slots[0].current;click("-1");assert(state.magic.slots[0].current==slot_before-1);click("+1");assert(state.magic.slots[0].current==slot_before);click("Patto");assert(slot_pact);click("-1");assert(!state.magic.pact[0].current);click("+1");assert(state.magic.pact[0].current==1);
-    click("Risorse");click("Elenco");click("Innato sintetico");click("Lancia");click("Conferma");assert(!state.magic.powers[2].remaining);click("Gestisci");click("Utilizzi manuali");screenshot("magic-recovery.ppm");click("+1");assert(state.magic.powers[2].remaining==1);click("Indietro");
+    click("Risorse");click("Elenco");click("Innato sintetico");click("Lancia");click("Solo costo");click("Conferma");assert(!state.magic.powers[2].remaining);click("Gestisci");click("Utilizzi manuali");screenshot("magic-recovery.ppm");click("+1");assert(state.magic.powers[2].remaining==1);click("Indietro");
     click("Elenco");click("Capacita");click("Ira sintetica");click("Usa");click("Conferma");assert(state.combat.raging&&state.training.strength_advantage&&state.magic.powers[3].remaining==1);
     click("Elenco");click("Magie");click("Luce sintetica");before_magic=state;act(831);assert(page==MAGIC_DETAIL&&!memcmp(&state,&before_magic,sizeof state));
     click("Elenco");click("Risorse");click("Ira: termina");click("Conferma");assert(!state.combat.raging&&!state.training.strength_advantage);
-    click("Elenco");click("Luce sintetica");magic_saves=save_calls;click("Lancia");click("Conferma");assert(save_calls==magic_saves); /* A cantrip with no state changes does not wear flash. */
-    click("Elenco");click("Scudo sintetico");click("Lancia");before_magic=state;fail_save=true;click("Conferma");assert(page==MAGIC_CONFIRM&&!memcmp(&state,&before_magic,sizeof state));fail_save=false;click("Indietro");
+    click("Elenco");click("Luce sintetica");magic_saves=save_calls;click("Lancia");click("Solo costo");click("Conferma");assert(save_calls==magic_saves); /* A cantrip with no state changes does not wear flash. */
+    click("Elenco");click("Scudo sintetico");click("Lancia");click("Solo costo");before_magic=state;fail_save=true;click("Conferma");assert(page==MAGIC_CONFIRM&&!memcmp(&state,&before_magic,sizeof state));fail_save=false;click("Indietro");
     click("Elenco");click("Risorse");click("Usi");click("Eroe");click("Aspetto");click("Tasti");assert(page==KEY_SETTINGS);screenshot("keys.ppm");
     click("BOOT breve: Dadi");assert(page==KEY_PICKER&&state.shortcuts[1]==3);click("Zaino");assert(state.shortcuts[1]==4);calls=random_calls;shortcut(1);assert(page==INVENTORY&&random_calls==calls);
     shortcut(0);assert(page==HERO);state.shortcuts[1]=6;act(14);shortcut(1);assert(dice_animation.active);calls=random_calls;shortcut(0);assert(page==DICE&&dice_animation.active);shortcut(1);assert(!dice_animation.active&&random_calls==calls);
@@ -741,7 +781,7 @@ int main(void) {
     pd_hp(&state,17);assert(state.hp==41);act(836);click("Concentrazione: termina");screenshot("link-stop.ppm");effects_before=state;effects_saves=save_calls;shortcut(0);act(100);assert(page==MAGIC_STOP&&save_calls==effects_saves&&!stage_import(&imported_magic));click("Indietro");assert(!memcmp(&state,&effects_before,sizeof state));
     click("Concentrazione: termina");fail_save=true;click("Conferma");assert(page==MAGIC_STOP&&!memcmp(&state,&effects_before,sizeof state));fail_save=false;click("Conferma");assert(page==MAGIC_STATUS&&!state.magic.concentration&&!state.effects[0].active&&!state.effects[0].concentration&&state.hp==32&&pd_max_hp(&state)==32);act(100);click("Annulla");assert(state.hp==41&&state.effects[0].active&&state.effects[0].concentration==1&&state.magic.concentration==1);
     /* Recasting the very same entry ends its old numeric effects. */
-    page=MAGIC_DETAIL;power_index=0;cast_level=0;cast_pact=false;render();click("Lancia");assert(page==MAGIC_CONFIRM);screenshot("link-recast.ppm");act(100);assert(page==MAGIC_CONFIRM);click("Conferma");assert(page==MAGIC_DETAIL&&state.magic.concentration==1&&!state.effects[0].active&&!state.effects[0].concentration&&state.hp==32);act(100);click("Annulla");assert(state.hp==41&&state.effects[0].concentration==1);
+    page=MAGIC_DETAIL;power_index=0;cast_level=0;cast_pact=false;render();click("Lancia");click("Solo costo");assert(page==MAGIC_CONFIRM);screenshot("link-recast.ppm");act(100);assert(page==MAGIC_CONFIRM);click("Conferma");assert(page==MAGIC_DETAIL&&state.magic.concentration==1&&!state.effects[0].active&&!state.effects[0].concentration&&state.hp==32);act(100);click("Annulla");assert(state.hp==41&&state.effects[0].concentration==1);
     /* A failed concentration roll commits the reduced maximum with damage; retry cannot reroll. */
     assert(pd_defence_set(&state,0,true,0));state.temp_hp=10;act(1800);damage_plan.amount=1;render();click("Anteprima");click("Tira COS");random_values[0]=random_values[1]=0;effects_before=state;effects_calls=random_calls;fail_save=true;click("Tira e applica");assert(page==CONCENTRATION_SETUP&&!memcmp(&state,&effects_before,sizeof state)&&hit_candidate.hp==32&&!hit_candidate.effects[0].active&&concentration_damage.ended_effects==1);fail_save=false;click("Riprova");assert(page==DICE&&random_calls==effects_calls+1&&state.hp==32&&state.temp_hp==9&&!state.effects[0].concentration);act(16);click("Riepilogo");screenshot("link-damage.ppm");act(100);click("Annulla");assert(state.hp==41&&state.temp_hp==10&&state.effects[0].active&&state.effects[0].concentration==1);
     /* Long-rest preview ends bindings before healing; signed HP delta is a loss here. */
@@ -764,7 +804,7 @@ int main(void) {
     act(100);click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));state.shortcuts[0]=11;shortcut(0);assert(page==EFFECT_ROUND);click("Conferma");shortcut(0);assert(page==EFFECT_ROUND);click("Difese");screenshot("temporary-expiry.ppm");assert(pd_defence_flags(&scratch,5)==0&&scratch.defences.configured==32);click("Riepilogo");click("Conferma");assert(!state.defences.temporary[5].active&&!state.defences.temporary[5].rounds&&pd_defence_flags(&state,5)==0&&state.defences.configured==32);
     /* Damage snapshot plus a failed CON save commits all bound effects at once. */
     pd_effect renewed=state.effects[0];renewed.active=true;renewed.rounds=3;assert(pd_effect_set(&state,0,renewed));pd_defence_temporary renewed_defence=state.defences.temporary[5];renewed_defence.active=true;renewed_defence.rounds=3;assert(pd_defence_temporary_set(&state,5,renewed_defence));state.hp=41;state.temp_hp=20;act(1800);damage_plan.type=5;damage_plan.amount=25;render();click("Anteprima");screenshot("temporary-damage.ppm");click("Tira COS");effects_before=state;effects_calls=random_calls;random_values[0]=random_values[1]=0;fail_save=true;click("Tira e applica");assert(page==CONCENTRATION_SETUP&&!memcmp(&state,&effects_before,sizeof state)&&concentration_damage.adjusted==12&&concentration_damage.ended_effects==2&&!hit_candidate.defences.temporary[5].active&&hit_candidate.hp==32);fail_save=false;click("Riprova");assert(random_calls==effects_calls+1&&state.temp_hp==8&&state.hp==32&&!state.magic.concentration&&!state.effects[0].active&&!state.defences.temporary[5].active&&!state.defences.temporary[5].concentration&&pd_defence_flags(&state,5)==0);act(16);click("Riepilogo");screenshot("temporary-result.ppm");act(100);click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));
-    act(836);click("Concentrazione: termina");screenshot("temporary-stop.ppm");assert(pd_concentration_effects(&state)==2);click("Indietro");page=MAGIC_DETAIL;power_index=0;render();click("Lancia");click("Conferma");assert(state.magic.concentration==1&&!state.defences.temporary[5].active&&!state.defences.temporary[5].concentration&&!state.effects[0].active);
+    act(836);click("Concentrazione: termina");screenshot("temporary-stop.ppm");assert(pd_concentration_effects(&state)==2);click("Indietro");page=MAGIC_DETAIL;power_index=0;render();click("Lancia");click("Solo costo");click("Conferma");assert(state.magic.concentration==1&&!state.defences.temporary[5].active&&!state.defences.temporary[5].concentration&&!state.effects[0].active);
     /* An additional immunity never silently resolves an unknown base profile. */
     assert(pd_defence_temporary_set(&state,5,(pd_defence_temporary){.flags=4,.active=true,.timed=true,.rounds=1}));edit_defence(5,DEFENCE_LIST);render();click("Configurato: si");click("Anteprima");click("Conferma");assert(!state.defences.configured&&pd_defence_flags(&state,5)==4);act(1800);damage_plan.type=5;render();click("Anteprima");effects_before=state;effects_saves=save_calls;act(1805);assert(page==DAMAGE_CONFIRM&&!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves);screenshot("temporary-unknown.ppm");
     click("Configura difesa");click("A tempo");click("Immunita: si");click("Anteprima");effects_saves=save_calls;act(1817);assert(page==DEFENCE_CONFIRM&&save_calls==effects_saves);screenshot("temporary-invalid.ppm");click("Indietro");assert(page==DEFENCE_TEMPORARY);click("Resistenza: no");click("Durata");click("-1");click("Anteprima");act(1817);assert(page==DEFENCE_CONFIRM&&save_calls==effects_saves);click("Indietro");assert(page==DEFENCE_DURATION);click("+1");click("Anteprima");click("Conferma");assert(pd_defence_flags(&state,5)==1&&!state.defences.configured);
@@ -1597,7 +1637,7 @@ int main(void) {
     click("Preparazione >");fail_save=true;click("Conferma");assert(page==MAGIC_PREPARATION&&preparation_target&&!memcmp(&state,&effects_before,sizeof state));screenshot("prepare-save-error.ppm");fail_save=false;click("Conferma");
     assert(page==MAGIC_MANAGE&&(state.magic.powers[0].flags&PD_PREPARED)&&state.magic.slots[0].current==2&&state.magic.pact[0].current==1&&!state.magic.concentration&&random_calls==effects_calls&&history_save_calls==practical_history);screenshot("prepare-manage-prepared.ppm");
     click("Menu");click("Eroe");click("Annulla");assert(!memcmp(&state,&effects_before,sizeof state));
-    act(1000);click("Gestisci");click("Preparazione >");click("Conferma");click("Indietro");assert(page==MAGIC_DETAIL);screenshot("prepare-ready-to-cast.ppm");click("Lancia");click("Conferma");assert(state.magic.slots[0].current==1&&state.magic.pact[0].current==1&&state.magic.concentration==1);
+    act(1000);click("Gestisci");click("Preparazione >");click("Conferma");click("Indietro");assert(page==MAGIC_DETAIL);screenshot("prepare-ready-to-cast.ppm");click("Lancia");click("Solo costo");click("Conferma");assert(state.magic.slots[0].current==1&&state.magic.pact[0].current==1&&state.magic.concentration==1);
     /* Removing preparation keeps an existing concentration and every binding. */
     state.effect_count=2;state.effects[0]=(pd_effect){.target=PD_EFFECT_MAX_HP,.value=10,.active=true,.concentration=1};state.effects[1]=(pd_effect){.target=PD_EFFECT_ARMOR,.value=2,.active=true,.concentration=1};state.hp=41;
     state.defences.temporary[0]=(pd_defence_temporary){.flags=1,.active=true,.concentration=1};state.reductions[0]=(pd_reduction_profile){.value=3,.types=8191,.active=true,.stage=1,.concentration=1};assert(pd_valid(&state));effects_before=state;
@@ -2185,7 +2225,7 @@ int main(void) {
     fail_canvas=true;act(14);click("Lancia");assert(has_roll&&!dice_animation.active&&!dice_pixels&&visible_text(lv_screen_active(),"Animazione non disponibile"));fail_canvas=false;
     state=original;state.magic.powers[0]=(pd_power){.name="Scudo",.description="Descrizione sintetica consultabile, senza applicazione automatica.",.level=1,.flags=PD_PREPARED|PD_USES_SLOT,.ability=5};page=MAGIC_DETAIL;power_index=0;cast_level=0;render();
     pd_state before_details=state;draws=random_calls;writes=save_calls;lv_obj_update_layout(lv_screen_active());assert(visible_text(lv_screen_active(),"Effetti manuali"));screenshot("ux097-spell.ppm");
-    probe_click(result_touch,220,130);assert(page==MAGIC_TEXT);click("Indietro");assert(page==MAGIC_DETAIL);click("Lancia");assert(page==MAGIC_CONFIRM&&!memcmp(&state,&before_details,sizeof state));click("Indietro");
+    probe_click(result_touch,220,130);assert(page==MAGIC_TEXT);click("Indietro");assert(page==MAGIC_DETAIL);click("Lancia");click("Solo costo");assert(page==MAGIC_CONFIRM&&!memcmp(&state,&before_details,sizeof state));click("Indietro");
     assert(random_calls==draws&&save_calls==writes&&!memcmp(&state,&before_details,sizeof state));
     memset(state.magic.powers[0].name,'W',40);state.magic.powers[0].name[40]=0;render();lv_obj_update_layout(lv_screen_active());wrapped_tree_fits(lv_screen_active());bounds();
     state=original;act(501);screenshot("ux097-item.ppm");memset(state.items[1].name,'W',40);state.items[1].name[40]=0;render();lv_obj_update_layout(lv_screen_active());wrapped_tree_fits(lv_screen_active());bounds();
@@ -2218,7 +2258,7 @@ int main(void) {
     expected=state;assert(pd_rest_apply(&expected,&rest_plan));fail_save=true;click("Conferma");assert(page==REST_PREVIEW&&!memcmp(&state,&before,sizeof state));fail_save=false;click("Conferma");assert(page==REST_HOME&&!memcmp(&state,&expected,sizeof state)&&save_calls==writes+2&&random_calls==draws);
     state=before;act(903);probe_click(tx,233,221);assert(rest_plan.policy==PD_HD_2014);click("Scegli dadi da recuperare");click("+1");click("Indietro");probe_click(tx,233,221);assert(rest_plan.policy==PD_HD_2014&&selected_hit_dice()==1);probe_click(tx,337,221);assert(rest_plan.policy==PD_HD_2024&&!selected_hit_dice());probe_click(tx,129,221);assert(rest_plan.policy==PD_HD_MANUAL&&!selected_hit_dice());click("Indietro");assert(!memcmp(&state,&before,sizeof state));
     /* A spell costs a slot AND a finite use, replaces concentration, caps HP/AC. */
-    state=before;state.magic.slots[0]=(pd_slot){2,2};state.magic.pact[0]=(pd_slot){0,0};act(1001);click("Lancia");assert(page==MAGIC_CONFIRM&&!cast_details);before=state;expected=state;assert(pd_magic_use(&expected,1,1,false));
+    state=before;state.magic.slots[0]=(pd_slot){2,2};state.magic.pact[0]=(pd_slot){0,0};act(1001);click("Lancia");click("Solo costo");assert(page==MAGIC_CONFIRM&&!cast_details);before=state;expected=state;assert(pd_magic_use(&expected,1,1,false));
     writes=save_calls;draws=random_calls;screenshot("ux098-cast.ppm");click("Dettagli");assert(cast_details);bounds();wrapped_fits();assert(visible_text(lv_screen_active(),"CA 18 > 16 | usi 1 > 0"));screenshot("ux098-cast-details.ppm");click("Riepilogo");assert(!cast_details&&!memcmp(&state,&before,sizeof state)&&save_calls==writes&&random_calls==draws);
     for(unsigned i=0;i<3;i++)shortcut(i);act(100);assert(page==MAGIC_CONFIRM&&!stage_import(&before));
     fail_save=true;click("Conferma");assert(page==MAGIC_CONFIRM&&!memcmp(&state,&before,sizeof state));fail_save=false;click("Conferma");assert(page==MAGIC_DETAIL&&!memcmp(&state,&expected,sizeof state)&&save_calls==writes+2&&random_calls==draws&&state.hp==32&&pd_armor(&state)==16&&state.magic.slots[0].current==1&&!state.magic.powers[1].remaining&&state.magic.concentration==2);
@@ -2510,13 +2550,15 @@ int main(void) {
     lv_indev_delete(touch);page=HERO;render();
     puts("Final secondary UX: five distinct metal glyphs, real pointer bounded nine-digit coin draft/cancel, no overflow, all-five preview/max digits, failed-save retry/exact undo, direct step and local back, all shortcut IDs/device return/no lost binding after failure, local settings with PWR disabled, diagnostic pointer-only targets/raw three gestures/no shortcut side effects, direct counter8/duplicate names/no spend until command, explicit picker exit and health keypad back with unchanged history/RNG passed; synthetic LVGL, physical usability still to check.");
     }
+
+    test_spell_flow();
     unsigned covered=0;
-    for(unsigned p=0;p<=MAGIC_PREPARE_CONFIRM;p++){
+    for(unsigned p=0;p<=SPELL_RECEIPT;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)MAGIC_PREPARE_CONFIRM+1);
-    assert(covered==MAGIC_PREPARE_CONFIRM+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)SPELL_RECEIPT+1);
+    assert(covered==SPELL_RECEIPT+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }
