@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **3 novembre 2026 — v0.100**. Il dispositivo è il prodotto;
+Aggiornamento del **4 novembre 2026 — v0.101**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
@@ -19,6 +19,20 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Sesta iterazione UX · v0.101
+
+[Editor di effetti, difese e timer](UX-RPG.md#v0101-editor-di-effetti-difese-e-timer).
+Scelte dirette del bersaglio degli effetti, proprietà delle difese in griglia,
+confronti prima/dopo con dettagli completi conservati. Selettori condivisi per
+sette regole e sei tipi di durata, quantità rapide e regolazioni fini. La stessa
+durata riselezionata conserva quantità e soggetto; un nuovo tipo li reimposta.
+Focus locale PWR/BOOT negli editor e nelle conferme, importazioni protette durante
+le bozze. Nessuna nuova regola meccanica, scadenza in tempo reale o formato.
+
+Le proprietà condizionali e i risultati potenziali sono distinti dai danni
+applicabili al singolo colpo. Il resto dei flussi avanzati e le nuove interazioni
+sull’hardware rimangono da valutare; nessuna nuova lettura reale Beyond.
 
 ## Quinta iterazione UX · v0.100
 

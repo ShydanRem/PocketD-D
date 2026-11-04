@@ -273,3 +273,60 @@ Verifiche v0.100: 357 test JavaScript, suite nativa completa, 153 viste LVGL,
 scenari con puntatore e tasti simulati, ASan/UBSan e compilazione ESP32 passati.
 Il controllo memoria usa il renderer host; non certifica memoria o fluidità
 sull’ESP32. Nessun account o dato reale del personaggio usato in queste prove.
+
+
+## v0.101: editor di effetti, difese e timer
+
+- **Effetti locali:** CA e PF massimi sono due scelte dirette con icona, valore
+  della bozza e confronto con i valori attuali. Riselezionare lo stesso bersaglio
+  conserva il modificatore; cambiare bersaglio lo azzera. L’anteprima e la
+  conferma continuano ad applicare il motore esistente, senza cure anticipate.
+- **Difese:** resistenza, vulnerabilità, immunità e stato della base/extra in una
+  griglia con tre nuovi glifi originali. I flag possono coesistere; non diventano
+  scelte esclusive. Le proprietà condizionali mostrano `Con regola`, non una
+  promessa di dimezzamento o immunità in ogni situazione.
+- **Conferma difese:** quattro confronti prima/dopo per le proprietà potenziali e
+  la verifica della base. `Dettagli` conserva il precedente confronto completo
+  di base, extra selezionato, timer e concentrazione; `Regole` resta disponibile.
+  La base ignota non viene dichiarata normale e la conferma rifiuta dati invalidi.
+- **Regole:** selettore condiviso di tutte le sette condizioni già supportate,
+  tre per pagina. Accessibile dalle difese e dai profili di riduzione. Argento,
+  adamantio, origine magica e natura di attacco mantengono le distinzioni del
+  motore: non si deducono dal nome o dall’icona.
+- **Durate:** scelta diretta fra Manuale, Round, Inizio turno, Fine turno, Minuti
+  e Ore per effetti, difese e profili. Riselezionare lo stesso tipo conserva
+  quantità e soggetto del turno; cambiarlo riparte dai valori iniziali espliciti
+  del tipo e rimuove il soggetto esterno. La concentrazione resta separata.
+- **Valori rapidi:** 1/5/10 round o passaggi, 1/10/60 minuti, 1/8/24 ore. Le
+  regolazioni fini restano disponibili, incluse ore con precisione al minuto.
+  I valori rapidi modificano solo la bozza, anche nel terzo profilo/extra.
+- **Tasti:** PWR seleziona il comando disponibile, BOOT lo attiva e BOOT lungo
+  torna di un livello; le opzioni disabilitate sono saltate. Funziona nei nuovi
+  selettori, negli editor e nelle relative conferme. La prima pressione BOOT
+  attiva il focus, senza salvare. Le assegnazioni personali restano conservate.
+
+Le bozze degli editor non ricevono importazioni USB o nuove associazioni al loro
+posto. Nei selettori sono accettate solo le scelte locali e Indietro; consultarli
+non salva, non lancia dadi e non avvia collegamenti. Le scelte applicate passano
+ancora dall’anteprima e dalla conferma esistenti; una riprova dopo errore non
+aggiunge spese o casualità.
+
+[Quattro viste del renderer nativo](previews/v101-rule-editors.png), con PG,
+input e periferiche sintetici. Scenari nuovi: selezioni dirette e idempotenti,
+conservazione/reset del soggetto del turno, ore con minuti residui, scelte rapide,
+coesistenza di difese condizionali, riepilogo/dettagli senza scritture, fallimento
+salvataggio e riprova, indice originale dell’extra/profilo 3 e navigazione fisica
+locale senza attivare le scorciatoie di gioco.
+
+Questa iterazione non conclude la revisione UX. Restano flussi di danni misti,
+riduzioni e relativi costi, schermate secondarie e messaggi da semplificare;
+servono riscontri sul dispositivo. Timer ancora avanzati da comandi espliciti,
+nessuna scadenza in tempo reale o nuova regola automatica. Formati, PG, backup,
+USB e asset SD compatibili; roadmap funzionale conservata.
+
+
+Verifiche v0.101, 4 novembre 2026: 357 test JavaScript, suite nativa completa,
+153 viste LVGL, nuovi scenari con puntatore e tasti simulati, ASan/UBSan e
+compilazione ESP32 passati. Dati sintetici; nuove interazioni e fluidità da
+valutare sul dispositivo. Nessuna nuova lettura reale Beyond o modifica della
+raccolta personale.
