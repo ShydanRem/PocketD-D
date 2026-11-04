@@ -1,3 +1,8 @@
+> v0.105: la schermata Ponte distingue gli stati del collegamento e i contatori.
+> **Abbina** apre direttamente l'hotspot; in Rete lo stesso comando è **PC / Tel.**.
+> [Percorso attuale](USO-PRATICO.md#rete-e-copie--v0105). Il ponte resta
+> sperimentale: questa revisione UX non aggiunge un collaudo delle scritture Beyond.
+
 > Dalla v0.81 il pacchetto Windows x64 include Node.js. Avvia-Ponte.cmd
 > usa il runtime incluso; non serve installarlo separatamente. Il ponte rimane
 > opzionale e sperimentale. Per il primo utilizzo segui [Inizia qui](INIZIA-QUI.md).

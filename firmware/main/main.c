@@ -213,7 +213,7 @@ static page_t appearance_return;
 static lv_obj_t *appearance_targets[10];
 static unsigned appearance_target_count,appearance_focus;
 static bool appearance_keyboard,appearance_picker;
-static bool wifi_editing(void);
+static bool wifi_editing(void),wifi_local(void);
 static bool play_editing(void);
 static bool appearance_editing(void);
 static bool rules_editing(void),rules_navigating(void),rules_picker_open(void);
@@ -222,6 +222,8 @@ static void rules_preset(unsigned);
 static intptr_t rules_back(void);
 static lv_obj_t *wrapped_name(const char *,int,int,const lv_font_t *);
 static bool impact_menu_allowed(void);
+static void wifi_mark_focus(void);
+static lv_obj_t *wifi_button(const char *,int,int,int,int,int,bool);
 static void impact_open(unsigned),impact_picker_action(intptr_t),render_impact_picker(void);
 static void render_impact_confirm(const pd_damage_event_summary *);
 static unsigned avatar_scale;
@@ -307,6 +309,7 @@ static bool item_rolled;
 static pd_pool item_result;
 static unsigned item_gained;
 static bool wifi_editing(void){return page==WIFI_LIST||page==WIFI_PASSWORD||page==WIFI_JOIN_REVIEW;}
+static bool wifi_local(void){return wifi_editing()||page==WIFI_HOME||page==WIFI_FORGET;}
 static bool appearance_editing(void){return page==AVATAR_EDIT||page==SCENE_EDIT||page==APPEARANCE_CONFIRM;}
 static bool confirmation_open(void){return rules_editing()||magic_setup_open()||beyond_local()||beyond_network_flow()||page==LIBRARY_CONFIRM||play_editing()||wifi_editing()||page==ASSET_INSTALL||page==KEY_PICKER||page==SYNC_REVIEW||page==SYNC_FORGET||page==WIFI_FORGET||page==DEFENCE_SETUP||appearance_editing()||page==ITEM_QUANTITY_CONFIRM||page==MAGIC_PREPARATION||page==ITEM_SEARCH||page==POWER_SEARCH||power_paused||power_off_attempted||page==POWER_OFF||page==NUMBER_ENTRY||page==VITAL_CONFIRM||page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
 static pd_damage_plan damage_plan; /* First component + explicit concentration choice. */
@@ -508,6 +511,8 @@ static bool backup_send(const pd_state *s,const pd_history *h){return pd_ui_back
 static pd_history backup_history;
 static uint32_t backup_started;
 static const char *backup_notice="Richiedi la copia dal PC via USB";
+static bool backup_problem,connection_details;
+static page_t connection_owner=HERO;
 static bool stage_import_from(const pd_state *candidate,bool local);
 static bool stage_backup(const pd_backup *snapshot); /* NULL requests read-only export. */
 
@@ -852,14 +857,14 @@ static void act(intptr_t action) {
     if(page==ITEM_QUANTITY_CONFIRM&&action!=4101&&action!=4102)return;
     if(page==MAGIC_PREPARATION&&action!=4002&&action!=4003)return;
     if((page==ITEM_SEARCH||page==POWER_SEARCH)&&(action<3801||action>3806)&&(action<3900||action>=3900+(intptr_t)sizeof search_keys-1))return;
-    if(beyond_network_flow()&&(action<4501||action>4507)&&(action<5000||action>5226))return;
+    if(beyond_network_flow()&&(action<4501||action>4508)&&(action<5000||action>5226))return;
     if((action==2300||action==2301)&&(import_pending||(confirmation_open()&&!(action==2300&&impact_menu_allowed()))))return;
     if(import_pending&&action!=30&&action!=31)return;
     if(page==NUMBER_ENTRY&&(action<3603||action>3619))return;
     if(page==VITAL_CONFIRM&&action!=3620&&action!=3621)return;
     if(page==ITEM_CONFIRM&&item_rolled&&action!=89)return;
-    if(page==BACKUP_SEND_CONFIRM&&action!=2801&&action!=2802)return;
-    if(page==BACKUP_RESTORE_CONFIRM&&action!=2801&&action!=2803)return;
+    if(page==BACKUP_SEND_CONFIRM&&action!=2801&&action!=2802&&action!=2810)return;
+    if(page==BACKUP_RESTORE_CONFIRM&&action!=2801&&action!=2803&&action!=2810)return;
     if(page==HISTORY_DISCARD&&action!=2607&&action!=2608)return;
     if(page==WALLET_EDIT&&(action<2404||action>2410))return;
     if(page==WALLET_CONFIRM&&action!=2411&&action!=2412&&action!=2409)return;
@@ -936,9 +941,12 @@ static void act(intptr_t action) {
     else if(action==4704&&page==SYNC_FORGET)page=SYNC_HOME;
     else if(action==4705&&page==SYNC_FORGET){if(pd_sync_forget()){sync_notice="";page=SYNC_HOME;}else sync_notice="Rimozione non confermata";}
     else if(action==4706&&page==SYNC_HOME)page=WIFI_HOME;
+    else if(action==4707&&page==SYNC_HOME)connection_details=!connection_details;
+    else if(action==4708&&page==SYNC_HOME){page=WIFI_HOME;connection_details=false;wifi_notice=pd_wifi_command(PD_WIFI_SETUP)?"Richiesta inviata":"Richiesta occupata: riprova";}
+    else if(action==4508&&page==WIFI_HOME)connection_details=!connection_details;
     else if(action==4500&&page==DEVICE_SETTINGS){beyond_wifi_return=false;wifi_notice="";page=WIFI_HOME;}
     else if(action==4501&&page==WIFI_HOME){if(beyond_wifi_return){beyond_wait_clear();page=beyond_return();}else page=DEVICE_SETTINGS;}
-    else if((action==4502||action==4503||action==4504)&&page==WIFI_HOME){if(!pd_wifi_command(action==4502?PD_WIFI_ENABLE:action==4503?PD_WIFI_DISABLE:PD_WIFI_SETUP))wifi_notice="Richiesta occupata: riprova";else wifi_notice="Richiesta inviata";}
+    else if((action==4502||action==4503||action==4504)&&page==WIFI_HOME){if(action==4504)connection_details=false;if(!pd_wifi_command(action==4502?PD_WIFI_ENABLE:action==4503?PD_WIFI_DISABLE:PD_WIFI_SETUP))wifi_notice="Richiesta occupata: riprova";else wifi_notice="Richiesta inviata";}
     else if(action==5000&&page==WIFI_HOME){
         wifi_clear_draft();wifi_keyboard=false;wifi_list_page=0;
         if(pd_wifi_command(PD_WIFI_SCAN)){page=WIFI_LIST;wifi_notice="";}else wifi_notice="Wi-Fi occupato: riprova";
@@ -1066,16 +1074,17 @@ static void act(intptr_t action) {
     else if(action==5304&&page==LIBRARY_CONFIRM){page=LIBRARY_HOME;library_notice[0]=0;library_focus=0;}
     else if(action==5305&&page==LIBRARY_CONFIRM)library_confirm();
     else if(action==2800){page=BACKUP_HOME;}
-    else if(action==2801&&(page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM)){pd_history_store_cancel_restore();page=BACKUP_HOME;backup_notice="Richiesta annullata";reply("PDD CANCELLED backup\n");}
+    else if(action==2810&&(page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM))connection_details=!connection_details;
+    else if(action==2801&&(page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM)){backup_problem=false;pd_history_store_cancel_restore();page=BACKUP_HOME;backup_notice="Richiesta annullata";reply("PDD CANCELLED backup\n");}
     else if(action==2802&&page==BACKUP_SEND_CONFIRM){
-        bool sent=backup_send(&pending,&backup_history);page=BACKUP_HOME;backup_notice=sent?"Copia inviata; verifica sul PC":"Invio fallito; scheda conservata";
+        bool sent=backup_send(&pending,&backup_history);backup_problem=!sent;page=BACKUP_HOME;backup_notice=sent?"Copia inviata; verifica sul PC":"Invio fallito; scheda conservata";
         if(!sent)reply("PDD ERROR backup-send\n");
     }
     else if(action==2803&&page==BACKUP_RESTORE_CONFIRM){
-        if(!library_checkpoint()){backup_notice=library_notice;render();return;}
-        if(!pd_history_store_prepare_restore(&backup_history)){backup_notice="Errore storico: riprova";reply("PDD ERROR backup-history\n");}
-        else if(!pd_storage_save(&pending)){pd_history_store_uncertain_restore();backup_notice="Errore scheda: riavvia";reply("PDD ERROR storage\n");}
-        else {pd_history_store_finish_restore();history=backup_history;adopt_pending_state();history_pending=false;history_pair_pending=history_third_pending=history_fourth_pending=history_fifth_pending=false;backup_notice="Copia ripristinata";reply("PDD RESTORED\n");}
+        if(!library_checkpoint()){backup_problem=true;backup_notice=library_notice;render();return;}
+        if(!pd_history_store_prepare_restore(&backup_history)){backup_problem=true;backup_notice="Errore storico: riprova";reply("PDD ERROR backup-history\n");}
+        else if(!pd_storage_save(&pending)){pd_history_store_uncertain_restore();backup_problem=true;backup_notice="Errore scheda: riavvia";reply("PDD ERROR storage\n");}
+        else {pd_history_store_finish_restore();history=backup_history;adopt_pending_state();history_pending=false;history_pair_pending=history_third_pending=history_fourth_pending=history_fifth_pending=false;backup_problem=false;backup_notice="Copia ripristinata";reply("PDD RESTORED\n");}
     }
     else if(action==2600){if(page!=HISTORY_HOME&&page!=HISTORY_DETAIL)history_return=page;history_page=0;page=HISTORY_HOME;}
     else if(action==2601&&page==HISTORY_HOME&&history_page)history_page--;
@@ -2470,27 +2479,7 @@ static void render_death_damage(void){
     lv_obj_t *verified=button(death_damage_choice.verified?"Base 2014: verificata":"Base 2014: da verificare",83,305,300,44,3003,!problem);lv_obj_set_style_text_font(verified,&lv_font_montserrat_16,0);
     button("Indietro",83,359,144,48,3001,true);button("Conferma",239,359,144,48,3004,r.allowed);
 }
-static void render_backup(void){
-    char text[160];
-    if(page==BACKUP_HOME){
-        label("Backup USB",83,111,300,true);
-        lv_obj_t *notice=small_label(backup_notice,83,164,300,PD_GOLD);lv_label_set_long_mode(notice,LV_LABEL_LONG_WRAP);lv_obj_set_height(notice,40);
-        small_label("Collega il dispositivo al tuo PC.",83,228,300,PD_TEXT);
-        small_label("Richiedi una copia o un ripristino.",83,260,300,PD_TEXT);
-        small_label("Conferma qui prima di procedere.",83,304,300,PD_MUTED);
-        button("Schermo",83,359,300,48,1600,true);return;
-    }
-    bool restoring=page==BACKUP_RESTORE_CONFIRM;
-    label(restoring?"Ripristina copia?":"Invia copia al PC?",83,111,300,true);
-    label(pending.name,83,152,300,false);
-    snprintf(text,sizeof text,"PF %u/%u +%u temp | CA %u",pending.hp,pd_max_hp(&pending),pending.temp_hp,pd_armor(&pending));small_label(text,83,187,300,PD_MINT);
-    snprintf(text,sizeof text,"Zaino %u | magie/usi %u",pending.item_count,pending.magic.count);small_label(text,83,215,300,PD_TEXT);
-    snprintf(text,sizeof text,"Storico %u | monete %s",backup_history.count,pending.wallet.available?"verificate":"non disponibili");small_label(text,83,243,300,PD_GOLD);
-    small_label(restoring?"Sostituisce scheda e storico locali.":"Nessuna modifica sul dispositivo.",83,274,300,PD_TEXT);
-    small_label(restoring?"Ripristina anche tasti e schermo.":"Conserva il file ricevuto sul PC.",83,299,300,PD_MUTED);
-    if(restoring&&strstr(backup_notice,"Errore"))small_label(backup_notice,83,326,300,PD_DANGER);
-    button("Annulla",83,359,144,48,2801,true);button(restoring?"Ripristina":"Invia",239,359,144,48,restoring?2803:2802,true);
-}
+#include "connection_ui.inc"
 static void render_power(void){
     char text[120];bool fresh=pd_power_fresh(&power_info,lv_tick_get()),ready=power_storage_ready(),battery=pd_power_battery_only(&power_info,lv_tick_get());
     if(page==POWER_OFF){
@@ -2520,14 +2509,10 @@ static void render_power(void){
     const char *names[]={"Indietro","Pausa","Spegni"};const unsigned actions[]={1600,3701,3702};
     for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names[i],83+i*104,359,92,48,actions[i],i==0||(ready&&(i==1||battery)));lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
 }
-static void render_sync(void){
- pd_sync_info info;pd_sync_snapshot(&info);char text[120];
- if(page==SYNC_REVIEW){label("Abbina ponte Beyond?",83,111,300,false);snprintf(text,sizeof text,"PG: %s",state.name);small_label(text,83,155,300,PD_TEXT);snprintf(text,sizeof text,"Beyond: %s",info.character_id);small_label(text,83,185,300,PD_GOLD);snprintf(text,sizeof text,"PC: %s",info.host);small_label(text,83,215,300,PD_TEXT);small_label("Confronta inizio SHA256 sul PC:",83,245,300,PD_MUTED);snprintf(text,sizeof text,"%.16s",info.fingerprint);small_label(text,83,271,300,PD_MINT);small_label(info.fingerprint+16,83,297,300,PD_MINT);small_label(sync_notice,83,327,300,PD_GOLD);button("Annulla",83,359,144,48,4701,true);button("Conferma",239,359,144,48,4702,info.offer);return;}
- if(page==SYNC_FORGET){label("Rimuovi chiave locale?",83,111,300,false);small_label("Revoca anche il collegamento sul PC",83,187,300,PD_GOLD);small_label("Eventi gia inviati non si annullano",83,225,300,PD_TEXT);small_label("Scheda e Wi-Fi conservati",83,263,300,PD_MUTED);small_label(sync_notice,83,307,300,PD_GOLD);button("Indietro",83,359,144,48,4704,true);button("Conferma",239,359,144,48,4705,true);return;}
- label("Ponte Beyond",83,111,300,true);const char *states[]={"Non abbinato","Collegamento...","Verifica e avvia dal PC","Ponte pronto","Controlla ponte e rete sul PC","Conflitto: controlla sul PC","Esito incerto: controlla sul PC","PG cambiato: riabbina","Rete non collegata"};small_label(states[info.state<=8?info.state:4],83,163,300,PD_MINT);snprintf(text,sizeof text,"Beyond: %s",info.character_id[0]?info.character_id:"non impostato");small_label(text,83,207,300,PD_TEXT);snprintf(text,sizeof text,"Coda %u | ricevuti %u",info.queued,info.observed);small_label(text,83,247,300,PD_GOLD);small_label("Abbina: Rete > Telefono / PC",83,293,300,PD_MUTED);small_label("Tieni aperti ponte e scheda PC",83,321,300,PD_MUTED);button("Rete",83,359,144,48,4706,true);button("Rimuovi",239,359,144,48,4703,info.configured);
-}
 static void wifi_mark_focus(void){
+    if(!wifi_target_count)return;
     if(wifi_focus>=wifi_target_count)wifi_focus=0;
+    if(wifi_local())for(unsigned i=0;i<wifi_target_count&&lv_obj_has_state(wifi_targets[wifi_focus],LV_STATE_DISABLED);i++)wifi_focus=(wifi_focus+1)%wifi_target_count;
     for(unsigned i=0;i<wifi_target_count;i++){lv_obj_set_style_outline_width(wifi_targets[i],wifi_keyboard&&i==wifi_focus?2:0,0);lv_obj_set_style_outline_pad(wifi_targets[i],2,0);lv_obj_set_style_outline_color(wifi_targets[i],lv_color_hex(PD_GOLD),0);}
 }
 static lv_obj_t *wifi_button(const char *text,int x,int y,int w,int h,int action,bool enabled){
@@ -2570,24 +2555,7 @@ static void render_wifi_direct(void){
 }
 static void render_wifi(void){
     if(wifi_editing()){render_wifi_direct();return;}
-    wifi_target_count=0;pd_wifi_info info;pd_wifi_snapshot(&info);char text[120];
-    if(page==WIFI_FORGET){label("Dimenticare la rete?",83,111,300,false);small_label("Cancella nome rete e password Wi-Fi",83,181,300,PD_TEXT);small_label("Scheda e backup PG conservati",83,225,300,PD_GOLD);wifi_button("Indietro",83,359,144,48,4506,true);wifi_button("Conferma",239,359,144,48,4507,true);wifi_mark_focus();return;}
-    label(info.setup?"Configura Wi-Fi":beyond_waiting?"Wi-Fi per Beyond":"Wi-Fi 2,4 GHz",83,111,300,true);
-    if(info.setup){
-        small_label("1. Collega telefono/PC alla rete:",83,153,300,PD_TEXT);small_label(info.setup_ssid,83,179,300,PD_GOLD);
-        snprintf(text,sizeof text,"Password: %s",info.setup_password);small_label(text,83,207,300,PD_MINT);
-        small_label("2. Apri http://192.168.4.1",83,237,300,PD_TEXT);snprintf(text,sizeof text,"Portale: %u sec | %s",info.setup_seconds,info.setup_saved?"salvato":info.setup_failed?"riprova":info.state==PD_WIFI_CONNECTING?"connessione...":"attesa");small_label(text,83,267,300,PD_MUTED);
-    }else{
-        small_label((const char *const[]){"Spento: gioco offline","Connessione in corso...","Collegato alla rete","Connessione non riuscita"}[info.state<=3?info.state:3],83,155,300,PD_MINT);
-        lv_obj_t *network=small_label(info.ssid[0]?info.ssid:info.configured?"Rete salvata":"Nessuna rete salvata",83,181,300,PD_TEXT);lv_label_set_long_mode(network,LV_LABEL_LONG_DOT);lv_obj_set_height(network,20);
-        snprintf(text,sizeof text,"IP: %s",info.ip[0]?info.ip:"non disponibile");small_label(text,83,203,300,PD_MUTED);
-        lv_obj_t *setup=wifi_button("Cerca reti >",83,251,196,44,5000,!info.joining);lv_obj_set_style_text_font(setup,&lv_font_montserrat_16,0);wifi_button("Ponte",291,251,92,44,4700,!beyond_network_flow());
-        lv_obj_t *hotspot=wifi_button("Configura da telefono / PC",83,301,300,44,4504,!info.joining);lv_obj_set_style_text_font(hotspot,&lv_font_montserrat_16,0);
-    }
-    small_label(info.error==PD_WIFI_ERROR_STORAGE?"Salvataggio rete non confermato":info.error==PD_WIFI_ERROR_UNAVAILABLE?"Wi-Fi non disponibile":info.setup_failed?"Nuova rete non salvata: riprova":info.error==PD_WIFI_ERROR_NETWORK?"Controlla rete 2,4 GHz e password":info.setup_saved&&info.state==PD_WIFI_CONNECTED?"Rete collegata e salvata":wifi_notice,83,info.setup?309:225,300,PD_GOLD);
-    const char *names[]={"Indietro",info.state==PD_WIFI_OFF&&!info.setup?"Accendi":"Spegni","Dimentica"};const unsigned actions[]={4501,info.state==PD_WIFI_OFF&&!info.setup?4502:4503,4505};
-    for(unsigned i=0;i<3;i++){lv_obj_t *b=wifi_button(names[i],83+i*104,359,92,48,actions[i],i==0||i==1?(i==0||info.configured||info.setup):info.configured);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
-    wifi_mark_focus();
+    render_connection_wifi();
 }
 static void render_reference(void){
     unsigned n=reference_count(),pages=(n+2)/3;if(!pages)pages=1;if(reference_page>=pages)reference_page=pages-1;
@@ -3489,6 +3457,7 @@ static void list_swipe(lv_event_t *event){
 }
 static void render(void){
     static int last_page=-1;
+    if(connection_owner!=page){connection_details=false;connection_owner=page;}
     if(rules_panel&&rules_panel_owner!=page)rules_panel=0;
     render_content();
     rules_focus_refresh();
@@ -3538,7 +3507,7 @@ static void shortcut(unsigned gesture) {
 static void screen_service(int pwr,int boot){
     input_check_service();
     bool allowed=pd_screen_keys(&display_screen,pwr,boot,lv_tick_get());
-    bool enabled=allowed&&(!import_pending||import_from_beyond)&&(!confirmation_open()||appearance_editing()||rules_navigating()||magic_setup_open()||wifi_editing()||beyond_network_flow()||play_editing()||attack_preparing()||library_view()||beyond_local());
+    bool enabled=allowed&&(!import_pending||import_from_beyond)&&(!confirmation_open()||appearance_editing()||rules_navigating()||magic_setup_open()||wifi_local()||beyond_network_flow()||play_editing()||attack_preparing()||library_view()||beyond_local());
     unsigned gestures=pd_buttons_sample(&physical_keys,pwr,boot,lv_tick_get(),enabled);
     for(unsigned i=0;i<3;i++)if(gestures&(1u<<i)){
         if(beyond_local()){
@@ -3551,10 +3520,10 @@ static void screen_service(int pwr,int boot){
             if(i==0){if(!library_keyboard){library_keyboard=true;library_focus=0;}else if(library_target_count)library_focus=(library_focus+1)%library_target_count;library_mark_focus();}
             else if(i==1){if(!library_keyboard){library_keyboard=true;library_focus=0;library_mark_focus();}else if(library_focus<library_target_count&&!lv_obj_has_state(library_targets[library_focus],LV_STATE_DISABLED))lv_obj_send_event(library_targets[library_focus],LV_EVENT_CLICKED,NULL);}
             else act(page==LIBRARY_CONFIRM?5304:5301);
-        }else if(magic_setup_open()||wifi_editing()||beyond_network_flow()||play_editing()||attack_preparing()){
+        }else if(magic_setup_open()||wifi_local()||beyond_network_flow()||play_editing()||attack_preparing()){
             if(i==0){if(!wifi_keyboard){wifi_keyboard=true;wifi_focus=0;}else if(wifi_target_count)wifi_focus=(wifi_focus+1)%wifi_target_count;wifi_mark_focus();}
             else if(i==1){if(!wifi_keyboard){wifi_keyboard=true;wifi_focus=0;wifi_mark_focus();}else if(wifi_focus<wifi_target_count&&!lv_obj_has_state(wifi_targets[wifi_focus],LV_STATE_DISABLED))lv_obj_send_event(wifi_targets[wifi_focus],LV_EVENT_CLICKED,NULL);}
-            else act(magic_setup_open()?magic_setup_back():attack_preparing()?4002:play_editing()?6099:page==WIFI_HOME?4501:page==WIFI_FORGET?4506:page==WIFI_LIST?5001:page==WIFI_PASSWORD?5023:5025);
+            else act(magic_setup_open()?magic_setup_back():attack_preparing()?4002:play_editing()?6099:page==WIFI_HOME?(connection_details?4508:4501):page==WIFI_FORGET?4506:page==WIFI_LIST?5001:page==WIFI_PASSWORD?5023:5025);
         }else if(rules_navigating()){
             if(i==0){if(!rules_keyboard){rules_keyboard=true;rules_focus=0;}else if(rules_target_count)rules_focus=(rules_focus+1)%rules_target_count;rules_mark_focus();}
             else if(i==1){if(!rules_keyboard){rules_keyboard=true;rules_focus=0;rules_mark_focus();}else if(rules_focus<rules_target_count&&!lv_obj_has_state(rules_targets[rules_focus],LV_STATE_DISABLED))lv_obj_send_event(rules_targets[rules_focus],LV_EVENT_CLICKED,NULL);}
@@ -3614,14 +3583,14 @@ static bool stage_backup(const pd_backup *snapshot){
     if(dice_animation.active){pd_dice_finish(&dice_animation);has_roll=true;}
     pending=snapshot?snapshot->state:state;backup_history=snapshot?snapshot->history:history;
     if(snapshot){pending.history_epoch=epoch;backup_history.epoch=epoch;}
-    backup_notice=snapshot?"Controlla la copia da ripristinare":"Conferma l'invio al tuo PC";
+    backup_problem=false;backup_notice=snapshot?"Controlla la copia da ripristinare":"Conferma l'invio al tuo PC";
     page=snapshot?BACKUP_RESTORE_CONFIRM:BACKUP_SEND_CONFIRM;pd_screen_activity(&display_screen,lv_tick_get());
     backup_started=lv_tick_get();
     reply(snapshot?"PDD WAIT_RESTORE\n":"PDD WAIT_BACKUP\n");render();return true;
 }
 static void backup_service(void){
     if((page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM)&&(uint32_t)(lv_tick_get()-backup_started)>=120000){
-        pd_history_store_cancel_restore();page=BACKUP_HOME;backup_notice="Richiesta scaduta";reply("PDD CANCELLED timeout\n");render();
+        pd_history_store_cancel_restore();page=BACKUP_HOME;backup_problem=true;backup_notice="Richiesta scaduta";reply("PDD CANCELLED timeout\n");render();
     }
 }
 static bool stage_import_from(const pd_state *candidate,bool local) {

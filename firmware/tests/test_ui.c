@@ -34,11 +34,11 @@ bool pd_board_assets_verify(const char *path,const char *sha){(void)path;(void)s
 void pd_board_assets_activate(void){pd_looks_set_file(getenv("PD_TEST_CLASS_PACK"));}
 static pd_wifi_info wifi_mock;
 static pd_wifi_scan_info scan_mock;static pd_wifi_credentials joined_mock;static bool join_rejected;static unsigned join_calls;
-static unsigned wifi_requested,wifi_command_calls;
+static unsigned wifi_requested,wifi_command_calls;static bool wifi_command_rejected;
 void pd_wifi_boot(void){}
 uint32_t pd_wifi_random(void){return 0;}
 void pd_wifi_snapshot(pd_wifi_info *out){*out=wifi_mock;}
-bool pd_wifi_command(unsigned command){wifi_requested=command;wifi_command_calls++;return true;}
+bool pd_wifi_command(unsigned command){wifi_requested=command;wifi_command_calls++;return !wifi_command_rejected;}
 void pd_wifi_networks(pd_wifi_scan_info *out){*out=scan_mock;}
 bool pd_wifi_join(const pd_wifi_credentials *credentials){if(join_rejected||!pd_wifi_credentials_valid(credentials))return false;joined_mock=*credentials;join_calls++;return true;}
 bool pd_wifi_pause(bool paused){(void)paused;return true;}
@@ -48,7 +48,7 @@ void pd_sync_snapshot(pd_sync_info *out){*out=sync_mock;}
 void pd_sync_observe(const pd_state *s,const pd_history *h,bool durable){(void)s;(void)h;(void)durable;}
 bool pd_sync_pause(bool value){(void)value;return true;}
 bool pd_sync_stage_json(const char *json,size_t size){(void)json;(void)size;return true;}
-bool pd_sync_decide(bool accept,uint32_t epoch){(void)epoch;if(accept&&sync_fail_save)return false;sync_decisions++;sync_mock.offer=false;sync_mock.configured=accept;if(accept)sync_mock.state=PD_SYNC_BASELINE;return true;}
+bool pd_sync_decide(bool accept,uint32_t epoch){(void)epoch;if(accept&&sync_fail_save)return false;sync_decisions++;sync_mock.offer=false;if(accept){sync_mock.configured=true;sync_mock.state=PD_SYNC_BASELINE;}return true;}
 bool pd_sync_forget(void){if(sync_fail_save)return false;sync_mock=(pd_sync_info){0};return true;}
 static bool fail_save,fail_canvas,fail_brightness,fail_storage_commit;
 static unsigned brightness_calls,brightness_last;
@@ -1735,8 +1735,8 @@ int main(void) {
     click("Cerca reti >");click("Rete ospiti");assert(page==WIFI_JOIN_REVIEW&&wifi_draft.open&&!wifi_draft.password[0]&&join_calls==1);bounds();screenshot("wifi-open-review.ppm");click("Indietro");assert(page==WIFI_LIST&&join_calls==1&&!wifi_draft.ssid[0]);
     click("Casa sintetica");for(unsigned i=0;i<64;i++)act(5100+'A');act(5100+'B');assert(strlen(wifi_draft.password)==64&&pd_wifi_credentials_valid(&wifi_draft));bounds();wifi_draft.password[0]='G';render();bounds();act(5024);assert(page==WIFI_PASSWORD&&!pd_wifi_credentials_valid(&wifi_draft));wifi_draft.password[0]='A';render();click("Cancella");assert(strlen(wifi_draft.password)==63);click("Annulla");assert(page==WIFI_LIST&&!wifi_draft.password[0]);click("Indietro");assert(page==WIFI_HOME&&wifi_requested==PD_WIFI_SCAN_CANCEL);
     /* Physical keys focus/activate/back locally instead of invoking configured shortcuts. */
-    click("Cerca reti >");physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};screen_service(0,0);lv_tick_inc(40);screen_service(0,0);screen_service(1,0);lv_tick_inc(40);screen_service(1,0);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);assert(wifi_keyboard&&wifi_focus==0&&page==WIFI_LIST);bounds();
-    for(unsigned k=0;k<2;k++){screen_service(1,0);lv_tick_inc(40);screen_service(1,0);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);}assert(wifi_focus==2);screen_service(0,1);lv_tick_inc(40);screen_service(0,1);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);assert(page==WIFI_PASSWORD);screen_service(0,1);lv_tick_inc(40);screen_service(0,1);lv_tick_inc(801);screen_service(0,1);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);assert(page==WIFI_LIST&&!wifi_draft.password[0]);
+    click("Cerca reti >");physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};screen_service(0,0);lv_tick_inc(40);screen_service(0,0);screen_service(1,0);lv_tick_inc(40);screen_service(1,0);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);assert(wifi_keyboard&&wifi_focus==1&&page==WIFI_LIST);bounds();
+    for(unsigned k=0;k<1;k++){screen_service(1,0);lv_tick_inc(40);screen_service(1,0);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);}assert(wifi_focus==2);screen_service(0,1);lv_tick_inc(40);screen_service(0,1);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);assert(page==WIFI_PASSWORD);screen_service(0,1);lv_tick_inc(40);screen_service(0,1);lv_tick_inc(801);screen_service(0,1);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);assert(page==WIFI_LIST&&!wifi_draft.password[0]);
     click("Hotspot");assert(page==WIFI_HOME&&wifi_requested==PD_WIFI_SETUP);
     assert(!memcmp(&state,&effects_before,sizeof state)&&save_calls==effects_saves&&random_calls==effects_calls);memset(&joined_mock,0,sizeof joined_mock);
     puts("Direct Wi-Fi UI: async scan/list/paging, unsupported/open gates, 95 printable keys, masked/review drafts, 64-byte cap, cancel/retry/one join, protected import/shortcuts, physical focus, >=44 px targets and unchanged PG/RNG/NVS passed; RF not tested.");
@@ -2002,7 +2002,7 @@ int main(void) {
     act(100);act(4700);assert(page==WIFI_HOME&&beyond_waiting);
     physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};wifi_keyboard=false;
     screen_service(0,0);lv_tick_inc(40);screen_service(0,0);screen_service(1,0);lv_tick_inc(40);screen_service(1,0);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);
-    assert(wifi_keyboard&&wifi_focus==0&&page==WIFI_HOME&&!memcmp(keys,state.shortcuts,3));
+    assert(wifi_keyboard&&wifi_focus==0&&page==WIFI_HOME&&!memcmp(keys,state.shortcuts,3));click("Dettagli rete");assert(connection_details&&beyond_waiting);click("Indietro");assert(!connection_details&&beyond_waiting);
     screen_service(0,1);lv_tick_inc(40);screen_service(0,1);lv_tick_inc(801);screen_service(0,1);screen_service(0,0);lv_tick_inc(40);screen_service(0,0);
     assert(page==BEYOND_ACCOUNT&&!beyond_waiting&&!beyond_wifi_return);
     requests=beyond_start_calls;wifi_mock.state=PD_WIFI_CONNECTED;beyond_poll();assert(beyond_start_calls==requests);
@@ -2389,6 +2389,49 @@ int main(void) {
     assert(!memcmp(&state,&before,sizeof state)&&save_calls==writes&&random_calls==draws&&!memcmp(&history,&before_history,sizeof history));
     lv_indev_delete(touch);reference_query[0]=power_query[0]=item_query[0]=0;history_filter=0;page=HERO;render();
     puts("Reference/history UX: literal query/cancel isolation, original-index filters, 20 saved records, frozen 18 dice, full names, five pending components pinned/retry/discard, local keys, readonly menu and unchanged PG/bindings/RNG passed; synthetic LVGL, no hardware claim.");
+    }
+    /* v0.105: connection/backup commands and previews use real production controls. */
+    {
+    pd_demo(&state);state.hp=12;state.temp_hp=4;state.shortcuts[0]=14;state.shortcuts[1]=4;state.shortcuts[2]=13;
+    page=HERO;import_pending=history_pending=history_pair_pending=history_third_pending=history_fourth_pending=history_fifth_pending=history_quarantined=library_failed=smite_rolled=false;
+    fail_save=fail_storage_commit=fail_history=sync_fail_save=fail_backup_send=wifi_command_rejected=false;prepared_ready=false;library_test_root=NULL;beyond_wait_clear();beyond_wifi_return=false;beyond_mock=(pd_beyond_info){0};
+    pd_dice_idle(&dice_animation,1);display_screen=(pd_screen){0};physical_keys=(pd_buttons){0};pd_history_reset(&history,state.history_epoch);persisted_history=history;
+    pd_state before=state;pd_history before_history=history;unsigned writes=save_calls,draws=random_calls,journal_writes=history_save_calls,commands=wifi_command_calls,decisions=sync_decisions;
+    wifi_mock=(pd_wifi_info){.state=PD_WIFI_CONNECTED,.configured=true,.radio_active=true,.ssid="Rete sintetica",.ip="192.168.100.255"};sync_mock=(pd_sync_info){0};wifi_notice="";
+    act(1600);click("Wi-Fi >");screenshot("ux105-network.ppm");assert(!confirmation_open()&&wifi_target_count==7);
+    lv_indev_t *touch=lv_indev_create();lv_indev_set_type(touch,LV_INDEV_TYPE_POINTER);lv_indev_set_read_cb(touch,probe_touch);
+    probe_click(touch,230,195);assert(page==WIFI_HOME&&connection_details);assert(visible_text(lv_screen_active(),"IP: 192.168.100.255"));screenshot("ux105-network-details.ppm");
+    memset(wifi_mock.ssid,'W',32);wifi_mock.ssid[32]=0;render();bounds();wrapped_tree_fits(lv_screen_active());probe_key_gesture(1,900);assert(page==WIFI_HOME&&!connection_details);assert(!memcmp(&state,&before,sizeof state)&&wifi_command_calls==commands);
+    wifi_mock.setup_saved=true;wifi_notice="Provo la rete: attendi l IP";render();assert(visible_text(lv_screen_active(),"Rete collegata e salvata")&&!visible_text(lv_screen_active(),wifi_notice));
+    wifi_mock.error=PD_WIFI_ERROR_STORAGE;render();assert(visible_text(lv_screen_active(),"Salvataggio rete non confermato"));screenshot("ux105-network-error.ppm");wifi_mock.error=0;wifi_mock.setup_saved=false;wifi_notice="";
+    wifi_mock.suspended=true;render();assert(visible_text(lv_screen_active(),"Wi-Fi in pausa"));wifi_mock.suspended=false;
+    click("Dimentica");assert(page==WIFI_FORGET&&confirmation_open());physical_keys=(pd_buttons){0};wifi_keyboard=false;probe_key_gesture(1,100);assert(wifi_keyboard&&page==WIFI_FORGET);probe_key_gesture(1,900);assert(page==WIFI_HOME&&wifi_command_calls==commands);
+    /* Home focus opens network details rather than a configured game shortcut. */
+    physical_keys=(pd_buttons){0};wifi_keyboard=false;probe_key_gesture(1,100);assert(wifi_keyboard&&wifi_focus==0);probe_key_gesture(1,100);assert(connection_details&&page==WIFI_HOME);probe_key_gesture(1,900);probe_key_gesture(1,900);assert(page==DEVICE_SETTINGS&&!memcmp(&state,&before,sizeof state));
+    act(4500);click("Ponte");assert(page==SYNC_HOME&&!confirmation_open());screenshot("ux105-bridge-off.ppm");click("Dettagli ponte");assert(connection_details);click("Indietro");wifi_command_rejected=true;click("Abbina");assert(page==WIFI_HOME&&wifi_command_calls==commands+1&&wifi_requested==PD_WIFI_SETUP&&!strcmp(wifi_notice,"Richiesta occupata: riprova"));wifi_command_rejected=false;
+    click("Ponte");click("Abbina");assert(page==WIFI_HOME&&wifi_command_calls==commands+2&&!connection_details);wifi_mock=(pd_wifi_info){.setup=true,.setup_seconds=120,.setup_ssid="PocketDD-SYNTHETIC",.setup_password="SYNTHETIC-ONLY"};render();screenshot("ux105-hotspot.ppm");assert(visible_text(lv_screen_active(),"http://192.168.4.1"));
+    /* All worker statuses keep their distinct actionable meaning; counts are
+       observations reported by the bridge, not proof of a Beyond write. */
+    wifi_mock=(pd_wifi_info){.state=PD_WIFI_CONNECTED,.configured=true,.radio_active=true,.ssid="Rete sintetica",.ip="192.168.1.23"};act(4700);
+    for(unsigned status=PD_SYNC_OFF;status<=PD_SYNC_WAIT_NETWORK;status++){sync_mock=(pd_sync_info){.state=status,.configured=status!=PD_SYNC_OFF,.queued=256,.observed=123,.character_id="123456789012345",.host="192.168.100.255"};render();bounds();wrapped_tree_fits(lv_screen_active());assert(visible_text(lv_screen_active(),connection_sync_hint(status)));}
+    sync_mock.state=PD_SYNC_UNCERTAIN;render();screenshot("ux105-bridge-uncertain.ppm");click("Dettagli ponte");assert(connection_details);wrapped_tree_fits(lv_screen_active());screenshot("ux105-bridge-details.ppm");probe_key_gesture(1,900);assert(page==SYNC_HOME&&!connection_details);click("Rimuovi");assert(page==SYNC_FORGET);sync_fail_save=true;click("Conferma");assert(page==SYNC_FORGET&&sync_mock.configured);wrapped_tree_fits(lv_screen_active());sync_fail_save=false;probe_key_gesture(1,900);assert(page==SYNC_HOME&&sync_mock.configured);
+    sync_mock.offer=true;strcpy(sync_mock.fingerprint,"0123456789abcdef0123456789abcdef");memset(state.name,'W',PD_NAME_BYTES-1);state.name[PD_NAME_BYTES-1]=0;before=state;page=SYNC_REVIEW;render();wrapped_tree_fits(lv_screen_active());screenshot("ux105-pair-wide.ppm");physical_keys=(pd_buttons){0};rules_keyboard=false;probe_key_gesture(1,100);assert(rules_keyboard&&page==SYNC_REVIEW);probe_key_gesture(1,900);assert(page==SYNC_HOME&&!sync_mock.offer&&sync_decisions==decisions+1&&!memcmp(&state,&before,sizeof state));
+    assert(save_calls==writes&&history_save_calls==journal_writes&&random_calls==draws&&!memcmp(&history,&before_history,sizeof history));
+    strcpy(state.name,"Elian");before=state;
+    /* Full backup content and before/after values are read-only, with cancel
+       and a frozen timeout even when opening/closing details. */
+    page=HERO;render();act(1600);click("Backup");screenshot("ux105-backup-home.ppm");assert(!confirmation_open());assert(stage_backup(NULL));uint32_t started=backup_started;
+    screenshot("ux105-backup-send.ppm");click("Dettagli");assert(connection_details&&backup_started==started);wrapped_tree_fits(lv_screen_active());bounds();screenshot("ux105-backup-details.ppm");
+    physical_keys=(pd_buttons){0};rules_keyboard=false;probe_key_gesture(1,100);assert(rules_keyboard&&page==BACKUP_SEND_CONFIRM);probe_key_gesture(1,900);assert(page==BACKUP_SEND_CONFIRM&&!connection_details);probe_key_gesture(1,900);assert(page==BACKUP_HOME&&!memcmp(&state,&before,sizeof state));
+    static pd_backup copy;pd_demo(&copy.state);memset(copy.state.name,'W',PD_NAME_BYTES-1);copy.state.name[PD_NAME_BYTES-1]=0;copy.state.hp=7;copy.state.temp_hp=2;copy.state.armor=14;copy.state.brightness=80;copy.state.shortcuts[0]=7;copy.state.history_epoch=444;
+    copy.state.effect_count=1;copy.state.effects[0]=(pd_effect){.target=PD_EFFECT_MAX_HP,.value=-8,.active=true};pd_history_reset(&copy.history,444);assert(pd_valid(&copy.state));pd_history_entry entry={.kind=PD_H_FREE,.count=1,.sides=20,.dice={19},.total=19,.label="Tiro sintetico"};assert(pd_history_append(&copy.history,&entry));
+    assert(stage_backup(&copy));assert(pd_max_hp(&pending)==24);wrapped_tree_fits(lv_screen_active());screenshot("ux105-restore-wide.ppm");click("Annulla");strcpy(copy.state.name,"Mira");assert(stage_backup(&copy));started=backup_started;wrapped_tree_fits(lv_screen_active());screenshot("ux105-restore.ppm");
+    probe_click(touch,231,383);assert(connection_details&&page==BACKUP_RESTORE_CONFIRM&&backup_started==started);wrapped_tree_fits(lv_screen_active());screenshot("ux105-restore-details.ppm");click("Riepilogo");assert(!memcmp(&state,&before,sizeof state)&&save_calls==writes&&history_save_calls==journal_writes&&random_calls==draws);
+    fail_history=true;click("Ripristina");assert(page==BACKUP_RESTORE_CONFIRM&&backup_problem&&visible_text(lv_screen_active(),"Errore storico: riprova")&&!memcmp(&state,&before,sizeof state));fail_history=false;click("Dettagli");wrapped_tree_fits(lv_screen_active());click("Riepilogo");click("Annulla");assert(!backup_problem&&save_calls==writes&&!memcmp(&history,&before_history,sizeof history));
+    assert(stage_backup(&copy));click("Ripristina");assert(page==HERO&&state.hp==7&&state.temp_hp==2&&pd_max_hp(&state)==24&&pd_armor(&state)==14&&state.shortcuts[0]==7&&state.brightness==80&&history.count==1&&save_calls==writes+1&&random_calls==draws);assert(wifi_mock.configured&&sync_mock.configured);
+    before=state;before_history=history;writes=save_calls;journal_writes=history_save_calls;assert(stage_backup(NULL));started=backup_started;click("Dettagli");lv_tick_inc(120000-(uint32_t)(lv_tick_get()-started));backup_service();assert(page==BACKUP_HOME&&backup_problem&&!connection_details&&!strcmp(backup_notice,"Richiesta scaduta")&&save_calls==writes&&history_save_calls==journal_writes&&!memcmp(&state,&before,sizeof state)&&!memcmp(&history,&before_history,sizeof history));
+    lv_indev_delete(touch);page=HERO;render();
+    puts("Connection/backup UX: real pointer network details/full SSID/IP, Wi-Fi home/forget local keys, disabled focus, direct bridge hotspot/busy result, nine distinct worker states, observed counters, readonly fingerprint/cancel, full names, four restore deltas, details without writes/RNG, failed history retry/cancel, exact native restore and unchanged timeout/settings/network associations passed; synthetic LVGL, no physical RF/USB or Beyond write claim.");
     }
     unsigned covered=0;
     for(unsigned p=0;p<=MAGIC_PREPARE_CONFIRM;p++){

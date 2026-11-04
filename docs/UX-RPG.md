@@ -495,3 +495,66 @@ con cinque parti, rinuncia senza annullamento e assenza di scritture alla scheda
 o nuovi numeri casuali durante la consultazione. Le immagini sono catture del
 renderer reale con dati sintetici. Nessuna nuova prova fisica USB/Wi-Fi, lettura
 reale Beyond o modifica della raccolta personale.
+
+
+## v0.105: rete, ponte e backup
+
+- **Rete:** accessi diretti a Cerca reti, PC / Tel. e ponte Beyond. La scheda
+  centrale mostra lo stato Wi-Fi reale; toccandola si aprono nome completo,
+  IP, presenza di una rete in memoria e stato della radio. I messaggi di errore
+  restano visibili. La conferma «Rete collegata e salvata» proviene dal risultato
+  del servizio, senza restare bloccata sul vecchio messaggio di connessione.
+- **Hotspot:** nome della rete Pocket, password temporanea e indirizzo del
+  portale nello stesso percorso. L'apertura del portale è una richiesta: la UI
+  lo mostra soltanto quando il servizio ne conferma l'attivazione. Da Ponte →
+  Abbina si richiede direttamente questo percorso, senza tornare alla rete.
+  Una richiesta rifiutata mostra il problema, senza simulare un abbinamento.
+- **Ponte PC:** nove stati distinti con un'indicazione pertinente; conflitto,
+  mancata connessione ed esito incerto mantengono significati diversi. In coda
+  e Osservati sono contatori restituiti dal ponte; non sono una nuova garanzia
+  che Beyond abbia ricevuto un aggiornamento. Dettagli contiene ID Beyond e
+  indirizzo del PC. Il ponte resta sperimentale e richiede PC e pagina aperti.
+- **Abbinamento:** nome completo del PG e tutte le prime trentadue cifre
+  dell'impronta da confrontare sul PC prima della conferma. La richiesta
+  assente disabilita Conferma; un errore di salvataggio rimane visibile.
+  Scollega chiarisce che rimuove la chiave locale, preserva scheda e rete e
+  non annulla eventi già inviati. La revoca sul PC resta un'azione separata.
+- **Backup USB:** richiesta dal PC, anteprima sul Pocket e conferma esplicita.
+  L'invio mostra PF, CA, temporanei e numero di tiri. Il ripristino confronta
+  PF, massimi, temporanei e CA prima/dopo. Dettagli distingue dati non importati
+  da quantità zero, mostra oggetti, magie/usi e storico e chiarisce il perimetro
+  della copia. Nome completo fino a quarantotto caratteri anche nel confronto.
+- **Ambito del ripristino:** sostituisce scheda attiva e registro; aspetto,
+  tasti e schermo vengono dalla copia. Gli altri PG su SD sono conservati;
+  la rete e le associazioni restano quelle del dispositivo. Il motore esistente
+  archivia la scheda corrente su SD prima della sostituzione, quando presente;
+  un errore interrompe il percorso. Senza SD resta il flusso a scheda singola.
+  Credenziali Wi-Fi e Beyond non entrano nella copia del personaggio.
+- **Durata ed errori:** aprire Dettagli non rinnova i due minuti della richiesta
+  USB. Annullamento e scadenza conservano scheda e registro. Una scrittura non
+  confermata resta un errore, distinto dall'invio USB riuscito; dopo l'invio
+  occorre comunque conservare e verificare il file sul PC.
+- **Tasti e icone:** navigazione locale PWR/BOOT anche in rete, rimozione rete,
+  ponte e backup. Nel Wi-Fi il focus salta i controlli disabilitati. BOOT lungo
+  chiude prima i dettagli e poi torna indietro; l'anteprima resta protetta.
+  Le assegnazioni personali sono conservate durante consultazione e annullamento.
+  Glifi originali per PC e collegamento, USB nel catalogo condiviso; look SD
+  esistenti compatibili, senza nuovi file da installare sulla scheda.
+
+[Quattro viste native](previews/v105-connections-backup.png), con personaggi,
+input e periferiche sintetici. Il riordino della rete non verifica un accesso
+Beyond né completa la sincronizzazione in tempo reale. Protocolli, persistenza,
+politica di connessione e conferme di scrittura restano quelli esistenti.
+La revisione prosegue con importazione/collegamento account, primi passi e
+altre viste meno frequenti. La roadmap funzionale rimane in STATO-SOFTWARE.md.
+
+
+Verifiche v0.105, 4 novembre 2026: 357 test JavaScript, suite nativa completa,
+153 viste LVGL, ASan/UBSan e compilazione ESP32 passati. Scenari nuovi con
+puntatore e tasti: SSID completo/IP, rete in pausa, successo e errore del
+salvataggio, rete durante il rientro Beyond, apertura hotspot e comando occupato,
+nove stati del ponte, impronta e annullamento con vecchio abbinamento conservato,
+nome massimo, quattro confronti del ripristino, dettagli senza scritture o RNG,
+fallimento storico, ripristino esatto e scadenza invariata. Wi-Fi, USB e NVS
+usano doppi di prova; SD/codec sono verificati anche nelle suite esistenti.
+Nessuna nuova lettura reale Beyond, scrittura sull'account o prova fisica.

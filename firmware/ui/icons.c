@@ -5,7 +5,7 @@
 #include "companion/companion_assets.h"
 #include "control_icons.inc"
 const lv_image_dsc_t *pd_ui_icon(pd_ui_icon_id id){
- static const lv_image_dsc_t *const icons[]={&menu,&back,&next,&search,&ready,&pouch,&undo,&theme_sword,&theme_dice,&theme_magic,&theme_pack,&theme_rest,&theme_sheet,&theme_heart,&theme_shield,&theme_crystal,&theme_gear,&theme_hero,&wear,&wireless,&keys,&energy,&resist,&weak,&immune,&silver,&adamantine,&reaction,&start_turn,&end_turn,&subjects,&movement,&senses,&languages};
+ static const lv_image_dsc_t *const icons[]={&menu,&back,&next,&search,&ready,&pouch,&undo,&theme_sword,&theme_dice,&theme_magic,&theme_pack,&theme_rest,&theme_sheet,&theme_heart,&theme_shield,&theme_crystal,&theme_gear,&theme_hero,&wear,&wireless,&keys,&energy,&resist,&weak,&immune,&silver,&adamantine,&reaction,&start_turn,&end_turn,&subjects,&movement,&senses,&languages,&theme_usb,&bridge_link,&desktop};
  return (unsigned)id<PD_UI_COUNT?icons[id]:NULL;
 }
 const lv_image_dsc_t *pd_ui_menu_icon(pd_ui_icon_id id){
