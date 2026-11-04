@@ -627,3 +627,57 @@ bloccata, HTTP assente non ereditato, sei caratteristiche esatte, nome massimo,
 nota da 160 byte larghi, controlli disabilitati saltati, ulteriori note dichiarate
 e una sola conferma d'importazione con preferenze conservate. Nessun nuovo
 collaudo fisico, accesso Beyond reale o modifica della raccolta personale.
+
+
+## v0.107: rifinitura finale e verifica d'insieme
+
+Il giro software concordato è chiuso con l'[elenco dei difetti e la checklist
+fisica](RESTYLE-CHECK.md). Lo stile resta quello approvato: non si introduce
+un'altra direzione visiva.
+
+- **Borsello:** cinque glifi per i metalli, saldo digitabile con tastierino
+  coerente con gli altri inserimenti e nove passi selezionabili direttamente.
+  Il numero resta in bozza fino alla conferma del borsello. La prima cifra
+  sostituisce il valore proposto; il limite di 999999999 è protetto anche da
+  eventi tardivi. Annullare il numero non modifica neppure la bozza del taglio.
+- **Confronto:** cinque righe con icona e valori prima/dopo, comprese tutte le
+  nove cifre. Saldo ignoto e zero verificato rimangono distinti; nessun cambio
+  automatico. Salvataggio, errore/riprova, rifiuto dell'origine cambiata e undo
+  restano quelli del motore esistente, senza alterare gli altri campi del PG.
+- **Tasti:** icone condivise, comando attuale riconoscibile e paginazione
+  uniforme. Indietro e BOOT lungo tornano al chiamante. I menu restano operabili
+  con i tasti anche assegnando Spento a PWR breve; le assegnazioni di gioco non
+  vengono cambiate dalla navigazione. Selezionare un comando salva come prima.
+- **Collaudo:** accessi visivi a touch e tasti, progressi osservati e valori
+  non disponibili distinti da zero. Nel test touch la navigazione fisica opera
+  solo sui due comandi di fondo, senza registrare bersagli. Nel test tasti i
+  gesti rimangono dedicati alla misura: uscita col tocco o alla scadenza.
+  La quarantena dei gesti tenuti premuti e il limite di due minuti restano attivi.
+- **Contatori:** scelta diretta fra gli otto indici originali, anche con nomi
+  duplicati; quantità e ordine visibili. La scelta non consuma risorse. Nome
+  completo nel dettaglio del contatore; modifiche solo con i comandi espliciti.
+- **Inserimenti e titoli:** navigazione locale anche nei tastierini esistenti;
+  BOOT lungo annulla la bozza. Il titolo comune adatta il font per rimanere
+  completo nel suo spazio, senza abbreviare intestazioni come Compagno.
+
+[Quattro viste native](previews/v107-restyle-finish.png), con dati sintetici.
+La revisione d'insieme comprende 153 prime catture per ID pagina e scenari
+aggiuntivi con puntatore/tasti. Le tavole di revisione e il manifesto con nomi
+e SHA256 si generano con scripts/preview-restyle-finish.py fuori dallo ZIP PC.
+Dopo il commit il manifesto registra anche il commit sorgente e la pulizia del
+repository. Questa evidenza non certifica usabilità fisica o gradimento estetico.
+Nessun nuovo formato persistente, asset SD necessario o automatismo di regole.
+La roadmap funzionale resta separata dalla chiusura del giro grafico.
+
+
+Verifiche v0.107, 4 novembre 2026: 357 test JavaScript, suite nativa completa,
+153 viste LVGL e nuovi scenari, ASan/UBSan e compilazione ESP32 passati. Dopo
+la correzione comune dei titoli sono stati rieseguiti GUI completa, sanitizzatori
+e build ESP32. Verificati saldo a nove cifre e overflow rifiutato, annullamento
+della sola digitazione, massimo visibile in tutti i tagli, errore/riprova/undo,
+passi diretti, chiamante dei tasti, assegnazione non persa dopo errore, navigazione
+con PWR di gioco disattivato, bersagli solo pointer, tre gesti misurati senza
+scorciatoie, contatore 8 con nomi duplicati e tastierino PF senza cura prima
+della conferma. I byte dei glifi preesistenti restano identici. Sono stati
+confrontati scheda, altri saldi, storico, chiamate di salvataggio e casualità.
+Catture e periferiche sintetiche; verifica fisica e approvazione estetica pendenti.

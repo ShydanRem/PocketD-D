@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **4 novembre 2026 — v0.106**. Il dispositivo è il prodotto;
+Aggiornamento del **4 novembre 2026 — v0.107**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
@@ -19,6 +19,17 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Chiusura del giro software di restyle · v0.107
+
+[Resoconto e checklist](RESTYLE-CHECK.md). Chiuso l'elenco di rifiniture concordato:
+borsello, tasti, collaudo, contatori, tastierini e intestazioni lunghe. Revisione
+delle 153 prime viste native e dei percorsi interattivi, con dati sintetici.
+Lo stile resta quello approvato. La chiusura software non certifica il risultato
+estetico per l'utente né la comodità reale di touch/tasti: rimane la checklist
+sul Pocket. Non è aperta una nuova scaletta di varianti grafiche; eventuali
+correzioni successive partiranno dai difetti osservati. La roadmap funzionale
+D&D/Beyond e i collaudi di alimentazione/rete rimangono quelli sotto elencati.
 
 ## Undicesima iterazione UX · v0.106
 
