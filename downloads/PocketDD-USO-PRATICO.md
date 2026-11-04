@@ -387,3 +387,10 @@ N.d. significa lettura non disponibile. Durante Prova tasti BOOT lungo viene
 misurato: per uscire tocca Indietro oppure attendi due minuti. Durante Prova tocco
 i tasti possono usare Azzera/Indietro, senza simulare alcun bersaglio.
 [Checklist finale sull'hardware](RESTYLE-CHECK.md#checklist-sul-pocket).
+
+## Magie con tiro · v0.108
+
+Magie → scegli → Lancia → Danni/Cura me/Cura altri → formula → Rivedi → Tira e salva.
+Solo costo conserva il percorso manuale. Formula ed aumenti con slot vanno
+verificati; non sono dedotti dal testo. Riprova non cambia i dadi, Riepilogo non
+consuma di nuovo. [Guida e limiti](MAGIE-TIRI.md).

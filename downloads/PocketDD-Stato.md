@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **4 novembre 2026 — v0.107**. Il dispositivo è il prodotto;
+Aggiornamento del **4 novembre 2026 — v0.108**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
@@ -19,6 +19,20 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Ripresa funzionale · v0.108
+
+[Magie: costo e tiro insieme](MAGIE-TIRI.md). Le magie generiche hanno ora un
+percorso assistito sul dispositivo: Solo costo, Danni, Cura me o Cura altri;
+formula esplicita per questo lancio, scelta del dado e bonus caratteristica,
+anteprima, costo e cura personale atomici, dadi animati e ricevuta consultabile.
+Errore/riprova conserva il tiro; un trucchetto senza modifiche non riscrive NVS.
+
+È il primo passo del blocco magie/effetti, non una conversione automatica delle
+formule: edizione, aumento con slot, TS, critici, più componenti, effetti e
+bersagli restano da verificare. La formula non è un profilo persistente. True
+Strike e gli altri profili speciali mantengono i propri percorsi. Nessun nuovo
+formato PG/USB/backup o asset SD; nessuna nuova prova reale Beyond o hardware.
 
 ## Chiusura del giro software di restyle · v0.107
 
@@ -685,7 +699,8 @@ sono distinte da quelle nuove ancora verificate solo tramite software.
 
 ## Prossimi blocchi software, oltre alle prove hardware
 
-1. **Magie ed effetti:** profili espliciti per cure e danni degli incantesimi,
+1. **Magie ed effetti:** la v0.108 aggiunge tiro/costo/cura assistiti con formula
+   manuale per lancio. Restano profili persistenti e riconoscimento delle formule,
    condizioni, durate e proprietà concesse dagli oggetti. Un testo importato non
    equivale a un effetto eseguibile. Restano requisiti/limiti di preparazione.
 2. **Combattimento e dotazioni:** impugnature versatili/due mani, interazione con
