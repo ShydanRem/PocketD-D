@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **4 novembre 2026 — v0.102**. Il dispositivo è il prodotto;
+Aggiornamento del **4 novembre 2026 — v0.103**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
@@ -19,6 +19,17 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Ottava iterazione UX · v0.103
+
+[Turni, tempo e riferimenti](UX-RPG.md#v0103-turni-tempo-e-riferimenti).
+Reazione e azioni del proprio turno in griglia; A/B/C con nome leggibile e timer
+pertinenti a inizio/fine. Quantità rapide per il tempo dichiarato, confronti di
+CA/PF/reazione e scadenze con ore/minuti corretti. Focus locale anche nel
+tastierino dei nomi, compresi tutti i comandi di fondo. Nessun recupero da un
+riposo implicito: round, turni e tempo mantengono percorsi e conferme distinti.
+Consultazione, storico e messaggi secondari seguono nella stessa revisione;
+restano distinti riscontro hardware e letture reali Beyond.
 
 ## Settima iterazione UX · v0.102
 

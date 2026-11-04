@@ -1,5 +1,7 @@
 # PocketD-D — uso pratico sul dispositivo
 
+> v0.103: [turni, tempo e riferimenti](UX-RPG.md#v0103-turni-tempo-e-riferimenti).
+>
 > v0.102: [danni misti, riduzioni e spese](UX-RPG.md#v0102-danni-misti-riduzioni-e-spese).
 >
 > v0.101: [editor di effetti, difese e timer](UX-RPG.md#v0101-editor-di-effetti-difese-e-timer).
@@ -254,3 +256,24 @@ le proprie conferme.
 
 PWR sceglie, BOOT attiva, BOOT lungo torna indietro nei nuovi percorsi. Le
 scorciatoie di gioco e le importazioni non sostituiscono la bozza in corso.
+
+
+## Turni e tempo · v0.103
+
+`Stato > Reazione` apre quattro azioni: annotare una reazione, iniziare o finire
+il proprio turno, aprire A/B/C. La reazione torna disponibile all’inizio del
+proprio turno; gli altri turni non la ripristinano. Anteprima e conferma mostrano
+cosa cambia prima di salvare.
+
+In `Altri` scegli A/B/C. Tocca il nome per personalizzarlo, poi scegli Inizio o
+Fine: il numero sul comando indica quanti timer avanzerebbero. Il nome non cambia
+il riferimento dei timer già assegnati e non importa un altro PG.
+
+`Stato > Tempo` propone 1/10 minuti e 1/4/8/24 ore. Puoi rifinire i minuti prima
+di `Anteprima > Conferma`. La schermata confronta CA, PF e reazione; `Scadenze`
+mostra le fonti e i residui. Avanzare il tempo non recupera risorse, non equivale
+a un riposo e non fa avanzare round o turni.
+
+PWR sposta il focus, BOOT attiva, BOOT lungo torna indietro. Nel tastierino il
+focus raggiunge anche Cancella e Anteprima quando il nome è pieno. Menu ed Eroe
+permettono di uscire dalle viste principali senza applicare una proposta.
