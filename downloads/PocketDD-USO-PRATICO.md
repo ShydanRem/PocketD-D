@@ -1,5 +1,7 @@
 # PocketD-D — uso pratico sul dispositivo
 
+> v0.110: [Attacco, TS nemico e critici delle magie](MAGIE-COMBATTIMENTO.md).
+
 > v0.107: [rifinitura finale e checklist sul dispositivo](RESTYLE-CHECK.md).
 > v0.106: [ingresso Beyond e account](UX-RPG.md#v0106-ingresso-beyond-e-collegamento-account).
 > v0.105: [rete, ponte e backup](UX-RPG.md#v0105-rete-ponte-e-backup).

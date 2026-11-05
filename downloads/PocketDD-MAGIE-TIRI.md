@@ -1,5 +1,7 @@
 # Magie: costo e tiro nello stesso percorso · v0.108
 
+> v0.110: [Attacco, TS nemico e critici delle magie](MAGIE-COMBATTIMENTO.md).
+
 **Dalla v0.109:** [profili persistenti, aumenti e prime formule base Beyond](MAGIE-PROFILI.md).
 Il percorso per un singolo lancio sotto descritto resta disponibile.
 

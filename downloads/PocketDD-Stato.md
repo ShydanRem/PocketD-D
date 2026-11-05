@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **5 novembre 2026 — v0.109**. Il dispositivo è il prodotto;
+Aggiornamento del **5 novembre 2026 — v0.110**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
@@ -20,6 +20,32 @@ compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
 
+## Attacchi e TS delle magie · v0.110
+
+[Guida, limiti e verifiche](MAGIE-COMBATTIMENTO.md). Sei scelte contestuali:
+Attacco, TS nemico, Danni diretti, Cura me, Cura altri e Solo costo. Attacco
+con bonus della magia, condizioni rappresentate, CA dichiarata e critico con
+soli dadi doppi; costo sul mancato e riprova che conserva il d20. Critici fino
+a 36 dadi in due parti, totale e storico coerenti, bonus applicato una volta.
+
+Per il TS si scelgono caratteristica e zero/metà su successo; la CD è quella
+della magia. Il risultato del bersaglio è dichiarato dal DM, senza d20 fittizio.
+Costo salvato prima dell'esito, danni potenziali e metà del totale per difetto;
+zero danni non genera dadi. Nessun nuovo formato, protocollo o asset SD.
+
+Verifiche superate: 361 test JavaScript, suite nativa completa con **162/162**
+viste di produzione, 11.520 casi attacco/costo e 2.592 casi danno/critico,
+ASan/UBSan sul nuovo motore e sui percorsi magie LVGL, compilazione ESP32-S3.
+Le schermate in [anteprima](previews/v110-spell-battle.png) usano dati sintetici.
+Il firmware entra nella partizione attuale senza cambiarla; restano circa
+162 KiB liberi (4%), da considerare nei prossimi ampliamenti.
+
+Scelte di modalità e regola TS esplicite per ogni lancio, nessuna nuova identità
+Beyond riconosciuta. Difese/PF del bersaglio, più bersagli/attacchi, bonus speciali
+e componenti multiple restano manuali. Chiudere un lancio pagato conserva il
+costo; non esiste ripresa automatica dopo riavvio. Prove software sintetiche,
+nessuna nuova lettura/scrittura Beyond o prova fisica in questa versione.
+
 ## Formule salvate e primo riconoscimento Beyond · v0.109
 
 [Guida e verifica dei profili](MAGIE-PROFILI.md). Formule di base salvate per magia,
@@ -34,7 +60,8 @@ profili passano PC/C e il convertitore nativo QuickJS produce il record completo
 identico al PC. Nel 167361077 Cure Wounds/Sacred Flame restano note per la
 caratteristica di lancio non riconciliata: HTTP 200 non le rende eseguibili.
 
-Restano manuali colpire, TS, critici, bonus speciali, difese e bersagli delle magie;
+Alla v0.109 erano manuali colpire, TS e critici: il percorso assistito v0.110
+è descritto sopra. Restano manuali bonus speciali, difese e bersagli delle magie;
 altre identità e versioni 2014 non ricevono formule automatiche. Le copie già
 importate possono essere configurate dal Pocket; nessun aggiornamento remoto
 silenzioso o fusione dei progressi. Prove hardware/account privato ancora separate.
@@ -718,9 +745,10 @@ sono distinte da quelle nuove ancora verificate solo tramite software.
 
 ## Prossimi blocchi software, oltre alle prove hardware
 
-1. **Magie ed effetti:** le v0.108–0.109 aggiungono tiro/costo/cura assistiti,
-   profili persistenti e tre identità 2024 riconosciute. Restano altri profili,
-   bonus speciali, colpire/TS/critici e formule miste,
+1. **Magie ed effetti:** le v0.108–0.110 aggiungono tiro/costo/cura assistiti,
+   profili persistenti, tre identità 2024 riconosciute e attacco/TS/critico
+   espliciti per singolo lancio. Restano altri profili,
+   bonus speciali, più bersagli/attacchi e formule miste,
    condizioni, durate e proprietà concesse dagli oggetti. Un testo importato non
    equivale a un effetto eseguibile. Restano requisiti/limiti di preparazione.
 2. **Combattimento e dotazioni:** impugnature versatili/due mani, interazione con
