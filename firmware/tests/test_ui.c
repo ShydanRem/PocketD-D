@@ -331,11 +331,36 @@ static void test_saved_formula(void){
     pd_demo(&state);page=HERO;combat_roll=0;spell_saved=false;render();
     puts("Saved spell formula UI: index119/base formula/ability+extra/slot step, RAM cancel and stale guards, physical back, failed save/retry with no RNG/cost, direct saved cast/pact scaling, per-cast edits isolated, restart decode, live ability change, imported/manual provenance, removal and overflow without fallback passed; synthetic LVGL.");
 }
+
+static void battle_fixture(unsigned count,int bonus){
+    pd_demo(&state);state.level=5;state.hp=10;state.abilities[3]=18;state.magic=(pd_magic){.available=true,.count=1};state.magic.powers[0]=(pd_power){.name="Dardo di prova",.level=1,.ability=3,.flags=PD_PREPARED|PD_USES_SLOT|PD_LIMITED,.maximum=2,.remaining=1,.attack_modifier=2,.save_modifier=1};state.magic.slots[0]=(pd_slot){2,2};state.formulas[0]=(pd_spell_formula){.kind=1,.count=count,.sides=8,.bonus=bonus};
+    pd_history_reset(&history,state.history_epoch);history_pending=false;history_pair_pending=history_third_pending=history_fourth_pending=history_fifth_pending=smite_rolled=false;power_paused=power_off_attempted=library_failed=import_pending=false;fail_save=fail_history=fail_storage_commit=history_quarantined=false;dice_animation.active=false;page=HERO;act(1000);
+}
+static void test_spell_battle_flow(void){
+    battle_fixture(18,3);pd_state before=state;unsigned draws=random_calls,writes=save_calls,journals=history_save_calls;
+    click("Lancia");bounds();screenshot("battle110-method.ppm");click("Attacco");assert(page==SPELL_BATTLE_SETUP&&spell_plan.count==18);bounds();screenshot("battle110-attack-setup.ppm");
+    click("Rivedi");assert(page==SPELL_REVIEW);bounds();screenshot("battle110-review.ppm");click("Indietro");physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};rules_keyboard=false;probe_key_gesture(1,900);assert(page==SPELL_METHOD);click("Indietro");assert(page==MAGIC_DETAIL&&save_calls==writes&&random_calls==draws&&!memcmp(&state,&before,sizeof state));
+    click("Lancia");click("Attacco");click("Rivedi");random_values[0]=random_values[1]=19;fail_storage_commit=true;click("Lancia e salva");assert(page==SPELL_REVIEW&&spell_attack_drawn&&!spell_paid&&spell_attack.critical&&random_calls==draws+1&&save_calls==writes+1&&!memcmp(&state,&before,sizeof state));
+    act(SC_BACK);act(SR_BACK);act(100);for(unsigned i=0;i<3;i++)shortcut(i);assert(page==SPELL_REVIEW&&!stage_import(&before)&&!stage_backup(NULL)&&history_save_calls==journals);fail_storage_commit=false;click("Riprova");assert(page==DICE&&combat_roll==10&&spell_paid&&dice_animation.active&&state.magic.slots[0].current==1&&!state.magic.powers[0].remaining&&random_calls==draws+1&&save_calls==writes+2&&history.count==1);screenshot("battle110-attack-flight.ppm");act(SC_DAMAGE);assert(random_calls==draws+1);click("Accelera");assert(visible_text(lv_screen_active(),"CRITICO!"));bounds();screenshot("battle110-critical.ppm");
+    pd_state paid=state;random_values[0]=random_values[1]=0;fail_history=true;click("Danni");assert(page==DICE&&combat_roll==11&&spell_damage_done&&spell_impact.first.count==18&&spell_impact.second.count==18&&spell_impact.rolled==39&&spell_impact.applicable==39&&random_calls==draws+37&&history_pending&&history_pair_pending&&!memcmp(&state,&paid,sizeof state)&&save_calls==writes+2);pd_spell_impact frozen=spell_impact;act(SC_DAMAGE);act(SC_COMMIT);assert(random_calls==draws+37);click("Accelera");bounds();screenshot("battle110-damage.ppm");click("Altri dadi");click("Accelera");click("Primi dadi");click("Accelera");assert(!memcmp(&spell_impact,&frozen,sizeof frozen)&&random_calls==draws+37);click("Riepilogo");assert(page==SPELL_BATTLE_RECEIPT);bounds();click("Eroe");act(2600);fail_history=false;act(2603);assert(!history_pending&&history.count==3&&history.entries[0].bonus==0&&history.entries[1].bonus==3);act(100);click("Annulla");assert(!memcmp(&state,&before,sizeof state));
+    /* A miss still pays; no queued action creates damage from that miss. */
+    battle_fixture(1,2);click("Lancia");click("Attacco");click("Rivedi");random_values[0]=random_values[1]=0;draws=random_calls;click("Lancia e salva");click("Accelera");assert(!spell_attack.hits&&state.magic.slots[0].current==1&&random_calls==draws+1);act(SC_DAMAGE);assert(!spell_damage_done&&random_calls==draws+1);click("Riepilogo");click("Magia");
+    /* Target saves ignore the caster's blinded/poisoned/fear attack penalties;
+       no d20 is fabricated for a target whose statistics are unknown. */
+    battle_fixture(1,2);state.roll_conditions=PD_BLINDED|PD_FRIGHTENED;state.training.poisoned=true;render();before=state;draws=random_calls;writes=save_calls;click("Lancia");click("TS nemico");assert(page==SPELL_BATTLE_SETUP&&lv_obj_has_state(named_control("Rivedi"),LV_STATE_DISABLED));click("TS bersaglio: scegli");click("SAG");click("Meta danni");bounds();screenshot("battle110-save-setup.ppm");click("Rivedi");click("Lancia e salva");assert(page==SPELL_TARGET_SAVE&&spell_paid&&random_calls==draws&&save_calls==writes+1&&state.magic.slots[0].current==1&&history.count==0);bounds();screenshot("battle110-target.ppm");act(SC_COMMIT);act(SR_COMMIT);assert(state.magic.slots[0].current==1&&random_calls==draws);random_values[0]=random_values[1]=0;click("Riuscito");assert(page==DICE&&combat_roll==11&&spell_impact.rolled==3&&spell_impact.applicable==1&&random_calls==draws+1&&state.hp==before.hp&&history.count==1&&history.entries[0].total==3);click("Accelera");bounds();screenshot("battle110-half.ppm");click("Riepilogo");assert(page==SPELL_BATTLE_RECEIPT);click("Magia");
+    battle_fixture(1,2);click("Lancia");click("TS nemico");click("TS bersaglio: scegli");click("DES");click("Zero danni");click("Rivedi");draws=random_calls;writes=save_calls;click("Lancia e salva");click("Riuscito");assert(page==SPELL_BATTLE_RECEIPT&&spell_damage_done&&!spell_impact.first.count&&random_calls==draws&&save_calls==writes+1&&history.count==0);bounds();screenshot("battle110-zero.ppm");click("Magia");
+    /* Fear is declared before RNG; advantage cancellation stays identical to
+       ordinary attacks. State edits invalidate the cast before any spend. */
+    battle_fixture(1,2);state.roll_conditions=PD_FRIGHTENED;render();draws=random_calls;writes=save_calls;click("Lancia");click("Attacco");assert(lv_obj_has_state(named_control("Rivedi"),LV_STATE_DISABLED));click("Paura: da dichiarare");click("Base");click("Rivedi");state.hp--;paid=state;act(SC_COMMIT);assert(page==SPELL_REVIEW&&random_calls==draws&&save_calls==writes&&!memcmp(&state,&paid,sizeof state));click("Indietro");click("Indietro");click("Indietro");
+    /* Leaving a paid target-save prompt does not refund or re-spend a slot. */
+    battle_fixture(1,2);click("Lancia");click("TS nemico");click("TS bersaglio: scegli");click("DES");click("Zero danni");click("Rivedi");click("Lancia e salva");paid=state;draws=random_calls;click("Chiudi");assert(page==MAGIC_DETAIL&&random_calls==draws&&!memcmp(&state,&paid,sizeof state));
+    pd_demo(&state);page=HERO;combat_roll=0;spell_saved=false;render();puts("Spell battle UI: six contextual methods, local back/cancel, frozen attack save retry, cost on miss, double18 critical/bonus once, frozen history pair, target save declared/no fake d20/half floor/zero no RNG, caster-condition separation, stale guard and paid close passed; synthetic LVGL.");
+}
 int main(void) {
     lv_init();lv_display_t *d=lv_display_create(466,466);static uint16_t buffer[466*40];
     lv_display_set_buffers(d,buffer,NULL,sizeof buffer,LV_DISPLAY_RENDER_MODE_PARTIAL);lv_display_set_flush_cb(d,paint);
     pd_demo(&state);render();bounds();screenshot("hero.ppm");
-    if(getenv("PD_TEST_SPELL_ONLY")){test_spell_flow();test_saved_formula();return 0;}
+    if(getenv("PD_TEST_SPELL_ONLY")){test_spell_flow();test_saved_formula();test_spell_battle_flow();return 0;}
     pd_state animated_before=state;unsigned idle_saves=save_calls,idle_rng=random_calls;
     assert(avatar_timer&&avatar_sprite&&!dice_timer);
     for(int frame=0;frame<16;frame++) {
@@ -2581,13 +2606,14 @@ int main(void) {
 
     test_spell_flow();
     test_saved_formula();
+    test_spell_battle_flow();
     unsigned covered=0;
-    for(unsigned p=0;p<=SPELL_FORMULA_SAVE;p++){
+    for(unsigned p=0;p<=SPELL_BATTLE_RECEIPT;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)SPELL_FORMULA_SAVE+1);
-    assert(covered==SPELL_FORMULA_SAVE+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)SPELL_BATTLE_RECEIPT+1);
+    assert(covered==SPELL_BATTLE_RECEIPT+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

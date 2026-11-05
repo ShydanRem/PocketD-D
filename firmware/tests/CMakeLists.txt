@@ -257,3 +257,7 @@ target_compile_options(spell-roll PRIVATE -Wall -Wextra -Werror)
 add_executable(spell-formula test_spell_formula.c ../core/spell_roll.c ../core/magic.c ../core/pocketdd.c ../core/checks.c ../core/dice_pool.c ../core/backup.c ../core/history.c ../core/library.c)
 target_include_directories(spell-formula PRIVATE ../core)
 target_compile_options(spell-formula PRIVATE -Wall -Wextra -Werror)
+
+add_executable(spell-battle test_spell_battle.c ../core/spell_roll.c ../core/magic.c ../core/pocketdd.c ../core/checks.c ../core/dice_pool.c ../core/combat.c)
+target_include_directories(spell-battle PRIVATE ../core)
+target_compile_options(spell-battle PRIVATE -Wall -Wextra -Werror)

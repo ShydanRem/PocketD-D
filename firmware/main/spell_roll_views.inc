@@ -4,11 +4,12 @@ static void render_spell_roll(void){
     if(page==SPELL_REVIEW&&!spell_rolled)valid=current&&pd_spell_roll_prepare(&state,&spell_plan,&spell_candidate);
     if(page==SPELL_RECEIPT||spell_rolled)valid=true;
     if(page==SPELL_METHOD){
-        transaction_header(pd_power_icon(p),p->name);small_label(state.formulas[spell_plan.power].kind?"Formula salvata disponibile":"Come vuoi risolverla?",83,174,300,PD_TEXT);
-        const char *names[]={"Solo costo","Danni","Cura me","Cura altri"};
-        const char *badges[]={"Al tavolo","Da tirare","Ai miei PF","Solo tiro"};
-        const pd_ui_icon_id icons[]={PD_UI_MAGIC,PD_UI_ATTACK,PD_UI_HEART,PD_UI_HEART};
-        for(unsigned i=0;i<4;i++)scene_control(names[i],pd_ui_icon(icons[i]),names[i],badges[i],83+(i%2)*156,195+(i/2)*72,144,64,SR_COST+i,current&&(!i||!spell_notice[0]||state.formulas[spell_plan.power].kind!=(i==1?1:2))&&(i!=2||state.hp<pd_max_hp(&state)));
+        wrapped_name(p->name,99,48,&lv_font_montserrat_14);
+        const char *names[]={"Attacco","TS nemico","Danni","Cura me","Cura altri","Solo costo"};
+        const char *badges[]={"Contro CA","CD magia","Diretti","I miei PF","Solo tiro","Al tavolo"};
+        const unsigned actions[]={SC_ATTACK,SC_SAVE,SR_DAMAGE,SR_SELF,SR_OTHER,SR_COST};
+        const pd_ui_icon_id icons[]={PD_UI_ATTACK,PD_UI_SHIELD,PD_UI_DICE,PD_UI_HEART,PD_UI_HEART,PD_UI_MAGIC};
+        for(unsigned i=0;i<6;i++)scene_control(names[i],pd_ui_icon(icons[i]),names[i],badges[i],83+(i%2)*156,159+(i/2)*64,144,56,actions[i],current&&(i==5||!spell_notice[0]||state.formulas[spell_plan.power].kind!=(i<=2?1:2))&&(i!=3||state.hp<pd_max_hp(&state)));
         button("Indietro",83,359,300,48,SR_BACK,true);
     }else if(page==SPELL_FORMULA){
         lv_obj_t *name=wrapped_name(p->name,99,48,&lv_font_montserrat_14);lv_obj_set_style_text_color(name,lv_color_hex(PD_GOLD),0);
@@ -44,5 +45,5 @@ static void render_spell_roll(void){
         lv_obj_t *a=button(receipt?"Magia":"Modifica",83,359,92,48,receipt?SR_DONE:SR_EDIT,receipt||!spell_rolled),*b=button(spell_details?"Riepilogo":"Dettagli",187,359,92,48,SR_DETAILS,!spell_rolled),*c=button(receipt?"Fine":spell_rolled?"Riprova":"Tira e salva",291,359,92,48,receipt?SR_HOME:SR_COMMIT,receipt||(valid&&power_storage_ready()));
         label_font(lv_obj_get_child(a,0),&lv_font_montserrat_16);label_font(lv_obj_get_child(b,0),&lv_font_montserrat_16);label_font(lv_obj_get_child(c,0),&lv_font_montserrat_14);
     }
-    if(page==SPELL_METHOD){lv_obj_t *notice=small_label(current?spell_notice:"Scheda cambiata: annulla e riapri",83,337,300,PD_DANGER);label_font(notice,&lv_font_montserrat_14);}
+    if(page==SPELL_METHOD&&spell_notice[0]){lv_obj_t *notice=small_label(current?spell_notice:"Scheda cambiata: annulla e riapri",83,343,300,PD_DANGER);label_font(notice,&lv_font_montserrat_14);}
 }

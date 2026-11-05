@@ -39,6 +39,8 @@ static void render_dice_game(void){
         total=mixed?damage_parts.total:dice_animation.pool.total;
     }else if(combat_roll==3||combat_roll==4){if(has_roll)snprintf(source,sizeof source,"Cura %ud%u%+d | PF %u/%u",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus,state.hp,pd_max_hp(&state));else snprintf(source,sizeof source,"Cura %ud%u%+d",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);}
     else if(combat_roll==7){if(has_roll)snprintf(source,sizeof source,"Ricarica %ud%u%+d | %u/%u",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus,recharge_after,recharge_maximum);else snprintf(source,sizeof source,"Ricarica %ud%u%+d",dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);}
+    else if(combat_roll==10)snprintf(source,sizeof source,"Magia %+d | CA %u",spell_attack.roll.bonus,spell_battle.armor);
+    else if(combat_roll==11){if(has_roll)snprintf(source,sizeof source,"Totale %d | dadi %s",spell_impact.rolled,spell_second?"2/2":spell_impact.second.count?"1/2":"1/1");else snprintf(source,sizeof source,"Danni magia | %s",spell_second?"parte 2":"parte 1");total=spell_impact.applicable;}
     else if(combat_roll==9){if(has_roll)snprintf(source,sizeof source,"%s %ud%u%+d | tiro %d",spell_kind(),spell_result.count,spell_result.sides,spell_result.bonus,spell_result.total);else snprintf(source,sizeof source,"%s %ud%u%+d",spell_kind(),spell_result.count,spell_result.sides,spell_result.bonus);}
     else if(combat_roll==8)snprintf(source,sizeof source,"Iniziativa %+d",result.bonus);
     else if(combat_roll==6)snprintf(source,sizeof source,"Concentrazione | CD %u",incoming_result.concentration_dc);
@@ -54,6 +56,8 @@ static void render_dice_game(void){
         else if(combat_roll==7){snprintf(value,sizeof value,"+%u",recharge_gained);snprintf(verdict,sizeof verdict,"Cariche recuperate");color=PD_VIOLET;}
         else if(combat_roll==5){snprintf(verdict,sizeof verdict,"%s",(const char *const[]){result.natural==1?"1 naturale: due fallite":"Fallita","Riuscita","Stabilizzato","Tre fallimenti","20 naturale: riprendi 1 PF"}[status_outcome]);color=status_outcome==0||status_outcome==3?PD_DANGER:PD_MINT;}
         else if(combat_roll==6){snprintf(verdict,sizeof verdict,"Concentrazione %s",incoming_result.ends_concentration?"persa":"mantenuta");color=incoming_result.ends_concentration?PD_DANGER:PD_MINT;}
+        else if(combat_roll==10){snprintf(verdict,sizeof verdict,"%s",spell_attack.critical?"CRITICO!":spell_attack.hits?"COLPITO":"MANCATO");color=spell_attack.critical?PD_GOLD:spell_attack.hits?PD_MINT:PD_DANGER;}
+        else if(combat_roll==11){snprintf(verdict,sizeof verdict,"%s",spell_impact.impact==PD_SPELL_HALF?"Meta per TS":"Danni potenziali");color=PD_GOLD;}
         else if(combat_roll==9){if(spell_plan.kind==PD_SPELL_HEAL_SELF)snprintf(value,sizeof value,"+%u",spell_gained);snprintf(verdict,sizeof verdict,"%s",spell_plan.kind==PD_SPELL_HEAL_SELF?"PF recuperati":spell_plan.kind==PD_SPELL_DAMAGE?"Danni da risolvere":"Cura altro bersaglio");color=spell_plan.kind==PD_SPELL_DAMAGE?PD_GOLD:PD_MINT;}
         else if(combat_roll==8)snprintf(verdict,sizeof verdict,"Iniziativa");
         else if(pool_view){snprintf(verdict,sizeof verdict,"%s",dice_animation.pool.damage?"Danni":"Totale");if(dice_animation.pool.damage&&dice_animation.pool.sum+dice_animation.pool.bonus<0)snprintf(source,sizeof source,"Somma %d | minimo 0",dice_animation.pool.sum+dice_animation.pool.bonus);}
@@ -75,11 +79,11 @@ static void render_dice_game(void){
         lv_obj_add_flag(lv_obj_get_child(detail,0),LV_OBJ_FLAG_HIDDEN);lv_obj_set_width(lv_obj_get_child(detail,0),280);lv_label_set_long_mode(lv_obj_get_child(detail,0),LV_LABEL_LONG_DOT);
         lv_obj_set_style_bg_opa(detail,LV_OPA_TRANSP,0);lv_obj_set_style_border_width(detail,0,0);lv_obj_set_style_shadow_opa(detail,0,0);lv_obj_set_style_pad_all(detail,0,0);pd_ui_name(detail,"Dettagli della prova");
     }
-    lv_obj_t *caption=small_label(source,83,100,300,PD_MUTED);if(combat_roll==9)label_font(caption,&lv_font_montserrat_14);
+    lv_obj_t *caption=small_label(source,83,100,300,PD_MUTED);if(combat_roll>=9)label_font(caption,&lv_font_montserrat_14);
     lv_obj_t *number=label(value,83,124,300,true);label_font(number,&pd_pixel_6);lv_obj_set_style_text_color(number,lv_color_hex(color),0);
     lv_obj_t *meaning=small_label(verdict,83,177,300,color);if(combat_roll==1&&has_roll)label_font(meaning,&lv_font_montserrat_20);
     if(detail){lv_obj_set_parent(caption,detail);lv_obj_set_pos(caption,0,4);lv_obj_set_parent(number,detail);lv_obj_set_pos(number,0,28);lv_obj_set_parent(meaning,detail);lv_obj_set_pos(meaning,0,81);}
-    if(has_roll&&((combat_roll==1&&strike.critical)||(!combat_roll&&!pool_view&&result.natural==20))){
+    if(has_roll&&((combat_roll==1&&strike.critical)||(combat_roll==10&&spell_attack.critical)||(!combat_roll&&!pool_view&&result.natural==20))){
         for(unsigned i=0;i<2;i++){int x=i?359:99;decoration(x,139,12,4,PD_GOLD,0);decoration(x+4,135,4,12,PD_GOLD,0);}
     }
     if(automatic_failure)small_label("Nessun dado",83,254,300,PD_MUTED);
@@ -98,6 +102,10 @@ static void render_dice_game(void){
         const char *next=damage_view_smite_overflow?"Dadi arma":damage_view_smite?(damage_parts.smite_overflow.count?"Altri d8":"Dadi arma"):damage_view_extra?(damage_parts.smite.count?"Punizione":"Dadi arma"):damage_view_radiant?(damage_parts.extra.count?"Extra":damage_parts.smite.count?"Punizione":"Dadi arma"):damage_parts.radiant.count?"Radianti":damage_parts.extra.count?"Extra":"Punizione";
         dice_command(dice_animation.active?"Accelera":next,143,164,dice_animation.active?16:6422,dice_animation.active||damage_parts.radiant.count||damage_parts.extra.count||damage_parts.smite.count,true);
         dice_command("Fine",315,68,100,!dice_animation.active,false);
+    }else if(combat_roll==10){
+        dice_command("Magia",83,92,SC_DONE,!dice_animation.active,false);dice_command(dice_animation.active?"Accelera":spell_attack.hits&&!spell_damage_done?"Danni":"Riepilogo",183,200,dice_animation.active?16:spell_attack.hits&&!spell_damage_done?SC_DAMAGE:SC_RECEIPT,true,true);
+    }else if(combat_roll==11){
+        dice_command("Riepilogo",83,144,SC_RECEIPT,!dice_animation.active,false);dice_command(dice_animation.active?"Accelera":spell_impact.second.count?(spell_second?"Primi dadi":"Altri dadi"):"Magia",239,144,dice_animation.active?16:spell_impact.second.count?SC_MORE:SC_DONE,true,true);
     }else if(combat_roll==9){
         dice_command("Magia",83,92,SR_DONE,!dice_animation.active,false);dice_command(dice_animation.active?"Accelera":"Riepilogo",183,200,dice_animation.active?16:SR_RECEIPT,true,true);
     }else if(combat_roll==8){

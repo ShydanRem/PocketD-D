@@ -1,5 +1,7 @@
 # Formule salvate e formule base Beyond · v0.109
 
+> v0.110: [Attacco, TS nemico e critici delle magie](MAGIE-COMBATTIMENTO.md).
+
 5 novembre 2026. Il tiro assistito della v0.108 ora può riutilizzare una formula
 salvata con la magia. La scelta del bersaglio resta esplicita a ogni lancio.
 
