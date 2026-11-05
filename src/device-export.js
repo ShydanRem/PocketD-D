@@ -1,3 +1,4 @@
+import {emptySpellFormula} from './spell-formula.js';
 import {validateDefences} from './defences.js';
 import {avatarOutfit} from './avatar-classes.js';
 import {avatarIdentity} from './avatar-species.js';
@@ -59,8 +60,11 @@ export function projectDevice(input){
   warnings.push('Morte: contatori trasferiti esattamente; d20 base senza bonus, vantaggi o talenti, con conferma e correzioni DM. Tre fallimenti a zero PF bloccano cure ordinarie e riposo lungo fino a correzione esplicita. Nessuna morte istantanea o gestione automatica dei danni a zero PF.');
   const wallet={available:s.extended?.currenciesAvailable??false,...Object.fromEntries(['cp','sp','ep','gp','pp'].map(k=>[k,s.extended?.currenciesAvailable?integer(s.extended.currencies[k],0,999999999,k):0]))};
   warnings.push(wallet.available?'Monete: cinque saldi verificati, separati e modificabili con conferma sul dispositivo. Nessun cambio o acquisto automatico.':'Monete: saldo non verificato, nessuna ricchezza inventata. Verificalo in Stato e risorse sul PC oppure configura il borsello sul dispositivo.');
-  const smite=s.powers.some(p=>p.effect==='divine-smite-2024'),onHit=s.powers.some(p=>['hex-2024','hunters-mark-2024'].includes(p.effect)),identity=avatarIdentity(s.avatar),outfit=avatarOutfit(s.avatar),defences=s.extended?.defences,mapped=s.extended?.skillAbilities!==undefined,cannon=s.powers.some(p=>p.effect==='eldritch-cannon'),reference=s.powers.some(p=>p.reference!==undefined),attuned=s.extended?.loadout?.items.some(g=>g.attunement!==undefined),modern=smite||onHit||s.extended?.loadout!==undefined||s.powers.some(p=>p.effect==='true-strike-2024'),variant=modern||reference||cannon||mapped||defences!==undefined||outfit||identity.lineage||identity.body;
-  const packet={format:'pocketdd-device',version:smite?21:onHit?20:attuned?19:modern?18:reference?17:cannon?16:mapped?15:defences!==undefined?14:outfit?13:identity.lineage>=16?12:identity.lineage>=12?11:variant?10:9,name:ascii(s.name,48),level:integer(s.level,1,20,'Livello'),hp:integer(s.hp,0,999,'PF'),
+  const smite=s.powers.some(p=>p.effect==='divine-smite-2024'),onHit=s.powers.some(p=>['hex-2024','hunters-mark-2024'].includes(p.effect)),identity=avatarIdentity(s.avatar),outfit=avatarOutfit(s.avatar),defences=s.extended?.defences,mapped=s.extended?.skillAbilities!==undefined,cannon=s.powers.some(p=>p.effect==='eldritch-cannon'),reference=s.powers.some(p=>p.reference!==undefined),attuned=s.extended?.loadout?.items.some(g=>g.attunement!==undefined),modern=smite||onHit||s.extended?.loadout!==undefined||s.powers.some(p=>p.effect==='true-strike-2024'||p.formula!==undefined),variant=modern||reference||cannon||mapped||defences!==undefined||outfit||identity.lineage||identity.body;
+  const formulas=s.powers.some(p=>p.formula!==undefined);
+  if(formulas)warnings.push('Formule base delle magie: firmware 0.109 / USB22. Dadi, bonus e aumenti espliciti conservati; bonus speciali, colpire, TS e critici restano al tavolo.');
+  if(formulas)magic.powers.forEach((p,i)=>{p.formula=s.powers[i].formula??emptySpellFormula();});
+  const packet={format:'pocketdd-device',version:formulas?22:smite?21:onHit?20:attuned?19:modern?18:reference?17:cannon?16:mapped?15:defences!==undefined?14:outfit?13:identity.lineage>=16?12:identity.lineage>=12?11:variant?10:9,name:ascii(s.name,48),level:integer(s.level,1,20,'Livello'),hp:integer(s.hp,0,999,'PF'),
     maxHp:integer(s.maxHp,1,999,'PF massimi'),tempHp:integer(s.extended?.tempHp??0,0,999,'PF temporanei'),armorClass:integer(s.armorClass,1,40,'CA'),
     avatar:Object.fromEntries(['skin','hair','cloak','style'].map(k=>[k,integer(s.avatar[k],0,2,k)])),
     training,inventory,magic,recovery,status,wallet,

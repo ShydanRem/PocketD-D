@@ -5,8 +5,16 @@ static bool printable(const char *v,size_t cap,bool empty) {
     size_t n=0;while(n<cap&&v[n]){if((unsigned char)v[n]<32||(unsigned char)v[n]>126)return false;n++;}
     return n<cap&&(empty||n>0);
 }
+bool pd_spell_formula_valid(const pd_power *p,pd_spell_formula f){
+    if(!f.kind)return !(f.count||f.sides||f.ability||f.scaling||f.step||f.source||f.bonus);
+    if(!p||p->kind||p->effect||f.kind>2||!f.count||f.count>18||f.ability>1||f.scaling>2||f.source>1||f.bonus< -15||f.bonus>60)return false;
+    if(f.sides!=4&&f.sides!=6&&f.sides!=8&&f.sides!=10&&f.sides!=12&&f.sides!=20)return false;
+    if(f.scaling?(!f.step||f.step>18):f.step)return false;
+    return !(f.scaling==1&&!p->level)&&!(f.scaling==2&&p->level);
+}
 bool pd_magic_valid(const pd_state *s) {
     const pd_magic *m=&s->magic;
+    for(unsigned i=0;i<PD_POWERS;i++)if(!pd_spell_formula_valid(i<m->count?&m->powers[i]:NULL,s->formulas[i]))return false;
     if(m->count>PD_POWERS||m->concentration>m->count||(!m->available&&(m->count||m->concentration)))return false;
     for(int i=0;i<9;i++)if(m->slots[i].maximum>9||m->slots[i].current>m->slots[i].maximum||m->pact[i].maximum>9||m->pact[i].current>m->pact[i].maximum)return false;
     for(int i=0;i<m->count;i++) {
@@ -23,6 +31,10 @@ bool pd_magic_valid(const pd_state *s) {
     }
     if(m->concentration&&(!(m->powers[m->concentration-1].flags&PD_CONCENTRATES)||m->powers[m->concentration-1].kind||!s->hp||s->combat.raging))return false;
     return true;
+}
+bool pd_spell_formula_set(pd_state *s,unsigned index,pd_spell_formula f){
+    if(!s||!pd_valid(s)||!s->magic.available||index>=s->magic.count||s->magic.powers[index].kind||s->magic.powers[index].effect||!pd_spell_formula_valid(&s->magic.powers[index],f))return false;
+    s->formulas[index]=f;return true;
 }
 int pd_on_hit_spell(const pd_state *s){
     if(!s||!pd_valid(s)||!s->magic.available||!s->magic.concentration||!s->hp||s->combat.raging)return -1;

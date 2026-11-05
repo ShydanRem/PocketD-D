@@ -303,11 +303,39 @@ static void test_spell_flow(void){
     puts("Explicit spell UI: last source index/long name, formula/dice/ability/local keys, cancel/stale draft, guarded import/backups, frozen save retry, one cost+healing commit/exact undo, pact vs ordinary, other-target no local healing, pending history no new RNG, cantrip no NVS, zero floor, canvas fallback, result/receipt without re-roll passed; synthetic only.");
     }
 }
+
+static void test_saved_formula(void){
+    pd_demo(&state);state.hp=10;state.abilities[5]=18;state.magic=(pd_magic){.available=true,.count=120};
+    for(unsigned i=0;i<120;i++)state.magic.powers[i]=(pd_power){.name="Synthetic generic",.flags=PD_PREPARED};
+    state.magic.powers[119]=(pd_power){.name="Ristoro di prova",.level=1,.ability=5,.flags=PD_PREPARED|PD_USES_SLOT};state.magic.slots[0]=(pd_slot){2,2};state.magic.pact[2]=(pd_slot){1,1};
+    pd_history_reset(&history,state.history_epoch);history_pending=false;history_pair_pending=history_third_pending=history_fourth_pending=history_fifth_pending=smite_rolled=false;undo_available=import_pending=power_paused=power_off_attempted=library_failed=false;fail_save=fail_history=fail_storage_commit=history_quarantined=false;dice_animation.active=false;
+    page=HERO;act(1119);click("Gestisci");pd_state before=state;unsigned writes=save_calls,draws=random_calls,journals=history_save_calls;
+    click("Formula");assert(page==SPELL_FORMULA_SETUP&&confirmation_open()&&!stage_import(&before)&&!stage_backup(NULL));bounds();click("Cura");click("1d6+0");click("Dado d6");click("d8");click("Dadi +");click("CAR no");click("Extra +");click("Indietro");assert(formula_draft.count==2&&formula_draft.ability&&formula_draft.bonus==1);click("Formula fissa");click("Per livello slot");click("Passo 1 +");assert(formula_draft.step==2);bounds();screenshot("profile109-scaling.ppm");click("Indietro");bounds();screenshot("profile109-editor.ppm");
+    click("Rivedi");assert(page==SPELL_FORMULA_SAVE);bounds();screenshot("profile109-save.ppm");act(100);act(832);for(unsigned i=0;i<3;i++)shortcut(i);assert(page==SPELL_FORMULA_SAVE&&save_calls==writes&&random_calls==draws&&history_save_calls==journals&&!memcmp(&state,&before,sizeof state));
+    physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};rules_keyboard=false;probe_key_gesture(1,900);assert(page==SPELL_FORMULA_SETUP);click("Indietro");assert(page==MAGIC_MANAGE&&!memcmp(&state,&before,sizeof state));
+    click("Formula");click("Cura");click("Rivedi");state.hp--;pd_state stale=state;act(SF_SAVE);assert(page==SPELL_FORMULA_SAVE&&save_calls==writes&&!memcmp(&state,&stale,sizeof state));click("Modifica");click("Indietro");state=before;
+    /* Rebuild the explicit draft and force a true NVS commit failure. */
+    render();click("Formula");click("Cura");click("1d6+0");click("Dado d6");click("d8");click("Dadi +");click("CAR no");click("Extra +");click("Indietro");click("Formula fissa");click("Per livello slot");click("Passo 1 +");click("Indietro");click("Rivedi");fail_storage_commit=true;click("Salva");assert(page==SPELL_FORMULA_SAVE&&!memcmp(&state,&before,sizeof state)&&save_calls==writes+1&&random_calls==draws);fail_storage_commit=false;click("Salva");assert(page==MAGIC_MANAGE&&state.formulas[119].kind==2&&state.formulas[119].count==2&&state.formulas[119].ability&&state.formulas[119].bonus==1&&state.formulas[119].step==2&&save_calls==writes+2&&random_calls==draws);
+    pd_spell_formula saved=state.formulas[119];pd_state configured=state;click("Indietro");click("Slot 1 ordinario >");click("Patto");click("L3: 1/1");click("Lancia");assert(page==SPELL_METHOD);click("Cura me");assert(page==SPELL_REVIEW&&spell_plan.count==6&&spell_plan.sides==8&&spell_plan.bonus==5&&cast_pact);bounds();screenshot("profile109-ready.ppm");
+    /* Editing one cast does not rewrite its saved base profile. */
+    click("Modifica");click("Bonus +");assert(spell_plan.bonus==6&&!spell_from_formula&&!memcmp(&state,&configured,sizeof state));click("Indietro");click("Indietro");click("Lancia");click("Cura me");assert(page==SPELL_REVIEW&&spell_plan.bonus==5&&spell_plan.count==6);random_values[0]=random_values[1]=0;click("Tira e salva");assert(page==DICE&&state.hp==21&&!state.magic.pact[2].current&&state.magic.slots[0].current==2&&!memcmp(&state.formulas[119],&saved,sizeof saved));click("Accelera");screenshot("profile109-result.ppm");click("Magia");
+    /* Native decode simulates a restart without inventing an NVS/RF test. */
+    static unsigned char record[PD_RECORD_SIZE];pd_state restart;uint32_t gen;size_t n=pd_encode(&state,109,record);assert(!memcmp(record,PD_FORMULA_RECORD_MAGIC,4)&&pd_decode(record,n,&restart,&gen)&&!memcmp(&restart,&state,sizeof state));state=restart;act(1119);click("Lancia");click("Cura altri");assert(page==SPELL_REVIEW&&spell_plan.count==2&&spell_plan.bonus==5);click("Modifica");click("Indietro");click("Indietro");
+    state.abilities[5]=20;render();click("Lancia");click("Cura altri");assert(spell_plan.bonus==6);click("Modifica");click("Indietro");click("Indietro");
+    /* Imported provenance changes only after an actual edit, and cancellation
+       preserves the imported formula and every resource. */
+    state.formulas[119].source=1;configured=state;click("Gestisci");click("Formula");assert(formula_draft.source==1);click("2d8 + CAR+1");click("Extra +");assert(!formula_draft.source&&state.formulas[119].source==1);click("Indietro");click("Indietro");assert(!memcmp(&state,&configured,sizeof state));
+    click("Formula");click("Senza");click("Rivedi");click("Salva");assert(!state.formulas[119].kind&&state.hp==configured.hp&&state.magic.slots[0].current==configured.magic.slots[0].current&&!state.magic.pact[2].current);click("Indietro");click("Lancia");click("Danni");assert(page==SPELL_FORMULA&&spell_plan.count==1&&spell_plan.bonus==0);click("Indietro");click("Indietro");
+    state.formulas[119]=(pd_spell_formula){.kind=2,.count=18,.sides=8,.scaling=1,.step=2};state.magic.pact[2].current=1;act(1119);click("Slot 1 ordinario >");click("Patto");click("L3: 1/1");click("Lancia");assert(page==SPELL_METHOD&&strstr(spell_notice,"limiti"));assert(lv_obj_has_state(named_control("Cura me"),LV_STATE_DISABLED)&&lv_obj_has_state(named_control("Cura altri"),LV_STATE_DISABLED));draws=random_calls;act(SR_SELF);assert(page==SPELL_METHOD&&random_calls==draws);click("Indietro");
+    memset(state.magic.powers[119].name,'W',40);state.magic.powers[119].name[40]=0;act(1119);click("Gestisci");click("Formula");bounds();wrapped_tree_fits(lv_screen_active());screenshot("profile109-wide.ppm");click("Rivedi");bounds();wrapped_tree_fits(lv_screen_active());click("Modifica");click("Indietro");assert(random_calls==draws);
+    pd_demo(&state);page=HERO;combat_roll=0;spell_saved=false;render();
+    puts("Saved spell formula UI: index119/base formula/ability+extra/slot step, RAM cancel and stale guards, physical back, failed save/retry with no RNG/cost, direct saved cast/pact scaling, per-cast edits isolated, restart decode, live ability change, imported/manual provenance, removal and overflow without fallback passed; synthetic LVGL.");
+}
 int main(void) {
     lv_init();lv_display_t *d=lv_display_create(466,466);static uint16_t buffer[466*40];
     lv_display_set_buffers(d,buffer,NULL,sizeof buffer,LV_DISPLAY_RENDER_MODE_PARTIAL);lv_display_set_flush_cb(d,paint);
     pd_demo(&state);render();bounds();screenshot("hero.ppm");
-    if(getenv("PD_TEST_SPELL_ONLY")){test_spell_flow();return 0;}
+    if(getenv("PD_TEST_SPELL_ONLY")){test_spell_flow();test_saved_formula();return 0;}
     pd_state animated_before=state;unsigned idle_saves=save_calls,idle_rng=random_calls;
     assert(avatar_timer&&avatar_sprite&&!dice_timer);
     for(int frame=0;frame<16;frame++) {
@@ -2552,13 +2580,14 @@ int main(void) {
     }
 
     test_spell_flow();
+    test_saved_formula();
     unsigned covered=0;
-    for(unsigned p=0;p<=SPELL_RECEIPT;p++){
+    for(unsigned p=0;p<=SPELL_FORMULA_SAVE;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)SPELL_RECEIPT+1);
-    assert(covered==SPELL_RECEIPT+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)SPELL_FORMULA_SAVE+1);
+    assert(covered==SPELL_FORMULA_SAVE+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

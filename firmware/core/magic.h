@@ -5,6 +5,9 @@ enum {PD_TRUE_STRIKE_2024=6,PD_HEX_2024=7,PD_HUNTERS_MARK_2024=8,PD_DIVINE_SMITE
 /* Active concentration only; target eligibility is always a caller decision. */
 int pd_on_hit_spell(const pd_state *s);
 bool pd_magic_valid(const pd_state *s);
+bool pd_spell_formula_valid(const pd_power *,pd_spell_formula);
+/* Empty clears a generic formula. No RNG, resource expense or side effects. */
+bool pd_spell_formula_set(pd_state *,unsigned,pd_spell_formula);
 bool pd_magic_stats(const pd_state *s,unsigned index,int *attack,int *dc);
 /* Validate all costs before changing anything. Effects are limited to recognized identities. */
 bool pd_magic_use(pd_state *s,unsigned index,unsigned slot,bool pact);

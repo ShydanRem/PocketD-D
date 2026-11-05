@@ -116,9 +116,10 @@ static bool inventory(cJSON *o,pd_state *s,bool charges) {
     }
     return true;
 }
-static bool magic(cJSON *o,pd_magic *m,int version) {
+static bool magic(cJSON *o,pd_state *state,int version) {
+    pd_magic *m=&state->magic;
     const char *const fields[]={"powers","slots","pact","concentration"};
-    const char *const power_keys[]={"name","description","kind","level","flags","ability","maximum","remaining","recovery","effect","attackModifier","saveModifier"};
+    const char *const power_keys[]={"name","description","kind","level","flags","ability","maximum","remaining","recovery","effect","attackModifier","saveModifier","formula"};
     const char *const slot_keys[]={"current","maximum"};
     if(!keys(o,fields,4))return false;
     cJSON *powers=cJSON_GetObjectItemCaseSensitive(o,"powers");
@@ -135,7 +136,7 @@ static bool magic(cJSON *o,pd_magic *m,int version) {
     }
     for(int i=0;i<m->count;i++) {
         cJSON *o=cJSON_GetArrayItem(powers,i);pd_power *v=&m->powers[i];
-        if(!keys(o,power_keys,12)||!copy(o,"name",v->name,sizeof v->name))return false;
+        if(!keys(o,power_keys,version>=22?13:12)||!copy(o,"name",v->name,sizeof v->name))return false;
         cJSON *description=cJSON_GetObjectItemCaseSensitive(o,"description");
         if(!cJSON_IsString(description)||strlen(description->valuestring)>=sizeof v->description)return false;
         strcpy(v->description,description->valuestring);
@@ -146,6 +147,13 @@ static bool magic(cJSON *o,pd_magic *m,int version) {
             values[j]=n->valueint;
         }
         v->kind=values[0];v->level=values[1];v->flags=values[2];v->ability=values[3];v->maximum=values[4];v->remaining=values[5];v->recovery=values[6];v->effect=values[7];v->attack_modifier=values[8];v->save_modifier=values[9];
+        if(version>=22){
+            const char *const names[]={"kind","count","sides","ability","scaling","step","source","bonus"};cJSON *o=cJSON_GetObjectItemCaseSensitive(cJSON_GetArrayItem(powers,i),"formula");
+            if(!keys(o,names,8))return false;
+            int n[8];const int max[]={2,18,20,1,2,18,1,60};
+            for(unsigned j=0;j<8;j++){cJSON *v=cJSON_GetObjectItemCaseSensitive(o,names[j]);if(!cJSON_IsNumber(v)||!isfinite(v->valuedouble)||v->valuedouble<(j==7?-15:0)||v->valuedouble>max[j]||floor(v->valuedouble)!=v->valuedouble)return false;n[j]=v->valueint;}
+            state->formulas[i]=(pd_spell_formula){.kind=n[0],.count=n[1],.sides=n[2],.ability=n[3],.scaling=n[4],.step=n[5],.source=n[6],.bonus=n[7]};
+        }
     }
     return true;
 }
@@ -202,7 +210,7 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
     const char *const abilities[]={"FOR","DES","COS","INT","SAG","CAR"};
     const char *const resource_keys[]={"name","current","maximum"};
     const char *const avatar_keys[]={"skin","hair","cloak","style","lineage","body","outfit"};
-    int version=number(root,"version",1,21);
+    int version=number(root,"version",1,22);
     cJSON *fmt=cJSON_GetObjectItemCaseSensitive(root,"format");
     if (version<0 || end!=json+size || !keys(root,fields,version==1?10:version==2?11:version==3?12:version==4?13:version==5?14:version==6?15:version<9?16:version<14?17:version<18?18:19) || !cJSON_IsString(fmt) ||
         strcmp(fmt->valuestring,"pocketdd-device") ||
@@ -223,7 +231,7 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
     }
     if(version>=3&&!training(cJSON_GetObjectItemCaseSensitive(root,"training"),&candidate.training,version>=15))goto done;
     if(version>=4&&!inventory(cJSON_GetObjectItemCaseSensitive(root,"inventory"),&candidate,version>=8))goto done;
-    if(version>=5&&!magic(cJSON_GetObjectItemCaseSensitive(root,"magic"),&candidate.magic,version))goto done;
+    if(version>=5&&!magic(cJSON_GetObjectItemCaseSensitive(root,"magic"),&candidate,version))goto done;
     if(version>=6&&!recovery(cJSON_GetObjectItemCaseSensitive(root,"recovery"),&candidate.recovery))goto done;
     if(version>=7&&!status(cJSON_GetObjectItemCaseSensitive(root,"status"),&candidate.status))goto done;
     if(version>=9){

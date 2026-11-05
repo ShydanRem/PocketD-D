@@ -1,3 +1,4 @@
+import {validateSpellFormula} from './spell-formula.js';
 import {gearTotals} from './equipment.js';
 import {recoverItemCharges} from './inventory.js';
 // Local resources and explicit effects; no bundled external catalogue.
@@ -35,6 +36,7 @@ export function validatePower(power,extended=false){
       base.effect=power.effect;
     }
   }
+  if(power.formula!==undefined){if(!extended)throw Error('Le formule richiedono dati estesi');const f=validateSpellFormula(power.formula,power);if(f.kind)base.formula=f;}
   return base;
 }
 export function validateMagic(input,extended=false){

@@ -9,6 +9,9 @@ typedef struct {
     int bonus;
     bool pact;
 } pd_spell_roll_plan;
+/* Resolve a saved BASE formula for this payment. Reject overflow, absent or
+   invalid data; never clamp away dice or silently fall back to another roll. */
+bool pd_spell_formula_resolve(const pd_state *,unsigned,unsigned,bool,pd_spell_roll_plan *);
 /* Preview all costs and concentration consequences before RNG. Only generic
    spell rows (effect=0) are eligible; special weapon/feature flows stay intact.
    A slot-free spell must use slot=0/pact=false: never silently ignore payment. */

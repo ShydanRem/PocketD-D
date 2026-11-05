@@ -9,8 +9,10 @@
 #define PD_NAME_BYTES 49
 #define PD_RESOURCE_BYTES 33
 #define PD_EQUIPMENT_BYTES (1u+18u*60u)
-#define PD_RECORD_SIZE (75204u+PD_EQUIPMENT_BYTES)
+#define PD_LEGACY_RECORD_SIZE (75204u+PD_EQUIPMENT_BYTES)
+#define PD_RECORD_SIZE (PD_LEGACY_RECORD_SIZE+8u*120u)
 #define PD_RECORD_MAGIC "PDDe"
+#define PD_FORMULA_RECORD_MAGIC "PDDf"
 #define PD_SCENES 3
 #define PD_TURN_NAME_BYTES 21
 #define PD_COINS 5
@@ -60,6 +62,10 @@ typedef struct {
     int8_t attack_modifier,save_modifier;
 } pd_power;
 typedef struct { uint8_t current,maximum; } pd_slot;
+/* Generic spell formula at its base level. kind: 0 absent, 1 damage, 2 heal;
+   ability adds the casting modifier; scaling: 0 fixed, 1 per slot level,
+   2 at character levels 5/11/17. source: 0 manual, 1 structured Beyond data. */
+typedef struct {uint8_t kind,count,sides,ability,scaling,step,source;int8_t bonus;} pd_spell_formula;
 typedef struct {
     bool available;
     uint8_t count,concentration; /* 0: none, otherwise index + 1. */
@@ -129,6 +135,7 @@ typedef struct {
     pd_wallet wallet;
     uint32_t history_epoch; /* Local import identity; never supplied by USB. */
     char turn_names[3][PD_TURN_NAME_BYTES]; /* Local aliases for stable A/B/C references. */
+    pd_spell_formula formulas[PD_POWERS];
 } pd_state;
 typedef struct { uint8_t dice[2], count, natural; int total, bonus; } pd_roll;
 typedef uint32_t (*pd_random)(void *context);

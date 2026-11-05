@@ -253,3 +253,7 @@ target_link_libraries(beyond-account m)
 add_executable(spell-roll test_spell_roll.c ../core/spell_roll.c ../core/magic.c ../core/pocketdd.c ../core/checks.c ../core/dice_pool.c)
 target_include_directories(spell-roll PRIVATE ../core)
 target_compile_options(spell-roll PRIVATE -Wall -Wextra -Werror)
+
+add_executable(spell-formula test_spell_formula.c ../core/spell_roll.c ../core/magic.c ../core/pocketdd.c ../core/checks.c ../core/dice_pool.c ../core/backup.c ../core/history.c ../core/library.c)
+target_include_directories(spell-formula PRIVATE ../core)
+target_compile_options(spell-formula PRIVATE -Wall -Wextra -Werror)

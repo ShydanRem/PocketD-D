@@ -1,3 +1,4 @@
+import {beyondSpellFormula} from './beyond-spell-formula.js';
 import {beyondEquipment,beyondTrueStrike2024,beyondOnHit2024,beyondSmite2024} from './beyond-equipment.js';
 import {applyBeyondTraining} from './beyond-training.js';
 import {BeyondError} from './beyond.js';
@@ -278,7 +279,8 @@ export function extendBeyond(report,c,customTraining=[]){
       if(m.subType==='spell-attacks')attackModifier+=m.value;else saveModifier+=m.value;
     }
     if(unresolved){warn(`${d.name}: bonus di lancio non risolto, magia conservata come nota.`);addPower({id:`ddb-spell-note-${powers.length+1}`,type:'feature',name:d.name,description:text(d.description,d.name),passive:true});continue;}
-    addPower({id:`ddb-spell-${powers.length+1}`,type:'spell',name:d.name,description:text(d.description,d.name),level:d.level,concentration:d.concentration===true,castingAbility:ability,attackModifier,saveModifier,prepared:d.level===0||s.alwaysPrepared===true||s.prepared!==false&&s.isPrepared!==false,usesSpellSlot:usesSlot,...(trueStrike?{effect:'true-strike-2024'}:onHit?{effect:onHit}:smite?{effect:'divine-smite-2024'}:{}),...(resource?{limited:resource}:{})});
+    const formula=!trueStrike&&!onHit&&!smite?beyondSpellFormula(d,{warn,evidence:t=>evidence.push(t)}):undefined;
+    addPower({id:`ddb-spell-${powers.length+1}`,type:'spell',name:d.name,description:text(d.description,d.name),level:d.level,concentration:d.concentration===true,castingAbility:ability,attackModifier,saveModifier,prepared:d.level===0||s.alwaysPrepared===true||s.prepared!==false&&s.isPrepared!==false,usesSpellSlot:usesSlot,...(formula?{formula}:{}),...(trueStrike?{effect:'true-strike-2024'}:onHit?{effect:onHit}:smite?{effect:'divine-smite-2024'}:{}),...(resource?{limited:resource}:{})});
   }
   if(casters.length)state.spellcastingAbility=casters[0];
   if(powers.length>120)throw new Error('Oltre 120 magie/capacità: conversione non rappresentabile');
@@ -300,6 +302,7 @@ export function extendBeyond(report,c,customTraining=[]){
   evidence.push(`Magie: ${powers.filter(p=>p.type==='spell').length}; capacità e note: ${powers.filter(p=>p.type==='feature').length}. I contatori usano limitedUse, non limiti inventati dai testi.`);
   beyondEquipment(c,state,{warn,evidence,modifiers:mods,report});
   const omissions=[...issues,...report.conversion.omissions.filter(t=>/Oggetti personalizzati|Note personalizzate/.test(t)),
+    'Formule base Beyond: solo identità e dadi riconciliati, con livelli slot/PG espliciti. Altre formule, colpire, TS, critici, bonus speciali e bersagli restano manuali.',
     'Effetti condizionali, armi versatili, due armi e maestrie restano al DM; Ira, Grande Maestro d’Armi 2014 e dado critico aggiuntivo riconosciuti hanno comandi dedicati.',
     'Condizioni, dadi vita e tiri morte sono conservati e modificabili; solo Avvelenato applica automaticamente svantaggio. Recupero dei dadi vita e stabilizzazione restano manuali.',
     'Difese ai danni: importate solo concessioni incondizionate riconciliate; tipi mancanti o ambigui da verificare. Le difese si applicano nel calcolo Danni del dispositivo, non alle variazioni dirette dei PF sul PC. Cambiare equipaggiamento o terminare effetti richiede ricontrollarle.',

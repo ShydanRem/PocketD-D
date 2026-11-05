@@ -1,3 +1,4 @@
+import {validateSpellFormula} from './spell-formula.js';
 import {avatarSpecies} from './avatar-species.js';
 export const DEVICE_BACKUP_MAX=110000;
 const fail=()=>{throw new Error('Backup dispositivo non valido o non supportato')};
@@ -21,7 +22,18 @@ function record(text,magic,max){
 }
 function text(bytes,start,capacity,empty=false){let end=start;while(end<start+capacity&&bytes[end]){if(bytes[end]<32||bytes[end]>126)fail();end++}if(end===start+capacity||(!empty&&end===start))fail();return String.fromCharCode(...bytes.subarray(start,end))}
 export function inspectDeviceBackup(raw){
-  const packet=envelope(raw),s=record(packet.state,['PDDP','PDDQ','PDDR','PDDS','PDDT','PDDU','PDDV','PDDW','PDDX','PDDY','PDDZ','PDDa','PDDb','PDDc','PDDd','PDDe'],76285),h=record(packet.history,'PDH1',2481);
+  const packet=envelope(raw),s=record(packet.state,['PDDP','PDDQ','PDDR','PDDS','PDDT','PDDU','PDDV','PDDW','PDDX','PDDY','PDDZ','PDDa','PDDb','PDDc','PDDd','PDDe','PDDf'],77245),h=record(packet.history,'PDH1',2481);
+  const spellFormulas=[];
+  if(s.bytes[3]===102){
+    const count=s.bytes[5123],legacySize=s.bytes.length-8*count,start=legacySize-4;
+    if(count>120||legacySize!==8964+1081+552*count)fail();
+    for(let i=0;i<count;i++){
+      const at=start+8*i,base=5124+552*i,f={kind:s.bytes[at],count:s.bytes[at+1],sides:s.bytes[at+2],ability:s.bytes[at+3],scaling:s.bytes[at+4],step:s.bytes[at+5],source:s.bytes[at+6],bonus:s.bytes[at+7]-15};
+      try{validateSpellFormula(f,{kind:s.bytes[base+542],level:s.bytes[base+543],effect:s.bytes[base+549]});}catch{fail();}
+      if(f.kind)spellFormulas.push({index:i,...f});
+    }
+    s.bytes=new Uint8Array([...s.bytes.subarray(0,start),...s.bytes.subarray(-4)]);s.bytes[3]=101;s.view=new DataView(s.bytes.buffer);
+  }
   const tag=s.bytes[3];for(let i=0;i<s.bytes[5123];i++)if(s.bytes[5124+i*552+549]>(tag===101?9:tag===100?8:tag>=98?6:tag===97?5:tag===90?3:2))fail();
   let loadout=null;
   if(s.bytes[3]>=98&&s.bytes[3]<=101){
@@ -66,5 +78,5 @@ export function inspectDeviceBackup(raw){
   }
   // This is an integrity check and a bounded preview. The device runs the full
   // native validators for all remaining rules before offering Restore.
-  return {nativeValidation:false,packet,...(loadout?{loadout}:{}),skillAbilities,scene,lineage,body,outfit,name,level,hp,maxHp,baseHp,tempHp,armor,baseArmor,effects,items:b[435],powers:b[5123],resources:b[71],wallet,keys,brightness,dim,turnSubjects,turnNames,payments,rolls};
+  return {nativeValidation:false,packet,spellFormulas,...(loadout?{loadout}:{}),skillAbilities,scene,lineage,body,outfit,name,level,hp,maxHp,baseHp,tempHp,armor,baseArmor,effects,items:b[435],powers:b[5123],resources:b[71],wallet,keys,brightness,dim,turnSubjects,turnNames,payments,rolls};
 }

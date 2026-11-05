@@ -38,6 +38,14 @@ class BackupTests(unittest.TestCase):
         data[-1085]=4;data[-4:]=zlib.crc32(data[:-4]).to_bytes(4,'little');obj['state']=base64.b64encode(data).decode('ascii')
         with self.assertRaises(ValueError):backup.validate(json.dumps(obj).encode('ascii'))
 
+    def test_spell_formula_record_and_corruption(self):
+        path=Path(__file__).resolve().parents[1]/'firmware/tests/out/formula-backup.synthetic.json'
+        raw=path.read_bytes();obj,_=backup.validate(raw);self.assertEqual(obj,json.loads(raw))
+        original=bytearray(base64.b64decode(obj['state']));self.assertEqual(original[:4],b'PDDf')
+        for field,bad in enumerate([3,0,7,2,3,1,2,255]):
+            data=bytearray(original);data[len(data)-12+field]=bad;data[-4:]=zlib.crc32(data[:-4]).to_bytes(4,'little');obj['state']=base64.b64encode(data).decode('ascii')
+            with self.assertRaises(ValueError):backup.validate(json.dumps(obj).encode('ascii'))
+
     def test_acquisition_exact_bytes_fragmented_and_partial_writes(self):
         for fragments in [1, 7, 4096]:
             port = Port(frame(), fragments, partial_write=True)

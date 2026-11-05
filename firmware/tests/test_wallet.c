@@ -38,6 +38,6 @@ int main(void){
     pd_demo(&s);wallet=(pd_wallet){.available=true};assert(pd_wallet_set(&s,&wallet));n=pd_encode(&s,9,data);
     assert(pd_decode(data,n,&out,&generation)&&out.wallet.available&&generation==9);
     for(unsigned i=0;i<120;i++)s.magic.powers[i]=(pd_power){.name="Magia",.flags=PD_PREPARED};s.magic.count=120;
-    assert(pd_valid(&s)&&pd_encode(&s,11,data)==PD_RECORD_SIZE&&pd_decode(data,PD_RECORD_SIZE,&out,&generation)&&out.wallet.available&&out.magic.count==120);
+    assert(pd_valid(&s)&&pd_encode(&s,11,data)==PD_LEGACY_RECORD_SIZE&&pd_decode(data,PD_LEGACY_RECORD_SIZE,&out,&generation)&&out.wallet.available&&out.magic.count==120);
     printf("Wallet: %u boundary/delta cases, 64-bit equivalent, unknown/zero, atomic invalid input, CRC-valid corruption and actual PDD23 migration passed\n",cases);
 }

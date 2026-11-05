@@ -31,7 +31,7 @@ def validate(raw):
             or obj['format'] != 'pocketdd-device-backup' or type(obj['version']) is not int or obj['version'] != 1):
         raise ValueError('Usa un backup nativo del dispositivo v1')
     records = []
-    for key, magic, maximum in [('state', (b'PDDP', b'PDDQ', b'PDDR', b'PDDS', b'PDDT', b'PDDU', b'PDDV', b'PDDW', b'PDDX', b'PDDY', b'PDDZ', b'PDDa', b'PDDb', b'PDDc', b'PDDd', b'PDDe'), 76285), ('history', (b'PDH1',), 2481)]:
+    for key, magic, maximum in [('state', (b'PDDP', b'PDDQ', b'PDDR', b'PDDS', b'PDDT', b'PDDU', b'PDDV', b'PDDW', b'PDDX', b'PDDY', b'PDDZ', b'PDDa', b'PDDb', b'PDDc', b'PDDd', b'PDDe', b'PDDf'), 77245), ('history', (b'PDH1',), 2481)]:
         text = obj[key]
         if not isinstance(text, str) or not text or len(text) > 4*((maximum+2)//3):
             raise ValueError('Record nativo fuori limite')
@@ -42,6 +42,17 @@ def validate(raw):
         records.append(data)
     state, history = records
     if len(state)<5124 or state[5123]>120 or 5124+552*state[5123]>len(state)-4: raise ValueError('Invalid native power size')
+    if state[:4] == b'PDDf':
+        count=state[5123]; legacy_size=len(state)-8*count; start=legacy_size-4
+        if legacy_size != 10045+552*count: raise ValueError('Invalid formula record size')
+        for i in range(count):
+            kind,n,sides,ability,scaling,step,source,bonus=state[start+8*i:start+8*(i+1)]; bonus-=15
+            base=5124+552*i; level=state[base+543]
+            if not kind:
+                if any((n,sides,ability,scaling,step,source,bonus)): raise ValueError('Invalid empty formula')
+            elif (kind>2 or state[base+542] or state[base+549] or not 1<=n<=18 or sides not in (4,6,8,10,12,20) or ability>1 or scaling>2 or source>1 or not -15<=bonus<=60 or (scaling and not 1<=step<=18) or (not scaling and step) or (scaling==1 and not level) or (scaling==2 and level)):
+                raise ValueError('Invalid spell formula')
+        state=b'PDDe'+state[4:start]+state[-4:]
     limit = 9 if state[:4] == b'PDDe' else 8 if state[:4] == b'PDDd' else 6 if state[:4] in (b'PDDb', b'PDDc') else 5 if state[:4] == b'PDDa' else 3 if state[:4] == b'PDDZ' else 2
     if any(state[5124+i*552+549] > limit for i in range(state[5123])): raise ValueError('Unsupported spell effect for state version')
     if state[:4] in (b'PDDb', b'PDDc', b'PDDd', b'PDDe'):

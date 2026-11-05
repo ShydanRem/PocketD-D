@@ -511,10 +511,11 @@ static void put16(uint8_t **p, unsigned n) { *(*p)++=n; *(*p)++=n>>8; }
 static unsigned get16(const uint8_t **p) { unsigned n=(*p)[0]|((*p)[1]<<8); *p+=2; return n; }
 static void put32(uint8_t *p, uint32_t n) { for (int i=0;i<4;i++) p[i]=n>>(8*i); }
 static uint32_t get32(const uint8_t *p) { return (uint32_t)p[0]|((uint32_t)p[1]<<8)|((uint32_t)p[2]<<16)|((uint32_t)p[3]<<24); }
-size_t pd_encoded_size(const pd_state *s){return 8964u+PD_EQUIPMENT_BYTES+552u*s->magic.count;}
+static bool formula_record(const pd_state *s){for(unsigned i=0;i<s->magic.count;i++)if(s->formulas[i].kind)return true;return false;}
+size_t pd_encoded_size(const pd_state *s){return 8964u+PD_EQUIPMENT_BYTES+(formula_record(s)?560u:552u)*s->magic.count;}
 size_t pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
     memset(out, 0, pd_encoded_size(s));
-    memcpy(out, PD_RECORD_MAGIC, 4); put32(out+4,gen);
+    memcpy(out, formula_record(s)?PD_FORMULA_RECORD_MAGIC:PD_RECORD_MAGIC, 4); put32(out+4,gen);
     uint8_t *p=out+8;
     memcpy(p,s->name,PD_NAME_BYTES); p+=PD_NAME_BYTES;
     put16(&p,s->hp); put16(&p,s->max_hp); put16(&p,s->temp_hp);
@@ -593,11 +594,15 @@ size_t pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
         const int8_t values[]={g->ac,g->attack,g->damage,g->spell_attack,g->spell_dc,g->saves,g->checks};for(unsigned j=0;j<7;j++)*p++=values[j]+10;
         put16(&p,g->max_hp+999);
     }
+    if(formula_record(s))for(unsigned i=0;i<s->magic.count;i++){
+        pd_spell_formula f=s->formulas[i];*p++=f.kind;*p++=f.count;*p++=f.sides;*p++=f.ability;*p++=f.scaling;*p++=f.step;*p++=f.source;*p++=f.bonus+15;
+    }
     size_t size=pd_encoded_size(s);put32(out+size-4,pd_crc32(out,size-4));return size;
 }
 static bool record_payments(const uint8_t *data){return !memcmp(data,"PDDS",4)||!memcmp(data,"PDDT",4)||!memcmp(data,"PDDU",4)||!memcmp(data,"PDDV",4)||(!memcmp(data,"PDDW",4)||(!memcmp(data,"PDDX",4)||(!memcmp(data,"PDDY",4)||(!memcmp(data,"PDDZ",4)||(!memcmp(data,"PDDa",4)||(!memcmp(data,"PDDb",4)||(!memcmp(data,"PDDc",4)||(!memcmp(data,"PDDd",4)||!memcmp(data,"PDDe",4)))))))));}
 bool pd_record_known(const uint8_t *data,size_t size) {
     if(!data)return false;
+    if(size>=8964u+PD_EQUIPMENT_BYTES&&size<=PD_RECORD_SIZE&&!memcmp(data,"PDDf",4)&&data[5123]<=PD_POWERS)return size==8964u+PD_EQUIPMENT_BYTES+560u*data[5123];
     if(size>=8964u+PD_EQUIPMENT_BYTES&&size<=PD_RECORD_SIZE&&(!memcmp(data,"PDDb",4)||(!memcmp(data,"PDDc",4)||(!memcmp(data,"PDDd",4)||!memcmp(data,"PDDe",4))))&&data[5123]<=PD_POWERS)return size==8964u+PD_EQUIPMENT_BYTES+552u*data[5123];
     if(size>=8964&&size<=75204&&(!memcmp(data,"PDDY",4)||!memcmp(data,"PDDZ",4)||!memcmp(data,"PDDa",4))&&data[5123]<=PD_POWERS)return size==8964u+552u*data[5123];
     if(size>=8946&&size<=75186&&!memcmp(data,"PDDX",4)&&data[5123]<=PD_POWERS)return size==8946u+552u*data[5123];
@@ -633,6 +638,17 @@ bool pd_record_known(const uint8_t *data,size_t size) {
 static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint32_t *gen) {
     if (!pd_record_known(data,size) ||
         pd_crc32(data,size-4) != get32(data+size-4)) return false;
+    /* Normalize only the legacy body. Check original length/CRC before reading
+       the appended formulas, then retain all existing historical validators. */
+    if(!memcmp(data,"PDDf",4)){
+        unsigned count=data[5123];size_t legacy_size=size-8u*count;
+        uint8_t *legacy=malloc(legacy_size);if(!legacy)return false;
+        memcpy(legacy,data,legacy_size-4);memcpy(legacy,"PDDe",4);put32(legacy+legacy_size-4,pd_crc32(legacy,legacy_size-4));
+        bool ok=decode_into(legacy,legacy_size,allocated,gen);free(legacy);if(!ok)return false;
+        const uint8_t *tail=data+legacy_size-4;
+        for(unsigned i=0;i<count;i++){pd_spell_formula f={.kind=tail[0],.count=tail[1],.sides=tail[2],.ability=tail[3],.scaling=tail[4],.step=tail[5],.source=tail[6]};if(tail[7]>75)return false;f.bonus=(int)tail[7]-15;allocated->formulas[i]=f;tail+=8;}
+        return pd_valid(allocated);
+    }
     memset(allocated,0,sizeof *allocated);
     #define candidate (*allocated)
     candidate.brightness=50;candidate.equipped=PD_NO_WEAPON;candidate.shortcuts[0]=1;candidate.shortcuts[1]=3;candidate.shortcuts[2]=5;

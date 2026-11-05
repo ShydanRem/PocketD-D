@@ -51,7 +51,7 @@ int main(void){
  assert(pd_condition_add(&s,"CA +99",6)&&pd_armor(&s)==16&&pd_max_hp(&s)==65);assert(pd_condition_remove(&s,0)&&s.effect_count==7);
  s.magic.count=PD_POWERS;for(unsigned i=0;i<PD_POWERS;i++)s.magic.powers[i]=(pd_power){.name="Magia",.flags=PD_PREPARED};
  s.shortcuts[0]=10;pd_hp(&s,999);static uint8_t data[PD_RECORD_SIZE];uint32_t generation;
- size_t size=pd_encode(&s,127,data);assert(size==PD_RECORD_SIZE&&pd_decode(data,size,&next,&generation)&&generation==127&&next.hp==65&&next.max_hp==32&&pd_max_hp(&next)==65&&next.shortcuts[0]==10&&next.effects[2].value==4);
+ size_t size=pd_encode(&s,127,data);assert(size==PD_LEGACY_RECORD_SIZE&&pd_decode(data,size,&next,&generation)&&generation==127&&next.hp==65&&next.max_hp==32&&pd_max_hp(&next)==65&&next.shortcuts[0]==10&&next.effects[2].value==4);
  /* CRC-valid malformed fields, invalid effective totals and out-of-range HP fail atomically. */
  size_t start=size-1051;const unsigned offsets[]={0,1,3,4};const unsigned corrupt[]={9,2,255,2};
  for(unsigned i=0;i<4;i++){pd_encode(&s,127,data);data[start+offsets[i]]=corrupt[i];crc(data,size);before=next;generation=99;assert(!pd_decode(data,size,&next,&generation)&&generation==99&&!memcmp(&next,&before,sizeof next));}
