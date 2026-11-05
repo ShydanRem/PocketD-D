@@ -1,5 +1,7 @@
 # Attacco normale o con magia — aggiornato v0.96
 
+> v0.111: [Munizioni, costo sul tiro e riprova senza nuovi dadi](MUNIZIONI.md).
+
 > Aggiornamento v0.89: [Punizione Divina 2024 e slot ibridi](PUNIZIONE-DIVINA.md).
 
 > Aggiornamento v0.88: [Hex e Marchio 2024 sul colpo](EFFETTI-SUL-COLPO.md).

@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **5 novembre 2026 — v0.110**. Il dispositivo è il prodotto;
+Aggiornamento del **5 novembre 2026 — v0.111**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
@@ -19,6 +19,29 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Munizioni collegate all'attacco · v0.111
+
+[Guida e confini](MUNIZIONI.md). Con un'arma configurata a distanza, la faretra
+apre la scelta esplicita della pila. Una unità e il d20 si confermano insieme,
+anche sul mancato; i danni non spendono di nuovo. Riprova NVS con lo stesso tiro,
+storico in attesa senza duplicati, ultima unità che conserva l'arma e blocco a
+zero senza passaggio silenzioso a un'altra fonte. True Strike usa lo stesso costo.
+
+Verifiche superate: **361** test JavaScript, suite nativa completa e **164/164**
+viste di produzione, **4.800** casi del nuovo motore, ASan/UBSan sul motore e sul
+flusso munizioni, compilazione ESP32-S3. La partizione applicazione resta invariata
+con circa 157 KiB liberi: gli ampliamenti successivi devono rispettare il margine.
+[Anteprima nativa con dati sintetici](previews/v111-ammunition.png).
+
+Scelta senza scritture, quantità prima/dopo sul risultato e tasti locali nel
+selettore. Le quantità persistono nei formati esistenti; il collegamento alla
+pila resta nella sessione e va riselezionato dopo riavvio. Non è un riconoscimento
+automatico di proprietà delle armi o bonus delle munizioni magiche. Cariche,
+oggetti curativi, armi e dotazioni configurate sono esclusi dalla selezione.
+Nessun nuovo protocollo o asset da installare sulla SD. Nessuna nuova prova
+reale Beyond/USB/SD; recupero dei proiettili, ricarica, mani e armi lanciate restano
+manuali. La roadmap continua con impugnature/scudi, due armi e maestrie.
 
 ## Attacchi e TS delle magie · v0.110
 
@@ -752,7 +775,9 @@ sono distinte da quelle nuove ancora verificate solo tramite software.
    condizioni, durate e proprietà concesse dagli oggetti. Un testo importato non
    equivale a un effetto eseguibile. Restano requisiti/limiti di preparazione.
 2. **Combattimento e dotazioni:** impugnature versatili/due mani, interazione con
-   gli scudi, munizioni, due armi, maestrie e altre proprietà speciali. Nessuna
+   gli scudi, due armi, maestrie e altre proprietà speciali. La v0.111 collega
+   esplicitamente una pila separata al costo del tiro: restano associazioni
+   persistenti, bonus delle munizioni, recupero e ricarica. Nessuna
    regola dedotta soltanto dal nome dell’oggetto.
 3. **Rilettura Beyond della stessa scheda:** confrontare i dati nuovi con la copia
    locale e riconciliare progressi, aspetto e risorse. Oggi l’importazione crea
