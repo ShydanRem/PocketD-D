@@ -68,6 +68,14 @@ bool pd_equip(pd_state *s,unsigned index) {
     pd_weapon_info w;if(index!=PD_NO_WEAPON&&!pd_weapon_stats(s,index,&w))return false;
     s->equipped=index;s->combat.thrown=false;return true;
 }
+bool pd_ammunition_eligible(const pd_state *s,unsigned index){
+    return s&&s->inventory_available&&index<PD_ITEMS&&index<s->item_count&&index!=s->equipped&&s->items[index].kind<=PD_CONSUMABLE&&!s->gear[index].kind&&!s->items[index].charges.maximum;
+}
+bool pd_ammunition_prepare(const pd_state *s,unsigned index,pd_state *next){
+    pd_weapon_info weapon;
+    if(!s||!next||s==next||!pd_valid(s)||!pd_ammunition_eligible(s,index)||!s->items[index].quantity||s->combat.thrown||!pd_weapon_stats(s,s->equipped,&weapon)||!(s->items[s->equipped].flags&4))return false;
+    *next=*s;return pd_item_quantity_set(next,index,s->items[index].quantity-1);
+}
 bool pd_weapon_damage_with_effect(const pd_state *s,const pd_strike *hit,bool target,pd_random random,void *context,pd_weapon_damage_parts *out){
     if(!s||!hit||!random||!out||!pd_valid(s))return false;
     int power=target?pd_on_hit_spell(s):-1;if(target&&power<0)return false;

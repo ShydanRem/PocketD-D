@@ -356,10 +356,51 @@ static void test_spell_battle_flow(void){
     battle_fixture(1,2);click("Lancia");click("TS nemico");click("TS bersaglio: scegli");click("DES");click("Zero danni");click("Rivedi");click("Lancia e salva");paid=state;draws=random_calls;click("Chiudi");assert(page==MAGIC_DETAIL&&random_calls==draws&&!memcmp(&state,&paid,sizeof state));
     pd_demo(&state);page=HERO;combat_roll=0;spell_saved=false;render();puts("Spell battle UI: six contextual methods, local back/cancel, frozen attack save retry, cost on miss, double18 critical/bonus once, frozen history pair, target save declared/no fake d20/half floor/zero no RNG, caster-condition separation, stale guard and paid close passed; synthetic LVGL.");
 }
+static void ammunition_fixture(unsigned quantity){
+    pd_demo(&state);memset(state.gear,0,sizeof state.gear);state.item_count=4;state.equipped=0;state.combat.thrown=false;state.level=5;
+    state.items[0]=(pd_item){.name="Arco di prova",.quantity=1,.kind=PD_WEAPON,.ability=1,.count=1,.sides=8,.flags=7,.reach=16};
+    state.items[1]=(pd_item){.name="Frecce di prova",.quantity=quantity};state.items[2]=(pd_item){.name="Dardi di prova",.quantity=7,.kind=PD_CONSUMABLE};state.items[3]=(pd_item){.name="Pila vuota",.quantity=0};
+    state.magic=(pd_magic){.available=true,.count=1};state.magic.powers[0]=(pd_power){.name="Colpo di prova",.effect=PD_TRUE_STRIKE_2024,.ability=3,.flags=PD_PREPARED};
+    pd_history_reset(&history,state.history_epoch);history_pending=history_pair_pending=history_third_pending=history_fourth_pending=history_fifth_pending=smite_rolled=false;
+    fail_save=fail_history=fail_storage_commit=fail_canvas=history_quarantined=power_paused=power_off_attempted=library_failed=import_pending=false;
+    ammo_pending=ammo_paid=false;ammo_item=PD_ITEMS;dice_animation.active=false;attack_spell=-1;page=HERO;act(81);assert(pd_valid(&state));
+}
+static void test_ammunition_flow(void){
+    ammunition_fixture(2);pd_state before=state;unsigned draws=random_calls,writes=save_calls,journals=history_save_calls;
+    click("Munizioni");bounds();screenshot("ammo111-picker.ppm");click("Indietro");assert(page==COMBAT&&!ammunition_bound()&&save_calls==writes&&random_calls==draws);
+    click("Munizioni");click("Frecce di prova");assert(page==COMBAT&&ammunition_bound()&&state.items[1].quantity==2&&save_calls==writes&&random_calls==draws);bounds();screenshot("ammo111-ready.ppm");
+    random_values[0]=random_values[1]=19;fail_storage_commit=true;click("Lancia");assert(page==AMMO_RETRY&&ammo_pending&&!ammo_paid&&!strike_ready&&random_calls==draws+1&&save_calls==writes+1&&history_save_calls==journals&&!memcmp(&state,&before,sizeof state));pd_strike frozen=strike;bounds();screenshot("ammo111-retry.ppm");
+    for(unsigned i=0;i<3;i++)shortcut(i);act(100);act(3);act(72);act(13);act(AC_NONE);assert(page==AMMO_RETRY&&random_calls==draws+1&&save_calls==writes+1&&!stage_import(&before)&&!stage_backup(NULL)&&!memcmp(&state,&before,sizeof state));
+    physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};rules_keyboard=false;probe_key_gesture(1,900);assert(page==AMMO_RETRY&&ammo_pending&&random_calls==draws+1&&save_calls==writes+1);
+    fail_storage_commit=false;click("Riprova");assert(page==DICE&&!ammo_pending&&ammo_paid&&strike_ready&&strike.critical&&!memcmp(&strike,&frozen,sizeof strike)&&random_calls==draws+1&&save_calls==writes+2&&state.items[1].quantity==1&&state.equipped==0&&history.count==1);click("Accelera");bounds();screenshot("ammo111-hit.ppm");
+    unsigned paid_writes=save_calls;act(72);assert(random_calls==draws+1&&save_calls==paid_writes);click("Danni");assert(combat_roll==2&&random_calls==draws+3&&save_calls==paid_writes&&state.items[1].quantity==1&&damage_result.count==2);click("Accelera");click("Arma");assert(page==COMBAT&&ammunition_bound());
+    random_values[0]=random_values[1]=0;click("Lancia");assert(state.items[1].quantity==0&&state.equipped==0&&!strike.hits&&random_calls==draws+4&&save_calls==paid_writes+1);click("Accelera");bounds();screenshot("ammo111-empty-result.ppm");click("Nuovo");assert(page==COMBAT&&!ammunition_available());unsigned stopped=random_calls,stopped_writes=save_calls;act(72);act(13);assert(page==COMBAT&&random_calls==stopped&&save_calls==stopped_writes&&state.items[1].quantity==0);bounds();screenshot("ammo111-empty.ppm");act(93);assert(page==COMBAT_DETAIL);bounds();click("Munizioni");assert(lv_obj_has_state(named_control("Frecce di prova"),LV_STATE_DISABLED));click("Dardi di prova");assert(ammo_item==2&&ammunition_available());
+    act(100);click("Annulla");assert(state.items[1].quantity==1&&state.items[2].quantity==7);
+    /* The same paid shot works for every True Strike casting ability. */
+    for(unsigned ability=0;ability<6;ability++){
+        ammunition_fixture(1);state.magic.powers[0].ability=ability;state.abilities[ability]=18;render();click("Colpo di prova");assert(attack_spell==0);click("Munizioni");click("Frecce di prova");draws=random_calls;writes=save_calls;random_values[0]=random_values[1]=19;click("Normale");click("Lancia");assert(strike.weapon.true_strike&&strike.weapon.attack_bonus==7&&strike.weapon.radiant_dice==1&&strike.roll.count==2&&random_calls==draws+2&&save_calls==writes+1&&!state.items[1].quantity);click("Accelera");click("Danni");assert(damage_parts.weapon.count==2&&damage_parts.radiant.count==2&&save_calls==writes+1);click("Accelera");
+    }
+    /* No binding retains the original free attack path; no name grants +1. */
+    ammunition_fixture(2);draws=random_calls;writes=save_calls;click("Lancia");assert(state.items[1].quantity==2&&save_calls==writes&&random_calls==draws+1&&!ammo_paid);click("Accelera");
+    /* Read-only storage blocks entropy/spend before opening a paid attempt. */
+    ammunition_fixture(2);click("Munizioni");click("Frecce di prova");fail_save=true;render();assert(lv_obj_has_state(named_control("Lancia"),LV_STATE_DISABLED));draws=random_calls;writes=save_calls;act(72);assert(page==COMBAT&&random_calls==draws&&save_calls==writes&&state.items[1].quantity==2);fail_save=false;
+    /* History failure never refunds or duplicates the paid shot. */
+    ammunition_fixture(3);click("Munizioni");click("Frecce di prova");writes=save_calls;draws=random_calls;fail_history=true;click("Lancia");assert(history_pending&&!ammo_pending&&state.items[1].quantity==2&&save_calls==writes+1);pd_roll fixed=result;click("Accelera");click("Nuovo");click("Lancia");assert(page==HISTORY_HOME&&random_calls==draws+1&&state.items[1].quantity==2&&save_calls==writes+1);fail_history=false;act(2603);assert(!history_pending&&history.count==1&&history.entries[0].total==fixed.total);act(100);
+    /* A changed source or a stale picker never silently switches the stack. */
+    ammunition_fixture(3);click("Munizioni");click("Frecce di prova");strcpy(state.items[1].name,"Altra pila");draws=random_calls;writes=save_calls;act(72);assert(page==COMBAT&&!ammunition_available()&&random_calls==draws&&save_calls==writes);click("Munizioni");state.hp--;act(AC_ITEM_FIRST+2);assert(page==AMMO_PICKER&&ammo_item==1&&random_calls==draws&&save_calls==writes);click("Indietro");click("Munizioni");click("Altra pila");assert(ammunition_available());
+    click("Munizioni");click("Senza consumo");assert(page==COMBAT&&!ammunition_bound()&&random_calls==draws&&save_calls==writes);
+    ammunition_fixture(3);click("Munizioni");click("Frecce di prova");state.history_epoch++;assert(!ammunition_bound());
+    /* Last inventory index, duplicate labels and pages preserve source IDs. */
+    ammunition_fixture(2);for(unsigned i=4;i<PD_ITEMS;i++)state.items[i]=(pd_item){.name="Pila uguale",.quantity=4};state.item_count=PD_ITEMS;strcpy(state.items[59].name,"Ultima pila");click("Munizioni");while(lv_obj_has_state(named_control(">"),LV_STATE_DISABLED)==false)click(">");bounds();click("Ultima pila");assert(ammo_item==59&&page==COMBAT);click("Lancia");assert(state.items[59].quantity==3&&state.items[1].quantity==2);click("Accelera");
+    ammo_item=PD_ITEMS;ammo_paid=ammo_pending=false;pd_demo(&state);combat_roll=0;page=HERO;render();
+    puts("Ammunition UI: selection/cancel/no writes, fixed attack retry, guarded USB/keys, crit/damage no second cost, miss/last shot/empty refusal, explicit replacement/manual mode, undo, six True Strike abilities, history retry/no refund, stale source/picker, epoch and index59 passed; synthetic LVGL.");
+}
+
 int main(void) {
     lv_init();lv_display_t *d=lv_display_create(466,466);static uint16_t buffer[466*40];
     lv_display_set_buffers(d,buffer,NULL,sizeof buffer,LV_DISPLAY_RENDER_MODE_PARTIAL);lv_display_set_flush_cb(d,paint);
     pd_demo(&state);render();bounds();screenshot("hero.ppm");
+    if(getenv("PD_TEST_AMMO_ONLY")){test_ammunition_flow();return 0;}
     if(getenv("PD_TEST_SPELL_ONLY")){test_spell_flow();test_saved_formula();test_spell_battle_flow();return 0;}
     pd_state animated_before=state;unsigned idle_saves=save_calls,idle_rng=random_calls;
     assert(avatar_timer&&avatar_sprite&&!dice_timer);
@@ -2607,13 +2648,14 @@ int main(void) {
     test_spell_flow();
     test_saved_formula();
     test_spell_battle_flow();
+    test_ammunition_flow();
     unsigned covered=0;
-    for(unsigned p=0;p<=SPELL_BATTLE_RECEIPT;p++){
+    for(unsigned p=0;p<=AMMO_RETRY;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)SPELL_BATTLE_RECEIPT+1);
-    assert(covered==SPELL_BATTLE_RECEIPT+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)AMMO_RETRY+1);
+    assert(covered==AMMO_RETRY+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

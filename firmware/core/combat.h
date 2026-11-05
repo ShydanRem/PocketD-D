@@ -28,6 +28,11 @@ int pd_attack_mode(const pd_state *s,int requested);
 bool pd_attack(const pd_state *s,unsigned armor,int mode,pd_random random,void *context,pd_strike *out);
 bool pd_weapon_damage(const pd_strike *strike,pd_random random,void *context,pd_pool *out);
 bool pd_equip(pd_state *s,unsigned index);
+/* Explicit separate ammunition stack. Names grant no rule or numeric bonus.
+   Eligible rows include empty stacks for browsing; prepare rejects zero.
+   Gear effects, charges, healing and the weapon itself cannot be consumed. */
+bool pd_ammunition_eligible(const pd_state *s,unsigned index);
+bool pd_ammunition_prepare(const pd_state *s,unsigned index,pd_state *next);
 /* Consumable/healing only. No draw at full HP. Caller commits next atomically. */
 bool pd_use_item(const pd_state *s,unsigned index,pd_random random,void *context,pd_state *next,pd_pool *roll,unsigned *gained);
 #endif

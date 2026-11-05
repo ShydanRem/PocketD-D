@@ -31,7 +31,8 @@ static void render_dice_game(void){
     const char *part=damage_view_smite_overflow?"Punizione 2":damage_view_smite?"Punizione":damage_view_extra?(damage_parts.extra_effect==PD_HEX_2024?"Necrotici":"Forza"):damage_view_radiant?"Radianti":"Arma";
     if(combat_roll==1){
         pd_weapon_info w={0};attack_weapon_info(&w);
-        snprintf(source,sizeof source,"Attacco %+d | CA %u",strike_ready?strike.roll.bonus:w.attack_bonus,strike_ready?strike.armor:target_armor);
+        if(ammo_paid&&strike_ready)snprintf(source,sizeof source,"Att %+d | CA %u | mun. %u>%u",strike.roll.bonus,strike.armor,ammo_before,ammo_after);
+        else snprintf(source,sizeof source,"Attacco %+d | CA %u",strike_ready?strike.roll.bonus:w.attack_bonus,strike_ready?strike.armor:target_armor);
     }else if(combat_roll==2){
         if(mixed&&has_roll)snprintf(source,sizeof source,"%s %d | %ud%u%+d",part,dice_animation.pool.total,dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
         else if(mixed)snprintf(source,sizeof source,"%s | %ud%u%+d",part,dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
@@ -79,7 +80,7 @@ static void render_dice_game(void){
         lv_obj_add_flag(lv_obj_get_child(detail,0),LV_OBJ_FLAG_HIDDEN);lv_obj_set_width(lv_obj_get_child(detail,0),280);lv_label_set_long_mode(lv_obj_get_child(detail,0),LV_LABEL_LONG_DOT);
         lv_obj_set_style_bg_opa(detail,LV_OPA_TRANSP,0);lv_obj_set_style_border_width(detail,0,0);lv_obj_set_style_shadow_opa(detail,0,0);lv_obj_set_style_pad_all(detail,0,0);pd_ui_name(detail,"Dettagli della prova");
     }
-    lv_obj_t *caption=small_label(source,83,100,300,PD_MUTED);if(combat_roll>=9)label_font(caption,&lv_font_montserrat_14);
+    lv_obj_t *caption=small_label(source,83,100,300,PD_MUTED);if(combat_roll>=9||(combat_roll==1&&ammo_paid))label_font(caption,&lv_font_montserrat_14);
     lv_obj_t *number=label(value,83,124,300,true);label_font(number,&pd_pixel_6);lv_obj_set_style_text_color(number,lv_color_hex(color),0);
     lv_obj_t *meaning=small_label(verdict,83,177,300,color);if(combat_roll==1&&has_roll)label_font(meaning,&lv_font_montserrat_20);
     if(detail){lv_obj_set_parent(caption,detail);lv_obj_set_pos(caption,0,4);lv_obj_set_parent(number,detail);lv_obj_set_pos(number,0,28);lv_obj_set_parent(meaning,detail);lv_obj_set_pos(meaning,0,81);}

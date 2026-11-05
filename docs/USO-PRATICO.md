@@ -1,5 +1,7 @@
 # PocketD-D — uso pratico sul dispositivo
 
+> v0.111: [Munizioni, costo sul tiro e riprova senza nuovi dadi](MUNIZIONI.md).
+
 > v0.110: [Attacco, TS nemico e critici delle magie](MAGIE-COMBATTIMENTO.md).
 
 > v0.107: [rifinitura finale e checklist sul dispositivo](RESTYLE-CHECK.md).
