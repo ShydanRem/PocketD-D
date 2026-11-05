@@ -1,5 +1,8 @@
 # Magie: costo e tiro nello stesso percorso · v0.108
 
+**Dalla v0.109:** [profili persistenti, aumenti e prime formule base Beyond](MAGIE-PROFILI.md).
+Il percorso per un singolo lancio sotto descritto resta disponibile.
+
 Dal Pocket: **Magie → scegli la magia → Lancia**. Per una magia generica scegli:
 
 - **Solo costo**: il percorso precedente, con anteprima e conferma; effetti al tavolo.

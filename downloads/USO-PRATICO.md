@@ -394,3 +394,10 @@ Magie → scegli → Lancia → Danni/Cura me/Cura altri → formula → Rivedi 
 Solo costo conserva il percorso manuale. Formula ed aumenti con slot vanno
 verificati; non sono dedotti dal testo. Riprova non cambia i dadi, Riepilogo non
 consuma di nuovo. [Guida e limiti](MAGIE-TIRI.md).
+
+## Formule riutilizzabili · v0.109
+
+Magie → scegli → Gestisci → Formula → Rivedi → Salva. Base, caratteristica
+collegata e aumento restano con il PG. Lancia → tipo/bersaglio → conferma usa
+la formula risolta; Modifica vale solo per quel lancio. [Guida, compatibilita e
+limiti del riconoscimento Beyond](MAGIE-PROFILI.md).
