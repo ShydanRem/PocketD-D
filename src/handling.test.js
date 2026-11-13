@@ -25,7 +25,7 @@ test('Handling: shield conflicts block attacks and both directions of equipment 
  s.extended.loadout.items[0].equipped=true;assert.equal(weaponStats(s),null);assert.throws(()=>equipWeapon(s,s.inventory[0].id),/scudo/);s.inventory[0].handling.grip=0;assert.ok(weaponStats(s));
 });
 test('Handling: invalid metadata, missing/self bindings and incompatible dice are explicit errors',()=>{
- const s=state(),item=s.inventory[0];for(const patch of [{flags:32},{flags:3},{grip:2},{versatileSides:7},{versatileSides:8},{ammoId:item.id},{ammoId:4},{extra:true}])assert.throws(()=>validateHandling({...item.handling,...patch},item));
+ const s=state(),item=s.inventory[0];for(const patch of [{flags:144},{flags:3},{grip:2},{versatileSides:7},{versatileSides:8},{ammoId:item.id},{ammoId:4},{extra:true}])assert.throws(()=>validateHandling({...item.handling,...patch},item));
  const missing=state();missing.inventory[0].handling.ammoId='missing';assert.throws(()=>parseBackup(serialize(missing)),/assente/);
  const bow={...item,profile:{ranged:true},handling:{...item.handling}};assert.throws(()=>validateHandling(bow.handling,bow));
  assert.deepEqual(validateHandling(emptyHandling(),item),emptyHandling());

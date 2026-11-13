@@ -458,10 +458,21 @@ static void test_dual_flow(void){
     pd_demo(&state);page=HERO;combat_roll=0;dual_result=dual_pending=false;render();puts("Dual UI: separate saved weapon, cancel/draft, frozen d20/save retry, bonus cost on miss/hit, exact damage source, no reroll bypass, manual correction cancel, own turn reset, restart metadata, stale guard and local physical back passed; synthetic LVGL.");
 }
 
+static void extra_fixture(void){dual_fixture();state.dual=(pd_dual){.weapon=2,.edition=2,.feat=1};state.handling[1].flags=PD_NICK|PD_LIGHT|PD_FINESSE;assert(pd_valid(&state));render();}
+static void test_extra_flow(void){
+    dual_fixture();state.handling[1].flags=PD_FINESSE;render();act(DW_OPEN);click("Scegli secondaria");click("Pugnale secondario");click("Regola: due armi 2014");click("Regola: Light 2024");assert(dual_draft.feat&&dual_draft.edition==2&&!dual_other_light);bounds();screenshot("extra114-profile.ppm");click("Salva");assert(state.dual.feat&&state.dual.edition==2&&!(state.handling[1].flags&PD_LIGHT)&&dual_method==PD_EXTRA_FEAT);click("Indietro");click("Dettagli attacco");click("Impugnatura");click("Maestria: Nessuna");click("Maestria: Scalfire 2024");assert((handling_draft.flags>>4)==2);click("Rivedi");click("Salva");assert((state.handling[0].flags>>4)==2);
+    extra_fixture();unsigned draws=random_calls,writes=save_calls;pd_state before=state;click("Secondaria");assert(page==DUAL_ATTACK&&dual_method==PD_EXTRA_NICK);bounds();screenshot("extra114-nick.ppm");fail_storage_commit=true;click("Lancia Nick");assert(dual_pending&&random_calls==draws+1&&!memcmp(&state,&before,sizeof state));pd_strike frozen=strike;act(DW_METHOD+2);assert(dual_method==PD_EXTRA_NICK);fail_storage_commit=false;click("Riprova");assert(page==DICE&&state.dual.light_spent&&!state.dual.bonus_spent&&!state.dual.feat_spent&&save_calls==writes+2&&!memcmp(&frozen,&strike,sizeof strike)&&random_calls==draws+1);click("Accelera");click("Danni");click("Accelera");act(85);click("Secondaria");assert(dual_method==PD_EXTRA_FEAT);bounds();screenshot("extra114-feat.ppm");click("Lancia: bonus");click("Accelera");assert(state.dual.bonus_spent&&state.dual.feat_spent&&state.dual.light_spent);act(85);click("Secondaria");click("Nick");before=state;draws=random_calls;writes=save_calls;act(DW_ROLL);assert(!memcmp(&state,&before,sizeof state)&&draws==random_calls&&writes==save_calls);bounds();screenshot("extra114-spent.ppm");click("Turno");click("Inizio turno");click("Conferma");assert(!state.dual.light_spent&&!state.dual.feat_spent&&!state.dual.bonus_spent);
+    extra_fixture();state.dual.bonus_spent=1;click("Secondaria");assert(dual_method==PD_EXTRA_NICK);click("Lancia Nick");click("Accelera");assert(state.dual.bonus_spent&&state.dual.light_spent&&!state.dual.feat_spent);
+    dual_fixture();state.handling[0].flags=PD_CLEAVE;assert(pd_valid(&state));render();click("Lancia");click("Accelera");assert(strike.hits&&strike.weapon.mastery==3);click("Maestria");assert(page==MASTERY_HELP);bounds();screenshot("extra114-cleave-help.ppm");before=state;draws=random_calls;writes=save_calls;act(DW_CLEAVE);assert(page==MASTERY_HELP&&!memcmp(&state,&before,sizeof state)&&draws==random_calls&&writes==save_calls);click("Indietro");click("Danni");click("Accelera");click("Maestria");click("Cleave");assert(page==CLEAVE_ATTACK);bounds();screenshot("extra114-cleave.ppm");before=state;draws=random_calls;writes=save_calls;fail_storage_commit=true;click("Lancia Cleave");assert(dual_pending&&random_calls==draws+1&&!memcmp(&state,&before,sizeof state));fail_storage_commit=false;click("Riprova");assert(page==DICE&&state.dual.cleave_spent&&!state.dual.bonus_spent&&random_calls==draws+1&&save_calls==writes+2&&!strike.weapon.true_strike&&!strike.weapon.damage_base);click("Accelera");click("Danni");click("Accelera");click("Maestria");assert(page==MASTERY_HELP);act(DW_CLEAVE);assert(page==MASTERY_HELP);click("Indietro");
+    for(unsigned m=4;m<=8;m++){dual_fixture();state.handling[0].flags=m<<4;render();click("Lancia");click("Accelera");before=state;draws=random_calls;writes=save_calls;click("Maestria");assert(page==MASTERY_HELP);bounds();char note[220];assert(pd_mastery_text(&strike,state.level,note,sizeof note)&&note[0]);if(m==7)screenshot("extra114-topple.ppm");assert(!memcmp(&state,&before,sizeof state)&&draws==random_calls&&writes==save_calls);physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};rules_keyboard=false;probe_key_gesture(1,900);assert(page==DICE&&!memcmp(&state,&before,sizeof state));}
+    pd_demo(&state);page=HERO;combat_roll=0;dual_pending=dual_result=false;render();puts("Extra attack UI: saved Nick/feat modes, same-d20 retry, separate turn costs including bonus already used, turn reset, guarded Cleave after original damage, no recursion, readonly mastery/Topple without fake RNG or local target effects and physical back passed; synthetic LVGL.");
+}
+
 int main(void) {
     lv_init();lv_display_t *d=lv_display_create(466,466);static uint16_t buffer[466*40];
     lv_display_set_buffers(d,buffer,NULL,sizeof buffer,LV_DISPLAY_RENDER_MODE_PARTIAL);lv_display_set_flush_cb(d,paint);
     pd_demo(&state);render();bounds();screenshot("hero.ppm");
+    if(getenv("PD_TEST_EXTRA_ONLY")){test_extra_flow();return 0;}
     if(getenv("PD_TEST_DUAL_ONLY")){test_dual_flow();return 0;}
     if(getenv("PD_TEST_SOURCE_ONLY")){test_source_copy_flow();return 0;}
     if(getenv("PD_TEST_HANDLING_ONLY")){test_handling_flow();return 0;}
@@ -2718,13 +2729,14 @@ int main(void) {
     test_handling_flow();
     test_source_copy_flow();
     test_dual_flow();
+    test_extra_flow();
     unsigned covered=0;
-    for(unsigned p=0;p<=BONUS_ACTION;p++){
+    for(unsigned p=0;p<=CLEAVE_ATTACK;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)BONUS_ACTION+1);
-    assert(covered==BONUS_ACTION+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)CLEAVE_ATTACK+1);
+    assert(covered==CLEAVE_ATTACK+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

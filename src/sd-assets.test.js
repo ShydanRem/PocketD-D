@@ -33,7 +33,7 @@ test('SD preflight rejects corrupt/truncated/download failures and forged handle
 });
 test('SD old firmware and device errors do not send a PG or claim success; exact already-installed result skips writes',async()=>{
  const old=serial({old:true});await assert.rejects(installSdAssets(handle,{serial:old.serial,timeouts}),/firmware 0.83/);assert.equal(old.commands.length,3);assert.equal(old.chunks,0);
- for(const version of [17,22,23,24]){const done=serial({already:true,version});assert.deepEqual(await installSdAssets(handle,{serial:done.serial,timeouts}),{installed:true,already:true});assert.equal(done.chunks,0);}
+ for(const version of [17,22,23,24,25]){const done=serial({already:true,version});assert.deepEqual(await installSdAssets(handle,{serial:done.serial,timeouts}),{installed:true,already:true});assert.equal(done.chunks,0);}
  for(const settings of [{failAt:'begin'},{failAt:'write'},{wrongAck:true}]){const f=serial(settings),phases=[];await assert.rejects(installSdAssets(handle,{serial:f.serial,timeouts,onProgress:p=>phases.push(p)}));assert.ok(!phases.includes('sd-complete'));assert.ok(f.commands.includes('PDD ASSET ABORT 1'));assert.equal(f.closed,1);assert.ok(!f.commands.some(s=>s.startsWith('{')));}
 });
 test('SD cancellation shares the character USB lock and sends one best-effort abort without replaying chunks',async()=>{

@@ -8,6 +8,7 @@ if not (ROOT/'dist/index.html').is_file():raise SystemExit('Run npm run build fi
 subprocess.run(['python3',str(ROOT/'scripts/fetch-windows-runtime.py'),'--verify'],check=True)
 runtime_info=json.loads((ROOT/'scripts/windows-runtime.json').read_text());runtime=ROOT/'.pocketdd-runtime'/f'node-{runtime_info["version"]}-{runtime_info["platform"]}'
 files=[ROOT/'docs/MUNIZIONI.md',ROOT/'docs/previews/v111-ammunition.png',ROOT/'docs/MAGIE-COMBATTIMENTO.md',ROOT/'docs/previews/v110-spell-battle.png',ROOT/'docs/MAGIE-PROFILI.md',ROOT/'docs/MAGIE-TIRI.md',ROOT/'docs/LIBRERIA-LOCALE.md',ROOT/'docs/previews/v090-local-library.png',ROOT/'docs/POCKET-AUTONOMO.md',ROOT/'docs/PUNIZIONE-DIVINA.md',ROOT/'docs/previews/v089-divine-smite.png',ROOT/'docs/EFFETTI-SUL-COLPO.md',ROOT/'docs/previews/v088-on-hit-effects.png',ROOT/'docs/ATTACCHI-CONTESTUALI.md',ROOT/'docs/previews/v087-contextual-attacks.png',ROOT/'docs/OGGETTI-SINTONIA.md',ROOT/'docs/previews/v086-attunement.png',ROOT/'docs/EQUIPAGGIAMENTO-MAGIE.md',ROOT/'docs/previews/v085-device-session.png',ROOT/'docs/GITHUB-PAGES.md',ROOT/'docs/previews/v084-wifi-direct.png',ROOT/'docs/previews/v083-sd-install.png',ROOT/'docs/SD-WEB-USB.md',ROOT/'package.json',ROOT/'Avvia-PocketDD.cmd',ROOT/'Avvia-Ponte.cmd',ROOT/'docs/PONTE-BEYOND.md',ROOT/'docs/PONTE-BEYOND-PROVE.md',ROOT/'docs/STATO-SOFTWARE.md',ROOT/'docs/USO-PRATICO.md',ROOT/'docs/INIZIA-QUI.md',ROOT/'docs/SESSIONE-V082.md',ROOT/'docs/BEYOND-CONSENSO-V0821.md',ROOT/'docs/previews/v082-key-picker.png',ROOT/'docs/previews/v081-setup-flow.png',ROOT/'docs/previews/v080-practical-device.png',ROOT/'docs/BEYOND-PERSONALIZZAZIONI-TIRI.md',ROOT/'docs/ABILITA-CARATTERISTICHE.md',ROOT/'docs/DIFESE-VERIFICA-RAPIDA.md',ROOT/'docs/BEYOND-CONTATORI-MANUALI.md',ROOT/'docs/BEYOND-CANNONE.md',ROOT/'docs/BEYOND-V1.md',ROOT/'docs/WIFI.md',ROOT/'docs/BEYOND-TEMPO-REALE.md',ROOT/'docs/previews/v078-reference-wifi.png',ROOT/'docs/previews/v079-bridge.png']
+files += [ROOT/'docs/ATTACCHI-EXTRA-MAESTRIE.md',ROOT/'docs/previews/v114-extra-masteries.png']
 files += [ROOT/'docs/DUE-ARMI-GRAZE.md',ROOT/'docs/previews/v113-dual-graze.png']
 files += [ROOT/'docs/ARMI-COPIE-V112.md',ROOT/'docs/previews/v112-handling-copy.png']
 for directory in ('src','scripts'):
@@ -47,6 +48,9 @@ Uso pratico sul dispositivo, filtri e icone: docs/USO-PRATICO.md.
 Profilo PG, iniziativa e dotazioni: nuova importazione v20, firmware 0.78 / USB17.
 Wi-Fi: Menu > ingranaggio > Wi-Fi > Cerca reti; password sul display; vedi docs/WIFI.md.
 Beyond dal Pocket v0.91: I miei PG > ricerca > ID pubblico > Leggi > anteprima > Importa.
+Firmware v0.114: Nick, attacco Dual Wielder 2024, Cleave e otto maestrie configurabili.
+Guida docs/ATTACCHI-EXTRA-MAESTRIE.md. PC v28 / USB25 / PDDi per nuovi dati, precedenti leggibili.
+Conserva dati; aggiorna il componente PC. Look SD invariati. Effetti sui nemici assistiti al tavolo.
 Firmware v0.113: secondaria senza cambio arma, azione bonus condivisa e Scalfire/Graze 2024.
 Guida docs/DUE-ARMI-GRAZE.md. Aggiorna anche il componente PC: USB24 / PDDh, PC v27 per nuovi dati.
 Conserva dati; nessun nuovo look SD. Nick, altre maestrie e talenti restano manuali.

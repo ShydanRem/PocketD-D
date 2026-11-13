@@ -1,10 +1,11 @@
 #include "combat.h"
 #include "checks.h"
 #include "magic.h"
+#include <stdio.h>
 bool pd_weapon_stats(const pd_state *s,unsigned index,pd_weapon_info *out) {
     if(!s||!out||!s->inventory_available||index>=s->item_count)return false;
     const pd_item *v=&s->items[index];if(v->kind!=PD_WEAPON||!v->quantity)return false;
-    pd_weapon_info w={.graze=!!(s->handling[index].flags&PD_GRAZE),.index=index,.ability=v->ability,.base=pd_modifier(s->abilities[v->ability]),.trained=(v->flags&1)?pd_proficiency(s->level):0,.count=v->count,.sides=v->sides};
+    pd_weapon_info w={.mastery=s->handling[index].flags>>4,.graze=(s->handling[index].flags>>4)==1,.index=index,.ability=v->ability,.base=pd_modifier(s->abilities[v->ability]),.trained=(v->flags&1)?pd_proficiency(s->level):0,.count=v->count,.sides=v->sides};
     if(v->ability<2&&(s->handling[index].flags&PD_FINESSE)){w.ability=s->abilities[0]>=s->abilities[1]?0:1;w.base=pd_modifier(s->abilities[w.ability]);}
     if((s->handling[index].flags&PD_VERSATILE)&&pd_weapon_two_hands(s,index))w.sides=s->handling[index].sides;
     bool thrown=s->combat.thrown&&index==s->equipped&&v->thrown_range;
@@ -17,28 +18,48 @@ bool pd_weapon_stats(const pd_state *s,unsigned index,pd_weapon_info *out) {
     w.attack_bonus=w.base+w.trained+w.attack_extra;w.damage_bonus=w.damage_base+w.damage_extra;
     *out=w;return true;
 }
-bool pd_dual_stats(const pd_state *s,pd_weapon_info *out){
-    if(!s||!out||!pd_valid(s)||!s->hp||!s->dual.weapon||s->equipped>=s->item_count)return false;
+bool pd_dual_stats_for(const pd_state *s,unsigned method,pd_weapon_info *out){
+    if(method>PD_EXTRA_FEAT||!s||!out||!pd_valid(s)||!s->hp||!s->dual.weapon||s->equipped>=s->item_count)return false;
     unsigned other=s->dual.weapon-1;const pd_item *a=&s->items[s->equipped],*b=&s->items[other];
     if(other==s->equipped||a->kind!=PD_WEAPON||!a->quantity||!b->quantity||s->combat.thrown)return false;
-    if(!(s->handling[s->equipped].flags&PD_LIGHT)||!(s->handling[other].flags&PD_LIGHT)||pd_weapon_two_hands(s,s->equipped)||pd_weapon_two_hands(s,other))return false;
+    if(!(s->handling[s->equipped].flags&PD_LIGHT)||(method!=PD_EXTRA_FEAT&&!(s->handling[other].flags&PD_LIGHT))||pd_weapon_two_hands(s,s->equipped)||pd_weapon_two_hands(s,other))return false;
     for(unsigned i=0;i<s->item_count;i++)if(s->gear[i].kind==PD_WEAR_SHIELD&&s->gear[i].equipped)return false;
     if(s->dual.edition==1&&((a->flags|b->flags)&4))return false;
+    if(method==PD_EXTRA_NICK&&(s->dual.edition!=2||(s->handling[other].flags>>4)!=2))return false;
+    if(method==PD_EXTRA_FEAT&&(s->dual.edition!=2||!s->dual.feat||(b->flags&4)))return false;
     pd_weapon_info w;if(!pd_weapon_stats(s,other,&w))return false;
     w.damage_base=s->dual.style?w.base:w.base<0?w.base:0;w.damage_bonus=w.damage_base+w.damage_extra;*out=w;return true;
 }
-bool pd_dual_prepare(const pd_state *s,bool trigger,pd_state *next){
-    pd_weapon_info w;if(!trigger||!pd_dual_stats(s,&w)||s->dual.bonus_spent||next==s)return false;
+bool pd_dual_prepare_for(const pd_state *s,unsigned method,bool trigger,pd_state *next){
+    pd_weapon_info w;if(!trigger||!pd_dual_stats_for(s,method,&w)||next==s)return false;
+    if(method==PD_EXTRA_NICK?s->dual.light_spent:method==PD_EXTRA_FEAT?(s->dual.bonus_spent||s->dual.feat_spent):(s->dual.bonus_spent||s->dual.light_spent))return false;
     unsigned binding=s->handling[w.index].ammo;
     if(!w.melee&&binding){unsigned ammo=binding-1;if(!pd_ammunition_eligible(s,ammo)||!s->items[ammo].quantity)return false;}
-    if(next){*next=*s;next->dual.bonus_spent=1;if(!w.melee&&binding&&!pd_item_quantity_set(next,binding-1,s->items[binding-1].quantity-1))return false;}
+    if(next){*next=*s;if(method!=PD_EXTRA_NICK)next->dual.bonus_spent=1;if(method==PD_EXTRA_FEAT)next->dual.feat_spent=1;else next->dual.light_spent=1;if(!w.melee&&binding&&!pd_item_quantity_set(next,binding-1,s->items[binding-1].quantity-1))return false;}
     return true;
 }
-bool pd_dual_attack(const pd_state *s,bool trigger,unsigned armor,int mode,pd_roll_context context,bool ignore,pd_random random,void *random_context,pd_strike *out){
-    if(!out||!random||armor<1||armor>30||!pd_dual_prepare(s,trigger,NULL))return false;
+bool pd_dual_attack_for(const pd_state *s,unsigned method,bool trigger,unsigned armor,int mode,pd_roll_context context,bool ignore,pd_random random,void *random_context,pd_strike *out){
+    if(!out||!random||armor<1||armor>30||!pd_dual_prepare_for(s,method,trigger,NULL))return false;
     pd_strike hit={.armor=armor};pd_attack_resolution r;
-    if(!pd_dual_stats(s,&hit.weapon)||!pd_attack_resolve(s,mode,context,ignore,&r)||!r.allowed)return false;
+    if(!pd_dual_stats_for(s,method,&hit.weapon)||!pd_attack_resolve(s,mode,context,ignore,&r)||!r.allowed)return false;
     hit.roll=pd_d20(hit.weapon.attack_bonus,r.mode,random,random_context);hit.critical=hit.roll.natural==20;hit.hits=hit.roll.natural!=1&&(hit.critical||hit.roll.total>=(int)armor);*out=hit;return true;
+}
+bool pd_dual_stats(const pd_state *s,pd_weapon_info *out){return pd_dual_stats_for(s,PD_EXTRA_LIGHT,out);}
+bool pd_dual_prepare(const pd_state *s,bool trigger,pd_state *next){return pd_dual_prepare_for(s,PD_EXTRA_LIGHT,trigger,next);}
+bool pd_dual_attack(const pd_state *s,bool trigger,unsigned armor,int mode,pd_roll_context c,bool ignore,pd_random r,void *ctx,pd_strike *out){return pd_dual_attack_for(s,PD_EXTRA_LIGHT,trigger,armor,mode,c,ignore,r,ctx,out);}
+bool pd_cleave_stats(const pd_state *s,const pd_strike *origin,pd_weapon_info *out){
+    if(!s||!out||!origin||!pd_valid(s)||!s->hp||!origin->hits||!origin->weapon.melee||origin->weapon.mastery!=3||(origin->weapon.index!=s->equipped&&s->dual.weapon!=origin->weapon.index+1)||!pd_weapon_hands_ready(s,origin->weapon.index))return false;
+    pd_weapon_info w;if(!pd_weapon_stats(s,origin->weapon.index,&w)||w.mastery!=3||!w.melee)return false;
+    w.damage_base=w.base<0?w.base:0;w.damage_bonus=w.damage_base+w.damage_extra;*out=w;return true;
+}
+bool pd_cleave_prepare(const pd_state *s,const pd_strike *origin,bool target,pd_state *next){
+    pd_weapon_info w;if(!target||!pd_cleave_stats(s,origin,&w)||s->dual.cleave_spent||next==s)return false;
+    if(next){*next=*s;next->dual.cleave_spent=1;}return true;
+}
+bool pd_cleave_attack(const pd_state *s,const pd_strike *origin,bool target,unsigned armor,int mode,pd_roll_context c,bool ignore,pd_random random,void *ctx,pd_strike *out){
+    if(!out||!random||armor<1||armor>30||!pd_cleave_prepare(s,origin,target,NULL))return false;
+    pd_strike hit={.armor=armor};pd_attack_resolution r;if(!pd_cleave_stats(s,origin,&hit.weapon)||!pd_attack_resolve(s,mode,c,ignore,&r)||!r.allowed)return false;
+    hit.roll=pd_d20(hit.weapon.attack_bonus,r.mode,random,ctx);hit.critical=hit.roll.natural==20;hit.hits=hit.roll.natural!=1&&(hit.critical||hit.roll.total>=(int)armor);*out=hit;return true;
 }
 bool pd_attack_resolve(const pd_state *s,int requested,pd_roll_context context,bool ignore,pd_attack_resolution *out){
     pd_condition_result effect;if(!out||requested< -1||requested>1||!pd_condition_evaluate(s,PD_ROLL_ATTACK,0,context,ignore,&effect))return false;
@@ -142,4 +163,21 @@ bool pd_smite_damage(const pd_state *s,const pd_strike *hit,unsigned index,unsig
     if(!pd_roll_pool(8,first,0,true,random,context,&result.smite))return false;
     if(extra&&!pd_roll_pool(8,extra,0,true,random,context,&result.smite_overflow))return false;
     result.total+=result.smite.total+result.smite_overflow.total;*out=result;return true;
+}
+
+const char *pd_mastery_name(unsigned m){static const char *const names[]={"Nessuna","Scalfire","Nick","Cleave","Push","Sap","Slow","Topple","Vex"};return m<9?names[m]:"Non supportata";}
+bool pd_mastery_text(const pd_strike *hit,unsigned level,char *text,size_t cap){
+    if(!hit||!text||!cap||level<1||level>20||hit->weapon.mastery<1||hit->weapon.mastery>8)return false;
+    const char *note="";unsigned m=hit->weapon.mastery;int n=0;
+    if(!hit->hits&&m!=1&&m!=2)note="Mancato: maestria non applicabile";
+    else if(m==1){unsigned damage=0;if(pd_graze_damage(hit,&damage))n=snprintf(text,cap,"Mancato: Scalfire %u. Stesso tipo dell'arma; difese al tavolo.",damage);else note="Colpito: usa i danni normali, senza Scalfire.";}
+    else if(m==2)note="Nick permette l'extra Light in Attacco senza bonus. Il limite per turno vale anche sul mancato.";
+    else if(m==3)note="Cleave: altro nemico entro 1,5 m dal primo e nella tua portata. Un extra per turno.";
+    else if(m==4)note="Push: puoi spingere fino a 3 m, diritto lontano da te; solo taglia Grande o inferiore.";
+    else if(m==5)note="Sap: svantaggio al prossimo attacco del nemico prima dell'inizio del tuo prossimo turno.";
+    else if(m==6)note="Slow: solo se infliggi danni, velocita -3 m fino all'inizio del tuo prossimo turno. Non si somma.";
+    else if(m==7)n=snprintf(text,cap,"Topple: TS COS CD %d del bersaglio. Su fallimento diventa Prono; esito dichiarato dal DM.",8+hit->weapon.base+pd_proficiency(level));
+    else note="Vex: solo se infliggi danni. Vantaggio al tuo prossimo attacco contro lo stesso nemico, entro fine del tuo prossimo turno.";
+    if(!n)n=snprintf(text,cap,"%s",note);
+    if(n<0||(size_t)n>=cap){text[0]=0;return false;}return true;
 }

@@ -1,5 +1,8 @@
 # PocketD-D — uso pratico sul dispositivo
 
+> v0.114: [Nick, talento 2024 e Cleave](ATTACCHI-EXTRA-MAESTRIE.md).
+> Dalla secondaria scegli Light/Nick/Talento; dai risultati apri **Maestria**.
+
 > v0.113: [Due armi, azione bonus e Scalfire](DUE-ARMI-GRAZE.md).
 > Attacca → dettagli → Due armi per la prima configurazione; poi **Secondaria**.
 > Il saldo bonus è in **Turni e reazione** e si recupera a **Inizio turno**.

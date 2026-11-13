@@ -31,8 +31,8 @@ static void render_dice_game(void){
     const char *part=damage_view_smite_overflow?"Punizione 2":damage_view_smite?"Punizione":damage_view_extra?(damage_parts.extra_effect==PD_HEX_2024?"Necrotici":"Forza"):damage_view_radiant?"Radianti":"Arma";
     if(combat_roll==1){
         pd_weapon_info w={0};attack_weapon_info(&w);
-        if(ammo_paid&&strike_ready)snprintf(source,sizeof source,"Att %+d | CA %u | mun. %u>%u",strike.roll.bonus,strike.armor,ammo_before,ammo_after);
-        else snprintf(source,sizeof source,dual_result?"Secondaria %+d | CA %u | bonus spesa":"Attacco %+d | CA %u",strike_ready?strike.roll.bonus:w.attack_bonus,strike_ready?strike.armor:target_armor);
+        if(ammo_paid&&strike_ready)snprintf(source,sizeof source,"%s %+d | CA %u | mun. %u>%u",dual_result?extra_caption:"Att",strike.roll.bonus,strike.armor,ammo_before,ammo_after);
+        else snprintf(source,sizeof source,"%s %+d | CA %u",dual_result?extra_caption:"Attacco",strike_ready?strike.roll.bonus:w.attack_bonus,strike_ready?strike.armor:target_armor);
     }else if(combat_roll==2){
         if(mixed&&has_roll)snprintf(source,sizeof source,"%s %d | %ud%u%+d",part,dice_animation.pool.total,dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
         else if(mixed)snprintf(source,sizeof source,"%s | %ud%u%+d",part,dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
@@ -128,6 +128,7 @@ static void render_dice_game(void){
         bool context=state.roll_conditions&&!pool_view&&ability>=0;
         lv_obj_t *more=icon_button(context?"Contesto":"Altri",context?PD_UI_SHEET:PD_UI_MENU,327,335,56,48,context?2230:40,!dice_animation.active);(void)more;
     }
-    const char *names[]={"Eroe","Scheda","Storico","Usi"};const lv_image_dsc_t *icons[]={&theme_hero,&theme_sheet,&theme_notes,&theme_crystal};const int actions[]={100,101,2600,103};
-    for(unsigned i=0;i<4;i++){lv_obj_t *b=button("",133+52*i,394,44,44,actions[i],!dice_animation.active);pd_ui_name(b,names[i]);art(icons[i],6,6,b);}
+    bool mastery=strike_ready&&(combat_roll==1||combat_roll==2)&&strike.weapon.mastery;
+    const char *names[]={"Eroe","Scheda","Storico","Usi","Maestria"};const lv_image_dsc_t *icons[]={&theme_hero,&theme_sheet,&theme_notes,&theme_crystal,pd_ui_icon(PD_UI_ATTACK)};const int actions[]={100,101,2600,103,DW_MASTER};
+    for(unsigned i=0;i<(mastery?5u:4u);i++){lv_obj_t *b=button("",mastery?115+48*i:133+52*i,mastery?386:394,44,44,actions[i],!dice_animation.active);pd_ui_name(b,names[i]);art(icons[i],6,6,b);}
 }

@@ -434,3 +434,15 @@ section='''<section class="after"><h2>Secondaria pronta, azione bonus chiara · 
 <p><a href="downloads/PocketDD-DUE-ARMI-GRAZE.md">Uso, compatibilita e limiti</a>. Aggiorna firmware e componente Pocket PC insieme, usando <strong>Conserva dati</strong>; look SD invariati. Nick, altre maestrie e talenti restano manuali. Prove e catture sintetiche; nessuna nuova lettura/scrittura Beyond o prova fisica.</p>
 <div class="import-captures"><img src="assets/dual113-attack.png" width="466" height="466" alt="Tiro della secondaria con PG sintetico, principale conservata"><img src="assets/graze113-result.png" width="466" height="466" alt="Mancato sintetico con due danni potenziali di Scalfire"></div></section>'''
 page.write_text(page.read_text().replace('<section class="after">',section+'<section class="after">',1))
+
+# Real native views with synthetic inputs; no physical/per-account claim.
+shutil.copyfile(ROOT/'docs/ATTACCHI-EXTRA-MAESTRIE.md',out/'downloads/PocketDD-ATTACCHI-EXTRA-MAESTRIE.md')
+shutil.copyfile(ROOT/'docs/previews/v114-extra-masteries.png',out/'downloads/previews/v114-extra-masteries.png')
+for name in ('extra114-nick','extra114-topple'):
+ shutil.copyfile(ROOT/'firmware/tests/out/ui-build'/f'{name}.png',out/'assets'/f'{name}.png')
+section='''<section class="after"><h2>Nick, attacchi extra e maestrie · v0.114</h2>
+<p>Light, Nick e attacco da Dual Wielder 2024 dichiarato nella stessa schermata. Light/Nick condividono un solo extra; il talento usa un contatore distinto e la bonus. Cleave apre un attacco contro un altro nemico dichiarato valido, una volta per turno, dopo i danni originali.</p>
+<p>Contatori conservati dopo riavvio, riprova con lo stesso d20, costi e munizioni insieme. Otto maestrie configurabili: Scalfire, Nick e Cleave operativi; Push, Sap, Slow, Topple e Vex assistiti al tavolo. CD Topple dal vero modificatore del colpo; nessun finto TS nemico o vantaggio Vex automatico.</p>
+<p><a href="downloads/PocketDD-ATTACCHI-EXTRA-MAESTRIE.md">Guida, compatibilita e limiti</a>. Aggiorna firmware e componente PC insieme con <strong>Conserva dati</strong>; look SD invariati. Nuove prove software sintetiche, da collaudare sul dispositivo. Nessuna nuova lettura o scrittura Beyond.</p>
+<div class="import-captures"><img src="assets/extra114-nick.png" width="466" height="466" alt="Nick selezionato con dati sintetici e costo Light distinto dalla bonus"><img src="assets/extra114-topple.png" width="466" height="466" alt="Maestria Topple assistita: CD dal colpo sintetico ed esito del DM"></div></section>'''
+page.write_text(page.read_text().replace('<section class="after">',section+'<section class="after">',1))

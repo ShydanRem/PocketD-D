@@ -7,7 +7,7 @@ export function helperRequest(action,{win=window,timeout=1500,view}={}){
 }
 export function supportsCurrentHelper(version){
  if(typeof version!=='string'||!/^\d+\.\d+\.\d+$/.test(version))return false;
- const parts=version.split('.').map(Number),minimum=[0,113,0];for(let i=0;i<3;i++){if(parts[i]!==minimum[i])return parts[i]>minimum[i];}return true;
+ const parts=version.split('.').map(Number),minimum=[0,114,0];for(let i=0;i<3;i++){if(parts[i]!==minimum[i])return parts[i]>minimum[i];}return true;
 }
 export function bindPocketHub(root,{blocked=()=>false}={}){
  const update='Aggiorna il componente Pocket PC qui sotto, premi Ricarica nelle estensioni e ricarica questa pagina.';

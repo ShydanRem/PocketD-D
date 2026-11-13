@@ -9,13 +9,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
  def log_message(self,*args):pass
 server=http.server.ThreadingHTTPServer(('127.0.0.1',0),partial(Handler,directory=str(ROOT/'extension')))
 threading.Thread(target=server.serve_forever,daemon=True).start()
-diagnostic=json.loads((ROOT/'firmware/tests/fixtures/diagnostics-v1.synthetic.json').read_text());diagnostic['firmware']='0.93.0-synthetic';diagnostic['formats']['usb']=24;diagnostic['formats']['state']=43
+diagnostic=json.loads((ROOT/'firmware/tests/fixtures/diagnostics-v1.synthetic.json').read_text());diagnostic['firmware']='0.114.0-synthetic';diagnostic['formats']['usb']=25;diagnostic['formats']['state']=44
 backup=(ROOT/'firmware/tests/fixtures/device-backup-v1.synthetic.json').read_text()
 mock=r'''
 window.chooserCalls=0;window.secretWrites=0;
 let reader,pending='';const nonce='0123456789abcdef0123456789abcdef',d=__DIAGNOSTIC__,backup=BACKUP,crc=CRC,hash='d439cacf0de37f60c16d3dec4e59fefe7cb19e9bf0d9feb10e3fec651d31950f';
 const push=text=>reader.enqueue(new TextEncoder().encode(text));window.approvePocket=()=>push('PDD ACCOUNT ACCEPT 1 '+nonce+'\n');
-const port={open:async()=>{pending='';port.readable=new ReadableStream({start(c){reader=c}});port.writable=new WritableStream({write(bytes){pending+=new TextDecoder().decode(bytes);let at;while((at=pending.indexOf('\n'))>=0){const line=pending.slice(0,at);pending=pending.slice(at+1);if(line==='PDD HELLO')push('PDD READY 24\n');else if(line==='PDD DIAGNOSTICS GET 1')push('PDD DIAGNOSTICS '+JSON.stringify(d)+'\n');else if(line==='PDD BACKUP HELLO')push('PDD BACKUP_READY 1\n');else if(line==='PDD BACKUP GET 1')push('PDD WAIT_BACKUP\nPDD BACKUP_DATA '+new TextEncoder().encode(backup).length+' '+crc+'\n'+backup+'\nPDD BACKUP_DONE\n');else if(line==='PDD ASSET HELLO 1')push('PDD ASSET READY 1\n');else if(line.startsWith('PDD ASSET BEGIN'))push('PDD ASSET DONE 1 '+hash+'\n');else if(line==='PDD ACCOUNT HELLO 1')push('PDD ACCOUNT CODE 1 '+nonce+' 123456\n');else if(line.startsWith('PDD ACCOUNT OFFER')){window.secretWrites++;push('PDD ACCOUNT LINKED 1 '+nonce+'\n');}}}})},close:async()=>{},setSignals:async()=>{}};
+const port={open:async()=>{pending='';port.readable=new ReadableStream({start(c){reader=c}});port.writable=new WritableStream({write(bytes){pending+=new TextDecoder().decode(bytes);let at;while((at=pending.indexOf('\n'))>=0){const line=pending.slice(0,at);pending=pending.slice(at+1);if(line==='PDD HELLO')push('PDD READY 25\n');else if(line==='PDD DIAGNOSTICS GET 1')push('PDD DIAGNOSTICS '+JSON.stringify(d)+'\n');else if(line==='PDD BACKUP HELLO')push('PDD BACKUP_READY 1\n');else if(line==='PDD BACKUP GET 1')push('PDD WAIT_BACKUP\nPDD BACKUP_DATA '+new TextEncoder().encode(backup).length+' '+crc+'\n'+backup+'\nPDD BACKUP_DONE\n');else if(line==='PDD ASSET HELLO 1')push('PDD ASSET READY 1\n');else if(line.startsWith('PDD ASSET BEGIN'))push('PDD ASSET DONE 1 '+hash+'\n');else if(line==='PDD ACCOUNT HELLO 1')push('PDD ACCOUNT CODE 1 '+nonce+' 123456\n');else if(line.startsWith('PDD ACCOUNT OFFER')){window.secretWrites++;push('PDD ACCOUNT LINKED 1 '+nonce+'\n');}}}})},close:async()=>{},setSignals:async()=>{}};
 Object.defineProperty(navigator,'serial',{value:{requestPort:async()=>{window.chooserCalls++;return port;}}});
 window.chrome={permissions:{contains:async()=>true,request:async()=>true,remove:async()=>true},cookies:{get:async()=>({value:'synthetic-session-only',expirationDate:Date.now()/1000+3600})}};
 '''
@@ -43,7 +43,7 @@ try:
   assert Path(saved.value.path()).read_text()==backup;expect(page.locator('#device-status')).to_contain_text('Backup verificato')
   page.locator('#device-looks').click();expect(page.locator('#device-status')).to_contain_text('già aggiornati',timeout=15000);assert page.evaluate('chooserCalls')==1
   page.locator('#device-file').set_input_files({'name':'bad.json','mimeType':'application/json','buffer':b'{}'});expect(page.locator('#device-status')).not_to_contain_text('già aggiornati');assert page.evaluate('chooserCalls')==1
-  page.locator('#connection-info>summary').click();page.locator('#device-change').click();expect(page.locator('#device-status')).to_contain_text('firmware 0.93.0-synthetic');assert page.evaluate('chooserCalls')==2
+  page.locator('#connection-info>summary').click();page.locator('#device-change').click();expect(page.locator('#device-status')).to_contain_text('firmware 0.114.0-synthetic');assert page.evaluate('chooserCalls')==2
   assert 'synthetic-session-only' not in page.locator('body').inner_text() and page.evaluate('localStorage.length')==0
   for width in [1000,390,320]:page.set_viewport_size({'width':width,'height':1000});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
   page.set_viewport_size({'width':1000,'height':1000});page.locator('#connection-info>summary').click();page.locator('main').screenshot(path='/workspace/PocketDD-PC-hub-preview.png');assert not errors,errors;browser.close()

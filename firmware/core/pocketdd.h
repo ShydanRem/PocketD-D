@@ -16,7 +16,9 @@
 #define PD_METADATA_BYTES (PD_HANDLING_BYTES+PD_PROVENANCE_BYTES)
 #define PD_HANDLING_RECORD_SIZE (PD_FORMULA_RECORD_SIZE+PD_METADATA_BYTES)
 #define PD_DUAL_BYTES 4u
-#define PD_RECORD_SIZE (PD_HANDLING_RECORD_SIZE+PD_DUAL_BYTES)
+#define PD_DUAL_RECORD_SIZE (PD_HANDLING_RECORD_SIZE+PD_DUAL_BYTES)
+#define PD_EXTRA_BYTES 4u
+#define PD_RECORD_SIZE (PD_DUAL_RECORD_SIZE+PD_EXTRA_BYTES)
 #define PD_RECORD_MAGIC "PDDe"
 #define PD_FORMULA_RECORD_MAGIC "PDDf"
 #define PD_SCENES 3
@@ -42,8 +44,8 @@ typedef struct {
     int8_t skill_bonus[PD_SKILLS],save_bonus[6],check_bonus[6];
     uint32_t half_skills,blocked;
 } pd_training;
-enum {PD_TWO_HANDED=1,PD_VERSATILE=2,PD_FINESSE=4,PD_LIGHT=8,PD_GRAZE=16};
-typedef struct {uint8_t weapon,edition,style,bonus_spent;} pd_dual; /* weapon: row+1, 0 none; edition: 1=2014, 2=2024. */
+enum {PD_TWO_HANDED=1,PD_VERSATILE=2,PD_FINESSE=4,PD_LIGHT=8,PD_GRAZE=16,PD_NICK=32,PD_CLEAVE=48};
+typedef struct {uint8_t weapon,edition,style,bonus_spent;uint8_t feat,light_spent,feat_spent,cleave_spent;} pd_dual; /* weapon: row+1, 0 none; edition: 1=2014, 2=2024. */
 typedef struct {uint8_t flags,grip,sides,ammo;} pd_handling; /* ammo: row+1, zero manual. */
 typedef enum { PD_GEAR,PD_CONSUMABLE,PD_HEALING,PD_WEAPON } pd_item_kind;
 /* Flags: proficient, add ability to damage, ranged, heavy. Notes stay on PC. */

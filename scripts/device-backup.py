@@ -31,7 +31,7 @@ def validate(raw):
             or obj['format'] != 'pocketdd-device-backup' or type(obj['version']) is not int or obj['version'] != 1):
         raise ValueError('Usa un backup nativo del dispositivo v1')
     records = []
-    for key, magic, maximum in [('state', (b'PDDP', b'PDDQ', b'PDDR', b'PDDS', b'PDDT', b'PDDU', b'PDDV', b'PDDW', b'PDDX', b'PDDY', b'PDDZ', b'PDDa', b'PDDb', b'PDDc', b'PDDd', b'PDDe', b'PDDf', b'PDDg', b'PDDh'), 77505), ('history', (b'PDH1',), 2481)]:
+    for key, magic, maximum in [('state', (b'PDDP', b'PDDQ', b'PDDR', b'PDDS', b'PDDT', b'PDDU', b'PDDV', b'PDDW', b'PDDX', b'PDDY', b'PDDZ', b'PDDa', b'PDDb', b'PDDc', b'PDDd', b'PDDe', b'PDDf', b'PDDg', b'PDDh', b'PDDi'), 77509), ('history', (b'PDH1',), 2481)]:
         text = obj[key]
         if not isinstance(text, str) or not text or len(text) > 4*((maximum+2)//3):
             raise ValueError('Record nativo fuori limite')
@@ -42,19 +42,25 @@ def validate(raw):
         records.append(data)
     state, history = records
     if len(state)<5124 or state[5123]>120 or 5124+552*state[5123]>len(state)-4: raise ValueError('Invalid native power size')
+    extended=state[:4]==b'PDDi'
+    feat=0
+    if extended:
+        feat,light,spent,cleave=state[-8:-4]
+        if max(feat,light,spent,cleave)>1: raise ValueError('Invalid extra attack counters')
+        state=b'PDDh'+state[4:-8]+state[-4:]
     modern=state[:4]==b'PDDh'
     if modern:
         weapon,edition,style,bonus=state[-8:-4]
-        if weapon>state[435] or style>1 or bonus>1 or edition>2 or not weapon and (edition or style) or weapon and (not edition or state[442+78*(weapon-1)+68]!=3): raise ValueError('Invalid dual profile')
+        if feat and (edition!=2 or not weapon) or weapon>state[435] or style>1 or bonus>1 or edition>2 or not weapon and (edition or style) or weapon and (not edition or state[442+78*(weapon-1)+68]!=3): raise ValueError('Invalid dual profile')
         state=b'PDDg'+state[4:-8]+state[-4:]
     if state[:4] == b'PDDg':
         start=len(state)-260
         if start!=10041+560*state[5123]: raise ValueError('Invalid handling size')
         for i in range(60):
             flags,grip,sides,ammo=state[start+4*i:start+4*i+4];base=442+78*i
-            if flags>(31 if modern else 7) or grip>1 or ammo>state[435] or ammo==i+1: raise ValueError('Invalid weapon handling')
+            if flags>(143 if extended else 31 if modern else 7) or grip>1 or ammo>state[435] or ammo==i+1: raise ValueError('Invalid weapon handling')
             if any((flags,grip,sides,ammo)):
-                if i>=state[435] or state[base+68]!=3 or flags&1 and flags&10 or not flags&2 and (sides or grip) or flags&2 and (state[base+72]&4 or state[base+70]!=1 or sides not in (6,8,10,12) or sides<=state[base+71]) or flags&4 and state[base+69]>1 or flags&16 and state[base+72]&4: raise ValueError('Invalid weapon properties')
+                if i>=state[435] or state[base+68]!=3 or flags&1 and flags&10 or not flags&2 and (sides or grip) or flags&2 and (state[base+72]&4 or state[base+70]!=1 or sides not in (6,8,10,12) or sides<=state[base+71]) or flags&4 and state[base+69]>1 or flags>>4 in (1,3) and state[base+72]&4: raise ValueError('Invalid weapon properties')
         source=state[start+240:start+256];identity=source.split(b'\0')[0]
         if len(identity)==16 or identity and (not identity.isdigit() or identity.startswith(b'0')) or any(source[len(identity):]): raise ValueError('Invalid source identity')
         state=b'PDDf'+state[4:start]+state[-4:]

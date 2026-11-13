@@ -1,3 +1,6 @@
+> v0.114: [Nick, Dual Wielder 2024, Cleave e maestrie assistite](ATTACCHI-EXTRA-MAESTRIE.md).
+> Nuovi contatori per turno e formati PC v28 / USB25 / PDDi; riferimenti precedenti sotto.
+
 > v0.113: [Secondaria, azione bonus e Scalfire](DUE-ARMI-GRAZE.md).
 > Il colpo aggiuntivo richiede l’azione Attacco: True Strike da solo non basta.
 

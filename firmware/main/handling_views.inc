@@ -9,7 +9,7 @@ static void render_handling(void){
         button(handling_draft.flags&PD_LIGHT?"Leggera: si":"Leggera: no",239,255,144,44,WH_LIGHT,handling_current());
         scratch=state;scratch.handling[handling_index]=handling_draft;
         if(handling_current()&&!pd_weapon_hands_ready(&scratch,handling_index))button("Riponi scudo >",83,307,300,44,WH_SHIELD,true);
-        else button(handling_draft.flags&PD_GRAZE?"Maestria: Scalfire 2024":"Maestria: nessuna",83,307,300,44,WH_GRAZE,handling_current()&&!(item->flags&4));
+        else{snprintf(text,sizeof text,"Maestria: %s%s",pd_mastery_name(handling_draft.flags>>4),(handling_draft.flags>>4)>=4?" / DM":(handling_draft.flags>>4)?" 2024":"");button(text,83,307,300,44,WH_GRAZE,handling_current());}
         button("Indietro",83,359,144,48,WH_BACK,true);button("Rivedi",239,359,144,48,WH_REVIEW,valid);return;
     }
     pd_weapon_info old={0},next={0};pd_weapon_stats(&state,handling_index,&old);if(valid)pd_weapon_stats(&scratch,handling_index,&next);

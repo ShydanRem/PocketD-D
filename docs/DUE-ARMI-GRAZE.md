@@ -1,3 +1,6 @@
+> v0.114: [Nick, Dual Wielder 2024, Cleave e maestrie assistite](ATTACCHI-EXTRA-MAESTRIE.md).
+> Nuovi contatori per turno e formati PC v28 / USB25 / PDDi; riferimenti precedenti sotto.
+
 # Due armi, azione bonus e Scalfire · v0.113
 
 13 novembre 2026. Funzioni del dispositivo, per tutti i PG con proprietà

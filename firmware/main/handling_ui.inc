@@ -20,10 +20,10 @@ static void handling_action(intptr_t action){
         if(action==WH_TYPE){
             unsigned modes[6]={0,PD_TWO_HANDED,PD_VERSATILE|(6u<<8),PD_VERSATILE|(8u<<8),PD_VERSATILE|(10u<<8),PD_VERSATILE|(12u<<8)},at=0;
             for(unsigned i=0;i<6;i++)if((modes[i]&3)==(handling_draft.flags&3)&&(modes[i]>>8)==handling_draft.sides)at=i;
-            for(unsigned n=1;n<=6;n++){unsigned next=modes[(at+n)%6];pd_handling h=handling_draft;h.flags=(h.flags&(PD_FINESSE|PD_LIGHT|PD_GRAZE))|(next&3);h.sides=next>>8;h.grip=0;scratch=state;scratch.handling[handling_index]=h;if(pd_handling_valid(&scratch)){handling_draft=h;break;}}
+            for(unsigned n=1;n<=6;n++){unsigned next=modes[(at+n)%6];pd_handling h=handling_draft;h.flags=(h.flags&252)|(next&3);h.sides=next>>8;h.grip=0;scratch=state;scratch.handling[handling_index]=h;if(pd_handling_valid(&scratch)){handling_draft=h;break;}}
         }else if(action==WH_GRIP&&(handling_draft.flags&PD_VERSATILE))handling_draft.grip=!handling_draft.grip;
         else if(action==WH_FINESSE&&state.items[handling_index].ability<2)handling_draft.flags^=PD_FINESSE;
-        else if(action==WH_GRAZE)handling_draft.flags^=PD_GRAZE;
+        else if(action==WH_GRAZE)handling_draft.flags=(handling_draft.flags&15)|((((handling_draft.flags>>4)+1)%9)<<4);
         else if(action==WH_LIGHT)handling_draft.flags^=PD_LIGHT;
         else if(action==WH_REVIEW&&handling_preview())page=HANDLING_REVIEW;
         return;

@@ -74,14 +74,14 @@ export function upsertItem(state,input) {
     state={...state,extended:{...state.extended,loadout:{...state.extended.loadout,items:state.extended.loadout.items.filter(g=>g.id!==item.id)}}};
   }
   if(item.type==='weapon'&&(!exists||state.inventory.find(i=>i.id===item.id)?.type!=='weapon')&&state.extended?.loadout){const t=gearTotals(state);item=validateItem({...item,attackModifier:item.attackModifier+t.attack,damageModifier:item.damageModifier+t.damage},true);}
-  if(item.type!=='weapon'&&state.dualWield?.weaponId===item.id)state={...state,dualWield:{...state.dualWield,weaponId:null,edition:0,style:false}};
+  if(item.type!=='weapon'&&state.dualWield?.weaponId===item.id)state={...state,dualWield:{...state.dualWield,weaponId:null,edition:0,style:false,...(Object.hasOwn(state.dualWield,'feat')?{feat:false}:{})}};
   return changed(state,exists?state.inventory.map(other=>other.id===item.id?item:other):[...state.inventory,item]);
 }
 
 export function removeItem(state,id) {
   if(!state.inventory.some(item=>item.id===id)) throw new Error('Oggetto non trovato');
   if(state.extended?.loadout?.items.some(g=>g.id===id)){if(state.extended.loadout.items.find(g=>g.id===id).equipped)state=equipGear(state,id,false);state={...state,extended:{...state.extended,loadout:{...state.extended.loadout,items:state.extended.loadout.items.filter(g=>g.id!==id)}}};}
-  if(state.dualWield?.weaponId===id)state={...state,dualWield:{...state.dualWield,weaponId:null,edition:0,style:false}};
+  if(state.dualWield?.weaponId===id)state={...state,dualWield:{...state.dualWield,weaponId:null,edition:0,style:false,...(Object.hasOwn(state.dualWield,'feat')?{feat:false}:{})}};
   return changed(state,state.inventory.filter(item=>item.id!==id).map(item=>item.handling?.ammoId===id?{...item,handling:{...item.handling,ammoId:null}}:item));
 }
 

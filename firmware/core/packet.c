@@ -224,7 +224,7 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
     const char *const abilities[]={"FOR","DES","COS","INT","SAG","CAR"};
     const char *const resource_keys[]={"name","current","maximum"};
     const char *const avatar_keys[]={"skin","hair","cloak","style","lineage","body","outfit"};
-    int version=number(root,"version",1,24);
+    int version=number(root,"version",1,25);
     cJSON *fmt=cJSON_GetObjectItemCaseSensitive(root,"format");
     if (version<0 || end!=json+size || !keys(root,fields,version==1?10:version==2?11:version==3?12:version==4?13:version==5?14:version==6?15:version<9?16:version<14?17:version<18?18:version<23?19:version<24?21:22) || !cJSON_IsString(fmt) ||
         strcmp(fmt->valuestring,"pocketdd-device") ||
@@ -248,12 +248,13 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
         cJSON *rows=cJSON_GetObjectItemCaseSensitive(root,"handling");cJSON *inv=cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(root,"inventory"),"items");
         const char *const fields[]={"flags","grip","sides","ammo"};
         if(!cJSON_IsArray(rows)||cJSON_GetArraySize(rows)!=cJSON_GetArraySize(inv)||cJSON_GetArraySize(rows)>PD_ITEMS)goto done;
-        for(int i=0;i<cJSON_GetArraySize(rows);i++){cJSON *r=cJSON_GetArrayItem(rows,i);if(!keys(r,fields,4))goto done;int a=number(r,"flags",0,version>=24?31:7),b=number(r,"grip",0,1),c=number(r,"sides",0,12),d=number(r,"ammo",0,PD_ITEMS);if(a<0||b<0||c<0||d<0)goto done;candidate.handling[i]=(pd_handling){a,b,c,d};}
+        for(int i=0;i<cJSON_GetArraySize(rows);i++){cJSON *r=cJSON_GetArrayItem(rows,i);if(!keys(r,fields,4))goto done;int a=number(r,"flags",0,version>=25?143:version>=24?31:7),b=number(r,"grip",0,1),c=number(r,"sides",0,12),d=number(r,"ammo",0,PD_ITEMS);if(a<0||b<0||c<0||d<0)goto done;candidate.handling[i]=(pd_handling){a,b,c,d};}
     }
     if(version>=24){
-        cJSON *dual=cJSON_GetObjectItemCaseSensitive(root,"dual");const char *const fields[]={"weapon","edition","style","bonusSpent"};
-        if(!keys(dual,fields,4))goto done;
-        int a=number(dual,"weapon",0,PD_ITEMS),b=number(dual,"edition",0,2),c=number(dual,"style",0,1),d=number(dual,"bonusSpent",0,1);if(a<0||b<0||c<0||d<0)goto done;candidate.dual=(pd_dual){a,b,c,d};
+        cJSON *dual=cJSON_GetObjectItemCaseSensitive(root,"dual");const char *const fields[]={"weapon","edition","style","bonusSpent","feat","lightSpent","featSpent","cleaveSpent"};
+        if(!keys(dual,fields,version>=25?8:4))goto done;
+        int a=number(dual,"weapon",0,PD_ITEMS),b=number(dual,"edition",0,2),c=number(dual,"style",0,1),d=number(dual,"bonusSpent",0,1);if(a<0||b<0||c<0||d<0)goto done;candidate.dual=(pd_dual){.weapon=a,.edition=b,.style=c,.bonus_spent=d};
+        if(version>=25){int feat=number(dual,"feat",0,1),light=number(dual,"lightSpent",0,1),spent=number(dual,"featSpent",0,1),cleave=number(dual,"cleaveSpent",0,1);if(feat<0||light<0||spent<0||cleave<0)goto done;candidate.dual.feat=feat;candidate.dual.light_spent=light;candidate.dual.feat_spent=spent;candidate.dual.cleave_spent=cleave;}
     }
     if(version>=3&&!training(cJSON_GetObjectItemCaseSensitive(root,"training"),&candidate.training,version>=15))goto done;
     if(version>=4&&!inventory(cJSON_GetObjectItemCaseSensitive(root,"inventory"),&candidate,version>=8))goto done;

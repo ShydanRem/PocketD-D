@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **13 novembre 2026 — v0.113**. Il dispositivo è il prodotto;
+Aggiornamento del **13 novembre 2026 — v0.114**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
@@ -19,6 +19,34 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Nick, talento 2024 e maestrie · v0.114
+
+[Guida, condizioni e compatibilità](ATTACCHI-EXTRA-MAESTRIE.md). Tre percorsi
+espliciti nella secondaria: Light con bonus, Nick nell’azione Attacco e attacco
+con bonus da Dual Wielder 2024 dichiarato. Contatore Light/Nick condiviso,
+contatore del talento separato, bonus condivisa con Ira e magie note. Conservati
+al riavvio e nelle copie; recupero al proprio Inizio turno, correzioni DM distinte.
+
+Cleave esegue un attacco contro un secondo nemico dichiarato valido, una volta
+per turno, dopo i danni del colpo iniziale. Non spende bonus; bonus caratteristica
+positivo escluso, negativo conservato. Non eredita i benefici di True Strike.
+Scalfire resta automatico sul mancato. Selettore per tutte le otto maestrie;
+Push/Sap/Slow/Topple/Vex sono assistite sul nemico, con requisiti e CD Topple
+calcolata dal colpo. Vex non applica vantaggio automaticamente; identità,
+esiti, condizioni e timer degli avversari restano al tavolo.
+
+Verifiche: **388** test JS, suite nativa e **173/173** viste, 2.880 nuovi casi
+indipendenti, 128 confronti PC/C/backup, ASan/UBSan, browser e build ESP32-S3.
+Circa **137 KiB** liberi nella partizione applicazione invariata. PC v28 / USB25 /
+PDDi soltanto per i nuovi dati; vecchi formati leggibili. Aggiorna anche il
+componente PC con **Conserva dati**, senza ricaricare i look SD.
+[Anteprima nativa sintetica](previews/v114-extra-masteries.png).
+
+Nessuna nuova lettura reale Beyond o prova hardware. Maestrie/talento non vengono
+concessi dal nome o dal solo import. Restano bersagli e loro effetti automatici,
+talento 2014 completo, Lancio/ricarica, altre capacità, profili magie ulteriori
+e fusione dei progressi Beyond/Pocket.
 
 ## Due armi, azione bonus e prima maestria · v0.113
 
@@ -828,8 +856,9 @@ sono distinte da quelle nuove ancora verificate solo tramite software.
    equivale a un effetto eseguibile. Restano requisiti/limiti di preparazione.
 2. **Combattimento e dotazioni:** la v0.113 aggiunge due armi di base, azione bonus
    condivisa con i profili 2024 riconosciuti e Scalfire. La v0.112 copre impugnature,
-   Finezza, scudi e associazioni persistenti delle munizioni. Restano Nick,
-   talenti/altre maestrie, altre proprietà speciali, bonus delle munizioni,
+   Finezza, scudi e associazioni persistenti delle munizioni. La v0.114 aggiunge Nick, attacco del talento 2024 e Cleave; altre maestrie
+   assistite al tavolo. Restano effetti/timer dei nemici, talento 2014 completo,
+   altre proprietà speciali, bonus delle munizioni,
    recupero e ricarica. Nessuna
    regola dedotta soltanto dal nome dell’oggetto.
 3. **Rilettura Beyond della stessa scheda:** confronto per ID disponibile nella

@@ -4,12 +4,21 @@
 #include "checks.h"
 typedef struct {
     int base,trained,attack_extra,damage_base,damage_extra,attack_bonus,damage_bonus;
-    unsigned index,ability,count,sides,critical_dice,reach,radiant_dice;
+    unsigned mastery,index,ability,count,sides,critical_dice,reach,radiant_dice;
     bool graze,melee,melee_weapon,power_attack,true_strike,radiant_weapon;
 } pd_weapon_info;
 typedef struct { pd_roll roll; pd_weapon_info weapon; unsigned armor; bool hits,critical; } pd_strike;
 /* Extra Light-weapon attack. Trigger declares an Attack-action attack with the
    other Light weapon this turn; no True Strike, Nick or feat inferred. */
+enum {PD_EXTRA_LIGHT,PD_EXTRA_NICK,PD_EXTRA_FEAT};
+bool pd_dual_stats_for(const pd_state *s,unsigned method,pd_weapon_info *out);
+bool pd_dual_prepare_for(const pd_state *s,unsigned method,bool trigger,pd_state *next);
+bool pd_dual_attack_for(const pd_state *s,unsigned method,bool trigger,unsigned armor,int mode,pd_roll_context context,bool ignore,pd_random random,void *random_context,pd_strike *out);
+bool pd_cleave_stats(const pd_state *s,const pd_strike *origin,pd_weapon_info *out);
+bool pd_cleave_prepare(const pd_state *s,const pd_strike *origin,bool target,pd_state *next);
+bool pd_cleave_attack(const pd_state *s,const pd_strike *origin,bool target,unsigned armor,int mode,pd_roll_context context,bool ignore,pd_random random,void *random_context,pd_strike *out);
+const char *pd_mastery_name(unsigned mastery);
+bool pd_mastery_text(const pd_strike *hit,unsigned level,char *text,size_t capacity);
 bool pd_dual_stats(const pd_state *s,pd_weapon_info *out);
 bool pd_dual_prepare(const pd_state *s,bool trigger,pd_state *next);
 bool pd_dual_attack(const pd_state *s,bool trigger,unsigned armor,int mode,pd_roll_context context,bool ignore,pd_random random,void *random_context,pd_strike *out);
