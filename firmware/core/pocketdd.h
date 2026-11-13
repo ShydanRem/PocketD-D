@@ -14,7 +14,9 @@
 #define PD_HANDLING_BYTES (4u*60u)
 #define PD_PROVENANCE_BYTES 16u
 #define PD_METADATA_BYTES (PD_HANDLING_BYTES+PD_PROVENANCE_BYTES)
-#define PD_RECORD_SIZE (PD_FORMULA_RECORD_SIZE+PD_METADATA_BYTES)
+#define PD_HANDLING_RECORD_SIZE (PD_FORMULA_RECORD_SIZE+PD_METADATA_BYTES)
+#define PD_DUAL_BYTES 4u
+#define PD_RECORD_SIZE (PD_HANDLING_RECORD_SIZE+PD_DUAL_BYTES)
 #define PD_RECORD_MAGIC "PDDe"
 #define PD_FORMULA_RECORD_MAGIC "PDDf"
 #define PD_SCENES 3
@@ -40,7 +42,8 @@ typedef struct {
     int8_t skill_bonus[PD_SKILLS],save_bonus[6],check_bonus[6];
     uint32_t half_skills,blocked;
 } pd_training;
-enum {PD_TWO_HANDED=1,PD_VERSATILE=2,PD_FINESSE=4};
+enum {PD_TWO_HANDED=1,PD_VERSATILE=2,PD_FINESSE=4,PD_LIGHT=8,PD_GRAZE=16};
+typedef struct {uint8_t weapon,edition,style,bonus_spent;} pd_dual; /* weapon: row+1, 0 none; edition: 1=2014, 2=2024. */
 typedef struct {uint8_t flags,grip,sides,ammo;} pd_handling; /* ammo: row+1, zero manual. */
 typedef enum { PD_GEAR,PD_CONSUMABLE,PD_HEALING,PD_WEAPON } pd_item_kind;
 /* Flags: proficient, add ability to damage, ranged, heavy. Notes stay on PC. */
@@ -143,6 +146,7 @@ typedef struct {
     char turn_names[3][PD_TURN_NAME_BYTES]; /* Local aliases for stable A/B/C references. */
     pd_spell_formula formulas[PD_POWERS];
     pd_handling handling[PD_ITEMS];
+    pd_dual dual;
     char beyond_id[PD_PROVENANCE_BYTES]; /* Provenance only, never credentials. */
 } pd_state;
 typedef struct { uint8_t dice[2], count, natural; int total, bonus; } pd_roll;
@@ -153,6 +157,9 @@ bool pd_outfit_set(pd_state *state,unsigned outfit);
 bool pd_identity_set(pd_state *state,unsigned lineage,unsigned body);
 bool pd_appearance_set(pd_state *state,const pd_avatar *avatar,unsigned scene);
 bool pd_valid(const pd_state *state);
+bool pd_dual_valid(const pd_state *s);
+bool pd_dual_set(pd_state *s,pd_dual profile);
+bool pd_bonus_change(pd_state *s,bool spent);
 bool pd_handling_valid(const pd_state *);
 bool pd_handling_set(pd_state *,unsigned,pd_handling);
 bool pd_weapon_two_hands(const pd_state *,unsigned);

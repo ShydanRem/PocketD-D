@@ -3,7 +3,7 @@ import {serializeDevice} from './device-export.js';
 import {crc32,inspectDeviceBackup,DEVICE_BACKUP_MAX} from './device-backup.js';
 import {createUsbDiagnostics} from './device-usb-diagnostics.js';
 import {validateRuntimeDiagnostics} from './device-runtime-diagnostics.js';
-export const SUPPORTED_USB_VERSION=23;
+export const SUPPORTED_USB_VERSION=24;
 const encoder=new TextEncoder(),decoder=new TextDecoder('utf-8',{fatal:true});
 let active=false;
 export const deviceUsbSupported=()=>globalThis.isSecureContext===true&&globalThis.location?.protocol!=='file:'&&Boolean(globalThis.navigator?.serial?.requestPort);

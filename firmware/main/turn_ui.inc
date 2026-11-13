@@ -10,7 +10,7 @@ static void clock_summary(bool time){
         delta_tile(PD_UI_SHIELD,"CA",pd_armor(&state),pd_armor(&scratch),83,183);delta_tile(PD_UI_HEART,"PF max",pd_max_hp(&state),pd_max_hp(&scratch),239,183);
         delta_tile(PD_UI_HEART,"PF",state.hp,scratch.hp,83,251);clock_reaction_tile(state.reaction_spent,scratch.reaction_spent,239,251);
         snprintf(text,sizeof text,"Avanzano %u | scadono %u",bit_count(r.effects_advanced)+bit_count(r.defences_advanced),bit_count(r.effects_expired)+bit_count(r.defences_expired));small_label(text,83,315,300,PD_GOLD);
-        lv_obj_t *note=small_label(state.hp>scratch.hp?"PF oltre il nuovo massimo: persi":time||turn_owner?"Reazione e risorse invariate":"Nessuna cura o risorsa recuperata",83,337,300,state.hp>scratch.hp?PD_DANGER:PD_MUTED);label_font(note,&lv_font_montserrat_14);
+        lv_obj_t *note=small_label(state.hp>scratch.hp?"PF oltre il nuovo massimo: persi":time||turn_owner?"Reazione e risorse invariate":turn_end?"Azione bonus invariata":"Reazione e azione bonus disponibili",83,337,300,state.hp>scratch.hp?PD_DANGER:PD_MUTED);label_font(note,&lv_font_montserrat_14);
     }else{label("Scadenze fuori limite",83,211,300,false);small_label("Durate e reazione invariate",83,259,300,PD_DANGER);small_label("Controlla gli effetti locali",83,303,300,PD_MUTED);}
     const char *names[]={"Indietro","Scadenze","Conferma"};const unsigned actions[]={time?2147:2121,time?2149:2124,time?2148:2122};for(unsigned i=0;i<3;i++){lv_obj_t *b=button(names[i],83+i*104,359,92,48,actions[i],i==0||(valid&&(i==2||r.effects_advanced||r.defences_advanced)));lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);}
 }
@@ -22,7 +22,7 @@ static void render_turn_clock(void){
         scene_control("Inizio turno",pd_ui_icon(PD_UI_TURN_START),"Inizio","Mio turno",239,179,144,64,2120,true);
         scene_control("Fine turno",pd_ui_icon(PD_UI_TURN_END),"Fine","Mio turno",83,255,144,64,2123,true);
         scene_control("Altri turni",pd_ui_icon(PD_UI_SUBJECTS),"Altri","A / B / C",239,255,144,64,3200,true);
-        small_label("Round e turni restano separati",83,331,300,PD_MUTED);button("Indietro",83,359,300,48,2118,true);
+        lv_obj_t *bonus=button(state.dual.bonus_spent?"Bonus: usata >":"Bonus: pronta >",239,359,144,48,DW_BONUS,true);label_font(lv_obj_get_child(bonus,0),&lv_font_montserrat_14);button("Indietro",83,359,144,48,2118,true);
     }else if(page==TIME_HOME){
         label("Tempo trascorso",83,99,300,true);time_text(text,sizeof text,time_minutes);label(text,83,145,300,true);
         for(unsigned i=0;i<6;i++){unsigned n=clock_presets[i];if(n<60)snprintf(text,sizeof text,"%u min",n);else snprintf(text,sizeof text,"%u h",n/60);lv_obj_t *b=button(text,83+(i%3)*104,187+(i/3)*52,92,44,7400+i,true);lv_obj_set_style_text_font(b,&lv_font_montserrat_16,0);rules_selected_style(b,time_minutes==n);}

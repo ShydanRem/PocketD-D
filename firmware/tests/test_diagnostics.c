@@ -17,7 +17,7 @@ int main(int argc,char **argv){
     char out[PD_DIAGNOSTICS_MAX+1],small[PD_DIAGNOSTICS_MAX+2];
     size_t n=pd_diagnostics_encode(&d,out,sizeof out);assert(n&&n<=PD_DIAGNOSTICS_MAX);
     assert(strlen(out)==n&&!strchr(out,'\n')&&strstr(out,"18446744073709551615"));
-    assert(strstr(out,"\"formats\":{\"usb\":23,\"state\":42,\"history\":2,\"backup\":1}"));
+    assert(strstr(out,"\"formats\":{\"usb\":24,\"state\":43,\"history\":2,\"backup\":1}"));
     for(size_t size=0;size<=n;size++){
         memset(small,'X',sizeof small);assert(!pd_diagnostics_encode(&d,small,size));
         assert(small[size]=='X');if(size)assert(small[0]==0);

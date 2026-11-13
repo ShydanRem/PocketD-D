@@ -48,7 +48,7 @@ test('USB browser: fragmented real streams negotiate USB9, send the frozen copy 
  }
 });
 test('USB browser: old/future protocol, malformed copy, chooser cancellation and occupied port do not send a candidate',async()=>{
- for(const version of [1,8,24]){const f=fake({version});await assert.rejects(sendDeviceCopy(packet(),options(f)));assert.deepEqual(f.sent,['','PDD HELLO']);released(f);}
+ for(const version of [1,8,25]){const f=fake({version});await assert.rejects(sendDeviceCopy(packet(),options(f)));assert.deepEqual(f.sent,['','PDD HELLO']);released(f);}
  for(const p of [{},null,{format:'pocketdd-device',version:true},{format:'pocketdd-device',version:9,name:'é'},{format:'pocketdd-device',version:9,name:'x'.repeat(262144)}]){const f=fake();await assert.rejects(sendDeviceCopy(p,options(f)));assert.equal(f.chooser,0);}
  await assert.rejects(sendDeviceCopy(packet(),{serial:{requestPort:async()=>{throw new DOMException('No port','NotFoundError')}}}),/annullata/);
  const busy=fake({openError:true});await assert.rejects(sendDeviceCopy(packet(),options(busy)),/busy/);assert.equal(busy.writes.length,0);
@@ -81,7 +81,7 @@ test('USB browser: one task at a time, explicit abort releases the port, and a n
  await sendDeviceCopy(packet(),options(g));released(g);
 });
 test('USB browser: bounded line/buffer, stale ACK and corrupt negotiation are rejected',async()=>{
- for(const text of ['x'.repeat(257)+'\n','PDD IMPORTED\n','\u0000\n','PDD READY 24\n','x'.repeat(112000)]){
+ for(const text of ['x'.repeat(257)+'\n','PDD IMPORTED\n','\u0000\n','PDD READY 25\n','x'.repeat(112000)]){
   const f=fake();f.serial.requestPort=async()=>{f.push(text);return f.port;};await assert.rejects(sendDeviceCopy(packet(),options(f)));assert.ok(!f.sent.some(x=>x.startsWith('{')));
  }
 });
@@ -104,7 +104,7 @@ test('USB browser: bounded ESP32 startup lines and one lost HELLO recover withou
  const partial=fake({missHello:1,partialReady:true});await sendDeviceCopy(packet(),{...options(partial),timeouts:{...times,helloAttempt:10}});assert.equal(partial.sent.filter(s=>s.startsWith('{')).length,1);released(partial);
 });
 test('USB browser: bootloader, unrecognized text, excess logs and unknown READY remain errors with no character data exposed',async()=>{
- for(const [startup,pattern] of [['ESP-ROM:esp32s3-20210327\nwaiting for download\n',/bootloader/],['ESP-ROM:esp32s3-20210327\n'.repeat(513),/Limite dei log/],['{"name":"private-sheet-marker"}\n',/testo non riconosciuto/],['PDD READY 24\n',/PDD READY 24/]]){
+ for(const [startup,pattern] of [['ESP-ROM:esp32s3-20210327\nwaiting for download\n',/bootloader/],['ESP-ROM:esp32s3-20210327\n'.repeat(513),/Limite dei log/],['{"name":"private-sheet-marker"}\n',/testo non riconosciuto/],['PDD READY 25\n',/PDD READY 25/]]){
   const f=fake({startup});let message='';await assert.rejects(sendDeviceCopy(packet(),options(f)),e=>{message=e.message;return pattern.test(message);});assert.doesNotMatch(message,/private-sheet-marker/);assert.ok(!f.sent.some(s=>s.startsWith('{')));released(f);
  }
  const f=fake({startup:'I (24) boot: starting\n',unexpected:'PDD RESTORED\n'});
@@ -180,7 +180,7 @@ test('Cannon/provenance USB23: older firmware receives HELLO only; current firmw
 
 
 test('Browser runtime diagnosis: exact read-only commands, fragmented bounded payload, actual firmware version and no PG mutation',async()=>{
- for(const fragment of [1,23,4096])for(const [version,state] of [[17,36],[22,41],[23,42]]){
+ for(const fragment of [1,23,4096])for(const [version,state] of [[17,36],[22,41],[23,42],[24,43]]){
   const value=JSON.parse(runtime);value.formats={...value.formats,usb:version,state};
   const f=fake({version,fragment,diagnosticResponse:JSON.stringify(value)}),states=[];let report;
   const d=await readDeviceDiagnostics({...options(f,p=>states.push(p)),onDiagnostic:v=>report=v});
@@ -235,4 +235,10 @@ test('Handling USB23: old firmware cannot silently discard weapon metadata; curr
  const s=initialState();s.inventory[0].handling={flags:2,grip:1,versatileSides:10,ammoId:null};const p=projectDevice(s).packet;assert.equal(p.version,23);
  const old=fake({version:22});await assert.rejects(sendDeviceCopy(p,options(old)),/USB23/);assert.deepEqual(old.sent,['','PDD HELLO']);released(old);
  const current=fake({version:23});await sendDeviceCopy(p,options(current));assert.deepEqual(JSON.parse(current.sent[2]).handling,p.handling);released(current);
+});
+
+test('USB24: Light/Graze and dual metadata are never sent to USB23; exact packet and final receipt required',async()=>{
+ const s=initialState();s.inventory[0].handling={flags:16,grip:0,versatileSides:0,ammoId:null};const p=projectDevice(s).packet;assert.equal(p.version,24);
+ const old=fake({version:23});await assert.rejects(sendDeviceCopy(p,options(old)),/USB24/);assert.deepEqual(old.sent,['','PDD HELLO']);released(old);
+ const current=fake({version:24});await sendDeviceCopy(p,options(current));assert.deepEqual(JSON.parse(current.sent[2]).dual,p.dual);released(current);
 });

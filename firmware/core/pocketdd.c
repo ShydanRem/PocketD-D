@@ -234,7 +234,7 @@ bool pd_turn_advance(pd_state *s,bool start,pd_round_summary *out){
 }
 bool pd_turn_advance_subject(pd_state *s,unsigned owner,bool start,pd_round_summary *out){
     if(!duration_tick(s,start?PD_TICK_START:PD_TICK_END,owner,out))return false;
-    if(start&&!owner)s->reaction_spent=false;
+    if(start&&!owner){s->reaction_spent=false;s->dual.bonus_spent=0;}
     return true;
 }
 bool pd_time_advance(pd_state *s,unsigned minutes,pd_round_summary *out){
@@ -377,7 +377,7 @@ bool pd_reduction_profile_set(pd_state *s,unsigned i,pd_reduction_profile p){
     s->reductions[i]=p;return true;
 }
 bool pd_valid(const pd_state *s) {
-    if(!pd_gear_valid(s)||!pd_handling_valid(s))return false;
+    if(!pd_gear_valid(s)||!pd_handling_valid(s)||!pd_dual_valid(s))return false;
     for(unsigned i=0;i<3;i++)if(!turn_name_valid(s->turn_names[i]))return false;
     for(unsigned i=0;i<PD_COINS;i++)if(s->wallet.coins[i]>PD_COIN_MAX||(!s->wallet.available&&s->wallet.coins[i]))return false;
     if (s->roll_conditions>PD_ROLL_CONDITIONS || !text(s->name, sizeof s->name) || s->level < 1 || s->level > 20 ||
@@ -512,16 +512,25 @@ static void put16(uint8_t **p, unsigned n) { *(*p)++=n; *(*p)++=n>>8; }
 static unsigned get16(const uint8_t **p) { unsigned n=(*p)[0]|((*p)[1]<<8); *p+=2; return n; }
 static void put32(uint8_t *p, uint32_t n) { for (int i=0;i<4;i++) p[i]=n>>(8*i); }
 static uint32_t get32(const uint8_t *p) { return (uint32_t)p[0]|((uint32_t)p[1]<<8)|((uint32_t)p[2]<<16)|((uint32_t)p[3]<<24); }
+bool pd_dual_valid(const pd_state *s){
+    if(!s||s->dual.style>1||s->dual.bonus_spent>1||s->dual.edition>2||s->dual.weapon>s->item_count||s->dual.weapon>PD_ITEMS)return false;
+    if(!s->dual.weapon)return !s->dual.edition&&!s->dual.style;
+    return s->dual.edition&&s->items[s->dual.weapon-1].kind==PD_WEAPON;
+}
+bool pd_dual_set(pd_state *s,pd_dual p){if(!s||!pd_valid(s))return false;pd_dual old=s->dual;s->dual=p;if(!pd_dual_valid(s)){s->dual=old;return false;}return true;}
+bool pd_bonus_change(pd_state *s,bool spent){if(!s||!pd_valid(s))return false;s->dual.bonus_spent=spent;return true;}
+static bool dual_record(const pd_state *s){if(s->dual.weapon||s->dual.bonus_spent)return true;for(unsigned i=0;i<PD_ITEMS;i++)if(s->handling[i].flags&(PD_LIGHT|PD_GRAZE))return true;return false;}
 bool pd_handling_valid(const pd_state *s){
     if(!s)return false;
     unsigned length=0;while(length<PD_PROVENANCE_BYTES&&s->beyond_id[length]){if(s->beyond_id[length]<'0'||s->beyond_id[length]>'9'||(!length&&s->beyond_id[length]=='0'))return false;length++;}
     if(length==PD_PROVENANCE_BYTES)return false;
     for(unsigned i=length;i<PD_PROVENANCE_BYTES;i++)if(s->beyond_id[i])return false;
     for(unsigned i=0;i<PD_ITEMS;i++){
-        pd_handling h=s->handling[i];if(h.flags>7||h.grip>1||h.ammo> s->item_count||h.ammo==i+1)return false;
+        pd_handling h=s->handling[i];if(h.flags>31||h.grip>1||h.ammo> s->item_count||h.ammo==i+1)return false;
         if(!(h.flags||h.grip||h.sides||h.ammo))continue;
         if(i>=s->item_count||s->items[i].kind!=PD_WEAPON)return false;
-        if((h.flags&PD_TWO_HANDED)&&(h.flags&PD_VERSATILE))return false;
+        if((h.flags&PD_TWO_HANDED)&&(h.flags&(PD_VERSATILE|PD_LIGHT)))return false;
+        if((h.flags&PD_GRAZE)&&(s->items[i].flags&4))return false;
         if(h.flags&PD_VERSATILE){if((s->items[i].flags&4)||s->items[i].count!=1||h.sides<=s->items[i].sides||(h.sides!=6&&h.sides!=8&&h.sides!=10&&h.sides!=12))return false;}
         else if(h.sides||h.grip)return false;
         if((h.flags&PD_FINESSE)&&s->items[i].ability>1)return false;
@@ -551,13 +560,13 @@ bool pd_handling_set(pd_state *s,unsigned index,pd_handling h){
     if(!pd_handling_valid(s)||(s->equipped==index&&!pd_weapon_hands_ready(s,index))){s->handling[index]=old;return false;}
     return true;
 }
-static bool handling_record(const pd_state *s){if(s->beyond_id[0])return true;for(unsigned i=0;i<PD_ITEMS;i++){pd_handling h=s->handling[i];if(h.flags||h.grip||h.sides||h.ammo)return true;}return false;}
+static bool handling_record(const pd_state *s){if(dual_record(s)||s->beyond_id[0])return true;for(unsigned i=0;i<PD_ITEMS;i++){pd_handling h=s->handling[i];if(h.flags||h.grip||h.sides||h.ammo)return true;}return false;}
 
 static bool formula_record(const pd_state *s){for(unsigned i=0;i<s->magic.count;i++)if(s->formulas[i].kind)return true;return false;}
-size_t pd_encoded_size(const pd_state *s){return 8964u+PD_EQUIPMENT_BYTES+((formula_record(s)||handling_record(s))?560u:552u)*s->magic.count+(handling_record(s)?PD_METADATA_BYTES:0);}
+size_t pd_encoded_size(const pd_state *s){return 8964u+PD_EQUIPMENT_BYTES+((formula_record(s)||handling_record(s))?560u:552u)*s->magic.count+(handling_record(s)?PD_METADATA_BYTES:0)+(dual_record(s)?PD_DUAL_BYTES:0);}
 size_t pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
     memset(out, 0, pd_encoded_size(s));
-    memcpy(out, handling_record(s)?"PDDg":formula_record(s)?PD_FORMULA_RECORD_MAGIC:PD_RECORD_MAGIC, 4); put32(out+4,gen);
+    memcpy(out, dual_record(s)?"PDDh":handling_record(s)?"PDDg":formula_record(s)?PD_FORMULA_RECORD_MAGIC:PD_RECORD_MAGIC, 4); put32(out+4,gen);
     uint8_t *p=out+8;
     memcpy(p,s->name,PD_NAME_BYTES); p+=PD_NAME_BYTES;
     put16(&p,s->hp); put16(&p,s->max_hp); put16(&p,s->temp_hp);
@@ -641,11 +650,13 @@ size_t pd_encode(const pd_state *s, uint32_t gen, uint8_t out[PD_RECORD_SIZE]) {
     }
     if(handling_record(s))for(unsigned i=0;i<PD_ITEMS;i++){pd_handling h=s->handling[i];*p++=h.flags;*p++=h.grip;*p++=h.sides;*p++=h.ammo;}
     if(handling_record(s)){memcpy(p,s->beyond_id,PD_PROVENANCE_BYTES);p+=PD_PROVENANCE_BYTES;}
+    if(dual_record(s)){*p++=s->dual.weapon;*p++=s->dual.edition;*p++=s->dual.style;*p++=s->dual.bonus_spent;}
     size_t size=pd_encoded_size(s);put32(out+size-4,pd_crc32(out,size-4));return size;
 }
 static bool record_payments(const uint8_t *data){return !memcmp(data,"PDDS",4)||!memcmp(data,"PDDT",4)||!memcmp(data,"PDDU",4)||!memcmp(data,"PDDV",4)||(!memcmp(data,"PDDW",4)||(!memcmp(data,"PDDX",4)||(!memcmp(data,"PDDY",4)||(!memcmp(data,"PDDZ",4)||(!memcmp(data,"PDDa",4)||(!memcmp(data,"PDDb",4)||(!memcmp(data,"PDDc",4)||(!memcmp(data,"PDDd",4)||!memcmp(data,"PDDe",4)))))))));}
 bool pd_record_known(const uint8_t *data,size_t size) {
     if(!data)return false;
+    if(size>=10045u+PD_METADATA_BYTES+PD_DUAL_BYTES&&size<=PD_RECORD_SIZE&&!memcmp(data,"PDDh",4)&&data[5123]<=PD_POWERS)return size==10045u+PD_METADATA_BYTES+PD_DUAL_BYTES+560u*data[5123];
     if(size>=10045u+PD_METADATA_BYTES&&size<=PD_RECORD_SIZE&&!memcmp(data,"PDDg",4)&&data[5123]<=PD_POWERS)return size==10045u+PD_METADATA_BYTES+560u*data[5123];
     if(size>=8964u+PD_EQUIPMENT_BYTES&&size<=PD_RECORD_SIZE&&!memcmp(data,"PDDf",4)&&data[5123]<=PD_POWERS)return size==8964u+PD_EQUIPMENT_BYTES+560u*data[5123];
     if(size>=8964u+PD_EQUIPMENT_BYTES&&size<=PD_RECORD_SIZE&&(!memcmp(data,"PDDb",4)||(!memcmp(data,"PDDc",4)||(!memcmp(data,"PDDd",4)||!memcmp(data,"PDDe",4))))&&data[5123]<=PD_POWERS)return size==8964u+PD_EQUIPMENT_BYTES+552u*data[5123];
@@ -683,11 +694,20 @@ bool pd_record_known(const uint8_t *data,size_t size) {
 static bool decode_into(const uint8_t *data,size_t size,pd_state *allocated,uint32_t *gen) {
     if (!pd_record_known(data,size) ||
         pd_crc32(data,size-4) != get32(data+size-4)) return false;
+    if(!memcmp(data,"PDDh",4)){
+        size_t base=size-PD_DUAL_BYTES;uint8_t *legacy=malloc(base);if(!legacy)return false;
+        memcpy(legacy,data,base-4);memcpy(legacy,"PDDg",4);
+        size_t metadata=base-PD_METADATA_BYTES-4;for(unsigned i=0;i<PD_ITEMS;i++)legacy[metadata+4*i]&=~(PD_LIGHT|PD_GRAZE);
+        put32(legacy+base-4,pd_crc32(legacy,base-4));
+        bool ok=decode_into(legacy,base,allocated,gen);free(legacy);if(!ok)return false;
+        for(unsigned i=0;i<PD_ITEMS;i++)allocated->handling[i].flags=data[metadata+4*i];
+        const uint8_t *tail=data+base-4;allocated->dual=(pd_dual){tail[0],tail[1],tail[2],tail[3]};return pd_valid(allocated);
+    }
     if(!memcmp(data,"PDDg",4)){
         size_t base=size-PD_METADATA_BYTES;uint8_t *legacy=malloc(base);if(!legacy)return false;
         memcpy(legacy,data,base-4);memcpy(legacy,"PDDf",4);put32(legacy+base-4,pd_crc32(legacy,base-4));
         bool ok=decode_into(legacy,base,allocated,gen);free(legacy);if(!ok)return false;
-        const uint8_t *tail=data+base-4;for(unsigned i=0;i<PD_ITEMS;i++){allocated->handling[i]=(pd_handling){tail[0],tail[1],tail[2],tail[3]};tail+=4;}
+        const uint8_t *tail=data+base-4;for(unsigned i=0;i<PD_ITEMS;i++){if(tail[0]>7)return false;allocated->handling[i]=(pd_handling){tail[0],tail[1],tail[2],tail[3]};tail+=4;}
         memcpy(allocated->beyond_id,tail,PD_PROVENANCE_BYTES);
         return pd_valid(allocated);
     }

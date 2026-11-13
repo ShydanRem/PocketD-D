@@ -1,3 +1,6 @@
+> v0.113: [Munizioni della secondaria e azione bonus atomica](DUE-ARMI-GRAZE.md).
+> La scelta della pila è disponibile direttamente nel tiro della secondaria.
+
 # Munizioni nel flusso di attacco
 
 ## Aggiornamento v0.112 · 13 novembre 2026

@@ -32,7 +32,7 @@ static void render_dice_game(void){
     if(combat_roll==1){
         pd_weapon_info w={0};attack_weapon_info(&w);
         if(ammo_paid&&strike_ready)snprintf(source,sizeof source,"Att %+d | CA %u | mun. %u>%u",strike.roll.bonus,strike.armor,ammo_before,ammo_after);
-        else snprintf(source,sizeof source,"Attacco %+d | CA %u",strike_ready?strike.roll.bonus:w.attack_bonus,strike_ready?strike.armor:target_armor);
+        else snprintf(source,sizeof source,dual_result?"Secondaria %+d | CA %u | bonus spesa":"Attacco %+d | CA %u",strike_ready?strike.roll.bonus:w.attack_bonus,strike_ready?strike.armor:target_armor);
     }else if(combat_roll==2){
         if(mixed&&has_roll)snprintf(source,sizeof source,"%s %d | %ud%u%+d",part,dice_animation.pool.total,dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
         else if(mixed)snprintf(source,sizeof source,"%s | %ud%u%+d",part,dice_animation.pool.count,dice_animation.pool.sides,dice_animation.pool.bonus);
@@ -69,6 +69,7 @@ static void render_dice_game(void){
             if(result.count==2){snprintf(source,sizeof source,"%s%s | %u/%u%+d",prefix,kind,result.dice[0],result.dice[1],result.bonus);snprintf(verdict,sizeof verdict,"%s | %s",result.natural==20?"20 naturale":result.natural==1?"1 naturale":"Totale",effective>0?"vantaggio":"svantaggio");}
             else snprintf(source,sizeof source,"%s%s | %u%+d",prefix,kind,result.natural,result.bonus);
         }
+        if(combat_roll==1&&strike_ready){unsigned graze;if(pd_graze_damage(&strike,&graze))snprintf(verdict,sizeof verdict,"Mancato | Scalfire %u",graze);}
     }else{
         snprintf(value,sizeof value,"--");
         snprintf(verdict,sizeof verdict,"%s",!allowed?(automatic_failure?"Fallimento automatico":check_gate.needed||(combat_roll==1&&attack_gate.needed)?"Dichiara Contesto":"Da verificare: apri i dettagli"):dice_animation.active?"In volo...":effective>0?"Vantaggio":effective<0?"Svantaggio":"Pronto al lancio");

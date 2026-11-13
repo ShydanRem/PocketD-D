@@ -1,3 +1,4 @@
+import {hasDual,validateDual} from './dual-wield.js';
 import {hasHandling,handsReady,twoHands} from './handling.js';
 import {validateEquippedState} from './equipment.js';
 import {validateExtended,adjustHeroHp} from './extended.js';
@@ -30,7 +31,7 @@ export function weaponStats(state,{allowHandsConflict=false}={}) {
   const powerAttack=Boolean(effects?.greatWeaponMaster&&effects.greatWeaponMasterAvailable&&melee&&weapon.profile?.heavy&&weapon.proficient);
   const rage=effects?.raging&&melee&&ability==='FOR'?(effects.rageBonus??0):0;
   const extraAttack=powerAttack?-5:0, extraDamage=rage+(powerAttack?10:0);
-  return {...weapon,ability,dieSides:(weapon.handling?.flags&2)&&twoHands(state,weapon)?weapon.handling.versatileSides:weapon.dieSides,reach:thrown?weapon.profile.thrownRange:weapon.reach,melee,powerAttack,rage,extraMeleeCriticalDice:melee?(effects?.extraMeleeCriticalDice??0):0,attackBonus:abilityBonus+(weapon.proficient?proficiency(state.level):0)+weapon.attackModifier+extraAttack,
+  return {...weapon,...(weapon.handling?.flags&16?{grazeDamageOnMiss:Math.max(0,abilityBonus)}:{}),ability,dieSides:(weapon.handling?.flags&2)&&twoHands(state,weapon)?weapon.handling.versatileSides:weapon.dieSides,reach:thrown?weapon.profile.thrownRange:weapon.reach,melee,powerAttack,rage,extraMeleeCriticalDice:melee?(effects?.extraMeleeCriticalDice??0):0,attackBonus:abilityBonus+(weapon.proficient?proficiency(state.level):0)+weapon.attackModifier+extraAttack,
     damageBonus:(weapon.addAbilityToDamage?abilityBonus:0)+weapon.damageModifier+extraDamage};
 }
 export const attackBonus = state => weaponStats(state)?.attackBonus??0;
@@ -139,7 +140,8 @@ function validInteger(value, min, max) {
 }
 export function parseBackup(raw) {
   const s = JSON.parse(raw);
-  if (!s || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26].includes(s.version)) throw new Error('Versione backup non supportata');
+  if (!s || ![1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27].includes(s.version)) throw new Error('Versione backup non supportata');
+  const dual=hasDual(s);if((s.version<27&&dual)||(s.version===27&&!dual))throw Error('Due armi e Leggera richiedono il formato v27');
   const handling=hasHandling(s);if((s.version<26&&handling)||(s.version===26&&!handling))throw Error('Impugnature e munizioni richiedono il formato v26');
   const formulas=s.powers?.some(p=>p.formula!==undefined);
   if((s.version<25&&formulas)||(s.version===25&&!formulas))throw Error('Le formule magie richiedono il formato v25');
@@ -149,7 +151,7 @@ export function parseBackup(raw) {
   if((s.version<23&&onHit)||(s.version===23&&!onHit))throw Error('Gli effetti al colpo richiedono il formato v23');
   const attuned=s.extended?.loadout?.items?.some(g=>g.attunement!==undefined);
   if((s.version<22&&attuned)||(s.version===22&&!attuned))throw Error("La sintonia richiede il formato v22");
-  const modern=handling||s.extended?.loadout!==undefined||s.powers?.some(p=>p?.effect==='true-strike-2024');
+  const modern=dual||handling||s.extended?.loadout!==undefined||s.powers?.some(p=>p?.effect==='true-strike-2024');
   if((s.version<21&&modern)||(s.version===21&&!modern))throw new Error('Equipaggiamento e attacchi magici richiedono il formato v21');
   const reference=Array.isArray(s.powers)&&s.powers.some(p=>p?.reference!==undefined);
   if((s.version<20&&reference)||(s.version===20&&!reference))throw new Error('I dati della scheda richiedono il formato v20');
@@ -198,12 +200,13 @@ export function parseBackup(raw) {
     if(!info || info.provider!=='dndbeyond' || typeof info.characterId!=='string' || !/^[1-9]\d{0,14}$/.test(info.characterId) || !['core-v1',...(s.version>=10?['extended-v1']:[])].includes(info.scope) || !Array.isArray(info.limitations) || info.limitations.length>30 || info.limitations.some(text=>typeof text!=='string'||text.length>500))throw new Error('Provenienza importazione non valida');
     base.importInfo={provider:info.provider,characterId:info.characterId,scope:info.scope,limitations:[...info.limitations]};
   }
+  if(s.dualWield!==undefined)base.dualWield=validateDual(s.dualWield,base);
   const result={...base,...core,resolve:s.resolve};validateEquippedState(result);return result;
 }
 export function serialize(state) {
   const handling=hasHandling(state);
-  const smite=state.powers.some(p=>p.effect==='divine-smite-2024'),onHit=state.powers.some(p=>['hex-2024','hunters-mark-2024'].includes(p.effect)),identity=avatarIdentity(state.avatar),outfit=avatarOutfit(state.avatar),defences=state.extended?.defences!==undefined,mapped=state.extended?.skillAbilities!==undefined,manual=state.extended?.manualResources!==undefined,cannon=state.powers.some(p=>p.effect==='eldritch-cannon'),reference=state.powers.some(p=>p.reference!==undefined),attuned=state.extended?.loadout?.items.some(g=>g.attunement!==undefined),modern=handling||state.extended?.loadout!==undefined||state.powers.some(p=>p.effect==='true-strike-2024'||p.formula!==undefined),variant=Boolean(smite||onHit||modern||reference||cannon||manual||mapped||defences||outfit||identity.lineage||identity.body);
-  return JSON.stringify({...state,...(variant?{avatar:{...state.avatar,...identity,...((smite||onHit||modern||reference||cannon||manual||mapped||defences)?{outfit}:{})}}:{}),version:handling?26:state.powers.some(p=>p.formula!==undefined)?25:smite?24:onHit?23:attuned?22:modern?21:reference?20:cannon?19:manual?18:mapped?17:defences?16:outfit?15:identity.lineage>=16?14:identity.lineage>=12?13:variant?12:11},null,2);
+  const smite=state.powers.some(p=>p.effect==='divine-smite-2024'),onHit=state.powers.some(p=>['hex-2024','hunters-mark-2024'].includes(p.effect)),identity=avatarIdentity(state.avatar),outfit=avatarOutfit(state.avatar),defences=state.extended?.defences!==undefined,mapped=state.extended?.skillAbilities!==undefined,manual=state.extended?.manualResources!==undefined,cannon=state.powers.some(p=>p.effect==='eldritch-cannon'),reference=state.powers.some(p=>p.reference!==undefined),attuned=state.extended?.loadout?.items.some(g=>g.attunement!==undefined),modern=hasDual(state)||handling||state.extended?.loadout!==undefined||state.powers.some(p=>p.effect==='true-strike-2024'||p.formula!==undefined),variant=Boolean(smite||onHit||modern||reference||cannon||manual||mapped||defences||outfit||identity.lineage||identity.body);
+  return JSON.stringify({...state,...(variant?{avatar:{...state.avatar,...identity,...((smite||onHit||modern||reference||cannon||manual||mapped||defences)?{outfit}:{})}}:{}),version:hasDual(state)?27:handling?26:state.powers.some(p=>p.formula!==undefined)?25:smite?24:onHit?23:attuned?22:modern?21:reference?20:cannon?19:manual?18:mapped?17:defences?16:outfit?15:identity.lineage>=16?14:identity.lineage>=12?13:variant?12:11},null,2);
 }
 export function restore(raw) {
   try { return parseBackup(raw); } catch { return initialState(); }

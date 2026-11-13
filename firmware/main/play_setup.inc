@@ -41,6 +41,7 @@ static unsigned attack_power_at(unsigned at){if(state.magic.available)for(unsign
 static unsigned attack_power_count(void){unsigned n=0;if(state.magic.available)for(unsigned i=0;i<state.magic.count;i++)if(attack_context_candidate(&state.magic.powers[i]))n++;return n;}
 static bool attack_weapon_info(pd_weapon_info *out){return attack_spell>=0?pd_true_strike_stats(&state,(unsigned)attack_spell,attack_radiant,out):pd_weapon_stats(&state,state.equipped,out);}
 static void attack_select(int power){
+ dual_result=false;
  attack_spell=power;page=COMBAT;combat_roll=1;pool_view=false;has_roll=false;strike_ready=false;damage_used=false;wifi_focus=0;
  pd_dice_idle(&dice_animation,pd_attack_mode(&state,mode)?2:1);
 }

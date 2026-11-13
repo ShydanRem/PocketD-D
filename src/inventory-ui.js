@@ -1,4 +1,5 @@
 import {handlingFields,readHandling} from './handling-ui.js';
+import {openDualManager} from './dual-ui.js';
 import {MAX_ITEMS,DIE_SIDES,upsertItem,removeItem,equipWeapon} from './inventory.js';
 
 export function openInventoryManager({getState,commit,newId,escapeHtml,abilityKeys}) {
@@ -8,7 +9,7 @@ export function openInventoryManager({getState,commit,newId,escapeHtml,abilityKe
   const number=(label,name,value,min,max)=>`<label>${label}<input name="${name}" type="number" min="${min}" max="${max}" value="${value}" required></label>`;
   function draw(){
     const state=getState();
-    dialog.innerHTML=`<div class="editor-heading"><div><div class="eyebrow">APP DI SUPPORTO · ${state.inventory.length}/${MAX_ITEMS} OGGETTI</div><h2>Inventario e armi</h2></div><button data-inventory-close aria-label="Chiudi inventario">×</button></div><p class="editor-intro">Quantità e proprietà sono esplicite. Configura impugnatura, Finezza e pila di munizioni nell'arma; cariche, peso e bonus speciali restano separati.</p><button data-new-item class="rest-button" ${state.inventory.length>=MAX_ITEMS?'disabled':''}>+ Aggiungi oggetto o arma</button><div class="manager-list inventory-manager-list">${state.inventory.map(item=>`<div><span>${escapeHtml(item.name)} ×${item.quantity}<small>${labels[item.type]}${item.charges?` · Cariche ${item.charges.current}/${item.charges.max}`:''}${state.equippedWeaponId===item.id?' · Equipaggiata':''}</small></span>${item.type==='weapon'?`<button data-manager-equip="${item.id}" ${item.quantity===0?'disabled':''}>${state.equippedWeaponId===item.id?'Riponi':'Equipaggia'}</button>`:''}<button data-edit-item="${item.id}">Modifica</button><button data-delete-item="${item.id}">Elimina</button></div>`).join('')||'<p class="editor-intro">Inventario vuoto. Aggiungi il primo oggetto.</p>'}</div><div id="item-form-container"></div><p class="editor-error" role="alert"></p><p class="manager-status" role="status"></p>`;
+    dialog.innerHTML=`<div class="editor-heading"><div><div class="eyebrow">APP DI SUPPORTO · ${state.inventory.length}/${MAX_ITEMS} OGGETTI</div><h2>Inventario e armi</h2></div><button data-inventory-close aria-label="Chiudi inventario">×</button></div><p class="editor-intro">Quantità e proprietà sono esplicite. Configura impugnatura, Finezza e pila di munizioni nell'arma; cariche, peso e bonus speciali restano separati.</p><button data-dual-config class="rest-button">Due armi / azione bonus</button><button data-new-item class="rest-button" ${state.inventory.length>=MAX_ITEMS?'disabled':''}>+ Aggiungi oggetto o arma</button><div class="manager-list inventory-manager-list">${state.inventory.map(item=>`<div><span>${escapeHtml(item.name)} ×${item.quantity}<small>${labels[item.type]}${item.charges?` · Cariche ${item.charges.current}/${item.charges.max}`:''}${state.equippedWeaponId===item.id?' · Equipaggiata':''}</small></span>${item.type==='weapon'?`<button data-manager-equip="${item.id}" ${item.quantity===0?'disabled':''}>${state.equippedWeaponId===item.id?'Riponi':'Equipaggia'}</button>`:''}<button data-edit-item="${item.id}">Modifica</button><button data-delete-item="${item.id}">Elimina</button></div>`).join('')||'<p class="editor-intro">Inventario vuoto. Aggiungi il primo oggetto.</p>'}</div><div id="item-form-container"></div><p class="editor-error" role="alert"></p><p class="manager-status" role="status"></p>`;
   }
   function drawForm(){
     const item=editing;
@@ -26,6 +27,7 @@ export function openInventoryManager({getState,commit,newId,escapeHtml,abilityKe
     const button=event.target.closest('button');if(!button||button.disabled)return;
     try{
       if(button.hasAttribute('data-inventory-close')){dialog.close();return}
+      if(button.hasAttribute('data-dual-config')){openDualManager({getState,commit,escapeHtml});return}
       if(button.hasAttribute('data-new-item')){editing={id:newId(),type:'gear',name:'',notes:'',quantity:1};drawForm();dialog.querySelector('[name="item-name"]').focus()}
       if(button.dataset.editItem){editing=structuredClone(getState().inventory.find(item=>item.id===button.dataset.editItem));drawForm();dialog.querySelector('#item-editor').scrollIntoView({block:'nearest'})}
       if(button.hasAttribute('data-cancel-item')){editing=null;dialog.querySelector('#item-form-container').innerHTML=''}

@@ -75,6 +75,9 @@ bool pd_magic_use(pd_state *s,unsigned index,unsigned slot,bool pact) {
         if(slot<v->level||slot>9)return false;
         cost=&(pact?s->magic.pact:s->magic.slots)[slot-1];if(!cost->current)return false;
     }
+    bool bonus=v->effect==PD_HEX_2024||v->effect==PD_HUNTERS_MARK_2024;
+    if(bonus&&s->dual.bonus_spent)return false;
+    if(bonus)s->dual.bonus_spent=1;
     if(cost)cost->current--;
     if(v->flags&PD_LIMITED)v->remaining--;
     if(v->flags&PD_CONCENTRATES){pd_concentration_end(s);s->magic.concentration=index+1;}

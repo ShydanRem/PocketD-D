@@ -23,13 +23,18 @@ function record(text,magic,max){
 }
 function text(bytes,start,capacity,empty=false){let end=start;while(end<start+capacity&&bytes[end]){if(bytes[end]<32||bytes[end]>126)fail();end++}if(end===start+capacity||(!empty&&end===start))fail();return String.fromCharCode(...bytes.subarray(start,end))}
 export function inspectDeviceBackup(raw){
-  const packet=envelope(raw),s=record(packet.state,['PDDP','PDDQ','PDDR','PDDS','PDDT','PDDU','PDDV','PDDW','PDDX','PDDY','PDDZ','PDDa','PDDb','PDDc','PDDd','PDDe','PDDf','PDDg'],77501),h=record(packet.history,'PDH1',2481);
-  const weaponHandling=[];let sourceId='';
+  const packet=envelope(raw),s=record(packet.state,['PDDP','PDDQ','PDDR','PDDS','PDDT','PDDU','PDDV','PDDW','PDDX','PDDY','PDDZ','PDDa','PDDb','PDDc','PDDd','PDDe','PDDf','PDDg','PDDh'],77505),h=record(packet.history,'PDH1',2481);
+  const weaponHandling=[];let sourceId='',dual=null;const modern=s.bytes[3]===104;
+  if(modern){
+    const at=s.bytes.length-8,weapon=s.bytes[at],edition=s.bytes[at+1],style=s.bytes[at+2],bonusSpent=s.bytes[at+3];
+    if(weapon>s.bytes[435]||style>1||bonusSpent>1||edition>2||(!weapon&&(edition||style))||(weapon&&(!edition||s.bytes[442+78*(weapon-1)+68]!==3)))fail();
+    dual={weapon,edition,style,bonusSpent};s.bytes=new Uint8Array([...s.bytes.subarray(0,at),...s.bytes.subarray(-4)]);s.bytes[3]=103;s.view=new DataView(s.bytes.buffer);
+  }
   if(s.bytes[3]===103){
     const count=s.bytes[5123],start=s.bytes.length-260;if(count>120||start!==10041+560*count)fail();
     for(let i=0;i<60;i++){
       const at=start+4*i,base=442+78*i,flags=s.bytes[at],grip=s.bytes[at+1],sides=s.bytes[at+2],ammo=s.bytes[at+3];
-      if(ammo>s.bytes[435]||ammo===i+1)fail();
+      if(flags>(modern?31:7)||ammo>s.bytes[435]||ammo===i+1)fail();
       if(flags||grip||sides||ammo){if(i>=s.bytes[435])fail();try{validateHandling({flags,grip,versatileSides:sides,ammoId:ammo?`item-${ammo-1}`:null},{id:`item-${i}`,type:s.bytes[base+68]===3?'weapon':'gear',ability:['FOR','DES','COS','INT','SAG','CAR'][s.bytes[base+69]],profile:{ranged:Boolean(s.bytes[base+72]&4)},diceCount:s.bytes[base+70],dieSides:s.bytes[base+71]});}catch{fail();}weaponHandling.push({index:i,flags,grip,sides,ammo});}
     }
     sourceId=text(s.bytes,start+240,16,true);if(sourceId&&!/^[1-9]\d{0,14}$/.test(sourceId)||s.bytes.subarray(start+240+sourceId.length,start+256).some(v=>v))fail();
@@ -90,5 +95,5 @@ export function inspectDeviceBackup(raw){
   }
   // This is an integrity check and a bounded preview. The device runs the full
   // native validators for all remaining rules before offering Restore.
-  return {nativeValidation:false,packet,spellFormulas,weaponHandling,sourceId,...(loadout?{loadout}:{}),skillAbilities,scene,lineage,body,outfit,name,level,hp,maxHp,baseHp,tempHp,armor,baseArmor,effects,items:b[435],powers:b[5123],resources:b[71],wallet,keys,brightness,dim,turnSubjects,turnNames,payments,rolls};
+  return {nativeValidation:false,packet,spellFormulas,weaponHandling,sourceId,dual,...(loadout?{loadout}:{}),skillAbilities,scene,lineage,body,outfit,name,level,hp,maxHp,baseHp,tempHp,armor,baseArmor,effects,items:b[435],powers:b[5123],resources:b[71],wallet,keys,brightness,dim,turnSubjects,turnNames,payments,rolls};
 }

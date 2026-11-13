@@ -272,3 +272,6 @@ target_compile_options(handling PRIVATE -Wall -Wextra -Werror -Wno-misleading-in
 add_executable(handling-probe handling_probe.c ../core/pocketdd.c ../core/magic.c ../core/checks.c ../core/combat.c ../core/dice_pool.c ../core/backup.c ../core/history.c ../core/packet.c $ENV{IDF_PATH}/components/json/cJSON/cJSON.c)
 target_include_directories(handling-probe PRIVATE ../core "$ENV{IDF_PATH}/components/json/cJSON")
 target_link_libraries(handling-probe m)
+add_executable(dual test_dual.c ../core/pocketdd.c ../core/magic.c ../core/checks.c ../core/combat.c ../core/dice_pool.c ../core/backup.c ../core/history.c)
+target_include_directories(dual PRIVATE ../core)
+target_compile_options(dual PRIVATE -Wall -Wextra -Werror)

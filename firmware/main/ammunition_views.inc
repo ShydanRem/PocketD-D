@@ -16,7 +16,7 @@ static void render_ammunition(void){
         unsigned index=ammunition_at(ammo_page*3+row);if(index>=PD_ITEMS)break;
         snprintf(text,sizeof text,"%u rimaste | -1 / attacco",state.items[index].quantity);
         lv_obj_t *b=scene_control(state.items[index].name,pd_ui_icon(PD_UI_AMMO),state.items[index].name,text,83,151+row*64,300,56,AC_ITEM_FIRST+index,current&&state.items[index].quantity);
-        rules_selected_style(b,ammunition_bound()&&ammo_item==index);
+        rules_selected_style(b,state.handling[ammo_picker_weapon].ammo==index+1);
     }
     if(!count)connection_note("Nessuna pila disponibile: aggiungila allo zaino dal PC",193,80,PD_MUTED);
     connection_note(ammo_notice[0]?ammo_notice:"Scelta conservata; -1 al tiro",339,18,PD_GOLD);

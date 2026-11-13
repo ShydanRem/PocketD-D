@@ -34,6 +34,13 @@ try:
   page.locator('[name=dieSides]').select_option('8')
   for width in [1000,390,320]:
    page.set_viewport_size({'width':width,'height':1000});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth');assert page.locator('[name=handling-type]').bounding_box()['width']>0
-  page.set_viewport_size({'width':1000,'height':1000});page.locator('[data-handling-fields]').screenshot(path='/workspace/PocketDD-handling-PC-preview.png');assert not errors,errors;browser.close()
- print('PASS handling editor: cancel unchanged, one explicit saved v26 profile, no HP/quantity cost, invalid dice rejected unchanged, real form at 1000/390/320 px; synthetic character only.')
+  page.set_viewport_size({'width':1000,'height':1000});page.locator('[data-handling-fields]').screenshot(path='/workspace/PocketDD-handling-PC-preview.png')
+  page.locator('[data-cancel-item]').click();page.evaluate("state.inventory[0].handling={flags:12,grip:0,versatileSides:0,ammoId:null};state.inventory.push({...state.inventory[0],id:'second',name:'Secondaria sintetica'})")
+  page.evaluate('window.dualBefore=JSON.stringify(state)');page.locator('[data-dual-config]').click();page.locator('dialog').last.locator('[name=weapon]').select_option('second');page.locator('dialog').last.locator('[data-back]').click();assert page.evaluate('writes===1&&JSON.stringify(state)===dualBefore')
+  page.locator('[data-dual-config]').click();modal=page.locator('dialog').last;modal.locator('[name=weapon]').select_option('second');modal.locator('[name=edition]').select_option('2');modal.locator('[name=style]').check()
+  for width in [1000,390,320]:page.set_viewport_size({'width':width,'height':1000});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
+  page.set_viewport_size({'width':1000,'height':1000});modal.screenshot(path='/workspace/PocketDD-dual-PC-preview.png');modal.locator('[type=submit]').click();assert page.evaluate("writes===2&&state.dualWield.weaponId==='second'&&state.dualWield.edition===2&&state.dualWield.style&&!state.dualWield.bonusSpent&&JSON.parse(backup()).version===27")
+  assert not errors,errors;browser.close()
+
+ print('PASS handling editor: cancel unchanged, one explicit saved v26 profile, no HP/quantity cost, invalid dice rejected unchanged, real form at 1000/390/320 px; dual dialog cancel/save/edition/style and v27 checked; synthetic character only.')
 finally:server.shutdown();server.server_close()

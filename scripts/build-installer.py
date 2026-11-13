@@ -422,3 +422,15 @@ section='''<section class="after"><h2>Armi pronte, copie al sicuro · v0.112</h2
 <p><a href="downloads/PocketDD-ARMI-COPIE-V112.md">Uso, compatibilita e limiti</a>. Prove software e catture native con dati sintetici. Due armi, maestrie, ricarica e ulteriori regole restano da completare; accesso autenticato reale su ESP32 ancora da collaudare. Nessuna scrittura verso Beyond.</p>
 <div class="import-captures"><img src="assets/handling112-shield.png" width="466" height="466" alt="Impugnatura versatile e correzione dello scudo su PG sintetico"><img src="assets/source112-library.png" width="466" height="466" alt="Confronto sintetico fra copia SD e nuova importazione Beyond"></div></section>'''
 page.write_text(page.read_text().replace('<section class="after">',section+'<section class="after">',1))
+
+# Actual production renderer; synthetic character, turn and hardware inputs only.
+shutil.copyfile(ROOT/'docs/DUE-ARMI-GRAZE.md',out/'downloads/PocketDD-DUE-ARMI-GRAZE.md')
+shutil.copyfile(ROOT/'docs/previews/v113-dual-graze.png',out/'downloads/previews/v113-dual-graze.png')
+for name in ('dual113-attack','graze113-result'):
+ shutil.copyfile(ROOT/'firmware/tests/out/ui-build'/f'{name}.png',out/'assets'/f'{name}.png')
+section='''<section class="after"><h2>Secondaria pronta, azione bonus chiara · v0.113</h2>
+<p>Configura due armi Leggere una volta: poi Secondaria apre il suo attacco senza cambiare la principale. Bonus positivo ai danni solo con lo stile configurato; modificatore negativo conservato. Scelta munizioni diretta, costo e d20 salvati insieme anche sul mancato.</p>
+<p>Azione bonus condivisa con Hex, Marchio e Punizione Divina 2024. Inizio del proprio turno la recupera; correzione DM separata. Scalfire/Graze configurabile mostra sul mancato il solo modificatore consentito, senza dadi fittizi o altri bonus.</p>
+<p><a href="downloads/PocketDD-DUE-ARMI-GRAZE.md">Uso, compatibilita e limiti</a>. Aggiorna firmware e componente Pocket PC insieme, usando <strong>Conserva dati</strong>; look SD invariati. Nick, altre maestrie e talenti restano manuali. Prove e catture sintetiche; nessuna nuova lettura/scrittura Beyond o prova fisica.</p>
+<div class="import-captures"><img src="assets/dual113-attack.png" width="466" height="466" alt="Tiro della secondaria con PG sintetico, principale conservata"><img src="assets/graze113-result.png" width="466" height="466" alt="Mancato sintetico con due danni potenziali di Scalfire"></div></section>'''
+page.write_text(page.read_text().replace('<section class="after">',section+'<section class="after">',1))

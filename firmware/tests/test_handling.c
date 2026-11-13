@@ -29,7 +29,7 @@ int main(int argc,char **argv){
  setup();s.handling[0]=(pd_handling){.flags=PD_VERSATILE,.grip=1,.sides=10};s.combat.thrown=true;s.gear[1]=(pd_gear){.kind=PD_WEAR_SHIELD,.armor=2};s.unarmored_rule=1;before=s;assert(!pd_gear_equip(&s,1,true)&&!memcmp(&s,&before,sizeof s));s.gear[1].equipped=true;before=s;assert(!pd_equip(&s,0)&&!memcmp(&s,&before,sizeof s));
  setup();s.combat.raging=false;s.handling[0]=(pd_handling){.flags=PD_VERSATILE|PD_FINESSE,.grip=1,.sides=10,.ammo=3};s.magic.available=true;s.magic.count=120;
  for(unsigned i=0;i<120;i++)s.magic.powers[i]=(pd_power){.name="Spell",.flags=PD_PREPARED};assert(pd_valid(&s));
- uint32_t gen;size_t n=pd_encode(&s,112,record);assert(n==PD_RECORD_SIZE&&!memcmp(record,"PDDg",4)&&pd_decode(record,n,&decoded,&gen)&&gen==112&&!memcmp(&decoded,&s,sizeof s));
+ uint32_t gen;size_t n=pd_encode(&s,112,record);assert(n==PD_HANDLING_RECORD_SIZE&&!memcmp(record,"PDDg",4)&&pd_decode(record,n,&decoded,&gen)&&gen==112&&!memcmp(&decoded,&s,sizeof s));
  pd_history history;pd_history_reset(&history,s.history_epoch);size_t length;char *raw=pd_backup_encode(&s,&history,&length);pd_backup *backup=malloc(sizeof *backup);assert(raw&&backup&&pd_backup_decode(raw,length,backup)&&!memcmp(&backup->state,&s,sizeof s));
  if(argc>1){FILE *f=fopen(argv[1],"wb");assert(f&&fwrite(raw,1,length,f)==length);fclose(f);}free(raw);free(backup);
  unsigned tail=n-PD_METADATA_BYTES-4;for(unsigned field=0;field<4;field++){uint8_t old=record[tail+field];record[tail+field]=(unsigned[]){8,2,7,61}[field];uint32_t crc=pd_crc32(record,n-4);for(unsigned k=0;k<4;k++)record[n-4+k]=crc>>(8*k);before=decoded;assert(!pd_decode(record,n,&decoded,&gen)&&!memcmp(&decoded,&before,sizeof decoded));record[tail+field]=old;}

@@ -1,3 +1,4 @@
+import {emptyDual} from './dual-wield.js';
 import {validateSpellFormula} from './spell-formula.js';
 import {gearTotals} from './equipment.js';
 import {recoverItemCharges} from './inventory.js';
@@ -106,7 +107,9 @@ export function usePower(state,id,slotLevel=0){
   if(power.prepared===false)throw new Error('Magia non preparata: verifica la preparazione');
   if(power.concentration&&state.hp===0)throw new Error('Non puoi concentrarti a zero PF');
   if(power.limited&&power.limited.remaining<1)throw new Error('Utilizzi esauriti');
-  let next={...state};
+  const bonus=['hex-2024','hunters-mark-2024'].includes(power.effect);
+  if(bonus&&state.dualWield?.bonusSpent)throw Error('Azione bonus già utilizzata');
+  let next={...state,...(bonus?{dualWield:{...(state.dualWield??emptyDual()),bonusSpent:true}}:{})};
   if(power.level>0&&power.usesSpellSlot!==false){
     const pact=typeof slotLevel==='string'&&slotLevel.startsWith('pact:');
     const level=Number(pact?slotLevel.slice(5):slotLevel),slots=pact?state.extended?.pactSlots:state.slots;

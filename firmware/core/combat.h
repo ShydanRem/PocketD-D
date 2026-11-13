@@ -4,10 +4,15 @@
 #include "checks.h"
 typedef struct {
     int base,trained,attack_extra,damage_base,damage_extra,attack_bonus,damage_bonus;
-    unsigned ability,count,sides,critical_dice,reach,radiant_dice;
-    bool melee,melee_weapon,power_attack,true_strike,radiant_weapon;
+    unsigned index,ability,count,sides,critical_dice,reach,radiant_dice;
+    bool graze,melee,melee_weapon,power_attack,true_strike,radiant_weapon;
 } pd_weapon_info;
 typedef struct { pd_roll roll; pd_weapon_info weapon; unsigned armor; bool hits,critical; } pd_strike;
+/* Extra Light-weapon attack. Trigger declares an Attack-action attack with the
+   other Light weapon this turn; no True Strike, Nick or feat inferred. */
+bool pd_dual_stats(const pd_state *s,pd_weapon_info *out);
+bool pd_dual_prepare(const pd_state *s,bool trigger,pd_state *next);
+bool pd_dual_attack(const pd_state *s,bool trigger,unsigned armor,int mode,pd_roll_context context,bool ignore,pd_random random,void *random_context,pd_strike *out);
 bool pd_weapon_stats(const pd_state *s,unsigned index,pd_weapon_info *out);
 /* 2024 weapon cantrip: casting ability replaces STR/DEX, weapon proficiency
    and weapon bonuses remain; spell-attack bonuses do not become weapon bonuses. */
@@ -26,6 +31,7 @@ bool pd_attack_resolve(const pd_state *s,int requested,pd_roll_context context,b
 bool pd_attack_with_context(const pd_state *s,unsigned armor,int mode,pd_roll_context context,bool ignore,pd_random random,void *random_context,pd_strike *out);
 int pd_attack_mode(const pd_state *s,int requested);
 bool pd_attack(const pd_state *s,unsigned armor,int mode,pd_random random,void *context,pd_strike *out);
+bool pd_graze_damage(const pd_strike *hit,unsigned *damage);
 bool pd_weapon_damage(const pd_strike *strike,pd_random random,void *context,pd_pool *out);
 bool pd_equip(pd_state *s,unsigned index);
 /* Explicit separate ammunition stack. Names grant no rule or numeric bonus.

@@ -49,3 +49,7 @@ test('Site relay allows an explicit Beyond view but never a supplied URL or priv
  receive({source:win,origin:location.origin,data:{...m,view:'https://elsewhere.test/'}});assert.equal(sent.length,0);receive({source:win,origin:location.origin,data:m});assert.equal(JSON.stringify(sent),'[{"type":"open-pocket-tools","view":"beyond"}]');assert.equal(JSON.stringify(posts).includes('private-marker'),false);
  receive({source:win,origin:location.origin,data:{...m,action:'ping'}});assert.equal(posts.at(-1).beyondEntry,true);
 });
+
+test('Installer helper: current USB24 release requires an updated component even when old Beyond routing exists',async()=>{
+ const {supportsCurrentHelper}=await import('../web-install/helper-link.js');for(const v of ['0.93.0','0.112.0','0.112.99','bad','0.113'])assert.equal(supportsCurrentHelper(v),false);for(const v of ['0.113.0','0.113.1','0.114.0','1.0.0'])assert.equal(supportsCurrentHelper(v),true);
+});

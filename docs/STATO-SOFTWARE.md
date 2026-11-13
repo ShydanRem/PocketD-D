@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **13 novembre 2026 — v0.112**. Il dispositivo è il prodotto;
+Aggiornamento del **13 novembre 2026 — v0.113**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
@@ -19,6 +19,30 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Due armi, azione bonus e prima maestria · v0.113
+
+[Guida e confini](DUE-ARMI-GRAZE.md). Secondaria salvata senza sostituire la
+principale, regola 2014/Light 2024 esplicita, modificatore negativo conservato e
+positivo solo con lo stile configurato. Munizioni selezionabili e consumate
+direttamente dalla secondaria, con costo e d20 salvati insieme anche sul mancato.
+Il saldo dell’azione bonus è condiviso con Hex, Marchio e Punizione Divina 2024;
+si recupera all’inizio del proprio turno, con correzione DM separata.
+
+Scalfire/Graze 2024 configurabile per arma: sul mancato mostra e registra il solo
+modificatore usato per l’attacco, minimo zero, senza dadi o bonus aggiuntivi.
+Light riconosciuta da dati Beyond strutturati; maestria, stile e coppia espliciti.
+Nessuna capacità concessa dal nome o da una descrizione.
+
+Verifiche software: **381** test JavaScript, suite nativa e **171/171** viste,
+3.200 casi indipendenti delle due armi, 180 di Scalfire e 110 confronti PC/C/backup,
+ASan/UBSan, browser e build ESP32-S3. Circa 142 KiB di margine applicazione,
+partizioni invariate. Nuovi dati PC v27 / USB24 / PDDh; precedenti leggibili.
+[Anteprima del renderer con dati sintetici](previews/v113-dual-graze.png).
+
+Aggiorna firmware e componente PC insieme con **Conserva dati**; look SD invariati.
+Nessun nuovo accesso reale Beyond o prova fisica. Nick, talenti ed altre maestrie,
+ulteriori automatismi delle magie e fusione dei progressi restano aperti.
 
 ## Armi, copie Beyond e associazione · v0.112
 
@@ -802,9 +826,10 @@ sono distinte da quelle nuove ancora verificate solo tramite software.
    bonus speciali, più bersagli/attacchi e formule miste,
    condizioni, durate e proprietà concesse dagli oggetti. Un testo importato non
    equivale a un effetto eseguibile. Restano requisiti/limiti di preparazione.
-2. **Combattimento e dotazioni:** la v0.112 copre impugnature versatili/due mani,
-   Finezza, interazione con gli scudi e associazioni persistenti delle munizioni.
-   Restano due armi, maestrie, altre proprietà speciali, bonus delle munizioni,
+2. **Combattimento e dotazioni:** la v0.113 aggiunge due armi di base, azione bonus
+   condivisa con i profili 2024 riconosciuti e Scalfire. La v0.112 copre impugnature,
+   Finezza, scudi e associazioni persistenti delle munizioni. Restano Nick,
+   talenti/altre maestrie, altre proprietà speciali, bonus delle munizioni,
    recupero e ricarica. Nessuna
    regola dedotta soltanto dal nome dell’oggetto.
 3. **Rilettura Beyond della stessa scheda:** confronto per ID disponibile nella

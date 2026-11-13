@@ -1,3 +1,6 @@
+> v0.113: lanciare Hex/Marchio 2024 spende l’azione bonus condivisa; i danni
+> della concentrazione già attiva non la rispendono. [Guida](DUE-ARMI-GRAZE.md).
+
 # Hex e Marchio del Cacciatore 2024 — v0.88
 
 > Aggiornamento v0.89: [Punizione Divina 2024 e slot ibridi](PUNIZIONE-DIVINA.md).

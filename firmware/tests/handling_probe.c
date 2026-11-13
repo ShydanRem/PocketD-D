@@ -9,5 +9,6 @@ int main(int argc,char **argv){
  if(!pd_parse_packet(text,n,&state)){free(text);puts("null");return 0;}free(text);
  pd_history h;pd_history_reset(&h,state.history_epoch);size_t size;char *raw=pd_backup_encode(&state,&h,&size);if(!raw)return 2;
  printf("{\"handling\":[");for(unsigned i=0;i<state.item_count;i++){pd_handling v=state.handling[i];printf("%s[%u,%u,%u,%u]",i?",":"",v.flags,v.grip,v.sides,v.ammo);}pd_weapon_info w={0};pd_weapon_stats(&state,state.equipped,&w);
- printf("],\"stats\":{\"ability\":%u,\"sides\":%u,\"attack\":%d,\"damage\":%d},\"backup\":%s}\n",w.ability,w.sides,w.attack_bonus,w.damage_bonus,raw);free(raw);return 0;
+ pd_weapon_info secondary={0};bool dual=pd_dual_stats(&state,&secondary);printf("],\"dual\":{\"valid\":%s,\"attack\":%d,\"damage\":%d,\"sides\":%u}",dual?"true":"false",secondary.attack_bonus,secondary.damage_bonus,secondary.sides);
+ printf(",\"graze\":%d,\"stats\":{\"ability\":%u,\"sides\":%u,\"attack\":%d,\"damage\":%d},\"backup\":%s}\n",w.graze?(w.base>0?w.base:0):-1,w.ability,w.sides,w.attack_bonus,w.damage_bonus,raw);free(raw);return 0;
 }

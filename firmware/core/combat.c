@@ -4,7 +4,7 @@
 bool pd_weapon_stats(const pd_state *s,unsigned index,pd_weapon_info *out) {
     if(!s||!out||!s->inventory_available||index>=s->item_count)return false;
     const pd_item *v=&s->items[index];if(v->kind!=PD_WEAPON||!v->quantity)return false;
-    pd_weapon_info w={.ability=v->ability,.base=pd_modifier(s->abilities[v->ability]),.trained=(v->flags&1)?pd_proficiency(s->level):0,.count=v->count,.sides=v->sides};
+    pd_weapon_info w={.graze=!!(s->handling[index].flags&PD_GRAZE),.index=index,.ability=v->ability,.base=pd_modifier(s->abilities[v->ability]),.trained=(v->flags&1)?pd_proficiency(s->level):0,.count=v->count,.sides=v->sides};
     if(v->ability<2&&(s->handling[index].flags&PD_FINESSE)){w.ability=s->abilities[0]>=s->abilities[1]?0:1;w.base=pd_modifier(s->abilities[w.ability]);}
     if((s->handling[index].flags&PD_VERSATILE)&&pd_weapon_two_hands(s,index))w.sides=s->handling[index].sides;
     bool thrown=s->combat.thrown&&index==s->equipped&&v->thrown_range;
@@ -16,6 +16,29 @@ bool pd_weapon_stats(const pd_state *s,unsigned index,pd_weapon_info *out) {
     w.critical_dice=w.melee?s->combat.critical_dice:0;
     w.attack_bonus=w.base+w.trained+w.attack_extra;w.damage_bonus=w.damage_base+w.damage_extra;
     *out=w;return true;
+}
+bool pd_dual_stats(const pd_state *s,pd_weapon_info *out){
+    if(!s||!out||!pd_valid(s)||!s->hp||!s->dual.weapon||s->equipped>=s->item_count)return false;
+    unsigned other=s->dual.weapon-1;const pd_item *a=&s->items[s->equipped],*b=&s->items[other];
+    if(other==s->equipped||a->kind!=PD_WEAPON||!a->quantity||!b->quantity||s->combat.thrown)return false;
+    if(!(s->handling[s->equipped].flags&PD_LIGHT)||!(s->handling[other].flags&PD_LIGHT)||pd_weapon_two_hands(s,s->equipped)||pd_weapon_two_hands(s,other))return false;
+    for(unsigned i=0;i<s->item_count;i++)if(s->gear[i].kind==PD_WEAR_SHIELD&&s->gear[i].equipped)return false;
+    if(s->dual.edition==1&&((a->flags|b->flags)&4))return false;
+    pd_weapon_info w;if(!pd_weapon_stats(s,other,&w))return false;
+    w.damage_base=s->dual.style?w.base:w.base<0?w.base:0;w.damage_bonus=w.damage_base+w.damage_extra;*out=w;return true;
+}
+bool pd_dual_prepare(const pd_state *s,bool trigger,pd_state *next){
+    pd_weapon_info w;if(!trigger||!pd_dual_stats(s,&w)||s->dual.bonus_spent||next==s)return false;
+    unsigned binding=s->handling[w.index].ammo;
+    if(!w.melee&&binding){unsigned ammo=binding-1;if(!pd_ammunition_eligible(s,ammo)||!s->items[ammo].quantity)return false;}
+    if(next){*next=*s;next->dual.bonus_spent=1;if(!w.melee&&binding&&!pd_item_quantity_set(next,binding-1,s->items[binding-1].quantity-1))return false;}
+    return true;
+}
+bool pd_dual_attack(const pd_state *s,bool trigger,unsigned armor,int mode,pd_roll_context context,bool ignore,pd_random random,void *random_context,pd_strike *out){
+    if(!out||!random||armor<1||armor>30||!pd_dual_prepare(s,trigger,NULL))return false;
+    pd_strike hit={.armor=armor};pd_attack_resolution r;
+    if(!pd_dual_stats(s,&hit.weapon)||!pd_attack_resolve(s,mode,context,ignore,&r)||!r.allowed)return false;
+    hit.roll=pd_d20(hit.weapon.attack_bonus,r.mode,random,random_context);hit.critical=hit.roll.natural==20;hit.hits=hit.roll.natural!=1&&(hit.critical||hit.roll.total>=(int)armor);*out=hit;return true;
 }
 bool pd_attack_resolve(const pd_state *s,int requested,pd_roll_context context,bool ignore,pd_attack_resolution *out){
     pd_condition_result effect;if(!out||requested< -1||requested>1||!pd_condition_evaluate(s,PD_ROLL_ATTACK,0,context,ignore,&effect))return false;
@@ -50,6 +73,10 @@ bool pd_true_strike_attack(const pd_state *s,unsigned power,bool radiant,unsigne
     pd_strike hit={.armor=armor};pd_attack_resolution r;
     if(!pd_weapon_hands_ready(s,s->equipped)||!pd_true_strike_stats(s,power,radiant,&hit.weapon)||!pd_attack_resolve(s,mode,context,ignore,&r)||!r.allowed)return false;
     hit.roll=pd_d20(hit.weapon.attack_bonus,r.mode,random,random_context);hit.critical=hit.roll.natural==20;hit.hits=hit.roll.natural!=1&&(hit.critical||hit.roll.total>=(int)armor);*out=hit;return true;
+}
+bool pd_graze_damage(const pd_strike *hit,unsigned *damage){
+    if(!hit||!damage||hit->hits||!hit->weapon.graze)return false;
+    *damage=hit->weapon.base>0?(unsigned)hit->weapon.base:0;return true;
 }
 bool pd_weapon_damage(const pd_strike *hit,pd_random random,void *context,pd_pool *out) {
     if(!hit||!hit->hits)return false;
@@ -98,13 +125,13 @@ bool pd_use_item(const pd_state *s,unsigned index,pd_random random,void *context
     *gained=next->hp-old;*roll=r;return true;
 }
 bool pd_smite_prepare(const pd_state *s,const pd_strike *hit,unsigned index,unsigned slot,bool pact,bool fiend,pd_state *next,unsigned *dice){
-    if(!s||!hit||!pd_valid(s)||!s->hp||s->combat.raging||!hit->hits||!hit->weapon.melee_weapon||!s->magic.available||index>=s->magic.count)return false;
+    if(!s||!hit||!pd_valid(s)||!s->hp||s->combat.raging||s->dual.bonus_spent||!hit->hits||!hit->weapon.melee_weapon||!s->magic.available||index>=s->magic.count)return false;
     const pd_power *p=&s->magic.powers[index];
     if(p->effect!=PD_DIVINE_SMITE_2024||!(p->flags&PD_PREPARED)||((p->flags&PD_LIMITED)&&!p->remaining))return false;
     if(p->flags&PD_USES_SLOT){if(slot<1||slot>9||!(pact?s->magic.pact:s->magic.slots)[slot-1].current)return false;}
     else if(slot||pact||!(p->flags&PD_LIMITED))return false;
     unsigned n=((slot?slot:1)+1+(fiend?1:0))*(hit->critical?2:1);
-    if(next){*next=*s;if(p->flags&PD_USES_SLOT)(pact?next->magic.pact:next->magic.slots)[slot-1].current--;if(p->flags&PD_LIMITED)next->magic.powers[index].remaining--;}
+    if(next){*next=*s;next->dual.bonus_spent=1;if(p->flags&PD_USES_SLOT)(pact?next->magic.pact:next->magic.slots)[slot-1].current--;if(p->flags&PD_LIMITED)next->magic.powers[index].remaining--;}
     if(dice)*dice=n;
     return true;
 }

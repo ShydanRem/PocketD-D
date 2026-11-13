@@ -5,10 +5,11 @@ static void render_handling(void){
         if(handling_draft.flags&PD_VERSATILE)snprintf(text,sizeof text,"Versatile: d%u",handling_draft.sides);else snprintf(text,sizeof text,"Tipo: %s",handling_draft.flags&PD_TWO_HANDED?"due mani":"manuale");
         button(text,83,151,300,44,WH_TYPE,handling_current());
         button((handling_draft.grip||(handling_draft.flags&PD_TWO_HANDED))?"Impugnatura: due mani":"Impugnatura: una mano",83,203,300,44,WH_GRIP,handling_current()&&(handling_draft.flags&PD_VERSATILE));
-        button(handling_draft.flags&PD_FINESSE?"Finezza: FOR/DES migliore":"Finezza: manuale",83,255,300,44,WH_FINESSE,handling_current()&&item->ability<2);
+        button(handling_draft.flags&PD_FINESSE?"Finezza: si":"Finezza: no",83,255,144,44,WH_FINESSE,handling_current()&&item->ability<2);
+        button(handling_draft.flags&PD_LIGHT?"Leggera: si":"Leggera: no",239,255,144,44,WH_LIGHT,handling_current());
         scratch=state;scratch.handling[handling_index]=handling_draft;
         if(handling_current()&&!pd_weapon_hands_ready(&scratch,handling_index))button("Riponi scudo >",83,307,300,44,WH_SHIELD,true);
-        else connection_note(handling_notice[0]?handling_notice:"Proprieta esplicite; nessuna spesa",331,18,PD_MUTED);
+        else button(handling_draft.flags&PD_GRAZE?"Maestria: Scalfire 2024":"Maestria: nessuna",83,307,300,44,WH_GRAZE,handling_current()&&!(item->flags&4));
         button("Indietro",83,359,144,48,WH_BACK,true);button("Rivedi",239,359,144,48,WH_REVIEW,valid);return;
     }
     pd_weapon_info old={0},next={0};pd_weapon_stats(&state,handling_index,&old);if(valid)pd_weapon_stats(&scratch,handling_index,&next);
