@@ -2158,7 +2158,7 @@ static void choose_cost(void) {
     for(unsigned i=0;i<count;i++)if(costs[i].level==cast_level&&costs[i].pact==cast_pact)return;
     cast_level=costs[0].level;cast_pact=costs[0].pact;
 }
-static bool can_use_power(void) {const pd_power *bp=&state.magic.powers[power_index];if(bp->effect>=PD_HEX_2024&&bp->effect<=PD_DIVINE_SMITE_2024&&state.dual.bonus_spent)return false;if(state.magic.powers[power_index].effect==PD_DIVINE_SMITE_2024)return state.hp&&!state.combat.raging&&(state.magic.powers[power_index].flags&PD_PREPARED);if(state.magic.powers[power_index].effect==PD_TRUE_STRIKE_2024){pd_weapon_info w;return pd_true_strike_stats(&state,power_index,attack_radiant,&w)||(state.equipped==PD_NO_WEAPON&&(state.magic.powers[power_index].flags&PD_PREPARED)&&state.hp&&!state.combat.raging);}scratch=state;return pd_magic_use(&scratch,power_index,cast_level,cast_pact);}
+static bool can_use_power(void) {const pd_power *bp=&state.magic.powers[power_index];if((bp->effect==1||(bp->effect>=PD_HEX_2024&&bp->effect<=PD_DIVINE_SMITE_2024))&&state.dual.bonus_spent)return false;if(state.magic.powers[power_index].effect==PD_DIVINE_SMITE_2024)return state.hp&&!state.combat.raging&&(state.magic.powers[power_index].flags&PD_PREPARED);if(state.magic.powers[power_index].effect==PD_TRUE_STRIKE_2024){pd_weapon_info w;return pd_true_strike_stats(&state,power_index,attack_radiant,&w)||(state.equipped==PD_NO_WEAPON&&(state.magic.powers[power_index].flags&PD_PREPARED)&&state.hp&&!state.combat.raging);}scratch=state;return pd_magic_use(&scratch,power_index,cast_level,cast_pact);}
 static void cost_text(char *text,size_t cap) {
     const pd_power *p=&state.magic.powers[power_index];
     if(p->kind&&(p->flags&PD_PASSIVE))snprintf(text,cap,"Informativa: nessun consumo");
@@ -2225,7 +2225,7 @@ static void render_magic_detail(void) {
         }else snprintf(text,sizeof text,"Formula: verifica i limiti");
     }
     lv_obj_t *note=small_label(text,83,289,300,manual?PD_GOLD:PD_MUTED);label_font(note,&lv_font_montserrat_14);
-    const char *use_label=p->kind?((p->flags&PD_PASSIVE)?"Informativa":!p->remaining&&p->effect!=3?"Esaurita":p->effect==3?"Crea":p->effect==1&&state.combat.raging?"Gia attiva":p->effect==2&&state.hp?"A zero PF":p->effect==2&&state.status.available&&state.status.failures==3?"Verifica DM":"Usa"):
+    const char *use_label=p->kind?((p->flags&PD_PASSIVE)?"Informativa":!p->remaining&&p->effect!=3?"Esaurita":p->effect==3?"Crea":p->effect==1&&state.combat.raging?"Gia attiva":p->effect==1&&state.dual.bonus_spent?"Azione bonus usata":p->effect==2&&state.hp?"A zero PF":p->effect==2&&state.status.available&&state.status.failures==3?"Verifica DM":"Usa"):
         state.combat.raging?"Ira attiva":p->effect>=PD_HEX_2024&&p->effect<=PD_DIVINE_SMITE_2024&&state.dual.bonus_spent?"Azione bonus usata":!(p->flags&PD_PREPARED)?"Non preparata":(p->flags&PD_LIMITED)&&!p->remaining?"Esaurita":"Lancia";
     if(!p->kind&&!(p->flags&PD_PREPARED))use_label="Prepara";else if(p->effect==PD_DIVINE_SMITE_2024)use_label=state.dual.bonus_spent?"Azione bonus usata":"Attacca";else if(weapon_spell_candidate(p))use_label=p->effect==PD_TRUE_STRIKE_2024?"Attacca":"Regole";
     lv_obj_t *use=button(use_label,83,315,300,44,831,can_use_power()||(!p->kind&&!(p->flags&PD_PREPARED))||(weapon_spell_candidate(p)&&p->effect!=PD_TRUE_STRIKE_2024));lv_obj_set_style_text_font(use,&lv_font_montserrat_16,0);
@@ -2306,7 +2306,7 @@ static void render_magic_other(void) {
         if(p->kind||(p->flags&PD_LIMITED))delta_tile(PD_UI_USES,"Utilizzi",p->remaining,scratch.magic.powers[power_index].remaining,239,199);else status_tile(PD_UI_USES,"Utilizzi","Non richiesti",239,199);
         delta_tile(PD_UI_HEART,"PF",state.hp,scratch.hp,83,267);
         const char *conc=state.magic.concentration==scratch.magic.concentration?"Invariata":!scratch.magic.concentration?"Termina":state.magic.concentration?"Sostituisce":"Inizia";status_tile(PD_UI_MAGIC,"Concentraz.",conc,239,267);
-        lv_obj_t *warning=small_label(p->effect==1?"Attiva Ira e termina concentrazione":p->effect>=PD_HEX_2024?"Spende azione bonus; bersaglio nei dettagli":p->effect==2?"Recupera 1 PF e spende un uso":p->effect==3?"Verifica strumenti e cannone attivo":"Effetti manuali: verifica con il DM",83,333,300,PD_GOLD);label_font(warning,&lv_font_montserrat_14);
+        lv_obj_t *warning=small_label(p->effect==1?"Spende bonus; Ira termina concentrazione":p->effect>=PD_HEX_2024?"Spende azione bonus; bersaglio nei dettagli":p->effect==2?"Recupera 1 PF e spende un uso":p->effect==3?"Verifica strumenti e cannone attivo":"Effetti manuali: verifica con il DM",83,333,300,PD_GOLD);label_font(warning,&lv_font_montserrat_14);
         }
         lv_obj_t *back=button("Indietro",83,359,92,48,833,true),*details=button(cast_details?"Riepilogo":"Dettagli",187,359,92,48,5604,true),*confirm=button("Conferma",291,359,92,48,832,valid);lv_obj_set_style_text_font(back,&lv_font_montserrat_16,0);lv_obj_set_style_text_font(details,&lv_font_montserrat_16,0);lv_obj_set_style_text_font(confirm,&lv_font_montserrat_16,0);
     } else if(page==MAGIC_STATUS) {

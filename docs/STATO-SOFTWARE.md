@@ -26,7 +26,7 @@ Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
 principale, regola 2014/Light 2024 esplicita, modificatore negativo conservato e
 positivo solo con lo stile configurato. Munizioni selezionabili e consumate
 direttamente dalla secondaria, con costo e d20 salvati insieme anche sul mancato.
-Il saldo dell’azione bonus è condiviso con Hex, Marchio e Punizione Divina 2024;
+Il saldo dell’azione bonus è condiviso con Ira, Hex, Marchio e Punizione Divina 2024;
 si recupera all’inizio del proprio turno, con correzione DM separata.
 
 Scalfire/Graze 2024 configurabile per arma: sul mancato mostra e registra il solo
@@ -34,7 +34,7 @@ modificatore usato per l’attacco, minimo zero, senza dadi o bonus aggiuntivi.
 Light riconosciuta da dati Beyond strutturati; maestria, stile e coppia espliciti.
 Nessuna capacità concessa dal nome o da una descrizione.
 
-Verifiche software: **381** test JavaScript, suite nativa e **171/171** viste,
+Verifiche software: **382** test JavaScript, suite nativa e **171/171** viste,
 3.200 casi indipendenti delle due armi, 180 di Scalfire e 110 confronti PC/C/backup,
 ASan/UBSan, browser e build ESP32-S3. Circa 142 KiB di margine applicazione,
 partizioni invariate. Nuovi dati PC v27 / USB24 / PDDh; precedenti leggibili.

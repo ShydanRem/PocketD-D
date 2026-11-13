@@ -46,7 +46,7 @@ il pulsante **Due armi / azione bonus** configura il profilo completo.
 
 ## Una sola azione bonus, conservata dopo riavvio
 
-Il saldo è condiviso fra attacco della secondaria, lancio dei profili riconosciuti
+Il saldo è condiviso fra attacco della secondaria, attivazione di **Ira**, lancio dei profili riconosciuti
 **Hex 2024**, **Hunter’s Mark 2024** e **Divine Smite 2024**. Una seconda spesa
 viene rifiutata prima dei dadi e senza consumare slot, utilizzi o quantità.
 I danni di un Hex/Marchio già concentrato non spendono un’altra azione bonus.

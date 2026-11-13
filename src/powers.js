@@ -94,8 +94,9 @@ export function usePower(state,id,slotLevel=0){
     if(power.effect==='relentless-endurance'&&state.hp!==0)throw new Error('Usa questa capacità soltanto a zero PF, dopo verifica col DM');
     let next={...state,powers:state.powers.map(p=>p.id===id?{...p,remaining:p.remaining-1}:p)};
     if(power.effect==='rage'){
+      if(state.dualWield?.bonusSpent)throw new Error('Azione bonus già utilizzata');
       if(!state.extended?.combat.rageBonus||state.hp===0||state.extended.combat.raging)throw new Error('Ira non disponibile o già attiva');
-      next={...next,extended:{...state.extended,combat:{...state.extended.combat,raging:true}},concentration:null};
+      next={...next,dualWield:{...(state.dualWield??emptyDual()),bonusSpent:true},extended:{...state.extended,combat:{...state.extended.combat,raging:true}},concentration:null};
     }
     if(power.effect==='relentless-endurance')next={...next,hp:1,extended:{...state.extended,deathSaves:{successes:0,failures:0,stabilized:false}}};
     return next;

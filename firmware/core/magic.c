@@ -61,10 +61,10 @@ bool pd_magic_use(pd_state *s,unsigned index,unsigned slot,bool pact) {
             if(slot||pact)return false;
         }
         if((v->flags&PD_PASSIVE)||!v->remaining)return false;
-        if(v->effect==1&&(!s->combat.rage_bonus||!s->hp||s->combat.raging))return false;
+        if(v->effect==1&&(s->dual.bonus_spent||!s->combat.rage_bonus||!s->hp||s->combat.raging))return false;
         if(v->effect==2&&(s->hp||(s->status.available&&s->status.failures==3)))return false;
         v->remaining--;
-        if(v->effect==1){pd_concentration_end(s);s->combat.raging=true;s->training.strength_advantage=true;}
+        if(v->effect==1){s->dual.bonus_spent=1;pd_concentration_end(s);s->combat.raging=true;s->training.strength_advantage=true;}
         if(v->effect==2)pd_hp(s,1);
         return true;
     }
