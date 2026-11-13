@@ -1,5 +1,10 @@
 # Pocket PC: scegli cosa fare, il collegamento è automatico
 
+**v0.113:** componente aggiornato necessario per USB24 e nuovi backup PDDh.
+Il sito segnala anche un vecchio componente che riconosce già Associa Beyond.
+Inventario e armi contiene proprietà Leggera/Scalfire e configurazione della
+secondaria. [Guida](DUE-ARMI-GRAZE.md). Look SD invariati, Conserva dati.
+
 **v0.112:** dal sito **Associa Beyond** apre la sezione account direttamente;
 **Apri Pocket PC** resta l’ingresso generale per SD e backup. Tre passi mostrano
 autorizzazione, codice e ricevuta finale; un componente vecchio viene segnalato

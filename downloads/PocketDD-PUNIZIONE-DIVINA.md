@@ -1,3 +1,7 @@
+> v0.113: Punizione Divina 2024 spende anche l’azione bonus condivisa con
+> secondaria, Hex e Marchio. Si recupera all’inizio del proprio turno;
+> [guida e limiti](DUE-ARMI-GRAZE.md). Slot/utilizzi e bonus si salvano insieme.
+
 # Punizione Divina 2024 — v0.89
 
 30 ottobre 2026. Nuovo effetto dopo il colpo, comune a tutti i PG che possiedono

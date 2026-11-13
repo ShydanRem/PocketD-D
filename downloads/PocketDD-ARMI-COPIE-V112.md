@@ -1,3 +1,6 @@
+> v0.113: [Due armi, azione bonus e Scalfire](DUE-ARMI-GRAZE.md) aggiunge
+> PC v27 / USB24 / PDDh per i nuovi dati. Questa pagina conserva il riferimento v0.112.
+
 # Armi, copie Beyond e prima associazione · v0.112
 
 13 novembre 2026. Il Pocket resta il centro del gioco. Questa versione completa

@@ -1,5 +1,9 @@
 # PocketD-D — uso pratico sul dispositivo
 
+> v0.113: [Due armi, azione bonus e Scalfire](DUE-ARMI-GRAZE.md).
+> Attacca → dettagli → Due armi per la prima configurazione; poi **Secondaria**.
+> Il saldo bonus è in **Turni e reazione** e si recupera a **Inizio turno**.
+
 > v0.112: [Impugnature, Finezza, scudo, munizioni per arma e confronto copie Beyond](ARMI-COPIE-V112.md).
 > Prima associazione: sito → **Associa Beyond** → autorizza/Collega Beyond →
 > confronta il codice e conferma sul Pocket → attendi **Beyond collegato**.

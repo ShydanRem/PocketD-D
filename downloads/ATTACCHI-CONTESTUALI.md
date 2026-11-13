@@ -1,3 +1,6 @@
+> v0.113: [Secondaria, azione bonus e Scalfire](DUE-ARMI-GRAZE.md).
+> Il colpo aggiuntivo richiede l’azione Attacco: True Strike da solo non basta.
+
 > v0.112: [Impugnature e munizioni persistenti](ARMI-COPIE-V112.md).
 > Finezza sceglie FOR/DES; versatile cambia dado in mischia a due mani.
 > Un conflitto con lo scudo blocca il tiro prima di dadi e costi, anche con True Strike.
