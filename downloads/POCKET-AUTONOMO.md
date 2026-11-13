@@ -1,3 +1,9 @@
+> v0.112: sito → **Associa Beyond** → consenso iniziale/Collega Beyond → codice e
+> conferma sul Pocket → ricevuta finale. Poi **I miei PG → Beyond** dal display.
+> [Nuovo ingresso e confronto con le copie locali](ARMI-COPIE-V112.md).
+> La prova autenticata su ESP32 resta da eseguire; il nuovo percorso è verificato
+> con servizi sintetici. Nessuna sincronizzazione automatica dei progressi.
+
 > v0.93: [Pocket PC](https://github.com/ShydanRem/PocketD-D/blob/main/docs/POCKET-PC.md) riunisce Beyond, SD e backup. Non serve più preparare l’accesso separatamente: prima autorizzazione, poi Collega Beyond e conferma sul display.
 
 # Pocket autonomo: stato dell’integrazione Beyond

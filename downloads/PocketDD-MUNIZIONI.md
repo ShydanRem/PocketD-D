@@ -1,4 +1,26 @@
-# Munizioni nel flusso di attacco · v0.111
+# Munizioni nel flusso di attacco
+
+## Aggiornamento v0.112 · 13 novembre 2026
+
+Il collegamento alla pila è ora **persistente per ogni arma**, salvato con
+quantità e proprietà in scheda, backup e raccolta SD. **Faretra → scegli pila**
+salva una scelta diversa senza tirare né consumare; una scelta identica evita
+la riscrittura. Indietro conserva la precedente. **Senza consumo** salva la
+gestione manuale. Cambio arma, cambio PG e riavvio recuperano il proprio collegamento.
+Anche cambiare pila è una modifica annullabile: Annulla riguarda l’ultima modifica.
+
+Il consumo resta uno per attacco, anche mancato/True Strike; danni e storico non
+consumano di nuovo. Pila vuota o riconfigurata richiede correzione esplicita.
+Impugnature, Finezza e scudo sono ora assistiti: [guida completa](ARMI-COPIE-V112.md).
+Restano manuali bonus delle munizioni, compatibilità, ricarica, recupero,
+consumi diversi da uno e armi lanciate. Nessuna associazione dedotta dai nomi.
+
+Aggiorna firmware e supporto PC **0.112** con **Conserva dati**. Non occorre
+ricaricare look SD o reimportare il PG. I nuovi metadati usano PC v26 / USB23 /
+PDDg; vecchi record leggibili e conservati senza modifiche se privi dei nuovi dati.
+Le nuove verifiche sono sintetiche, riportate nella guida e nel resoconto software.
+
+## Riferimento storico v0.111, sostituito dove indicato sopra
 
 Dal Pocket: **Attacca → faretra → scegli una pila**. Il collegamento è esplicito:
 nessuna arma acquisisce un consumo o un bonus dal nome. Usa questa funzione

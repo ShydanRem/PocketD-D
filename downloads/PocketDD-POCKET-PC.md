@@ -1,5 +1,10 @@
 # Pocket PC: scegli cosa fare, il collegamento è automatico
 
+**v0.112:** dal sito **Associa Beyond** apre la sezione account direttamente;
+**Apri Pocket PC** resta l’ingresso generale per SD e backup. Tre passi mostrano
+autorizzazione, codice e ricevuta finale; un componente vecchio viene segnalato
+prima di aprire la pagina sbagliata. [Guida corrente](ARMI-COPIE-V112.md).
+
 **Firmware v0.94:** dopo l’associazione, [connessione e ripresa della richiesta
 Beyond](AUTONOMIA-RECUPERO.md) avvengono sul Pocket. La pagina e l’estensione 0.93
 restano compatibili; aggiornare il firmware conserva PG, tasti e SD.
