@@ -37,6 +37,7 @@ class Port:
 
 class DiagnosticsTests(unittest.TestCase):
     def test_fresh_production_c_snapshot_values_and_no_character_data(self):
+        self.assertEqual(DATA['formats'], {'usb':23, 'state':42, 'history':2, 'backup':1})
         self.assertEqual(DATA['firmware'], '0.54.0-host-test')
         self.assertEqual(DATA['memory']['internal']['free'], 123000)
         self.assertEqual(DATA['stack']['ui_min_bytes'], 4000)
@@ -55,7 +56,7 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertEqual(port.sent, b'\nPDD HELLO\nPDD DIAGNOSTICS GET 1\n')
 
     def test_old_firmware_unknown_protocol_and_busy_do_not_send_character_or_backup(self):
-        for raw in [b'PDD READY 18\n', b'factory firmware\n', b'PDD ERROR busy\n']:
+        for raw in [b'PDD READY 24\n', b'factory firmware\n', b'PDD ERROR busy\n']:
             port = Port(raw)
             with self.assertRaises(RuntimeError):
                 check.acquire(port)

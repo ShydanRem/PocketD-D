@@ -39,6 +39,7 @@ static bool library_next_epoch(uint32_t current,uint32_t *next){
     uint32_t highest=current;
     if(pd_board_library_root()){
         pd_library_catalog catalog;if(!library_ready()||!pd_library_scan(&library,&catalog))return false;
+        library_catalog=catalog;
         for(unsigned i=0;i<catalog.count;i++)if((catalog.entries[i].status==PD_LIBRARY_OK||catalog.entries[i].status==PD_LIBRARY_RECOVERED)&&catalog.entries[i].owner==library.owner&&catalog.entries[i].epoch>highest)highest=catalog.entries[i].epoch;
     }
     return pd_history_store_next_epoch(highest,next);

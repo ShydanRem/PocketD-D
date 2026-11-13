@@ -31,7 +31,7 @@ def validate(raw):
             or obj['format'] != 'pocketdd-device-backup' or type(obj['version']) is not int or obj['version'] != 1):
         raise ValueError('Usa un backup nativo del dispositivo v1')
     records = []
-    for key, magic, maximum in [('state', (b'PDDP', b'PDDQ', b'PDDR', b'PDDS', b'PDDT', b'PDDU', b'PDDV', b'PDDW', b'PDDX', b'PDDY', b'PDDZ', b'PDDa', b'PDDb', b'PDDc', b'PDDd', b'PDDe', b'PDDf'), 77245), ('history', (b'PDH1',), 2481)]:
+    for key, magic, maximum in [('state', (b'PDDP', b'PDDQ', b'PDDR', b'PDDS', b'PDDT', b'PDDU', b'PDDV', b'PDDW', b'PDDX', b'PDDY', b'PDDZ', b'PDDa', b'PDDb', b'PDDc', b'PDDd', b'PDDe', b'PDDf', b'PDDg'), 77501), ('history', (b'PDH1',), 2481)]:
         text = obj[key]
         if not isinstance(text, str) or not text or len(text) > 4*((maximum+2)//3):
             raise ValueError('Record nativo fuori limite')
@@ -42,6 +42,17 @@ def validate(raw):
         records.append(data)
     state, history = records
     if len(state)<5124 or state[5123]>120 or 5124+552*state[5123]>len(state)-4: raise ValueError('Invalid native power size')
+    if state[:4] == b'PDDg':
+        start=len(state)-260
+        if start!=10041+560*state[5123]: raise ValueError('Invalid handling size')
+        for i in range(60):
+            flags,grip,sides,ammo=state[start+4*i:start+4*i+4];base=442+78*i
+            if flags>7 or grip>1 or ammo>state[435] or ammo==i+1: raise ValueError('Invalid weapon handling')
+            if any((flags,grip,sides,ammo)):
+                if i>=state[435] or state[base+68]!=3 or flags&1 and flags&2 or not flags&2 and (sides or grip) or flags&2 and (state[base+72]&4 or state[base+70]!=1 or sides not in (6,8,10,12) or sides<=state[base+71]) or flags&4 and state[base+69]>1: raise ValueError('Invalid weapon properties')
+        source=state[start+240:start+256];identity=source.split(b'\0')[0]
+        if len(identity)==16 or identity and (not identity.isdigit() or identity.startswith(b'0')) or any(source[len(identity):]): raise ValueError('Invalid source identity')
+        state=b'PDDf'+state[4:start]+state[-4:]
     if state[:4] == b'PDDf':
         count=state[5123]; legacy_size=len(state)-8*count; start=legacy_size-4
         if legacy_size != 10045+552*count: raise ValueError('Invalid formula record size')

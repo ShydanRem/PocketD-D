@@ -12,7 +12,7 @@ test('Beyond skill ability: all 18 targets x six abilities keep proficiency/extr
  for(const [id,key] of Object.entries(beyondSkillIds))for(let a=0;a<6;a++){
   const p=beyondCoreFixture();p.data.stats.forEach((s,i)=>s.value=8+2*i);p.data.modifiers.race=[];p.data.characterValues=[cv(27,id,a+1),cv(26,id,4),cv(24,id,2)];const before=structuredClone(p),r=convertBeyond(p,'123456');assert.ok(r.canImport,r.conversion.blockers.join(';'));const s=r.draft;
   assert.equal(s.extended.skillAbilities[key],abilityKeys[a]);assert.equal(describeRoll(s,{kind:'skill',key}).bonus,a-1+4+2);const changed={...s,abilities:{...s.abilities,[abilityKeys[a]]:20}};assert.equal(describeRoll(changed,{kind:'skill',key}).bonus,5+4+2);assert.equal(describeRoll(changed,{kind:'save',key:abilityKeys[a]}).bonus,5);assert.deepEqual(p,before);
-  const b=JSON.parse(serialize(s)),wire=projectDevice(s).packet;assert.equal(b.version,17);assert.equal(wire.version,15);assert.equal(wire.training.skillAbilities[key],a+1);assert.equal(wire.avatar.outfit,0);assert.deepEqual(parseBackup(JSON.stringify(b)),s);
+  const b=JSON.parse(serialize(s)),wire=projectDevice(s).packet;assert.equal(b.version,17);assert.equal(wire.version,23);assert.equal(wire.training.skillAbilities[key],a+1);assert.equal(wire.avatar.outfit,0);assert.deepEqual(parseBackup(JSON.stringify(b)),s);
  }
 });
 test('Skill ability: defaults, explicit default association, null/automatic and independent skills are preserved without new metadata on old states',()=>{

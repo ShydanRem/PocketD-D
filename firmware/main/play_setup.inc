@@ -69,7 +69,10 @@ static void profile_setup_begin(void){
 }
 static bool play_candidate(void){
  scratch=state;
- if(play_mode==0){return state.items[item_index].kind==PD_WEAPON?pd_equip(&scratch,play_return!=WEAPON_PICKER&&state.equipped==item_index?PD_NO_WEAPON:item_index):pd_gear_equip(&scratch,item_index,!state.gear[item_index].equipped);}
+ if(play_mode==0){
+  if(state.items[item_index].kind==PD_WEAPON&&!pd_weapon_hands_ready(&state,item_index)){play_error="Riponi lo scudo per usare due mani";return false;}
+  if(state.gear[item_index].kind==PD_WEAR_SHIELD&&!state.gear[item_index].equipped&&pd_weapon_two_hands(&state,state.equipped)){play_error="Riponi l'arma a due mani";return false;}
+  return state.items[item_index].kind==PD_WEAPON?pd_equip(&scratch,play_return!=WEAPON_PICKER&&state.equipped==item_index?PD_NO_WEAPON:item_index):pd_gear_equip(&scratch,item_index,!state.gear[item_index].equipped);}
  if(play_mode==4)return pd_gear_attune(&scratch,item_index,state.gear[item_index].attunement!=2);
  if(play_mode==1){
   if(state.gear[item_index].kind&&!pd_gear_configure(&scratch,item_index,(pd_gear){0},state.unarmored_rule,false))return false;
@@ -204,7 +207,7 @@ static bool play_action(intptr_t a){
   else if(a==6098&&play_candidate()){
    if(pd_storage_save(&scratch)){previous=state;undo_available=true;state=scratch;invalidate_strike();wifi_focus=0;
     if(play_mode==3)page=MAGIC_DETAIL;else if((play_mode==1||play_return==WEAPON_PICKER)&&weapon_from_attack){int selected=pending_attack_spell;pending_attack_spell=-1;attack_start(selected,selected<0);}
-    else page=play_return==INVENTORY?INVENTORY:ITEM_DETAIL;
+    else page=play_return==COMBAT?COMBAT:play_return==INVENTORY?INVENTORY:ITEM_DETAIL;
    }else play_error="Salvataggio non confermato: riprova";
   }return true;
  }

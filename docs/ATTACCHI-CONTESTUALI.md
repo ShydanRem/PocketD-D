@@ -1,3 +1,7 @@
+> v0.112: [Impugnature e munizioni persistenti](ARMI-COPIE-V112.md).
+> Finezza sceglie FOR/DES; versatile cambia dado in mischia a due mani.
+> Un conflitto con lo scudo blocca il tiro prima di dadi e costi, anche con True Strike.
+
 # Attacco normale o con magia — aggiornato v0.96
 
 > v0.111: [Munizioni, costo sul tiro e riprova senza nuovi dadi](MUNIZIONI.md).

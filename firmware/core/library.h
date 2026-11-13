@@ -4,7 +4,7 @@
 #define PD_LIBRARY_LIMIT 32
 typedef enum { PD_LIBRARY_EMPTY,PD_LIBRARY_OK,PD_LIBRARY_RECOVERED,PD_LIBRARY_CORRUPT,
     PD_LIBRARY_FUTURE,PD_LIBRARY_IO,PD_LIBRARY_MEMORY,PD_LIBRARY_FULL,PD_LIBRARY_CONFLICT } pd_library_result;
-typedef struct { unsigned slot;pd_library_result status;char name[PD_NAME_BYTES];uint8_t level;uint32_t epoch;uint64_t owner; } pd_library_entry;
+typedef struct { unsigned slot;pd_library_result status;char name[PD_NAME_BYTES],beyond_id[PD_PROVENANCE_BYTES];uint8_t level;uint32_t epoch;uint64_t owner; } pd_library_entry;
 typedef struct { pd_library_entry entries[PD_LIBRARY_LIMIT];unsigned count; } pd_library_catalog;
 typedef struct { char root[192];uint64_t owner;void (*yield)(void *);void *context; } pd_library;
 bool pd_library_init(pd_library *library,const char *root,uint64_t owner,void (*yield)(void *),void *context);

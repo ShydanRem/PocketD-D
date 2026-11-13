@@ -368,14 +368,14 @@ static void ammunition_fixture(unsigned quantity){
 static void test_ammunition_flow(void){
     ammunition_fixture(2);pd_state before=state;unsigned draws=random_calls,writes=save_calls,journals=history_save_calls;
     click("Munizioni");bounds();screenshot("ammo111-picker.ppm");click("Indietro");assert(page==COMBAT&&!ammunition_bound()&&save_calls==writes&&random_calls==draws);
-    click("Munizioni");click("Frecce di prova");assert(page==COMBAT&&ammunition_bound()&&state.items[1].quantity==2&&save_calls==writes&&random_calls==draws);bounds();screenshot("ammo111-ready.ppm");
+    click("Munizioni");click("Frecce di prova");assert(page==COMBAT&&ammunition_bound()&&state.items[1].quantity==2&&save_calls==writes+1&&random_calls==draws);before=state;writes=save_calls;bounds();screenshot("ammo111-ready.ppm");
     random_values[0]=random_values[1]=19;fail_storage_commit=true;click("Lancia");assert(page==AMMO_RETRY&&ammo_pending&&!ammo_paid&&!strike_ready&&random_calls==draws+1&&save_calls==writes+1&&history_save_calls==journals&&!memcmp(&state,&before,sizeof state));pd_strike frozen=strike;bounds();screenshot("ammo111-retry.ppm");
     for(unsigned i=0;i<3;i++)shortcut(i);act(100);act(3);act(72);act(13);act(AC_NONE);assert(page==AMMO_RETRY&&random_calls==draws+1&&save_calls==writes+1&&!stage_import(&before)&&!stage_backup(NULL)&&!memcmp(&state,&before,sizeof state));
     physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};rules_keyboard=false;probe_key_gesture(1,900);assert(page==AMMO_RETRY&&ammo_pending&&random_calls==draws+1&&save_calls==writes+1);
     fail_storage_commit=false;click("Riprova");assert(page==DICE&&!ammo_pending&&ammo_paid&&strike_ready&&strike.critical&&!memcmp(&strike,&frozen,sizeof strike)&&random_calls==draws+1&&save_calls==writes+2&&state.items[1].quantity==1&&state.equipped==0&&history.count==1);click("Accelera");bounds();screenshot("ammo111-hit.ppm");
     unsigned paid_writes=save_calls;act(72);assert(random_calls==draws+1&&save_calls==paid_writes);click("Danni");assert(combat_roll==2&&random_calls==draws+3&&save_calls==paid_writes&&state.items[1].quantity==1&&damage_result.count==2);click("Accelera");click("Arma");assert(page==COMBAT&&ammunition_bound());
     random_values[0]=random_values[1]=0;click("Lancia");assert(state.items[1].quantity==0&&state.equipped==0&&!strike.hits&&random_calls==draws+4&&save_calls==paid_writes+1);click("Accelera");bounds();screenshot("ammo111-empty-result.ppm");click("Nuovo");assert(page==COMBAT&&!ammunition_available());unsigned stopped=random_calls,stopped_writes=save_calls;act(72);act(13);assert(page==COMBAT&&random_calls==stopped&&save_calls==stopped_writes&&state.items[1].quantity==0);bounds();screenshot("ammo111-empty.ppm");act(93);assert(page==COMBAT_DETAIL);bounds();click("Munizioni");assert(lv_obj_has_state(named_control("Frecce di prova"),LV_STATE_DISABLED));click("Dardi di prova");assert(ammo_item==2&&ammunition_available());
-    act(100);click("Annulla");assert(state.items[1].quantity==1&&state.items[2].quantity==7);
+    act(100);click("Annulla");assert(state.items[1].quantity==0&&state.items[2].quantity==7&&state.handling[0].ammo==2);
     /* The same paid shot works for every True Strike casting ability. */
     for(unsigned ability=0;ability<6;ability++){
         ammunition_fixture(1);state.magic.powers[0].ability=ability;state.abilities[ability]=18;render();click("Colpo di prova");assert(attack_spell==0);click("Munizioni");click("Frecce di prova");draws=random_calls;writes=save_calls;random_values[0]=random_values[1]=19;click("Normale");click("Lancia");assert(strike.weapon.true_strike&&strike.weapon.attack_bonus==7&&strike.weapon.radiant_dice==1&&strike.roll.count==2&&random_calls==draws+2&&save_calls==writes+1&&!state.items[1].quantity);click("Accelera");click("Danni");assert(damage_parts.weapon.count==2&&damage_parts.radiant.count==2&&save_calls==writes+1);click("Accelera");
@@ -388,18 +388,66 @@ static void test_ammunition_flow(void){
     ammunition_fixture(3);click("Munizioni");click("Frecce di prova");writes=save_calls;draws=random_calls;fail_history=true;click("Lancia");assert(history_pending&&!ammo_pending&&state.items[1].quantity==2&&save_calls==writes+1);pd_roll fixed=result;click("Accelera");click("Nuovo");click("Lancia");assert(page==HISTORY_HOME&&random_calls==draws+1&&state.items[1].quantity==2&&save_calls==writes+1);fail_history=false;act(2603);assert(!history_pending&&history.count==1&&history.entries[0].total==fixed.total);act(100);
     /* A changed source or a stale picker never silently switches the stack. */
     ammunition_fixture(3);click("Munizioni");click("Frecce di prova");strcpy(state.items[1].name,"Altra pila");draws=random_calls;writes=save_calls;act(72);assert(page==COMBAT&&!ammunition_available()&&random_calls==draws&&save_calls==writes);click("Munizioni");state.hp--;act(AC_ITEM_FIRST+2);assert(page==AMMO_PICKER&&ammo_item==1&&random_calls==draws&&save_calls==writes);click("Indietro");click("Munizioni");click("Altra pila");assert(ammunition_available());
-    click("Munizioni");click("Senza consumo");assert(page==COMBAT&&!ammunition_bound()&&random_calls==draws&&save_calls==writes);
-    ammunition_fixture(3);click("Munizioni");click("Frecce di prova");state.history_epoch++;assert(!ammunition_bound());
+    click("Munizioni");click("Senza consumo");assert(page==COMBAT&&!ammunition_bound()&&random_calls==draws&&save_calls==writes+1);
+    ammunition_fixture(3);click("Munizioni");click("Frecce di prova");state.history_epoch++;state.handling[0].ammo=0;assert(!ammunition_bound());
     /* Last inventory index, duplicate labels and pages preserve source IDs. */
     ammunition_fixture(2);for(unsigned i=4;i<PD_ITEMS;i++)state.items[i]=(pd_item){.name="Pila uguale",.quantity=4};state.item_count=PD_ITEMS;strcpy(state.items[59].name,"Ultima pila");click("Munizioni");while(lv_obj_has_state(named_control(">"),LV_STATE_DISABLED)==false)click(">");bounds();click("Ultima pila");assert(ammo_item==59&&page==COMBAT);click("Lancia");assert(state.items[59].quantity==3&&state.items[1].quantity==2);click("Accelera");
     ammo_item=PD_ITEMS;ammo_paid=ammo_pending=false;pd_demo(&state);combat_roll=0;page=HERO;render();
-    puts("Ammunition UI: selection/cancel/no writes, fixed attack retry, guarded USB/keys, crit/damage no second cost, miss/last shot/empty refusal, explicit replacement/manual mode, undo, six True Strike abilities, history retry/no refund, stale source/picker, epoch and index59 passed; synthetic LVGL.");
+    puts("Ammunition UI: persistent selection/cancel, fixed attack retry, guarded USB/keys, crit/damage no second cost, miss/last shot/empty refusal, explicit replacement/manual mode, undo, six True Strike abilities, history retry/no refund, stale source/picker, epoch and index59 passed; synthetic LVGL.");
+}
+
+static void handling_fixture(void){
+    ammunition_fixture(3);state.items[0]=(pd_item){.name="Lama di prova",.quantity=1,.kind=PD_WEAPON,.ability=0,.count=1,.sides=8,.flags=3,.reach=1,.thrown_range=4};state.abilities[0]=14;state.abilities[1]=16;state.abilities[3]=18;
+    state.items[1]=(pd_item){.name="Scudo di prova",.quantity=1};state.gear[1]=(pd_gear){.kind=PD_WEAR_SHIELD,.armor=2};state.unarmored_rule=1;state.armor=13;render();assert(pd_valid(&state));
+}
+static void test_handling_flow(void){
+    handling_fixture();pd_state before=state;unsigned draws=random_calls,writes=save_calls;
+    click("Dettagli attacco");click("Impugnatura");assert(page==HANDLING_SETUP);bounds();click("Tipo: manuale");click("Tipo: due mani");assert(handling_draft.flags==PD_VERSATILE&&handling_draft.sides==10);click("Impugnatura: una mano");click("Finezza: manuale");bounds();screenshot("handling112-setup.ppm");
+    assert(save_calls==writes&&random_calls==draws&&!memcmp(&state,&before,sizeof state));click("Rivedi");assert(page==HANDLING_REVIEW);bounds();screenshot("handling112-review.ppm");
+    fail_storage_commit=true;click("Salva");assert(page==HANDLING_REVIEW&&!memcmp(&state,&before,sizeof state)&&random_calls==draws);fail_storage_commit=false;click("Salva");assert(page==COMBAT&&state.handling[0].grip==1&&state.handling[0].flags==6&&random_calls==draws);pd_weapon_info w;assert(pd_weapon_stats(&state,0,&w)&&w.sides==10&&w.ability==1&&w.attack_bonus==6);bounds();screenshot("handling112-ready.ppm");
+    /* A grip change is reviewed, cancelable and independent of magic variants. */
+    before=state;writes=save_calls;click("2 mani");assert(page==HANDLING_REVIEW&&handling_draft.grip==0);click("Modifica");physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};rules_keyboard=false;probe_key_gesture(1,900);assert(page==COMBAT&&!memcmp(&state,&before,sizeof state)&&save_calls==writes&&random_calls==draws);
+    click("Colpo di prova");assert(attack_spell==0);assert(pd_true_strike_stats(&state,0,false,&w)&&w.sides==10&&w.base==4&&w.attack_bonus==7);
+    /* Imported hand conflicts remain inspectable, block RNG, and offer the
+       existing shield preview rather than silently changing armor or gear. */
+    state.gear[1].equipped=true;state.armor=15;render();before=state;writes=save_calls;draws=random_calls;act(72);assert(page==COMBAT&&random_calls==draws&&save_calls==writes&&!memcmp(&state,&before,sizeof state));click("Mani");assert(page==HANDLING_SETUP);bounds();screenshot("handling112-shield.ppm");click("Riponi scudo >");assert(page==PLAY_CONFIRM);bounds();click("Conferma");assert(page==COMBAT&&!state.gear[1].equipped&&state.armor==13&&state.hp==before.hp&&random_calls==draws&&save_calls==writes+1);
+    /* Normal equipment activation refuses a shield while two hands are used. */
+    act(80);act(501);click("Equipaggia");assert(page==PLAY_CONFIRM&&!play_candidate()&&strstr(play_error,"due mani"));assert(!state.gear[1].equipped);act(6099);act(85);
+    /* Native reload remembers each weapon's own ammunition link. */
+    ammunition_fixture(3);click("Munizioni");before=state;writes=save_calls;fail_storage_commit=true;click("Frecce di prova");assert(page==AMMO_PICKER&&!memcmp(&state,&before,sizeof state));fail_storage_commit=false;click("Frecce di prova");assert(page==COMBAT&&state.handling[0].ammo==2&&save_calls==writes+2);uint8_t record[PD_RECORD_SIZE];uint32_t gen;size_t n=pd_encode(&state,112,record);pd_state reboot;assert(pd_decode(record,n,&reboot,&gen));state=reboot;ammo_item=PD_ITEMS;ammo_epoch=0;render();assert(ammunition_bound()&&ammo_item==1);screenshot("handling112-ammo.ppm");
+    before=state;writes=save_calls;draws=random_calls;click("Lancia");click("Accelera");assert(state.items[1].quantity==2&&save_calls==writes+1&&random_calls==draws+1);act(100);click("Annulla");assert(!memcmp(&state,&before,sizeof state)&&state.handling[0].ammo==2);
+    /* Stale drafts preserve the newer state and consume no dice. */
+    handling_fixture();act(WH_OPEN);state.hp--;before=state;writes=save_calls;draws=random_calls;act(WH_SAVE);act(WH_REVIEW);assert(handling_open()&&!memcmp(&state,&before,sizeof state)&&save_calls==writes&&random_calls==draws);click("Indietro");
+    ammo_item=PD_ITEMS;ammo_paid=ammo_pending=false;pd_demo(&state);page=HERO;combat_roll=0;render();
+    puts("Handling UI: draft/cancel/local back, saved retry/undo, versatile/finesse/True Strike, imported shield conflict before RNG, explicit armor preview, blocked shield activation, persistent ammunition/native reload, quantity undo and stale draft passed; synthetic LVGL.");
+}
+
+static void test_source_copy_flow(void){
+    const char *old_root=library_test_root;library_test_root=NULL;ammunition_fixture(3);act(100);strcpy(state.beyond_id,"123456");pd_state before=state,candidate=state;candidate.hp=5;strcpy(candidate.name,"Nome diverso");unsigned writes=save_calls,draws=random_calls;
+    assert(stage_import(&candidate)&&source_copy_count==1);act(30);assert(source_copy_open()&&import_pending&&save_calls==writes&&random_calls==draws);bounds();screenshot("source112-compare.ppm");click("Tieni locale");assert(!import_pending&&page==HERO&&!memcmp(&state,&before,sizeof state)&&save_calls==writes&&random_calls==draws);
+    page=BEYOND_BUSY;beyond_source_account=false;assert(stage_import_from(&candidate,true));act(30);assert(source_copy_open());physical_keys=(pd_buttons){0};display_screen=(pd_screen){0};rules_keyboard=false;probe_key_gesture(1,900);assert(!import_pending&&page==HERO&&!memcmp(&state,&before,sizeof state)&&save_calls==writes);
+    strcpy(candidate.beyond_id,"654321");strcpy(candidate.name,state.name);assert(stage_import(&candidate)&&!source_copy_count);act(30);assert(!import_pending&&!strcmp(state.beyond_id,"654321")&&state.hp==5);
+    candidate=state;candidate.hp=4;assert(stage_import(&candidate)&&source_copy_count==1);act(30);writes=save_calls;draws=random_calls;state.hp--;before=state;click("Sostituisci");assert(source_copy_open()&&import_pending&&save_calls==writes&&random_calls==draws&&!memcmp(&state,&before,sizeof state));click("Tieni locale");
+    /* A source ID in another saved slot is found without matching its name.
+       The new copy preserves that exact local state and its independent epoch. */
+    char temporary[]="/tmp/pdd-source-copy-XXXXXX";assert(mkdtemp(temporary));char root[256];snprintf(root,sizeof root,"%s/characters",temporary);library_test_root=root;
+    pd_library store;assert(pd_library_init(&store,root,42,NULL,NULL));pd_state local;pd_demo(&local);strcpy(local.beyond_id,"234567");local.history_epoch=7;local.hp=7;strcpy(local.name,"Nome precedente");pd_history local_history;pd_history_reset(&local_history,local.history_epoch);unsigned slot;assert(pd_library_save(&store,0,&local,&local_history,&slot)==PD_LIBRARY_OK);
+    pd_library_catalog scan;assert(pd_library_scan(&store,&scan)&&scan.count==1&&!strcmp(scan.entries[0].beyond_id,"234567"));
+    ammunition_fixture(3);act(100);strcpy(state.beyond_id,"999999");candidate=state;strcpy(candidate.beyond_id,"234567");strcpy(candidate.name,"Nome remoto nuovo");candidate.hp=20;before=state;writes=save_calls;draws=random_calls;
+    assert(stage_import(&candidate)&&source_copy_count==1&&hit_candidate.hp==7);act(30);bounds();screenshot("source112-library.ppm");assert(import_pending&&save_calls==writes&&!memcmp(&state,&before,sizeof state));click("Nuova copia");assert(!import_pending&&!strcmp(state.beyond_id,"234567")&&state.hp==20&&random_calls==draws);
+    pd_backup *saved=malloc(sizeof *saved);assert(saved&&pd_library_read(&store,slot,saved)==PD_LIBRARY_OK&&!memcmp(&saved->state,&local,sizeof local)&&!memcmp(&saved->history,&local_history,sizeof local_history));free(saved);
+    pd_state current=state;strcpy(state.beyond_id,"999999");candidate=current;assert(stage_import(&candidate)&&source_copy_slot==slot);act(30);click("Apri locale");assert(!import_pending&&page==LIBRARY_CONFIRM&&pending.hp==7&&!strcmp(pending.beyond_id,"234567"));act(5304);act(100);state=current;pd_history_reset(&history,state.history_epoch);render();
+    candidate=state;assert(stage_import(&candidate)&&source_copy_count==2);act(30);click("Tieni locale");assert(!import_pending&&state.hp==20);
+    for(unsigned id=1;id<=PD_LIBRARY_LIMIT;id++)for(unsigned bank=0;bank<2;bank++){char file[300];snprintf(file,sizeof file,"%s/pg%02u%c.pdl",root,id,bank?'b':'a');remove(file);}assert(!rmdir(root)&&!rmdir(temporary));library_test_root=old_root;library_catalog.count=0;source_copy_count=0;
+    pd_demo(&state);pd_history_reset(&history,state.history_epoch);page=HERO;combat_roll=0;render();puts("Beyond copy UI: provenance match despite rename, no name-only match, explicit keep/new confirmation, stale comparison guard, another SD slot/active duplicate counts and exact retained local state/history passed; synthetic LVGL/host files only.");
 }
 
 int main(void) {
     lv_init();lv_display_t *d=lv_display_create(466,466);static uint16_t buffer[466*40];
     lv_display_set_buffers(d,buffer,NULL,sizeof buffer,LV_DISPLAY_RENDER_MODE_PARTIAL);lv_display_set_flush_cb(d,paint);
     pd_demo(&state);render();bounds();screenshot("hero.ppm");
+    if(getenv("PD_TEST_SOURCE_ONLY")){test_source_copy_flow();return 0;}
+    if(getenv("PD_TEST_HANDLING_ONLY")){test_handling_flow();return 0;}
     if(getenv("PD_TEST_AMMO_ONLY")){test_ammunition_flow();return 0;}
     if(getenv("PD_TEST_SPELL_ONLY")){test_spell_flow();test_saved_formula();test_spell_battle_flow();return 0;}
     pd_state animated_before=state;unsigned idle_saves=save_calls,idle_rng=random_calls;
@@ -2649,13 +2697,15 @@ int main(void) {
     test_saved_formula();
     test_spell_battle_flow();
     test_ammunition_flow();
+    test_handling_flow();
+    test_source_copy_flow();
     unsigned covered=0;
-    for(unsigned p=0;p<=AMMO_RETRY;p++){
+    for(unsigned p=0;p<=IMPORT_COMPARE;p++){
         covered+=styled_pages[p];
         if(!styled_pages[p])fprintf(stderr,"Theme page not exercised: %u\n",p);
         if(p!=HERO&&p!=HOME_MENU&&p!=HOME_VITALS)assert(pd_theme_get(page_themes[p]));
     }
-    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)AMMO_RETRY+1);
-    assert(covered==AMMO_RETRY+1);
+    printf("Styled production views exercised: %u/%u\n",covered,(unsigned)IMPORT_COMPARE+1);
+    assert(covered==IMPORT_COMPARE+1);
     puts("LVGL host: navigation, base d20, HP/undo, counters, confirm/cancel, animated single/double dice, RNG isolation, skip, disabled input, timer cleanup, circular touch bounds >=44px, rest previews/policies, hit dice, rollback, condition notes/poison, death saves, display preferences, idle/wake policy explicit CA/max-HP effects, round durations/expiry, typed defences/damage, concentration saves with frozen retry, explicit effect bindings/end/recast/caps, signed rest preview, temporary defences, mixed damage, conditional rules/source declarations/grouping/frozen results, three independent extras/combined drafts/high-bit timers, before/after reductions/full math/frozen retry, reusable profiles/shared budget/42 timers/outer drafts, atomic pool costs/reaction/explicit turn/frozen expense, ordinary/pact slot costs/fixed levels/no fallback/rest recovery own-turn timers/atomic reaction reset/50 expiries/17 detail pages elapsed minutes/hours/chronological caps/precision, separate item charges/manual correction/rest recovery/atomic costs/frozen receipt three independent expenses/all-or-none/frozen receipts explicit charge recharge/frozen retry/no-write zero/capped results four explicit roll conditions/partial context/automatic failure/Boolean cancellation/DEX saves, saved-state feedback/expiry/static mode/wrap and guarded physical buttons passed");
 }

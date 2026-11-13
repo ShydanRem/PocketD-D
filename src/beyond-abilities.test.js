@@ -47,7 +47,7 @@ test('Beyond scores: final values outside 1..30 and base above its reconciled ca
  p.data.bonusStats[0].value=0;p.data.modifiers.feat.push(mod('strength-score','bonus',-100));assert.equal(convert(p).canImport,false);
 });
 test('Beyond scores: existing hard override keeps precedence, without adding new metadata to the local character schema',()=>{
- const p=source();p.data.overrideStats[0].value=22;const r=convertBeyondCore(p,'123456');assert.ok(r.canImport);assert.equal(r.draft.abilities.FOR,22);assert.equal(JSON.parse(serialize(r.draft)).version,11);assert.equal(projectDevice(r.draft).packet.version,9);assert.equal(r.conversion.complete,false);
+ const p=source();p.data.overrideStats[0].value=22;const r=convertBeyondCore(p,'123456');assert.ok(r.canImport);assert.equal(r.draft.abilities.FOR,22);assert.equal(JSON.parse(serialize(r.draft)).version,11);assert.equal(projectDevice(r.draft).packet.version,23);assert.equal(r.conversion.complete,false);
 });
 
 test('Beyond scores: HP uses validated source fields after CON reconciliation, even when the preliminary maximum was nonpositive',()=>{

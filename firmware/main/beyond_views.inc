@@ -12,8 +12,8 @@ static void render_beyond(void){
     pd_beyond_info current;pd_beyond_snapshot(&current);pd_wifi_info wifi;pd_wifi_snapshot(&wifi);bool online=beyond_online(&wifi);
     if(beyond_guide&&(page==BEYOND_ACCOUNT||page==BEYOND_RECOVER)){
         label("Collega dal PC",83,111,300,true);
-        beyond_step(PD_UI_PC,"1. Apri Pocket PC","Estensione in Chrome o Edge",165);
-        beyond_step(PD_UI_ACCOUNT,"2. Collega Beyond","Accedi, poi Collega Pocket",229);
+        beyond_step(PD_UI_PC,"1. Associa Beyond","Sul sito PocketD-D dal PC",165);
+        beyond_step(PD_UI_ACCOUNT,"2. Collega Beyond","Accedi e collega il cavo USB",229);
         beyond_step(PD_UI_LOCK,"3. Conferma il codice","Stesso codice sui due schermi",293);
         beyond_control("Indietro",83,359,page==BEYOND_ACCOUNT?144:300,48,B_GUIDE_BACK,true);
         if(page==BEYOND_ACCOUNT)beyond_control("Wi-Fi",239,359,144,48,B_WIFI,true);

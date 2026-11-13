@@ -51,7 +51,7 @@
 #include <assert.h>
 #include <stdlib.h>
 
-typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, KEY_PICKER, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM, POWER_HOME, POWER_OFF, ITEM_SEARCH, POWER_SEARCH, MAGIC_MANAGE, MAGIC_PREPARATION, ITEM_QUANTITY_CONFIRM, AVATAR_EDIT, SCENE_EDIT, APPEARANCE_CONFIRM, DEFENCE_SETUP, WIFI_HOME, WIFI_FORGET, REFERENCE_HOME, REFERENCE_TEXT, WIFI_LIST, WIFI_PASSWORD, WIFI_JOIN_REVIEW, WEAPON_PICKER, ITEM_CONFIG_MENU, WEAPON_SETUP, GEAR_SETUP, MAGIC_PROFILE, PLAY_CONFIRM, ATTACK_MODE, HIT_EFFECTS, HIT_SMITE, ASSET_INSTALL, SYNC_HOME, SYNC_REVIEW, SYNC_FORGET, LIBRARY_HOME, LIBRARY_CONFIRM, BEYOND_FORM, BEYOND_BUSY, BEYOND_REPORT, BEYOND_ACCOUNT, BEYOND_PAIR, BEYOND_FORGET, BEYOND_CONNECT, BEYOND_RECOVER, MAGIC_COST_PICKER, MAGIC_PREPARE_LIST, MAGIC_PREPARE_CONFIRM, SPELL_METHOD, SPELL_FORMULA, SPELL_REVIEW, SPELL_RECEIPT, SPELL_FORMULA_SETUP, SPELL_FORMULA_SAVE, SPELL_BATTLE_SETUP, SPELL_TARGET_SAVE, SPELL_BATTLE_RECEIPT, AMMO_PICKER, AMMO_RETRY } page_t;
+typedef enum { HERO, SHEET, DICE, RESOURCES, APPEARANCE, CHECK_DETAIL, INVENTORY, ITEM_DETAIL, ITEM_CONFIRM, COMBAT, COMBAT_DETAIL, MAGIC_LIST, MAGIC_DETAIL, MAGIC_CONFIRM, MAGIC_TEXT, MAGIC_STATUS, MAGIC_SLOTS, MAGIC_RECOVER, MAGIC_STOP, KEY_SETTINGS, KEY_PICKER, REST_HOME, REST_LONG_SETTINGS, REST_PREVIEW, REST_REGAIN, REST_SESSION, HIT_DICE, HIT_CONFIRM, STATUS_HOME, DEATH_VIEW, DEATH_EDIT, CONDITION_LIST, CONDITION_DETAIL, CONDITION_PICKER, STATUS_CONFIRM, DEVICE_SETTINGS, EFFECT_LIST, EFFECT_EDIT, EFFECT_CONFIRM, EFFECT_DURATION, EFFECT_ROUND, EFFECT_LINK, ROUND_DEFENCES, DAMAGE_HOME, DEFENCE_LIST, DEFENCE_EDIT, DEFENCE_CONFIRM, DAMAGE_CONFIRM, DAMAGE_RESULT, CONCENTRATION_SETUP, DEFENCE_TEMPORARY, DEFENCE_DURATION, DEFENCE_LINK, DAMAGE_PARTS, DAMAGE_PART_EDIT, DAMAGE_TYPES, DEFENCE_RULE, DEFENCE_RULE_REVIEW, DAMAGE_CONTEXT, DEFENCE_GRANTS, DEFENCE_GRANT_REVIEW, DAMAGE_REDUCTION, DAMAGE_MATH, PROFILE_LIST, PROFILE_VIEW, PROFILE_EDIT, PROFILE_DETAILS, PROFILE_NUMBER, PROFILE_CONFIRM, PROFILE_ALLOCATE, PROFILE_IMPACT, PROFILE_COST, PROFILE_COST_IMPACT, REACTION_HOME, REACTION_CONFIRM, TURN_DETAILS, TIME_HOME, TIME_CONFIRM, TIME_DETAILS, ITEM_CHARGES, ITEM_CHARGE_CONFIRM, ITEM_RECHARGE, ITEM_RECHARGE_CONFIRM, ITEM_RECHARGE_RESULT, CONDITION_EFFECTS, CONDITION_EFFECTS_CONFIRM, ROLL_CONTEXT, HOME_MENU, HOME_VITALS, WALLET_HOME, WALLET_EDIT, WALLET_CONFIRM, HISTORY_HOME, HISTORY_DETAIL, HISTORY_DISCARD, BACKUP_HOME, BACKUP_SEND_CONFIRM, BACKUP_RESTORE_CONFIRM, INPUT_CHECK_HOME, INPUT_CHECK_TOUCH, INPUT_CHECK_KEYS, DAMAGE_DEATH, DEATH_ROLL_SETUP, EXTERNAL_TURN_HOME, TURN_NAME_EDIT, TURN_NAME_CONFIRM, PAYMENT_CHOICE, NUMBER_ENTRY, VITAL_CONFIRM, POWER_HOME, POWER_OFF, ITEM_SEARCH, POWER_SEARCH, MAGIC_MANAGE, MAGIC_PREPARATION, ITEM_QUANTITY_CONFIRM, AVATAR_EDIT, SCENE_EDIT, APPEARANCE_CONFIRM, DEFENCE_SETUP, WIFI_HOME, WIFI_FORGET, REFERENCE_HOME, REFERENCE_TEXT, WIFI_LIST, WIFI_PASSWORD, WIFI_JOIN_REVIEW, WEAPON_PICKER, ITEM_CONFIG_MENU, WEAPON_SETUP, GEAR_SETUP, MAGIC_PROFILE, PLAY_CONFIRM, ATTACK_MODE, HIT_EFFECTS, HIT_SMITE, ASSET_INSTALL, SYNC_HOME, SYNC_REVIEW, SYNC_FORGET, LIBRARY_HOME, LIBRARY_CONFIRM, BEYOND_FORM, BEYOND_BUSY, BEYOND_REPORT, BEYOND_ACCOUNT, BEYOND_PAIR, BEYOND_FORGET, BEYOND_CONNECT, BEYOND_RECOVER, MAGIC_COST_PICKER, MAGIC_PREPARE_LIST, MAGIC_PREPARE_CONFIRM, SPELL_METHOD, SPELL_FORMULA, SPELL_REVIEW, SPELL_RECEIPT, SPELL_FORMULA_SETUP, SPELL_FORMULA_SAVE, SPELL_BATTLE_SETUP, SPELL_TARGET_SAVE, SPELL_BATTLE_RECEIPT, AMMO_PICKER, AMMO_RETRY, HANDLING_SETUP, HANDLING_REVIEW, IMPORT_COMPARE } page_t;
 static const pd_theme_kind page_themes[]={
     [HERO]=PD_THEME_NONE,
     [SHEET]=PD_THEME_SHEET,
@@ -153,7 +153,7 @@ static const pd_theme_kind page_themes[]={
     [WALLET_EDIT]=PD_THEME_WALLET,
     [WALLET_CONFIRM]=PD_THEME_WALLET,
     [BEYOND_FORM]=PD_THEME_BEYOND,[BEYOND_BUSY]=PD_THEME_BEYOND,[BEYOND_REPORT]=PD_THEME_BEYOND,[BEYOND_ACCOUNT]=PD_THEME_BEYOND,[BEYOND_PAIR]=PD_THEME_BEYOND,[BEYOND_FORGET]=PD_THEME_BEYOND,[BEYOND_CONNECT]=PD_THEME_BEYOND,[BEYOND_RECOVER]=PD_THEME_BEYOND,
-    [AMMO_PICKER]=PD_THEME_COMBAT,[AMMO_RETRY]=PD_THEME_COMBAT,[SPELL_BATTLE_SETUP]=PD_THEME_MAGIC,[SPELL_TARGET_SAVE]=PD_THEME_MAGIC,[SPELL_BATTLE_RECEIPT]=PD_THEME_MAGIC,[SPELL_FORMULA_SETUP]=PD_THEME_MAGIC,[SPELL_FORMULA_SAVE]=PD_THEME_MAGIC,[SPELL_METHOD]=PD_THEME_MAGIC,[SPELL_FORMULA]=PD_THEME_MAGIC,[SPELL_REVIEW]=PD_THEME_MAGIC,[SPELL_RECEIPT]=PD_THEME_MAGIC,
+    [IMPORT_COMPARE]=PD_THEME_IMPORT,[HANDLING_SETUP]=PD_THEME_COMBAT,[HANDLING_REVIEW]=PD_THEME_COMBAT,[AMMO_PICKER]=PD_THEME_COMBAT,[AMMO_RETRY]=PD_THEME_COMBAT,[SPELL_BATTLE_SETUP]=PD_THEME_MAGIC,[SPELL_TARGET_SAVE]=PD_THEME_MAGIC,[SPELL_BATTLE_RECEIPT]=PD_THEME_MAGIC,[SPELL_FORMULA_SETUP]=PD_THEME_MAGIC,[SPELL_FORMULA_SAVE]=PD_THEME_MAGIC,[SPELL_METHOD]=PD_THEME_MAGIC,[SPELL_FORMULA]=PD_THEME_MAGIC,[SPELL_REVIEW]=PD_THEME_MAGIC,[SPELL_RECEIPT]=PD_THEME_MAGIC,
     [MAGIC_COST_PICKER]=PD_THEME_MAGIC,[MAGIC_PREPARE_LIST]=PD_THEME_MAGIC,[MAGIC_PREPARE_CONFIRM]=PD_THEME_MAGIC,
     [LIBRARY_HOME]=PD_THEME_LIBRARY,
     [LIBRARY_CONFIRM]=PD_THEME_LIBRARY,
@@ -189,6 +189,8 @@ static bool beyond_network_flow(void);
 static bool magic_setup_open(void);
 static bool spell_roll_open(void);
 static bool ammunition_open(void);
+static bool handling_open(void);
+static bool source_copy_open(void);
 static void slot_picker_begin(bool smite);
 static pd_roll result;
 static pd_dice_animation dice_animation;
@@ -322,7 +324,7 @@ static unsigned item_gained;
 static bool wifi_editing(void){return page==WIFI_LIST||page==WIFI_PASSWORD||page==WIFI_JOIN_REVIEW;}
 static bool wifi_local(void){return wifi_editing()||page==WIFI_HOME||page==WIFI_FORGET;}
 static bool appearance_editing(void){return page==AVATAR_EDIT||page==SCENE_EDIT||page==APPEARANCE_CONFIRM;}
-static bool confirmation_open(void){return ammunition_open()||spell_roll_open()||(page==RESOURCES&&resource_picker)||rules_editing()||magic_setup_open()||beyond_local()||beyond_network_flow()||page==LIBRARY_CONFIRM||play_editing()||wifi_editing()||page==ASSET_INSTALL||page==KEY_PICKER||page==SYNC_REVIEW||page==SYNC_FORGET||page==WIFI_FORGET||page==DEFENCE_SETUP||appearance_editing()||page==ITEM_QUANTITY_CONFIRM||page==MAGIC_PREPARATION||page==ITEM_SEARCH||page==POWER_SEARCH||power_paused||power_off_attempted||page==POWER_OFF||page==NUMBER_ENTRY||page==VITAL_CONFIRM||page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
+static bool confirmation_open(void){return source_copy_open()||handling_open()||ammunition_open()||spell_roll_open()||(page==RESOURCES&&resource_picker)||rules_editing()||magic_setup_open()||beyond_local()||beyond_network_flow()||page==LIBRARY_CONFIRM||play_editing()||wifi_editing()||page==ASSET_INSTALL||page==KEY_PICKER||page==SYNC_REVIEW||page==SYNC_FORGET||page==WIFI_FORGET||page==DEFENCE_SETUP||appearance_editing()||page==ITEM_QUANTITY_CONFIRM||page==MAGIC_PREPARATION||page==ITEM_SEARCH||page==POWER_SEARCH||power_paused||power_off_attempted||page==POWER_OFF||page==NUMBER_ENTRY||page==VITAL_CONFIRM||page==PAYMENT_CHOICE||page==TURN_NAME_EDIT||page==TURN_NAME_CONFIRM||page==EXTERNAL_TURN_HOME||page==DEATH_ROLL_SETUP||page==DAMAGE_DEATH||input_check_open()||page==BACKUP_SEND_CONFIRM||page==BACKUP_RESTORE_CONFIRM||page==HISTORY_DISCARD||page==WALLET_EDIT||page==WALLET_CONFIRM||page==ITEM_CONFIRM||page==MAGIC_CONFIRM||page==MAGIC_STOP||page==REST_PREVIEW||page==HIT_CONFIRM||page==STATUS_CONFIRM||page==EFFECT_CONFIRM||page==EFFECT_ROUND||page==ROUND_DEFENCES||page==DEFENCE_CONFIRM||page==DAMAGE_CONFIRM||page==CONCENTRATION_SETUP||page==DAMAGE_TYPES||page==DEFENCE_RULE_REVIEW||page==DAMAGE_CONTEXT||page==DEFENCE_GRANT_REVIEW||page==DAMAGE_REDUCTION||page==DAMAGE_MATH||(page>=PROFILE_LIST&&page<=ROLL_CONTEXT);}
 static pd_damage_plan damage_plan; /* First component + explicit concentration choice. */
 static pd_damage_component damage_extra[PD_DAMAGE_COMPONENTS-1],damage_part_draft;
 static pd_damage_context damage_context,damage_extra_context[PD_DAMAGE_COMPONENTS-1],damage_part_context,source_context_draft;
@@ -843,17 +845,29 @@ static void wifi_clear_draft(void){memset(&wifi_draft,0,sizeof wifi_draft);wifi_
 
 static const char *sync_notice="";
 #include "library_ui.inc"
+#include "source_copy.inc"
 #include "beyond_ui.inc"
 #include "play_setup.inc"
+#include "handling_ui.inc"
 #include "ammunition_ui.inc"
 #include "magic_setup.inc"
 #include "spell_roll_ui.inc"
 static void act(intptr_t action) {
+    bool source_keep=false;
+    if(source_copy_open()){
+        if(action==IC_CANCEL){source_keep=true;action=31;}
+        else if(action==IC_NEW){if(!source_copy_current()){source_copy_notice="Scheda cambiata: annulla e riapri";render();return;}source_copy_approved=true;action=30;}
+        else if(action==IC_BACK){page=source_copy_return;render();return;}
+        else return;
+    }
+
     if(page!=MAGIC_DETAIL&&page!=MAGIC_CONFIRM&&page!=MAGIC_PREPARATION&&page!=MAGIC_TEXT&&page!=MAGIC_MANAGE&&page!=MAGIC_COST_PICKER)attack_cast_power=-1;
     if(action>=2900&&action<2913){input_check_action(action);return;}
     if(input_check_open())return;
     if(power_paused||power_off_attempted)return;
     if(library_failed)return;
+    if(handling_open()){handling_action(action);render();return;}
+    if((action==WH_OPEN||action==WH_SWAP)&&(page==COMBAT||page==COMBAT_DETAIL)&&!import_pending&&!dice_animation.active){handling_begin(action==WH_SWAP);render();return;}
     if(ammunition_open()){ammunition_action(action);render();return;}
     if(action==AC_OPEN&&(page==COMBAT||page==COMBAT_DETAIL)&&!import_pending&&!dice_animation.active){ammunition_begin();render();return;}
     if(secondary_action(action)){feedback.active=false;pd_screen_activity(&display_screen,lv_tick_get());render();return;}
@@ -1211,6 +1225,9 @@ static void act(intptr_t action) {
     else if (action==20 || action==21) { if(pd_resource_change(&next,resource_index,action==20?-1:1))apply(&next); }
     else if (action==22 && state.resource_count) resource_index=(resource_index+1)%state.resource_count;
     else if (action==30&&import_pending) {
+        if(source_copy_count&&!source_copy_approved){source_copy_return=page;page=IMPORT_COMPARE;render();return;}
+        if(source_copy_count&&!source_copy_current()){source_copy_approved=false;page=IMPORT_COMPARE;source_copy_notice="Scheda cambiata: annulla e riapri";render();return;}
+
         if(!library_checkpoint()){if(!import_from_beyond)reply("PDD ERROR library\n");import_pending=import_from_beyond=false;library_catalog.count=0;page=LIBRARY_HOME;render();return;}
         if (pd_storage_save(&pending)) {
             pd_history_store_load(pending.history_epoch,&history);
@@ -1219,7 +1236,7 @@ static void act(intptr_t action) {
             import_pending=import_from_beyond=false;
         } else { if(import_from_beyond){pd_history_store_uncertain_restore();library_failed=true;page=BEYOND_FORM;beyond_notice="Memoria non salvata: riavvia";}else reply("PDD ERROR storage\n");import_pending=import_from_beyond=false; }
     }
-    else if (action==31&&import_pending) { if(import_from_beyond){page=beyond_return();beyond_notice="Importazione annullata: PG conservato";}else reply("PDD CANCELLED\n");import_pending=import_from_beyond=false; }
+    else if (action==31&&import_pending) { if(import_from_beyond){page=beyond_return();beyond_notice="Importazione annullata: PG conservato";}else reply("PDD CANCELLED\n");import_pending=import_from_beyond=false;if(source_keep)source_copy_keep(); }
     else if (action==50)page=APPEARANCE;
     else if(action==4300&&page==APPEARANCE){appearance_draft=state.avatar;appearance_scene=state.scene;appearance_lineage=state.lineage;appearance_body=state.body;appearance_group=state.lineage/3;appearance_outfit=state.outfit;appearance_class_group=state.outfit/3;appearance_field=state.outfit?6:0;appearance_keyboard=false;appearance_picker=false;appearance_focus=0;page=AVATAR_EDIT;}
     else if((action==4301||action==4303)&&page==AVATAR_EDIT){do{appearance_field=(appearance_field+(action==4301?6:1))%7;}while((appearance_outfit&&appearance_field<4)||(appearance_field==1&&!pd_species_hair(appearance_lineage)));}
@@ -2103,15 +2120,15 @@ static void render_combat(void) {
     button("-",83,255,48,44,86,target_armor>1);snprintf(text,sizeof text,"CA %u",target_armor);label(text,139,266,188,false);button("+",335,255,48,44,87,target_armor<30);
     pd_attack_resolution gate={0};pd_attack_resolve(&state,mode,roll_context,ignore_effects,&gate);
     lv_obj_t *adv=button(gate.mode>0?"Vantaggio":gate.mode<0?"Svantaggio":"Normale",83,307,92,52,15,true);lv_obj_set_style_text_font(adv,&lv_font_montserrat_14,0);
-    bool ammo_ok=ammunition_available();
-    lv_obj_t *roll=button(!ammo_ok?"Munizioni":gate.allowed?"Lancia":"Contesto",187,307,196,52,!ammo_ok?AC_OPEN:gate.allowed?72:2230,!ammo_ok||!gate.allowed||ammunition_storage_ready());lv_obj_set_style_text_font(roll,ammo_ok?&lv_font_montserrat_20:&lv_font_montserrat_16,0);art(pd_ui_icon(ammo_ok?PD_UI_DICE:PD_UI_AMMO),12,10,roll);
+    bool hands_ok=pd_weapon_hands_ready(&state,state.equipped),ammo_ok=ammunition_available();
+    lv_obj_t *roll=button(!hands_ok?"Mani":!ammo_ok?"Munizioni":gate.allowed?"Lancia":"Contesto",187,307,196,52,!hands_ok?WH_OPEN:!ammo_ok?AC_OPEN:gate.allowed?72:2230,!hands_ok||!ammo_ok||!gate.allowed||ammunition_storage_ready());lv_obj_set_style_text_font(roll,ammo_ok?&lv_font_montserrat_20:&lv_font_montserrat_16,0);art(pd_ui_icon(!hands_ok?PD_UI_EQUIP:ammo_ok?PD_UI_DICE:PD_UI_AMMO),12,10,roll);
     bool ranged=(v->flags&4)&&!state.combat.thrown;
-    const char *names[]={"Arma","Varianti",state.combat.thrown?"Lancio si":"Lancio no","Contesto","Munizioni"};const unsigned actions[]={6403,6402,92,2230,AC_OPEN};
-    const pd_ui_icon_id icons[]={PD_UI_ATTACK,PD_UI_MAGIC,PD_UI_MOVEMENT,PD_UI_SHEET,PD_UI_AMMO};
-    unsigned count=2+(v->thrown_range>0)+(state.roll_conditions!=0)+ranged,width=(300-(count-1)*8)/count,col=0;
-    for(unsigned i=0;i<5;i++){
-        if((i==2&&!v->thrown_range)||(i==3&&!state.roll_conditions)||(i==4&&!ranged))continue;
-        lv_obj_t *b=ranged?icon_button(names[i],icons[i],83+col*(width+8),367,width,44,actions[i],true):button(names[i],83+col*(width+8),367,width,44,actions[i],true);
+    const char *names[]={"Arma","Varianti",state.combat.thrown?"Lancio si":"Lancio no","Contesto","Munizioni",state.handling[state.equipped].grip?"2 mani":"1 mano"};const unsigned actions[]={6403,6402,92,2230,AC_OPEN,WH_SWAP};
+    const pd_ui_icon_id icons[]={PD_UI_ATTACK,PD_UI_MAGIC,PD_UI_MOVEMENT,PD_UI_SHEET,PD_UI_AMMO,PD_UI_EQUIP};
+    unsigned count=2+(v->thrown_range>0)+(state.roll_conditions!=0)+ranged+!!(state.handling[state.equipped].flags&PD_VERSATILE),width=(300-(count-1)*8)/count,col=0;
+    for(unsigned i=0;i<6;i++){
+        if((i==5&&!(state.handling[state.equipped].flags&PD_VERSATILE))||(i==2&&!v->thrown_range)||(i==3&&!state.roll_conditions)||(i==4&&!ranged))continue;
+        lv_obj_t *b=(ranged||count>=4)?icon_button(names[i],icons[i],83+col*(width+8),367,width,44,actions[i],true):button(names[i],83+col*(width+8),367,width,44,actions[i],true);
         lv_obj_set_style_text_font(b,count>3?&lv_font_montserrat_14:&lv_font_montserrat_16,0);if(i==4&&ammunition_bound())rules_selected_style(b,true);col++;
     }
     if(ranged&&quick>=state.magic.count){char ammo[80];ammunition_caption(ammo,sizeof ammo);small_label(ammo,83,227,300,ammo_ok?PD_MUTED:PD_DANGER);}
@@ -3269,6 +3286,8 @@ static void render_companion(void){
 #include "spell_formula_views.inc"
 #include "spell_battle_views.inc"
 #include "ammunition_views.inc"
+#include "handling_views.inc"
+#include "source_copy_views.inc"
 #include "spell_roll_views.inc"
 #include "dice_scene.inc"
 static void render_content(void) {
@@ -3294,6 +3313,8 @@ static void render_content(void) {
     if(!import_pending&&appearance_editing()){render_appearance_editor();return;}
     frame();
     if(rules_picker_open()){render_rules_picker();return;}
+    if(source_copy_open()){render_source_copy();return;}
+    if(handling_open()){render_handling();return;}
     if(ammunition_open()){render_ammunition();return;}
     if(spell_battle_page()){render_spell_battle();return;}
     if(formula_configuring()){render_formula_config();return;}
@@ -3372,10 +3393,10 @@ static void render_content(void) {
         snprintf(text,sizeof text,"Attacco: %+d %+d %+d = %+d",w.base,w.trained,w.attack_extra,w.attack_bonus);label(text,83,155,300,false);
         small_label("Caratteristica / competenza / extra",83,185,300,PD_MUTED);
         snprintf(text,sizeof text,"Danni: base %+d / extra %+d",w.damage_base,w.damage_extra);label(text,83,215,300,false);
-        snprintf(text,sizeof text,"Ira %s | potente %s | critico +%ud",state.combat.raging&&w.melee&&state.items[state.equipped].ability==0?"si":"no",w.power_attack?"si":"no",w.critical_dice);small_label(text,83,247,300,PD_GOLD);
+        snprintf(text,sizeof text,"Ira %s | potente %s | critico +%ud",state.combat.raging&&w.melee&&w.ability==0?"si":"no",w.power_attack?"si":"no",w.critical_dice);small_label(text,83,247,300,PD_GOLD);
         small_label(state.training.poisoned?"PC: avvelenato (svantaggio attacco)":"PC: nessuno svantaggio da veleno",83,277,300,PD_MUTED);
-        small_label("Extra include modificatori ed effetti",83,307,300,PD_MUTED);
-        pd_attack_resolution gate={0};pd_attack_resolve(&state,mode,roll_context,ignore_effects,&gate);button("Indietro",83,359,144,48,85,true);bool ammo_ok=ammunition_available();button(ammo_ok?"Lancia":"Munizioni",239,359,144,48,ammo_ok?72:AC_OPEN,!ammo_ok||(gate.allowed&&ammunition_storage_ready()));return;
+        button("Impugnatura",83,307,300,44,WH_OPEN,true);
+        pd_attack_resolution gate={0};pd_attack_resolve(&state,mode,roll_context,ignore_effects,&gate);button("Indietro",83,359,144,48,85,true);bool ammo_ok=ammunition_available(),hands_ok=pd_weapon_hands_ready(&state,state.equipped);button(!hands_ok?"Mani":ammo_ok?"Lancia":"Munizioni",239,359,144,48,!hands_ok?WH_OPEN:ammo_ok?72:AC_OPEN,!hands_ok||!ammo_ok||(gate.allowed&&ammunition_storage_ready()));return;
     }
     if(page==DICE && dice_setup) { render_dice_setup();return; }
     if(page==CHECK_DETAIL) { render_check_detail();return; }
@@ -3423,7 +3444,7 @@ static void render_content(void) {
     }
 }
 #ifdef PD_UI_TEST
-static bool styled_pages[AMMO_RETRY+1];
+static bool styled_pages[IMPORT_COMPARE+1];
 static void capture_styled_page(unsigned view);
 #endif
 /* Only page lists accept swipes. No gesture can confirm, spend or roll. */
@@ -3495,10 +3516,10 @@ static void shortcut(unsigned gesture) {
 static void screen_service(int pwr,int boot){
     input_check_service();
     bool allowed=pd_screen_keys(&display_screen,pwr,boot,lv_tick_get());
-    bool enabled=allowed&&(!import_pending||import_from_beyond)&&(!confirmation_open()||appearance_editing()||rules_navigating()||magic_setup_open()||wifi_local()||beyond_network_flow()||play_editing()||attack_preparing()||library_view()||beyond_local());
+    bool enabled=allowed&&(!import_pending||import_from_beyond||page==IMPORT_COMPARE)&&(!confirmation_open()||appearance_editing()||rules_navigating()||magic_setup_open()||wifi_local()||beyond_network_flow()||play_editing()||attack_preparing()||library_view()||beyond_local());
     unsigned gestures=pd_buttons_sample(&physical_keys,pwr,boot,lv_tick_get(),enabled);
     for(unsigned i=0;i<3;i++)if(gestures&(1u<<i)){
-        if(beyond_local()){
+        if(beyond_local()&&!source_copy_open()){
             if(library_failed)continue;
             if(i==0){if(!beyond_keyboard){beyond_keyboard=true;beyond_focus=0;}else if(beyond_target_count)beyond_focus=(beyond_focus+1)%beyond_target_count;beyond_mark_focus();}
             else if(i==1){if(!beyond_keyboard){beyond_keyboard=true;beyond_focus=0;beyond_mark_focus();}else if(beyond_focus<beyond_target_count&&!lv_obj_has_state(beyond_targets[beyond_focus],LV_STATE_DISABLED))lv_obj_send_event(beyond_targets[beyond_focus],LV_EVENT_CLICKED,NULL);}
@@ -3592,7 +3613,7 @@ static bool stage_import_from(const pd_state *candidate,bool local) {
     }
     if(dice_animation.active) { pd_dice_finish(&dice_animation);has_roll=true; }
     pd_screen_activity(&display_screen,lv_tick_get());
-    pending=*candidate;pending.history_epoch=epoch;pending.brightness=state.brightness;pending.dim_timeout=state.dim_timeout;pending.idle_animation=state.idle_animation;pending.scene=state.scene;memcpy(pending.shortcuts,state.shortcuts,3);import_pending=true;import_from_beyond=local;
+    pending=*candidate;pending.history_epoch=epoch;pending.brightness=state.brightness;pending.dim_timeout=state.dim_timeout;pending.idle_animation=state.idle_animation;pending.scene=state.scene;memcpy(pending.shortcuts,state.shortcuts,3);if(!source_copy_prepare()){if(!local)reply("PDD ERROR library\n");return false;}import_pending=true;import_from_beyond=local;
 #ifndef PD_UI_TEST
     import_started=xTaskGetTickCount();
 #endif
@@ -3653,7 +3674,7 @@ static void usb_task(void *unused) {
                 }else if(!overflow && used) {
                     if(!pd_beyond_usb_begin()){reply("PDD ERROR busy\n");used=0;overflow=false;continue;}
                     line[used]=0;
-                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 22\n");
+                    if(!strcmp(line,"PDD HELLO")) reply("PDD READY 23\n");
                     else if(!strcmp(line,"PDD ASSET HELLO 1"))reply("PDD ASSET READY 1\n");
                     else if(!strncmp(line,"PDD ASSET ",10)){
                         pd_asset_request *request=malloc(sizeof *request);

@@ -4,7 +4,7 @@
 #include "checks.h"
 typedef struct {
     int base,trained,attack_extra,damage_base,damage_extra,attack_bonus,damage_bonus;
-    unsigned count,sides,critical_dice,reach,radiant_dice;
+    unsigned ability,count,sides,critical_dice,reach,radiant_dice;
     bool melee,melee_weapon,power_attack,true_strike,radiant_weapon;
 } pd_weapon_info;
 typedef struct { pd_roll roll; pd_weapon_info weapon; unsigned armor; bool hits,critical; } pd_strike;

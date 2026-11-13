@@ -185,6 +185,20 @@ static bool status(cJSON *o,pd_status *s) {
     }
     return true;
 }
+/* New provenance is canonical decimal text, without escapes or embedded NUL.
+   Bounded scan: packet callers need not supply a terminator after size. */
+static bool source_literal(const char *json,size_t size,const char *id){
+    for(size_t i=0;i+10<size;i++)if(!memcmp(json+i,"\"sourceId\"",10)){
+        size_t p=i+10;while(p<size&&(json[p]==' '||json[p]=='\r'||json[p]=='\n'||json[p]=='\t'))p++;
+        if(p==size||json[p++]!=':')continue;
+        while(p<size&&(json[p]==' '||json[p]=='\r'||json[p]=='\n'||json[p]=='\t'))p++;
+        if(p==size||json[p++]!='"')return false;
+        size_t start=p;
+        while(p<size&&json[p]>='0'&&json[p]<='9')p++;
+        return p<size&&json[p]=='"'&&p-start==strlen(id)&&!memcmp(json+start,id,p-start);
+    }
+    return false;
+}
 bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
     if (!json || !size || size>PD_PACKET_MAX || memchr(json,0,size)) return false;
     /* cJSON's string model cannot represent embedded NUL. Refuse all JSON Unicode
@@ -206,13 +220,13 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
     #define candidate (*allocated)
     candidate.brightness=50;candidate.idle_animation=true;candidate.equipped=PD_NO_WEAPON;
     candidate.shortcuts[0]=1;candidate.shortcuts[1]=3;candidate.shortcuts[2]=5;
-    const char *const fields[]={"format","version","name","level","hp","maxHp","tempHp","armorClass","abilities","resources","avatar","training","inventory","magic","recovery","status","wallet","defences","equipment"};
+    const char *const fields[]={"format","version","name","level","hp","maxHp","tempHp","armorClass","abilities","resources","avatar","training","inventory","magic","recovery","status","wallet","defences","equipment","handling","sourceId"};
     const char *const abilities[]={"FOR","DES","COS","INT","SAG","CAR"};
     const char *const resource_keys[]={"name","current","maximum"};
     const char *const avatar_keys[]={"skin","hair","cloak","style","lineage","body","outfit"};
-    int version=number(root,"version",1,22);
+    int version=number(root,"version",1,23);
     cJSON *fmt=cJSON_GetObjectItemCaseSensitive(root,"format");
-    if (version<0 || end!=json+size || !keys(root,fields,version==1?10:version==2?11:version==3?12:version==4?13:version==5?14:version==6?15:version<9?16:version<14?17:version<18?18:19) || !cJSON_IsString(fmt) ||
+    if (version<0 || end!=json+size || !keys(root,fields,version==1?10:version==2?11:version==3?12:version==4?13:version==5?14:version==6?15:version<9?16:version<14?17:version<18?18:version<23?19:21) || !cJSON_IsString(fmt) ||
         strcmp(fmt->valuestring,"pocketdd-device") ||
         !copy(root,"name",candidate.name,sizeof candidate.name)) goto done;
     int level=number(root,"level",1,20),hp=number(root,"hp",0,999),max=number(root,"maxHp",1,999),
@@ -228,6 +242,13 @@ bool pd_parse_packet(const char *json,size_t size,pd_state *s) {
         candidate.avatar=(pd_avatar){skin,hair,cloak,style};
         if(version>=10){int lineage=number(avatar,"lineage",0,version>=12?PD_SPECIES_COUNT-1:version>=11?15:11),body=number(avatar,"body",0,1);if(lineage<0||body<0)goto done;candidate.lineage=lineage;candidate.body=body;}
         if(version>=13){int outfit=number(avatar,"outfit",0,PD_OUTFITS-1);if(outfit<0)goto done;candidate.outfit=outfit;}
+    }
+    if(version>=23){
+        cJSON *id=cJSON_GetObjectItemCaseSensitive(root,"sourceId");if(!cJSON_IsString(id)||strlen(id->valuestring)>=PD_PROVENANCE_BYTES||!source_literal(json,size,id->valuestring))goto done;strcpy(candidate.beyond_id,id->valuestring);
+        cJSON *rows=cJSON_GetObjectItemCaseSensitive(root,"handling");cJSON *inv=cJSON_GetObjectItemCaseSensitive(cJSON_GetObjectItemCaseSensitive(root,"inventory"),"items");
+        const char *const fields[]={"flags","grip","sides","ammo"};
+        if(!cJSON_IsArray(rows)||cJSON_GetArraySize(rows)!=cJSON_GetArraySize(inv)||cJSON_GetArraySize(rows)>PD_ITEMS)goto done;
+        for(int i=0;i<cJSON_GetArraySize(rows);i++){cJSON *r=cJSON_GetArrayItem(rows,i);if(!keys(r,fields,4))goto done;int a=number(r,"flags",0,7),b=number(r,"grip",0,1),c=number(r,"sides",0,12),d=number(r,"ammo",0,PD_ITEMS);if(a<0||b<0||c<0||d<0)goto done;candidate.handling[i]=(pd_handling){a,b,c,d};}
     }
     if(version>=3&&!training(cJSON_GetObjectItemCaseSensitive(root,"training"),&candidate.training,version>=15))goto done;
     if(version>=4&&!inventory(cJSON_GetObjectItemCaseSensitive(root,"inventory"),&candidate,version>=8))goto done;

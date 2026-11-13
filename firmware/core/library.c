@@ -73,7 +73,7 @@ bool pd_library_scan(const pd_library *l,pd_library_catalog *out){
         uint64_t owner=0;pd_library_result r=load(l,slot,snapshot,NULL,NULL,&owner);if(r==PD_LIBRARY_EMPTY)continue;
         if(r==PD_LIBRARY_IO||r==PD_LIBRARY_MEMORY){ok=false;break;}
         pd_library_entry *entry=next->entries+next->count++;entry->slot=slot;entry->status=r;
-        if(good(r)){memcpy(entry->name,snapshot->state.name,PD_NAME_BYTES);entry->level=snapshot->state.level;entry->epoch=snapshot->state.history_epoch;entry->owner=owner;}
+        if(good(r)){memcpy(entry->name,snapshot->state.name,PD_NAME_BYTES);memcpy(entry->beyond_id,snapshot->state.beyond_id,PD_PROVENANCE_BYTES);entry->level=snapshot->state.level;entry->epoch=snapshot->state.history_epoch;entry->owner=owner;}
         cooperate(l);
     }
     if(ok)*out=*next;

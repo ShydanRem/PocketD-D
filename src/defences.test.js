@@ -16,7 +16,7 @@ test('Manual defence completion: all 8192 known/unknown subsets preserve every e
 });
 test('Beyond absence stays unknown until explicit manual completion; PC backup and device preserve the decision',()=>{
  const source=beyondCoreFixture(),report=convertBeyond(source,'123456'),before=serialize(report.draft);
- assert.equal(report.draft.extended.defences,undefined);assert.equal(projectDevice(report.draft).packet.defences,undefined);
+ assert.equal(report.draft.extended.defences,undefined);assert.deepEqual(projectDevice(report.draft).packet.defences,{configured:0,resistance:0,vulnerability:0,immunity:0});
  const next={...report.draft,extended:{...report.draft.extended,defences:completeNormalDefences(emptyDefences())}};
  const restored=parseBackup(serialize(next));assert.equal(restored.extended.defences.configured,8191);
  assert.deepEqual(projectDevice(restored).packet.defences,{configured:8191,resistance:0,vulnerability:0,immunity:0});

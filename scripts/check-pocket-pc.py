@@ -9,13 +9,13 @@ class Handler(http.server.SimpleHTTPRequestHandler):
  def log_message(self,*args):pass
 server=http.server.ThreadingHTTPServer(('127.0.0.1',0),partial(Handler,directory=str(ROOT/'extension')))
 threading.Thread(target=server.serve_forever,daemon=True).start()
-diagnostic=json.loads((ROOT/'firmware/tests/fixtures/diagnostics-v1.synthetic.json').read_text());diagnostic['firmware']='0.93.0-synthetic';diagnostic['formats']['usb']=21;diagnostic['formats']['state']=40
+diagnostic=json.loads((ROOT/'firmware/tests/fixtures/diagnostics-v1.synthetic.json').read_text());diagnostic['firmware']='0.93.0-synthetic';diagnostic['formats']['usb']=23;diagnostic['formats']['state']=42
 backup=(ROOT/'firmware/tests/fixtures/device-backup-v1.synthetic.json').read_text()
 mock=r'''
 window.chooserCalls=0;window.secretWrites=0;
 let reader,pending='';const nonce='0123456789abcdef0123456789abcdef',d=__DIAGNOSTIC__,backup=BACKUP,crc=CRC,hash='d439cacf0de37f60c16d3dec4e59fefe7cb19e9bf0d9feb10e3fec651d31950f';
 const push=text=>reader.enqueue(new TextEncoder().encode(text));window.approvePocket=()=>push('PDD ACCOUNT ACCEPT 1 '+nonce+'\n');
-const port={open:async()=>{pending='';port.readable=new ReadableStream({start(c){reader=c}});port.writable=new WritableStream({write(bytes){pending+=new TextDecoder().decode(bytes);let at;while((at=pending.indexOf('\n'))>=0){const line=pending.slice(0,at);pending=pending.slice(at+1);if(line==='PDD HELLO')push('PDD READY 21\n');else if(line==='PDD DIAGNOSTICS GET 1')push('PDD DIAGNOSTICS '+JSON.stringify(d)+'\n');else if(line==='PDD BACKUP HELLO')push('PDD BACKUP_READY 1\n');else if(line==='PDD BACKUP GET 1')push('PDD WAIT_BACKUP\nPDD BACKUP_DATA '+new TextEncoder().encode(backup).length+' '+crc+'\n'+backup+'\nPDD BACKUP_DONE\n');else if(line==='PDD ASSET HELLO 1')push('PDD ASSET READY 1\n');else if(line.startsWith('PDD ASSET BEGIN'))push('PDD ASSET DONE 1 '+hash+'\n');else if(line==='PDD ACCOUNT HELLO 1')push('PDD ACCOUNT CODE 1 '+nonce+' 123456\n');else if(line.startsWith('PDD ACCOUNT OFFER')){window.secretWrites++;push('PDD ACCOUNT LINKED 1 '+nonce+'\n');}}}})},close:async()=>{},setSignals:async()=>{}};
+const port={open:async()=>{pending='';port.readable=new ReadableStream({start(c){reader=c}});port.writable=new WritableStream({write(bytes){pending+=new TextDecoder().decode(bytes);let at;while((at=pending.indexOf('\n'))>=0){const line=pending.slice(0,at);pending=pending.slice(at+1);if(line==='PDD HELLO')push('PDD READY 23\n');else if(line==='PDD DIAGNOSTICS GET 1')push('PDD DIAGNOSTICS '+JSON.stringify(d)+'\n');else if(line==='PDD BACKUP HELLO')push('PDD BACKUP_READY 1\n');else if(line==='PDD BACKUP GET 1')push('PDD WAIT_BACKUP\nPDD BACKUP_DATA '+new TextEncoder().encode(backup).length+' '+crc+'\n'+backup+'\nPDD BACKUP_DONE\n');else if(line==='PDD ASSET HELLO 1')push('PDD ASSET READY 1\n');else if(line.startsWith('PDD ASSET BEGIN'))push('PDD ASSET DONE 1 '+hash+'\n');else if(line==='PDD ACCOUNT HELLO 1')push('PDD ACCOUNT CODE 1 '+nonce+' 123456\n');else if(line.startsWith('PDD ACCOUNT OFFER')){window.secretWrites++;push('PDD ACCOUNT LINKED 1 '+nonce+'\n');}}}})},close:async()=>{},setSignals:async()=>{}};
 Object.defineProperty(navigator,'serial',{value:{requestPort:async()=>{window.chooserCalls++;return port;}}});
 window.chrome={permissions:{contains:async()=>true,request:async()=>true,remove:async()=>true},cookies:{get:async()=>({value:'synthetic-session-only',expirationDate:Date.now()/1000+3600})}};
 '''
@@ -35,10 +35,10 @@ try:
    elif u=='https://character-service.dndbeyond.com/character/v5/characters/list?userId=1234':data={'success':True,'data':{'characters':[{'id':123456,'name':'Eroe sintetico','level':3}]}}
    else:raise AssertionError('Unexpected remote endpoint')
    r.fulfill(status=200,headers=headers,body=json.dumps(data))
-  context.route('**/*',route);page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)));page.goto(local+'account.html')
+  context.route('**/*',route);page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)));page.goto(local+'account.html#beyond');assert page.evaluate("Boolean(document.querySelector('#beyond').compareDocumentPosition(document.querySelector('.device-card'))&Node.DOCUMENT_POSITION_FOLLOWING)")
   page.locator('#device-looks').click();expect(page.locator('#device-status')).to_contain_text('già aggiornati',timeout=15000);assert page.evaluate('chooserCalls')==1
-  page.locator('#connect').click();expect(page.locator('#pair-code')).to_have_text('123456');assert page.evaluate('chooserCalls')==1 and page.evaluate('secretWrites')==0;expect(page.locator('#device-backup')).to_be_disabled()
-  page.evaluate('approvePocket()');expect(page.locator('#link-status')).to_contain_text('Beyond collegato');assert page.evaluate('secretWrites')==1
+  page.locator('#connect').click();expect(page.locator('#pair-code')).to_have_text('123456');expect(page.locator('[data-pair-step=\"1\"]')).to_have_attribute('data-state','current');expect(page.locator('#pair-finish')).not_to_be_visible();assert page.evaluate('chooserCalls')==1 and page.evaluate('secretWrites')==0;expect(page.locator('#device-backup')).to_be_disabled()
+  page.evaluate('approvePocket()');expect(page.locator('#link-status')).to_contain_text('Beyond collegato');expect(page.locator('#pair-finish')).to_be_visible();assert page.locator('.pair-steps [data-state=done]').count()==3;assert page.evaluate('secretWrites')==1
   with page.expect_download() as saved:page.locator('#device-backup').click()
   assert Path(saved.value.path()).read_text()==backup;expect(page.locator('#device-status')).to_contain_text('Backup verificato')
   page.locator('#device-looks').click();expect(page.locator('#device-status')).to_contain_text('già aggiornati',timeout=15000);assert page.evaluate('chooserCalls')==1

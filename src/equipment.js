@@ -1,3 +1,4 @@
+import {handsReady} from './handling.js';
 // Explicit item properties. Names/icons never grant mechanical effects.
 const integer=(n,a,b)=>Number.isSafeInteger(n)&&n>=a&&n<=b;
 const keys=['FOR','DES','COS','INT','SAG','CAR'];
@@ -27,6 +28,7 @@ export function gearTotals(state){const t={ability:[0,0,0,0,0,0],maxHp:0,...Obje
 function changeGear(state,id,equipped,attunement){
  if(typeof equipped!=='boolean'||!state.extended)throw Error('Equipaggiamento non disponibile');
  const item=state.inventory.find(i=>i.id===id);if(!item||item.type!=='gear'||equipped&&!item.quantity)throw Error('Oggetto non disponibile');
+
  const old=gearTotals(state),before=body(state),loadout=validateLoadout(state.extended.loadout??{unarmored:0,items:[]});let g=loadout.items.find(g=>g.id===id);
  if(!g){g=emptyGear(id);loadout.items.push(g);}g.equipped=equipped;if(attunement!==undefined)g.attunement=attunement;
  if(equipped)for(const other of loadout.items)if(other!==g&&(g.kind>=2&&g.kind<=4&&other.kind>=2&&other.kind<=4||g.kind===5&&other.kind===5))other.equipped=false;
@@ -43,6 +45,7 @@ function changeGear(state,id,equipped,attunement){
  for(const k of keys){next.extended.saveBonuses[k]+=t.saves-old.saves;next.extended.checkBonuses[k]+=t.checks-old.checks;}
  for(const k of Object.keys(next.extended.skillBonuses))next.extended.skillBonuses[k]+=t.checks-old.checks;
  if([next.extended.saveBonuses,next.extended.checkBonuses,next.extended.skillBonuses].some(map=>Object.values(map).some(n=>!integer(n,-30,30))))throw Error('Bonus tiri fuori limite');
+ if(next.inventory.some(i=>i.handling)){next.extended={...next.extended,combat:{...next.extended.combat,thrown:false}};if(!handsReady(next,next.inventory.find(i=>i.id===next.equippedWeaponId)))throw Error('Riponi l’arma a due mani prima dello scudo');}
  validateEquippedState(next);return next;
 }
 

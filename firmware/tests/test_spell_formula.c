@@ -29,7 +29,7 @@ int main(void){
     /* Exact max-sized current format; old empty records retain their bytes and
        all historical decoders continue to zero the newly introduced field. */
     s=before;for(unsigned i=0;i<PD_POWERS;i++)assert(pd_spell_formula_set(&s,i,(pd_spell_formula){.kind=2,.count=2,.sides=8,.ability=1,.scaling=1,.step=2,.source=i%2}));
-    uint32_t gen;size_t n=pd_encode(&s,109,data);assert(n==PD_RECORD_SIZE&&!memcmp(data,PD_FORMULA_RECORD_MAGIC,4)&&pd_decode(data,n,&next,&gen)&&gen==109&&!memcmp(&s,&next,sizeof s));
+    uint32_t gen;size_t n=pd_encode(&s,109,data);assert(n==PD_FORMULA_RECORD_SIZE&&!memcmp(data,PD_FORMULA_RECORD_MAGIC,4)&&pd_decode(data,n,&next,&gen)&&gen==109&&!memcmp(&s,&next,sizeof s));
     size_t old=n-8u*PD_POWERS;memcpy(legacy,data,old-4);memcpy(legacy,PD_RECORD_MAGIC,4);crc(legacy,old);assert(pd_decode(legacy,old,&next,&gen));for(unsigned i=0;i<PD_POWERS;i++)assert(!next.formulas[i].kind);assert(!memcmp(&next,&before,sizeof before));
     size_t same=pd_encode(&next,109,legacy);assert(same==PD_LEGACY_RECORD_SIZE&&!memcmp(legacy,PD_RECORD_MAGIC,4));
     /* A header relabel cannot make an older device accept truncated formulas. */

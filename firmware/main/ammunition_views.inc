@@ -19,6 +19,6 @@ static void render_ammunition(void){
         rules_selected_style(b,ammunition_bound()&&ammo_item==index);
     }
     if(!count)connection_note("Nessuna pila disponibile: aggiungila allo zaino dal PC",193,80,PD_MUTED);
-    connection_note(ammo_notice[0]?ammo_notice:"Scegli solo munizioni adatte all'arma",339,18,PD_GOLD);
+    connection_note(ammo_notice[0]?ammo_notice:"Scelta conservata; -1 al tiro",339,18,PD_GOLD);
     button("Indietro",83,359,144,48,AC_BACK,true);lv_obj_t *none=button("Senza consumo",239,359,144,48,AC_NONE,current);label_font(lv_obj_get_child(none,0),&lv_font_montserrat_14);
 }

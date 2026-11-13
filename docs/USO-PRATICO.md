@@ -1,5 +1,9 @@
 # PocketD-D — uso pratico sul dispositivo
 
+> v0.112: [Impugnature, Finezza, scudo, munizioni per arma e confronto copie Beyond](ARMI-COPIE-V112.md).
+> Prima associazione: sito → **Associa Beyond** → autorizza/Collega Beyond →
+> confronta il codice e conferma sul Pocket → attendi **Beyond collegato**.
+
 > v0.111: [Munizioni, costo sul tiro e riprova senza nuovi dadi](MUNIZIONI.md).
 
 > v0.110: [Attacco, TS nemico e critici delle magie](MAGIE-COMBATTIMENTO.md).

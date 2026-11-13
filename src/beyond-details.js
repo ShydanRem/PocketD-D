@@ -1,3 +1,5 @@
+import {beyondWeaponHandling} from './beyond-handling.js';
+import {handsReady} from './handling.js';
 import {beyondSpellFormula} from './beyond-spell-formula.js';
 import {beyondEquipment,beyondTrueStrike2024,beyondOnHit2024,beyondSmite2024} from './beyond-equipment.js';
 import {applyBeyondTraining} from './beyond-training.js';
@@ -135,6 +137,7 @@ export function extendBeyond(report,c,customTraining=[]){
     const weapon={...item,type:'weapon',ability,proficient,addAbilityToDamage:true,diceCount:d.damage.diceCount,dieSides:d.damage.diceValue,attackModifier,damageModifier,reach:range/5,damageType:typeof d.damageType==='string'?d.damageType:'',profile:{ranged,heavy:has('heavy'),thrownRange:has('thrown')?d.range/5:0,longRange:integer(d.longRange,0,1200)?Math.ceil(d.longRange/5):0,properties:propertyNames}};
     if(weapon.damageType.length>24||propertyNames.some(n=>n.length>60)||propertyNames.length>20)return note('proprietà o tipo di danno oltre i limiti locali.');
     weapon.notes=`Beyond: ${src.equipped?'equipaggiato':'non equipaggiato'}. Proprietà: ${propertyNames.join(', ')||'nessuna'}. Modalità primaria; maestrie, due armi e danni aggiuntivi condizionali al DM.${src.pocketddNote?' '+src.pocketddNote:''}`.slice(0,400);
+    const handling=beyondWeaponHandling(d,weapon,message=>warn(`${item.name}: ${message}`));if(handling)weapon.handling=handling;
     return weapon;
   });
   const itemImport=beyondItems(c.inventory,state.inventory,{warn,evidence});state.inventory=itemImport.items;
@@ -313,11 +316,12 @@ export function extendBeyond(report,c,customTraining=[]){
   ext.facts=[...facts,...issues].map(t=>t.slice(0,500));
   if(ext.facts.length>100)throw new Error('Troppe note da rappresentare');
   state.importInfo={...state.importInfo,scope:'extended-v1',limitations:omissions.length<=30?omissions:[...omissions.slice(0,29),`Altre ${omissions.length-29} eccezioni nei dettagli del personaggio.`]};
+  for(const w of weapons)if(!handsReady(state,w))warn(`${w.name}: due mani e scudo equipaggiato; riponi lo scudo o cambia impugnatura prima del tiro.`);
   state.title='Da D&D Beyond';
   const draft=parseBackup(serialize(state));
   const skillSummary=skills.map(s=>({id:s.id,name:s.name,rank:draft.skillRanks[s.id],extra:ext.skillBonuses[s.id],half:ext.halfSkills.includes(s.id),customized:customTraining.some(t=>t.kind==='skill'&&t.key===s.id),...describeRoll(draft,{kind:'skill',key:s.id})}));
   const saveSummary=abilityKeys.map(key=>({id:key,proficient:draft.saveProficiencies[key],extra:ext.saveBonuses[key],customized:customTraining.some(t=>t.kind==='save'&&t.key===key),...describeRoll(draft,{kind:'save',key})}));
-  const weaponSummary=weapons.map(w=>{const result=weaponStats({...draft,equippedWeaponId:w.id});return{id:w.id,name:w.name,attack:result.attackBonus,damage:`${w.diceCount}d${w.dieSides}${result.damageBonus>=0?'+':''}${result.damageBonus}`,reach:w.reach,properties:w.profile.properties}});
+  const weaponSummary=weapons.map(w=>{const result=weaponStats({...draft,equippedWeaponId:w.id},{allowHandsConflict:true});return{...(!handsReady(draft,w)?{blocked:true}:{}),id:w.id,name:w.name,attack:result.attackBonus,damage:`${w.diceCount}d${w.dieSides}${result.damageBonus>=0?'+':''}${result.damageBonus}`,reach:w.reach,properties:w.profile.properties}});
   const coverage=[{section:'Cariche e consumabili',status:itemImport.unresolved?'partial':'converted',count:itemImport.charges+itemImport.consumables},{section:'Difese ai danni',status:'partial',count:defenceImport.rows.filter(r=>r.flags!==null).length},{section:'Abilità e salvezze',status:ext.blockedChecks.length?'partial':'converted',count:skillSummary.length+saveSummary.length},{section:'Armi e attacchi',status:weaponIssues.length?'partial':'converted',count:weapons.length},{section:'Magie e capacità',status:issues.some(t=>/magia|Magia|risorsa|formula|contatore/.test(t))?'partial':'converted',count:powers.length},{section:'Contatori manuali',status:'data-only',count:manualResources.length},{section:'Stato e risorse',status:'data-only',count:ext.conditions.length+ext.hitDice.length}];
   return {...report,version:3,checks:{...report.checks,conversion:'supported-extended'},conversion:{scope:'extended-v1',complete:false,sourceCounts:report.conversion.sourceCounts,blockers:[],evidence:[...report.conversion.evidence.filter(t=>!t.startsWith('Inventario:')),...evidence],omissions,coverage},draft,canImport:true,warnings:omissions,details:{skills:skillSummary,saves:saveSummary,weapons:weaponSummary,spells:powers.filter(p=>p.type==='spell').map(p=>({id:p.id,name:p.name,level:p.level,...spellStats(draft,p)})),facts:ext.facts,items:{charges:itemImport.charges,consumables:itemImport.consumables,healing:itemImport.healing},defences:defenceImport.rows}};
 }

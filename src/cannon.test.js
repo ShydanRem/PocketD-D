@@ -31,6 +31,6 @@ test('Cannon: missing/malformed/exhausted choices, zero HP and invalid profiles 
 test('Cannon: backup v19 and USB16 retain feature type, exact costs and all unrelated data; old/future forms reject new effect',()=>{
  const s=state(0),b=JSON.parse(serialize(s));assert.equal(b.version,19);assert.deepEqual(parseBackup(serialize(s)),s);
  for(const version of [11,17,18,20])assert.throws(()=>parseBackup(JSON.stringify({...b,version})));
- const p=projectDevice(s).packet;assert.equal(p.version,16);assert.ok(p.training.skillAbilities);assert.deepEqual(p.defences,{configured:0,resistance:0,vulnerability:0,immunity:0});const c=p.magic.powers.find(p=>p.effect===3);assert.equal(c.kind,1);assert.equal(c.level,0);assert.equal(c.maximum,1);assert.equal(c.recovery,2);assert.equal(c.flags&13,0);
+ const p=projectDevice(s).packet;assert.equal(p.version,23);assert.ok(p.training.skillAbilities);assert.deepEqual(p.defences,{configured:0,resistance:0,vulnerability:0,immunity:0});const c=p.magic.powers.find(p=>p.effect===3);assert.equal(c.kind,1);assert.equal(c.level,0);assert.equal(c.maximum,1);assert.equal(c.recovery,2);assert.equal(c.flags&13,0);
  const l=createLibrary(),next=addCharacter(l,s,'cannon');assert.deepEqual(parseLibrary(serializeLibrary(next)),next);assert.deepEqual(next.characters[0],l.characters[0]);
 });

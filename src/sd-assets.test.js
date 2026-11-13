@@ -9,12 +9,12 @@ import {crc32} from './device-backup.js';
 const original=new Uint8Array(readFileSync(new URL('../public/assets/classes.pdc',import.meta.url)));
 const supplied=original.slice(),handle=await prepareSdAssets({bytes:supplied});supplied.fill(0);
 const timeouts={open:1000,hello:1000,send:1000,data:1000,assetsBegin:1000,assetsFinish:1000};
-function serial({already=false,old=false,failAt='',noDone=false,wrongAck=false,onChunk=()=>{},lostHello=false}={}){
+function serial({already=false,old=false,failAt='',noDone=false,wrongAck=false,onChunk=()=>{},lostHello=false,version=17}={}){
  let output,frame='',offset=0,closed=0,chosen=0,chunks=0,hellos=0;const commands=[],data=new Uint8Array(original.length),enc=new TextEncoder();
  const push=text=>{output.enqueue(enc.encode(text));};
  const port={readable:new ReadableStream({start(c){output=c;}}),writable:new WritableStream({write(bytes){frame+=new TextDecoder().decode(bytes);let i;while((i=frame.indexOf('\n'))>=0){const line=frame.slice(0,i);frame=frame.slice(i+1);
   if(!line.startsWith('PDD ASSET WRITE'))commands.push(line);
-  if(line==='PDD HELLO'){hellos++;if(!lostHello||hellos>1)push(lostHello?'PDD READY 17\nPDD READY 17\n':'PDD READY 17\n');}
+  if(line==='PDD HELLO'){hellos++;if(!lostHello||hellos>1)push(`PDD READY ${version}\n`+(lostHello?`PDD READY ${version}\n`:''));}
   else if(line==='PDD ASSET HELLO 1')push(old?'PDD ERROR packet\n':'PDD ASSET READY 1\n');
   else if(line.startsWith('PDD ASSET BEGIN')){assert.equal(line,`PDD ASSET BEGIN 1 ${original.length} ${SD_PACKAGE.sha256}`);push(failAt==='begin'?'PDD ASSET ERROR sd\n':already?`PDD ASSET DONE 1 ${SD_PACKAGE.sha256}\n`:'PDD ASSET OFFSET 0\n');}
   else if(line.startsWith('PDD ASSET WRITE')){const match=/^PDD ASSET WRITE 1 (\d+) ([a-f0-9]{8}) ([a-f0-9]+)$/.exec(line);assert.ok(match);const part=Uint8Array.from(Buffer.from(match[3],'hex'));assert.equal(Number(match[1]),offset);assert.equal(crc32(part),Number.parseInt(match[2],16));assert.ok(part.length<=2048);data.set(part,offset);offset+=part.length;chunks++;onChunk();push(failAt==='write'?'PDD ASSET ERROR storage\n':`PDD ASSET OFFSET ${wrongAck?offset+1:offset}\n`);}
@@ -33,7 +33,7 @@ test('SD preflight rejects corrupt/truncated/download failures and forged handle
 });
 test('SD old firmware and device errors do not send a PG or claim success; exact already-installed result skips writes',async()=>{
  const old=serial({old:true});await assert.rejects(installSdAssets(handle,{serial:old.serial,timeouts}),/firmware 0.83/);assert.equal(old.commands.length,3);assert.equal(old.chunks,0);
- const done=serial({already:true});assert.deepEqual(await installSdAssets(handle,{serial:done.serial,timeouts}),{installed:true,already:true});assert.equal(done.chunks,0);
+ for(const version of [17,22,23]){const done=serial({already:true,version});assert.deepEqual(await installSdAssets(handle,{serial:done.serial,timeouts}),{installed:true,already:true});assert.equal(done.chunks,0);}
  for(const settings of [{failAt:'begin'},{failAt:'write'},{wrongAck:true}]){const f=serial(settings),phases=[];await assert.rejects(installSdAssets(handle,{serial:f.serial,timeouts,onProgress:p=>phases.push(p)}));assert.ok(!phases.includes('sd-complete'));assert.ok(f.commands.includes('PDD ASSET ABORT 1'));assert.equal(f.closed,1);assert.ok(!f.commands.some(s=>s.startsWith('{')));}
 });
 test('SD cancellation shares the character USB lock and sends one best-effort abort without replaying chunks',async()=>{

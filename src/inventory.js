@@ -1,3 +1,4 @@
+import {validateHandling,equipHandsReady} from './handling.js';
 import {equipGear,gearTotals,attuneGear} from './equipment.js';
 export const MAX_ITEMS = 60;
 export const DIE_SIDES = [4,6,8,10,12];
@@ -42,6 +43,7 @@ export function validateItem(input,extended=false,allowCharges=true) {
     if(!p||typeof p.ranged!=='boolean'||typeof p.heavy!=='boolean'||!integer(p.thrownRange,0,120)||!integer(p.longRange,0,240)||!Array.isArray(p.properties)||p.properties.length>20||p.properties.some(t=>typeof t!=='string'||t.length>60))throw new Error('Proprietà arma non valide');
     item.profile={ranged:p.ranged,heavy:p.heavy,thrownRange:p.thrownRange,longRange:p.longRange,properties:[...p.properties]};
   }
+  if(input.handling!==undefined)item.handling=validateHandling(input.handling,item);
   return item;
 }
 
@@ -49,6 +51,7 @@ export function validateInventory(input,extended=false,allowCharges=true) {
   if(!input || !Array.isArray(input.inventory) || input.inventory.length>MAX_ITEMS) throw new Error(`Massimo ${MAX_ITEMS} oggetti`);
   const inventory=input.inventory.map(item=>validateItem(item,extended,allowCharges));
   if(new Set(inventory.map(item=>item.id)).size!==inventory.length) throw new Error('Oggetti duplicati');
+  for(const item of inventory)if(item.handling?.ammoId&&!inventory.some(i=>i.id===item.handling.ammoId))throw Error('Pila munizioni assente');
   if(input.equippedWeaponId!==null && !inventory.some(item=>item.id===input.equippedWeaponId && item.type==='weapon' && item.quantity>0)) throw new Error('Arma equipaggiata non valida');
   return {inventory,equippedWeaponId:input.equippedWeaponId};
 }
@@ -77,11 +80,12 @@ export function upsertItem(state,input) {
 export function removeItem(state,id) {
   if(!state.inventory.some(item=>item.id===id)) throw new Error('Oggetto non trovato');
   if(state.extended?.loadout?.items.some(g=>g.id===id)){if(state.extended.loadout.items.find(g=>g.id===id).equipped)state=equipGear(state,id,false);state={...state,extended:{...state.extended,loadout:{...state.extended.loadout,items:state.extended.loadout.items.filter(g=>g.id!==id)}}};}
-  return changed(state,state.inventory.filter(item=>item.id!==id));
+  return changed(state,state.inventory.filter(item=>item.id!==id).map(item=>item.handling?.ammoId===id?{...item,handling:{...item.handling,ammoId:null}}:item));
 }
 
 export function equipWeapon(state,id) {
   if(id!==null && !state.inventory.some(item=>item.id===id && item.type==='weapon' && item.quantity>0)) throw new Error('Arma non disponibile');
+  const weapon=state.inventory.find(i=>i.id===id);if(weapon&&!equipHandsReady(state,weapon))throw Error('Riponi lo scudo per usare due mani');
   return changed(state,state.inventory,id);
 }
 

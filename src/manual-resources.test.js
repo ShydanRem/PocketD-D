@@ -14,7 +14,7 @@ test('Beyond manual action counters preserve balances separately from abilities,
  for(let i=0;i<5;i++){const a=p.data.actions.class[i+1],m=s.extended.manualResources[i],power=s.powers.find(v=>v.name===a.name);assert.equal(m.current,a.limitedUse.maxUses-a.limitedUse.numberUsed);assert.equal(m.max,a.limitedUse.maxUses);assert.ok(power.passive);assert.equal(power.maxUses,0);assert.match(power.description,/Contatore manuale separato/);assert.throws(()=>usePower(s,power.id));}
  for(const kind of ['short','long'])assert.deepEqual(rest(s,kind).extended.manualResources,s.extended.manualResources);
  const ordinary=s.powers.find(v=>v.name==='Rage'),spent=usePower(s,ordinary.id);assert.equal(spent.powers.find(p=>p.id===ordinary.id).remaining,ordinary.remaining-1);assert.deepEqual(spent.extended.manualResources,s.extended.manualResources);
- assert.deepEqual(parseBackup(serialize(s)),s);assert.deepEqual(projectDevice(s).packet.resources,s.extended.manualResources.map(r=>({name:r.name,current:r.current,maximum:r.max})));assert.equal(projectDevice(s).packet.version,9);
+ assert.deepEqual(parseBackup(serialize(s)),s);assert.deepEqual(projectDevice(s).packet.resources,s.extended.manualResources.map(r=>({name:r.name,current:r.current,maximum:r.max})));assert.equal(projectDevice(s).packet.version,23);
 });
 test('Manual counter limits: 0/1/999 and zero used are exact, all eight reach device, ninth blocks instead of truncating',()=>{
  for(const max of [1,50,99,100,999])for(const used of [0,max]){const p=manualFixture(1);Object.assign(p.data.actions.class[1].limitedUse,{maxUses:max,numberUsed:used});const r=cv(p);assert.ok(r.canImport);assert.equal(r.draft.extended.manualResources[0].current,max-used);assert.equal(projectDevice(r.draft).packet.resources[0].maximum,max);}
@@ -31,7 +31,7 @@ test('Manual counter backup v18 is strict, optional on old states, independent o
  for(const version of [11,16,17,19])assert.throws(()=>parseBackup(JSON.stringify({...b,version})));delete b.extended.manualResources;assert.throws(()=>parseBackup(JSON.stringify(b)));
  for(const input of [null,{},Array(9).fill({}),[{id:'x',name:'x',max:4,current:5}],[{id:'x',name:'x',max:0,current:0}],[{id:'x',name:'x',max:4,current:0,extra:1}]])assert.throws(()=>validateManualResources(input));
  const local=initialState();assert.equal(JSON.parse(serialize(local)).version,11);assert.equal(projectDevice(local).packet.resources[0].name,'Slancio');
- s.extended.skillAbilities={intimidation:'FOR'};s.extended.defences={configured:32,resistance:32,vulnerability:0,immunity:0};assert.equal(projectDevice(s).packet.version,15);assert.deepEqual(parseBackup(serialize(s)),s);
+ s.extended.skillAbilities={intimidation:'FOR'};s.extended.defences={configured:32,resistance:32,vulnerability:0,immunity:0};assert.equal(projectDevice(s).packet.version,23);assert.deepEqual(parseBackup(serialize(s)),s);
  const l=createLibrary(),next=addCharacter(l,s,'manual');assert.deepEqual(parseLibrary(serializeLibrary(next)),next);assert.deepEqual(next.characters[0],l.characters[0]);
  assert.throws(()=>validateManualResources([{id:'x',name:'x',max:1,current:0},{id:'x',name:'y',max:1,current:1}]));
  const empty={...local,extended:{...emptyExtended(),manualResources:[]}};assert.equal(projectDevice(empty).packet.resources.length,0);assert.equal(JSON.parse(serialize(empty)).version,18);

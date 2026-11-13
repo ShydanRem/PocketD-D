@@ -41,7 +41,7 @@ test('General import: conditional, ambiguous, unsupported and discrepant item pr
  const p=source();p.data.inventory.at(-1).definition.grantedModifiers[1].value=2;const r=convertBeyondFull(p,'123456');assert.ok(r.canImport);assert.equal(r.draft.extended.loadout,undefined);
 });
 test('Attunement state: versioned transport, native-independent HP caps, quantity/removal, unchanged source and no downgrade',()=>{
- const r=convertBeyondFull(source(),'123456'),s=r.draft,g=s.extended.loadout.items[0];assert.equal(JSON.parse(serialize(s)).version,22);assert.deepEqual(parseBackup(serialize(s)).extended.loadout,s.extended.loadout);const p=projectDevice(s).packet;assert.equal(p.version,19);assert.equal(p.equipment.items[3].attunement,2);assert.ok(p.equipment.items.every(g=>Number.isInteger(g.attunement)));
+ const r=convertBeyondFull(source(),'123456'),s=r.draft,g=s.extended.loadout.items[0];assert.equal(JSON.parse(serialize(s)).version,22);assert.deepEqual(parseBackup(serialize(s)).extended.loadout,s.extended.loadout);const p=projectDevice(s).packet;assert.equal(p.version,23);assert.equal(p.equipment.items[3].attunement,2);assert.ok(p.equipment.items.every(g=>Number.isInteger(g.attunement)));
  assert.throws(()=>parseBackup(serialize(s).replace('"version": 22','"version": 21')));const n=adjustQuantity(s,g.id,-1);assert.equal(n.extended.loadout.items[0].attunement,1);assert.equal(n.extended.loadout.items[0].equipped,false);assert.throws(()=>attuneGear(n,g.id,true));assert.ok(!removeItem(s,g.id).extended.loadout.items.some(x=>x.id===g.id));assert.equal(s.inventory[3].quantity,1);
 });
 test('Equipment icon selection recognizes jewelry, clothing and foci consistently',()=>{

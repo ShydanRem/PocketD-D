@@ -20,7 +20,7 @@ for(let level=1;level<=20;level++)for(let kind=1;kind<=2;kind++)for(let scaling=
 /* Real source identities with invented names, sheet and counters. */
 for(const id of [2619079,2618890,2618967]){
   const payload=beyondRichFixture();payload.data.classSpells[0].spells[0].definition=formulaDefinition(id);const r=convertBeyondFull(payload,'123456');assert.equal(r.canImport,true);const p=r.draft.powers.find(p=>p.formula);assert(p&&p.formula.source===1);
-  const packet=projectDevice(r.draft).packet;assert.equal(packet.version,22);const formulas=r.draft.powers.map(p=>fields.map(k=>(p.formula??emptySpellFormula())[k])),resolved=[];
+  const packet=projectDevice(r.draft).packet;assert.equal(packet.version,23);const formulas=r.draft.powers.map(p=>fields.map(k=>(p.formula??emptySpellFormula())[k])),resolved=[];
   r.draft.powers.forEach((p,i)=>{if(!p.formula)return;for(let slot=p.level;slot<=(p.level?9:0);slot++){const f=resolveSpellFormula(r.draft,p,slot);resolved.push([i,slot,f.kind,f.count,f.sides,f.bonus]);}});cases.push(packet);expected.push({valid:true,formulas,resolved});
 }
 const valid=cases.length;

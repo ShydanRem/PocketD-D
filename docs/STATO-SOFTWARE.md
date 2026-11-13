@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **5 novembre 2026 — v0.111**. Il dispositivo è il prodotto;
+Aggiornamento del **13 novembre 2026 — v0.112**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
@@ -20,7 +20,35 @@ compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
 
-## Munizioni collegate all'attacco · v0.111
+## Armi, copie Beyond e associazione · v0.112
+
+[Guida e compatibilità](ARMI-COPIE-V112.md). Impugnature a una/due mani,
+versatile, Finezza e blocco dei conflitti con lo scudo prima del tiro.
+Configurazione sul Pocket e nel supporto PC; pila munizioni salvata per ogni
+arma anche dopo riavvio, backup e cambio PG. Le proprietà Beyond sono abilitate
+solo con dati strutturati riconosciuti; nessuna regola dal nome o dalla descrizione.
+
+I nuovi import conservano l’ID del PG. Reimportare lo stesso ID apre un confronto
+con la copia attiva o SD: tieni/apri locale, oppure confermi una nuova copia.
+Senza SD resta esplicita la sostituzione dell’unica scheda attiva. Nessuna fusione
+automatica dei progressi; le vecchie copie senza ID non sono abbinate per nome.
+Sul sito **Associa Beyond** apre direttamente la sezione guidata, con tre passi
+e stato finale soltanto dopo la ricevuta del dispositivo.
+
+Verifiche: **373** test JS, suite nativa completa e **167/167** viste di produzione,
+8.000 casi di impugnatura, 32 casi di parità PC/C/backup, ASan/UBSan sui nuovi
+flussi, browser con servizi sintetici e build ESP32-S3. Partizioni invariate,
+circa **149 KiB** liberi nell’applicazione. PC v26 / USB23 / PDDg con metadati;
+lettura dei precedenti conservata. Aggiorna firmware e supporto PC insieme,
+con **Conserva dati**. Nessun nuovo asset SD necessario.
+[Anteprima nativa sintetica](previews/v112-handling-copy.png).
+
+Restano due armi, maestrie, munizioni speciali/ricarica, profili magie ulteriori
+e riconciliazione dei progressi fra Beyond e Pocket. Account privato/Wi-Fi/USB
+reali delle nuove funzioni ancora da collaudare; nessuna nuova lettura o scrittura
+Beyond eseguita per questo rilascio.
+
+## Munizioni collegate all'attacco · v0.111, superata dalla v0.112
 
 [Guida e confini](MUNIZIONI.md). Con un'arma configurata a distanza, la faretra
 apre la scelta esplicita della pila. Una unità e il d20 si confermano insieme,
@@ -774,16 +802,17 @@ sono distinte da quelle nuove ancora verificate solo tramite software.
    bonus speciali, più bersagli/attacchi e formule miste,
    condizioni, durate e proprietà concesse dagli oggetti. Un testo importato non
    equivale a un effetto eseguibile. Restano requisiti/limiti di preparazione.
-2. **Combattimento e dotazioni:** impugnature versatili/due mani, interazione con
-   gli scudi, due armi, maestrie e altre proprietà speciali. La v0.111 collega
-   esplicitamente una pila separata al costo del tiro: restano associazioni
-   persistenti, bonus delle munizioni, recupero e ricarica. Nessuna
+2. **Combattimento e dotazioni:** la v0.112 copre impugnature versatili/due mani,
+   Finezza, interazione con gli scudi e associazioni persistenti delle munizioni.
+   Restano due armi, maestrie, altre proprietà speciali, bonus delle munizioni,
+   recupero e ricarica. Nessuna
    regola dedotta soltanto dal nome dell’oggetto.
-3. **Rilettura Beyond della stessa scheda:** confrontare i dati nuovi con la copia
-   locale e riconciliare progressi, aspetto e risorse. Oggi l’importazione crea
-   una nuova copia: non esiste una fusione automatica verificata.
-4. **Autonomia e raccolta:** ulteriori collegamenti fra elenco Beyond e copie
-   locali, gestione dei duplicati e ulteriori riduzioni dei passaggi frequenti.
+3. **Rilettura Beyond della stessa scheda:** confronto per ID disponibile nella
+   v0.112 prima di reimportare; mantiene distinta la copia locale con progressi.
+   Riconciliazione puntuale di progressi, aspetto e risorse ancora da implementare:
+   non esiste una fusione automatica verificata.
+4. **Autonomia e raccolta:** ingresso diretto Associa Beyond e confronto delle
+   copie disponibili nella v0.112; ulteriori riduzioni dei passaggi frequenti.
    Il nuovo accesso autenticato sull’ESP32 rimane da provare; l’estensione è
    confermata come soluzione per la prima associazione.
 5. **Rifiniture:** espressioni/animazioni dei look SD e feedback delle nuove

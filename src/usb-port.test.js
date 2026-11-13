@@ -36,3 +36,16 @@ test('Pocket PC tab can be found again after worker restart without storing a po
  const {openPocketTools}=await import('../extension/open-tools.js');let saved={},created=0,focused=0;const url='chrome-extension://synthetic/account.html',storage={session:{get:async()=>saved,set:async data=>saved=data}},tabs={create:async()=>{created++;return {id:5};},get:async()=>({url}),update:async()=>{focused++;}};
  await openPocketTools({runtime:{getURL:()=>url},storage,tabs});await openPocketTools({runtime:{getURL:()=>url},storage,tabs});assert.equal(created,1);assert.equal(focused,1);assert.deepEqual(saved,{pocketToolsTab:5});
 });
+test('Beyond entry intent opens only the fixed association view and preserves tabs navigated elsewhere',async()=>{
+ const {openPocketTools}=await import('../extension/open-tools.js');const base='chrome-extension://intent/account.html';let url=base,created=0;const updates=[];
+ const api={runtime:{getURL:()=>base},tabs:{create:async options=>{created++;url=options.url;return{id:9};},get:async()=>({url}),update:async(id,options)=>{updates.push(options);if(options.url)url=options.url;}}};
+ await openPocketTools(api);await openPocketTools(api,'beyond');assert.equal(created,1);assert.equal(url,base+'#beyond');assert.deepEqual(updates[0],{active:true,url:base+'#beyond'});
+ await openPocketTools(api,'beyond');assert.deepEqual(updates[1],{active:true});url='https://elsewhere.test/';await openPocketTools(api,'beyond');assert.equal(created,2);assert.equal(url,base+'#beyond');await assert.rejects(openPocketTools(api,'https://elsewhere.test/'));
+});
+test('Site relay allows an explicit Beyond view but never a supplied URL or private fields',()=>{
+ let receive;const sent=[],posts=[],win={addEventListener:(name,fn)=>receive=fn,postMessage:value=>posts.push(value)},location={href:'https://shydanrem.github.io/PocketD-D/',origin:'https://shydanrem.github.io'};
+ const chrome={runtime:{getManifest:()=>({version:'0.112.0'}),sendMessage:(m,reply)=>{sent.push(m);reply({ok:true});}}};vm.runInNewContext(readFileSync(new URL('../extension/site-helper.js',import.meta.url),'utf8'),{window:win,top:win,location,chrome,URL});
+ const m={type:'pocketdd-helper-request',id:'b'.repeat(32),action:'open',view:'beyond',cookie:'private-marker'};
+ receive({source:win,origin:location.origin,data:{...m,view:'https://elsewhere.test/'}});assert.equal(sent.length,0);receive({source:win,origin:location.origin,data:m});assert.equal(JSON.stringify(sent),'[{"type":"open-pocket-tools","view":"beyond"}]');assert.equal(JSON.stringify(posts).includes('private-marker'),false);
+ receive({source:win,origin:location.origin,data:{...m,action:'ping'}});assert.equal(posts.at(-1).beyondEntry,true);
+});

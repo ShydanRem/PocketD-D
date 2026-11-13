@@ -42,11 +42,12 @@ try:
  with sync_playwright() as p:
   browser=p.chromium.launch(executable_path='/usr/bin/chromium',headless=True,args=['--no-sandbox']);context=browser.new_context(viewport={'width':1100,'height':900},accept_downloads=True)
   context.add_init_script("Object.defineProperty(navigator,'serial',{value:{requestPort:async()=>{window.chooserCalls=(window.chooserCalls||0)+1;throw new DOMException('cancel','NotFoundError')}}});")
-  context.add_init_script("window.chrome={runtime:{getManifest:()=>({version:'0.93.0'}),sendMessage:(m,reply)=>{window.helperOpens=(window.helperOpens||0)+1;reply({ok:true})}}};")
+  context.add_init_script("window.chrome={runtime:{getManifest:()=>({version:'0.93.0'}),sendMessage:(m,reply)=>{window.helperOpens=(window.helperOpens||0)+1;window.lastHelperView=m.view||'tools';reply({ok:true})}}};")
   context.add_init_script((ROOT/'extension/site-helper.js').read_text())
   page=context.new_page();errors=[];requests=[];page.on('pageerror',lambda e:errors.append(str(e)));page.on('request',lambda r:requests.append(r.url));page.goto(url)
   expect(page.locator('[data-open-pocket]')).to_be_visible();assert not any(u.endswith(('.bin','.pdc','.zip')) for u in requests)
   page.locator('[data-open-pocket]').click();expect(page.locator('[data-helper-status]')).to_contain_text('Pocket PC aperto');assert page.evaluate('helperOpens')==1
+  page.locator('[data-open-beyond]').click();expect(page.locator('[data-helper-status]')).to_contain_text('Collegamento Beyond aperto');assert page.evaluate('helperOpens')==2 and page.evaluate('lastHelperView')=='beyond'
   page.locator('[data-show-firmware]').click()
   expect(page.locator('#status')).to_contain_text('Firmware pronto');expect(page.locator('#version')).to_have_text('Firmware '+m['version']);expect(page.locator('[value=update]')).to_be_checked()
   expect(page.locator('#install')).to_be_visible();page.locator('.sd-tools>summary').click();expect(page.locator('[data-sd-install]')).to_be_visible();expect(page.locator('[data-sd-install]')).to_be_enabled(timeout=15000)
@@ -69,6 +70,8 @@ try:
   page.reload();expect(page.locator('.firmware-tools')).to_have_attribute('open','');expect(page.locator('#status')).to_contain_text('Firmware pronto')
   missing=browser.new_context();missing.add_init_script("Object.defineProperty(navigator,'serial',{value:{requestPort:async()=>{throw new DOMException('cancel','NotFoundError')}}});")
   fallback=missing.new_page();fallback.goto(url);fallback.locator('[data-open-pocket]').click();expect(fallback.locator('[data-helper-help]')).to_be_visible();expect(fallback.locator('[data-helper-status]')).to_contain_text('prima volta');missing.close()
+  legacy=browser.new_context();legacy.add_init_script("Object.defineProperty(navigator,'serial',{value:{requestPort:async()=>{throw Error('must not open serial')}}});window.legacyOpens=0;window.addEventListener('message',e=>{if(e.data?.type!=='pocketdd-helper-request')return;const d=e.data;if(d.action==='open')window.legacyOpens++;window.postMessage({type:'pocketdd-helper-response',id:d.id,...(d.action==='ping'?{installed:true,version:'0.93.0'}:{opened:true})},location.origin);});")
+  old=legacy.new_page();old.goto(url);old.locator('[data-open-beyond]').click();expect(old.locator('[data-helper-status]')).to_contain_text('Aggiorna il componente');expect(old.locator('[data-helper-help]')).to_be_visible();assert old.evaluate('legacyOpens')==0;legacy.close()
   browser.close()
  print('PASS Pages: fixed /PocketD-D/ prefix, firmware/SD without ZIP, safe update default, optional verified PC and account-helper downloads, relative gallery back, mobile, simulated chooser, exact provenance/hashes and rejection of arbitrary JSON/corrupt firmware/extra helper ZIP entries. Does not prove GitHub activation or physical USB.')
 finally:server.shutdown();server.server_close();thread.join()

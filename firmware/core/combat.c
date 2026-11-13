@@ -4,13 +4,15 @@
 bool pd_weapon_stats(const pd_state *s,unsigned index,pd_weapon_info *out) {
     if(!s||!out||!s->inventory_available||index>=s->item_count)return false;
     const pd_item *v=&s->items[index];if(v->kind!=PD_WEAPON||!v->quantity)return false;
-    pd_weapon_info w={.base=pd_modifier(s->abilities[v->ability]),.trained=(v->flags&1)?pd_proficiency(s->level):0,.count=v->count,.sides=v->sides};
+    pd_weapon_info w={.ability=v->ability,.base=pd_modifier(s->abilities[v->ability]),.trained=(v->flags&1)?pd_proficiency(s->level):0,.count=v->count,.sides=v->sides};
+    if(v->ability<2&&(s->handling[index].flags&PD_FINESSE)){w.ability=s->abilities[0]>=s->abilities[1]?0:1;w.base=pd_modifier(s->abilities[w.ability]);}
+    if((s->handling[index].flags&PD_VERSATILE)&&pd_weapon_two_hands(s,index))w.sides=s->handling[index].sides;
     bool thrown=s->combat.thrown&&index==s->equipped&&v->thrown_range;
     w.melee_weapon=!(v->flags&4);w.melee=w.melee_weapon&&!thrown;w.reach=thrown?v->thrown_range:v->reach;
     w.power_attack=s->combat.power_attack&&w.melee&&(v->flags&8)&&(v->flags&1);
     w.attack_extra=v->attack_modifier-(w.power_attack?5:0);
     w.damage_base=(v->flags&2)?w.base:0;
-    w.damage_extra=v->damage_modifier+(w.power_attack?10:0)+(s->combat.raging&&w.melee&&v->ability==0?s->combat.rage_bonus:0);
+    w.damage_extra=v->damage_modifier+(w.power_attack?10:0)+(s->combat.raging&&w.melee&&w.ability==0?s->combat.rage_bonus:0);
     w.critical_dice=w.melee?s->combat.critical_dice:0;
     w.attack_bonus=w.base+w.trained+w.attack_extra;w.damage_bonus=w.damage_base+w.damage_extra;
     *out=w;return true;
@@ -25,7 +27,7 @@ int pd_attack_mode(const pd_state *s,int requested){pd_attack_resolution r;retur
 bool pd_attack(const pd_state *s,unsigned armor,int mode,pd_random random,void *context,pd_strike *out){return pd_attack_with_context(s,armor,mode,(pd_roll_context){0},false,random,context,out);}
 bool pd_attack_with_context(const pd_state *s,unsigned armor,int mode,pd_roll_context context,bool ignore,pd_random random,void *random_context,pd_strike *out) {
     if(!s||!out||!random||armor<1||armor>30||mode< -1||mode>1)return false;
-    pd_strike hit={.armor=armor};if(!pd_weapon_stats(s,s->equipped,&hit.weapon))return false;
+    pd_strike hit={.armor=armor};if(!pd_weapon_hands_ready(s,s->equipped)||!pd_weapon_stats(s,s->equipped,&hit.weapon))return false;
     pd_attack_resolution r;if(!pd_attack_resolve(s,mode,context,ignore,&r)||!r.allowed)return false;
     hit.roll=pd_d20(hit.weapon.attack_bonus,r.mode,random,random_context);
     hit.critical=hit.roll.natural==20;hit.hits=hit.roll.natural!=1&&(hit.critical||hit.roll.total>=(int)armor);
@@ -36,7 +38,7 @@ bool pd_true_strike_stats(const pd_state *s,unsigned power,bool radiant,pd_weapo
     const pd_power *p=&s->magic.powers[power];
     if(p->effect!=PD_TRUE_STRIKE_2024||!(p->flags&PD_PREPARED))return false;
     pd_weapon_info w;if(!pd_weapon_stats(s,s->equipped,&w))return false;
-    w.true_strike=true;w.radiant_weapon=radiant;w.base=pd_modifier(s->abilities[p->ability]);
+    w.true_strike=true;w.radiant_weapon=radiant;w.ability=p->ability;w.base=pd_modifier(s->abilities[p->ability]);
     w.damage_base=w.base; /* True Strike explicitly adds the casting modifier. */
     w.attack_extra+=p->attack_modifier; /* Explicit per-profile corrections only. */
     w.damage_extra=s->items[s->equipped].damage_modifier+(w.power_attack?10:0)+p->save_modifier;
@@ -46,7 +48,7 @@ bool pd_true_strike_stats(const pd_state *s,unsigned power,bool radiant,pd_weapo
 bool pd_true_strike_attack(const pd_state *s,unsigned power,bool radiant,unsigned armor,int mode,pd_roll_context context,bool ignore,pd_random random,void *random_context,pd_strike *out){
     if(!out||!random||armor<1||armor>30||mode< -1||mode>1)return false;
     pd_strike hit={.armor=armor};pd_attack_resolution r;
-    if(!pd_true_strike_stats(s,power,radiant,&hit.weapon)||!pd_attack_resolve(s,mode,context,ignore,&r)||!r.allowed)return false;
+    if(!pd_weapon_hands_ready(s,s->equipped)||!pd_true_strike_stats(s,power,radiant,&hit.weapon)||!pd_attack_resolve(s,mode,context,ignore,&r)||!r.allowed)return false;
     hit.roll=pd_d20(hit.weapon.attack_bonus,r.mode,random,random_context);hit.critical=hit.roll.natural==20;hit.hits=hit.roll.natural!=1&&(hit.critical||hit.roll.total>=(int)armor);*out=hit;return true;
 }
 bool pd_weapon_damage(const pd_strike *hit,pd_random random,void *context,pd_pool *out) {
@@ -65,7 +67,7 @@ bool pd_weapon_damage_roll(const pd_strike *hit,pd_random random,void *context,p
     roll.total=roll.weapon.total+roll.radiant.total;*out=roll;return true;
 }
 bool pd_equip(pd_state *s,unsigned index) {
-    pd_weapon_info w;if(index!=PD_NO_WEAPON&&!pd_weapon_stats(s,index,&w))return false;
+    pd_weapon_info w;if(index!=PD_NO_WEAPON&&(!pd_weapon_equip_ready(s,index)||!pd_weapon_stats(s,index,&w)))return false;
     s->equipped=index;s->combat.thrown=false;return true;
 }
 bool pd_ammunition_eligible(const pd_state *s,unsigned index){

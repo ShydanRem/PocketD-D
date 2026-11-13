@@ -1,3 +1,8 @@
+> v0.112: [Guida aggiornata e confronto delle copie](ARMI-COPIE-V112.md).
+> Dal sito premi **Associa Beyond** per aprire direttamente il percorso guidato.
+> I tre passi terminano solo dopo la ricevuta del Pocket; account reale su ESP32
+> ancora da collaudare. Aggiorna anche il componente se il sito lo richiede.
+
 > v0.106: [scelta account/ID, guida e confronto del codice](UX-RPG.md#v0106-ingresso-beyond-e-collegamento-account).
 > Ricollega apre la guida PC; codice HTTP e blocchi di conversione restano distinti.
 > Le nuove schermate sono verificate con dati sintetici, non con un login ESP32 reale.
@@ -18,7 +23,7 @@ sintetiche: non attestano un login reale ESP32 o la lettura reale di un PG priva
 ## Prima associazione, flusso semplificato v0.93
 
 1. Sul Pocket serve firmware **0.92 o successivo**. Dal [sito](https://shydanrem.github.io/PocketD-D/)
-   puoi aggiornarlo conservando i dati, poi **Apri Pocket PC**. Se manca il componente,
+   puoi aggiornarlo conservando i dati, poi **Associa Beyond**. Se manca il componente,
    segui i passaggi iniziali mostrati dal sito per caricare l’estensione Chrome/Edge.
 2. Accedi a Beyond nello stesso browser e collega il Pocket al Wi-Fi.
 3. In Pocket PC premi **Collega Beyond**. La prima volta autorizza prima

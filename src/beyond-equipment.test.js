@@ -37,7 +37,7 @@ test('Beyond potions: restrictions, extra effects, homebrew, dice limits and dis
 test('Beyond defenses: unconditional grants, simultaneous R/V/I, unknown absence, strict versions and preserved backup/collection',()=>{
  const p=beyondCoreFixture();p.data.modifiers.race.push(resistance(),resistance('cold','immunity'),resistance('fire','vulnerability'));const before=structuredClone(p),r=convert(p),d=r.draft.extended.defences;
  assert.equal(defenceFlags(d,damageTypes.indexOf('fire')),3);assert.equal(defenceFlags(d,damageTypes.indexOf('cold')),4);assert.equal(defenceFlags(d,0),null);assert.deepEqual(p,before);
- const backup=JSON.parse(serialize(r.draft)),device=projectDevice(r.draft).packet;assert.equal(backup.version,16);assert.equal(device.version,14);assert.equal(device.avatar.outfit,0);assert.deepEqual(device.defences,d);assert.deepEqual(parseBackup(JSON.stringify(backup)),r.draft);
+ const backup=JSON.parse(serialize(r.draft)),device=projectDevice(r.draft).packet;assert.equal(backup.version,16);assert.equal(device.version,23);assert.equal(device.avatar.outfit,0);assert.deepEqual(device.defences,d);assert.deepEqual(parseBackup(JSON.stringify(backup)),r.draft);
  for(const version of [11,12,13,14,15])assert.throws(()=>parseBackup(JSON.stringify({...backup,version})));
  const library=createLibrary(),next=addCharacter(library,r.draft,'new');assert.deepEqual(parseLibrary(serializeLibrary(next)),next);assert.equal(library.characters.length,1);
  const old=initialState();assert.equal(JSON.parse(serialize(old)).version,11);assert.equal(projectDevice(old).packet.version,9);

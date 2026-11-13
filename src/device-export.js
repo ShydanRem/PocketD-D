@@ -1,3 +1,4 @@
+import {hasHandling} from './handling.js';
 import {emptySpellFormula} from './spell-formula.js';
 import {validateDefences} from './defences.js';
 import {avatarOutfit} from './avatar-classes.js';
@@ -9,13 +10,13 @@ const integer=(n,min,max,label)=>{if(!Number.isInteger(n)||n<min||n>max)throw ne
 export function projectDevice(input){
   const s=parseBackup(serialize(input));
   const warnings=[
-    'Firmware iniziale: una sola scheda attiva. La conferma sul display sostituisce la copia sul dispositivo; la raccolta PC resta conservata.',
+    'Con SD disponibile il Pocket conserva le copie locali; senza SD rimane una scheda attiva. Importazione solo dopo conferma sul display; la raccolta PC resta conservata.',
     'Trasferisce nome, livello, aspetto dell’avatar, PF, PF temporanei, CA, caratteristiche, abilità, salvezze, inventario (60 voci), attacchi, magie/capacità, dadi vita, condizioni e contatori morte e fino a 8 contatori manuali. Non trasferisce la risposta originale di Beyond.',
     'Avatar originale: famiglia visiva, silhouette maschile/femminile, carnagione, capelli e mantello modificabili sul PC o sul dispositivo. Non rappresenta equipaggiamento o immagini di Beyond. Animazione disattivabile dal dispositivo in Aspetto.',
     'Non disponibili sul dispositivo: gestione completa degli effetti delle condizioni, mappa e party. Lo storico locale degli ultimi 20 tiri richiede firmware v0.52 ed è incluso nel backup nativo dalla v0.53.',
     'Prove con competenze, maestrie, bonus extra e mezza competenza riconosciuti dal PC. Le prove da verificare restano bloccate; per eccezioni del DM è disponibile il dado libero.',
     'Avvelenato e vantaggio FOR da Ira sono fotografati al trasferimento. Ira riconosciuta attivabile dalla capacità; altre condizioni e durate restano manuali. Effetti PC disattivabili per il singolo tiro; altri effetti restano da gestire con il DM.',
-    'CA fotografata al momento dell’esportazione; non ricalcolata cambiando equipaggiamento. I contatori non applicano recuperi o effetti automatici.',
+    'CA e PF massimi seguono i profili di equipaggiamento espliciti; formule o bonus non riconciliati restano manuali. I contatori manuali sono separati dagli utilizzi e dai recuperi delle capacità.',
     'Nomi limitati ad ASCII: accenti traslitterati, altri simboli sostituiti; nome massimo 48 caratteri, contatori 32.'
   ];
   // Structured resources belong to magic, never to duplicated manual counters.
@@ -50,21 +51,22 @@ export function projectDevice(input){
       attackModifier:p.attackModifier??0,saveModifier:p.saveModifier??0};
   }),slots:s.slots.map(v=>({current:v.current,maximum:v.max})),pact:(s.extended?.pactSlots??Array.from({length:9},()=>({current:0,max:0}))).map(v=>({current:v.current,maximum:v.max})),
     concentration:s.concentration?s.powers.findIndex(p=>p.id===s.concentration)+1:0};
-  warnings.push('Magie e capacità: fino a 120 voci, descrizioni ASCII fino a 500 caratteri con estratti segnalati, slot ordinari/patto, utilizzi innati, preparazione e concentrazione. Consumo solo dopo conferma; effetti, danni e salvezze delle magie da risolvere con il DM.');
+  warnings.push('Magie e capacità: fino a 120 voci, descrizioni ASCII fino a 500 caratteri con estratti segnalati, slot ordinari/patto, utilizzi innati, preparazione e concentrazione. Consumo dopo conferma. Formule salvate e tiri assistiti per i profili supportati; TS dei bersagli dichiarati al tavolo, proprietà speciali non configurate manuali.');
   const recovery={available:Boolean(s.extended),pools:(s.extended?.hitDice??[]).map(h=>({name:h.name.trim()?ascii(h.name,40):'Classe senza nome',die:h.die,maximum:h.max,used:h.used}))};
   warnings.push('Riposi con anteprima e conferma: patto e risorse con recupero breve/lungo riconosciuto. Dadi vita importati senza inventare riserve; recupero lungo 2014, 2024 o manuale scelto sul dispositivo. Requisiti, eccezioni e condizioni da verificare con il DM. Contatori generici manuali.');
   warnings.push('Dadi vita: nomi ASCII fino a 40 caratteri, d6/d8/d10/d12 e utilizzi per classe. Spesa singola durante il riposo breve con cura base dado + COS, minimo zero; bonus speciali e regole opzionali manuali. Tasti configurabili; la copia conserva le preferenze locali.');
   const status={available:Boolean(s.extended),successes:s.extended?.deathSaves.successes??0,failures:s.extended?.deathSaves.failures??0,stabilized:s.extended?.deathSaves.stabilized??false,
     conditions:(s.extended?.conditions??[]).map(c=>({name:ascii(c.name,60),level:c.level}))};
   warnings.push('Stato: fino a 30 condizioni come annotazioni con livello 0–6; nessun effetto dedotto dal nome. Avvelenato è un effetto separato e configurabile sul dispositivo. Rimuovere una nota non disattiva effetti.');
-  warnings.push('Morte: contatori trasferiti esattamente; d20 base senza bonus, vantaggi o talenti, con conferma e correzioni DM. Tre fallimenti a zero PF bloccano cure ordinarie e riposo lungo fino a correzione esplicita. Nessuna morte istantanea o gestione automatica dei danni a zero PF.');
+  warnings.push('Morte: contatori trasferiti esattamente. Sul Pocket sono disponibili tiri con circostanze esplicite, danni a zero PF e conferma delle conseguenze. Tre fallimenti bloccano cure ordinarie e riposo lungo fino a correzione esplicita.');
   const wallet={available:s.extended?.currenciesAvailable??false,...Object.fromEntries(['cp','sp','ep','gp','pp'].map(k=>[k,s.extended?.currenciesAvailable?integer(s.extended.currencies[k],0,999999999,k):0]))};
   warnings.push(wallet.available?'Monete: cinque saldi verificati, separati e modificabili con conferma sul dispositivo. Nessun cambio o acquisto automatico.':'Monete: saldo non verificato, nessuna ricchezza inventata. Verificalo in Stato e risorse sul PC oppure configura il borsello sul dispositivo.');
-  const smite=s.powers.some(p=>p.effect==='divine-smite-2024'),onHit=s.powers.some(p=>['hex-2024','hunters-mark-2024'].includes(p.effect)),identity=avatarIdentity(s.avatar),outfit=avatarOutfit(s.avatar),defences=s.extended?.defences,mapped=s.extended?.skillAbilities!==undefined,cannon=s.powers.some(p=>p.effect==='eldritch-cannon'),reference=s.powers.some(p=>p.reference!==undefined),attuned=s.extended?.loadout?.items.some(g=>g.attunement!==undefined),modern=smite||onHit||s.extended?.loadout!==undefined||s.powers.some(p=>p.effect==='true-strike-2024'||p.formula!==undefined),variant=modern||reference||cannon||mapped||defences!==undefined||outfit||identity.lineage||identity.body;
+  const handling=hasHandling(s),sourceId=s.importInfo?.provider==='dndbeyond'?s.importInfo.characterId:'',metadata=handling||Boolean(sourceId);
+  const smite=s.powers.some(p=>p.effect==='divine-smite-2024'),onHit=s.powers.some(p=>['hex-2024','hunters-mark-2024'].includes(p.effect)),identity=avatarIdentity(s.avatar),outfit=avatarOutfit(s.avatar),defences=s.extended?.defences,mapped=s.extended?.skillAbilities!==undefined,cannon=s.powers.some(p=>p.effect==='eldritch-cannon'),reference=s.powers.some(p=>p.reference!==undefined),attuned=s.extended?.loadout?.items.some(g=>g.attunement!==undefined),modern=metadata||smite||onHit||s.extended?.loadout!==undefined||s.powers.some(p=>p.effect==='true-strike-2024'||p.formula!==undefined),variant=modern||reference||cannon||mapped||defences!==undefined||outfit||identity.lineage||identity.body;
   const formulas=s.powers.some(p=>p.formula!==undefined);
-  if(formulas)warnings.push('Formule base delle magie: firmware 0.109 / USB22. Dadi, bonus e aumenti espliciti conservati; bonus speciali, colpire, TS e critici restano al tavolo.');
-  if(formulas)magic.powers.forEach((p,i)=>{p.formula=s.powers[i].formula??emptySpellFormula();});
-  const packet={format:'pocketdd-device',version:formulas?22:smite?21:onHit?20:attuned?19:modern?18:reference?17:cannon?16:mapped?15:defences!==undefined?14:outfit?13:identity.lineage>=16?12:identity.lineage>=12?11:variant?10:9,name:ascii(s.name,48),level:integer(s.level,1,20,'Livello'),hp:integer(s.hp,0,999,'PF'),
+  if(formulas)warnings.push('Formule base delle magie: firmware 0.109 / USB22. Dadi, bonus e aumenti espliciti conservati. Attacchi, TS dichiarati e critici assistiti sul Pocket dalla 0.110; bonus speciali non rappresentati manuali.');
+  if(formulas||metadata)magic.powers.forEach((p,i)=>{p.formula=s.powers[i].formula??emptySpellFormula();});
+  const packet={format:'pocketdd-device',version:metadata?23:formulas?22:smite?21:onHit?20:attuned?19:modern?18:reference?17:cannon?16:mapped?15:defences!==undefined?14:outfit?13:identity.lineage>=16?12:identity.lineage>=12?11:variant?10:9,name:ascii(s.name,48),level:integer(s.level,1,20,'Livello'),hp:integer(s.hp,0,999,'PF'),
     maxHp:integer(s.maxHp,1,999,'PF massimi'),tempHp:integer(s.extended?.tempHp??0,0,999,'PF temporanei'),armorClass:integer(s.armorClass,1,40,'CA'),
     avatar:Object.fromEntries(['skin','hair','cloak','style'].map(k=>[k,integer(s.avatar[k],0,2,k)])),
     training,inventory,magic,recovery,status,wallet,
@@ -84,6 +86,7 @@ export function projectDevice(input){
   if(defences!==undefined){packet.defences=validateDefences(defences);Object.assign(packet.avatar,identity,{outfit});warnings.push('Profilo difese: richiede USB14 / firmware 0.71. Solo i tipi verificati si applicano nel calcolo Danni; gli altri richiedono configurazione. Effetti temporanei e condizioni non vengono dedotti.');}
   if(outfit){packet.avatar.outfit=outfit;warnings.push('Look classe: richiede firmware 0.70 / USB13 e pocketdd/classes.pdc sulla SD. Senza asset viene mostrato lo stile originale, mantenendo la scelta. Colori e taglio del preset sono fissi; nessun valore di gioco cambia.');}
   if(variant){Object.assign(packet.avatar,identity);warnings.push(identity.lineage>=16?'Questa specie richiede USB12 / firmware 0.69 o successivo. Aspetto cosmetico: nessun bonus o equipaggiamento dedotto.':identity.lineage>=12?'Questa specie richiede USB11 / firmware 0.68 o successivo. Aspetto cosmetico: nessun bonus o equipaggiamento dedotto.':'Specie e silhouette maschile/femminile richiedono USB10 / firmware 0.67 o successivo. Aspetto cosmetico: nessun bonus o equipaggiamento dedotto.');}
+  if(metadata){packet.sourceId=sourceId;packet.handling=s.inventory.map(i=>({flags:i.handling?.flags??0,grip:i.handling?.grip??0,sides:i.handling?.versatileSides??0,ammo:i.handling?.ammoId?s.inventory.findIndex(a=>a.id===i.handling.ammoId)+1:0}));if(handling)warnings.push('Impugnature, finezza e munizioni persistenti: richiede firmware 0.112 / USB23. Mani e scudo verificati; proprietà speciali non configurate restano manuali.');if(sourceId)warnings.push('Provenienza Beyond conservata: firmware 0.112 / USB23. Il Pocket confronta le copie con lo stesso ID prima di una nuova importazione; progressi e dati remoti non vengono uniti automaticamente.');}
   if(serializeDevice(packet).length>262144)throw new Error('Copia oltre 262144 byte: nessun inventario troncato.');
   return {packet,warnings};
 }
