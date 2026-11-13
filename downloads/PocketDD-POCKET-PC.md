@@ -1,5 +1,9 @@
 # Pocket PC: scegli cosa fare, il collegamento è automatico
 
+**v0.114:** aggiorna il componente per USB25 e backup PDDi. Inventario e armi
+contiene selettore delle otto maestrie, attacco Dual Wielder 2024 e contatori
+separati. [Guida corrente](ATTACCHI-EXTRA-MAESTRIE.md). Look SD invariati.
+
 **v0.113:** componente aggiornato necessario per USB24 e nuovi backup PDDh.
 Il sito segnala anche un vecchio componente che riconosce già Associa Beyond.
 Inventario e armi contiene proprietà Leggera/Scalfire e configurazione della
