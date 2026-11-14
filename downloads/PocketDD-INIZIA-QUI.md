@@ -1,26 +1,32 @@
 # Da zero al tuo eroe — PocketD-D
 
-**Percorso attuale · v0.106**
+**Percorso attuale · v0.115**
 
-1. Dal [sito](https://shydanrem.github.io/PocketD-D/) installa o aggiorna il
-   firmware. Per un aggiornamento scegli **Conserva dati**. I look sulla SD
-   possono essere installati dalla stessa pagina, senza scaricare il pacchetto PC.
-2. Sul Pocket apri **Menu → ingranaggio → Wi-Fi → Cerca reti**, scegli la rete
-   e inserisci la password. Il gioco resta disponibile offline.
-3. Apri **I miei PG → Beyond** nella raccolta vuota, oppure l'icona d'importazione.
-   **I miei PG** guida al primo collegamento dal PC; **PG pubblico** accetta l'ID
-   numerico finale del link senza associare l'account.
-4. Verifica caratteristiche, PF, CA e limiti nell'anteprima, poi **Importa**.
-   Senza SD viene sostituita la scheda attiva; con la raccolta SD si conserva
-   prima il PG uscente. **Annulla** conserva lo stato attuale.
+1. Se il Pocket mostra già l’eroe, vai al passo 2. Altrimenti dal
+   [sito](https://shydanrem.github.io/PocketD-D/) apri **Installa / aggiorna firmware**.
+   Per conservare PG e impostazioni lascia **Aggiorna PocketD-D** selezionato.
+2. **Sul Pocket** apri Menu → ingranaggio → Wi-Fi → Cerca reti. Collega la rete,
+   poi lascia aperta la schermata del personaggio. Collega il cavo USB dati al PC.
+3. **Sul PC, Chrome/Edge**, accedi a Beyond nello stesso browser, apri
+   [Associa Beyond](https://shydanrem.github.io/PocketD-D/#beyond) e segui il
+   pulsante **Associa Beyond**. Se manca l’estensione, il sito spiega come
+   aggiungerla. Non serve scaricare l’app PC completa.
+4. Nella pagina PC consenti l’accesso se richiesto, premi **Scegli Pocket USB e
+   collega**, scegli la porta. **Il codice si apre da solo sul Pocket.**
+   Confrontalo, scegli se ricordare l’accesso e premi **Collega sul display**.
+   Attendi **Beyond collegato** sul PC prima di scollegare il cavo.
+5. **Sul Pocket**, Menu → I miei PG → **Beyond**, scegli il PG. Controlla
+   caratteristiche, PF, CA e limiti nell’anteprima, poi **Importa**. Senza SD
+   viene sostituita la scheda attiva; con raccolta SD si conserva prima il PG
+   uscente. Annulla conserva lo stato attuale.
 
-Per associare l'account la prima volta apri **Pocket PC** dal sito: l'estensione
-Chrome/Edge e il confronto del codice rimangono necessari. Se scegli di ricordare
-l'accesso, i successivi import dal Pocket non richiedono PC o ponte accesi
-finché l'accesso resta valido.
-Le nuove funzioni Wi-Fi/account sull'ESP32 restano da collaudare realmente:
-[stato software e prove](STATO-SOFTWARE.md). L'elenco nell'estensione è già stato
-confermato dall'utente; questa è una verifica distinta.
+Dopo il primo collegamento, con accesso ricordato e ancora valido, i successivi
+import richiedono solo Pocket e Wi-Fi. Look SD e backup sono strumenti separati.
+La lettura pubblica tramite ID resta disponibile senza associare l’account.
+
+Il nuovo percorso account sull’ESP32 resta da collaudare realmente; le prove
+software usano servizi e dispositivo simulati. L’elenco nell’estensione è già
+stato confermato dall’utente, separatamente dall’associazione sul dispositivo.
 
 [Guida account](COLLEGAMENTO-BEYOND.md) · [Importazione pubblica](BEYOND-DISPOSITIVO.md)
 · [Uso pratico](USO-PRATICO.md).

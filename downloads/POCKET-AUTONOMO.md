@@ -1,26 +1,36 @@
-> v0.112: sito → **Associa Beyond** → consenso iniziale/Collega Beyond → codice e
-> conferma sul Pocket → ricevuta finale. Poi **I miei PG → Beyond** dal display.
-> [Nuovo ingresso e confronto con le copie locali](ARMI-COPIE-V112.md).
-> La prova autenticata su ESP32 resta da eseguire; il nuovo percorso è verificato
-> con servizi sintetici. Nessuna sincronizzazione automatica dei progressi.
+# Pocket PC · prima associazione Beyond
 
-> v0.93: [Pocket PC](https://github.com/ShydanRem/PocketD-D/blob/main/docs/POCKET-PC.md) riunisce Beyond, SD e backup. Non serve più preparare l’accesso separatamente: prima autorizzazione, poi Collega Beyond e conferma sul display.
+**v0.115 — inizia da qui:**
+[Apri Associa Beyond sul PC](https://shydanrem.github.io/PocketD-D/#beyond).
 
-# Pocket autonomo: stato dell’integrazione Beyond
+1. **Sul Pocket:** collega il Wi-Fi da Menu → ingranaggio → Wi-Fi → Cerca reti.
+   Poi lascialo sulla schermata del personaggio e collega il cavo USB dati.
+2. **Sul PC, Chrome/Edge:** accedi a Beyond nello stesso browser. Se stai leggendo
+   questo file dallo ZIP, estrailo tutto e carica la cartella `extension` in
+   `chrome://extensions` o `edge://extensions`, con Modalità sviluppatore attiva.
+3. Torna al sito Pocket e premi **Associa Beyond**. Autorizza l’accesso se richiesto,
+   poi **Scegli Pocket USB e collega**. Seleziona la porta del dispositivo.
+4. **Il codice si apre da solo sul Pocket.** Confronta le sei cifre, scegli se
+   ricordare l’accesso e premi **Collega sul display**. Attendi **Beyond collegato**
+   nella pagina PC prima di scollegare il cavo.
+5. Sul Pocket: **Menu → I miei PG → Beyond → scegli PG → anteprima → Importa**.
+   Con accesso ricordato e ancora valido, i successivi import richiedono solo Wi-Fi.
 
-**v0.94, 3 novembre:** [connessione e recupero sul dispositivo](AUTONOMIA-RECUPERO.md).
-Richiesta ripresa dopo il Wi-Fi, riprova per ID e accesso da ricollegare distinto
-dagli errori di rete. L’estensione resta la scelta per la prima associazione;
-nessuna lettura automatica sostituisce l’anteprima e la conferma d’importazione.
-Nuovi percorsi verificati con rete/account sintetici, da collaudare sull’ESP32.
+Anche il pulsante dell’estensione **Associa Beyond** apre questo percorso.
+**Backup e look SD** apre gli altri strumenti. Il ponte sperimentale e il suo
+codice a nove cifre non servono per questa associazione.
 
-2 novembre 2026 · v0.92. Il dispositivo è il prodotto: il PC serve per
-installazione/aggiornamenti e per la prima associazione dell’account; poi il
-codice prevede scelta e importazione del PG dal Pocket tramite Wi-Fi.
-**Questo nuovo percorso deve ancora essere collaudato con l’account reale e l’ESP32.**
+[Guida completa e recupero](https://github.com/ShydanRem/PocketD-D/blob/main/docs/COLLEGAMENTO-BEYOND.md).
+L’accesso ricordato è opzionale e la memoria attuale non è cifrata: chi legge la
+flash può recuperarlo. Nessuna credenziale viene salvata nell’estensione,
+nelle schede, sulla SD o nei backup PG. Le nuove prove browser/firmware usano
+risposte simulate; **nessuna nuova associazione reale ESP32 è stata confermata**.
 
-[Guida al collegamento, alla memoria opzionale e ai limiti](https://github.com/ShydanRem/PocketD-D/blob/main/docs/COLLEGAMENTO-BEYOND.md).
-[Pagina di installazione](https://shydanrem.github.io/PocketD-D/).
+## Stato dell’integrazione Beyond
+
+Il dispositivo è il prodotto. Prima associazione da PC, poi lettura e conversione
+sul Pocket via Wi-Fi. L’anteprima e la conferma d’importazione restano necessarie;
+account, lettura HTTP, formato e correttezza dei valori sono controlli distinti.
 
 ## Che cosa è implementato
 
@@ -42,14 +52,6 @@ codice prevede scelta e importazione del PG dal Pocket tramite Wi-Fi.
 5. **Scelta account v0.92:** elenco proprio sul Pocket, rilettura e schede
    autenticate, anteprima con valori/limiti e conferma. Non usa elenchi campagna
    né fallback anonimi. Se Beyond non risponde, i PG locali restano giocabili.
-
-## Come partire quando si potrà provare
-
-Aggiorna il firmware conservando i dati e ricarica l’estensione aggiornata;
-collega il Pocket al Wi-Fi. Popup → **Apri Pocket PC → Collega Beyond**. Confronta il codice sul display, scegli se ricordare l’accesso
-in memoria non cifrata e conferma. Solo la ricevuta finale conferma l’associazione.
-Poi scegli il PG direttamente dal Pocket e verifica anteprima/limiti prima di importare.
-La guida collegata sopra contiene recupero dagli errori e scollegamento.
 
 ## Distinzione fra prove
 

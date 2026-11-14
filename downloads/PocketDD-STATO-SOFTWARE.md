@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **13 novembre 2026 — v0.114**. Il dispositivo è il prodotto;
+Aggiornamento del **14 novembre 2026 — v0.115**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
@@ -19,6 +19,27 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Associazione Beyond: inizio e passaggi espliciti · v0.115
+
+L’utente segnala che non trova da dove iniziare. La pagina iniziale ora porta
+prima a Wi-Fi sul Pocket, login Beyond nel browser e Associa Beyond dal PC.
+Il codice si apre automaticamente sul dispositivo, senza avviare un comando
+nei suoi menu. Installazione/aggiornamento dell’estensione spiegati nel punto
+necessario, Continua diretto alla vista Beyond se già rilevata. Nel popup
+estensione Associa Beyond è separato dal ponte sperimentale a nove cifre.
+
+Pagina PC dedicata con prossima azione esplicita e strumenti secondari nascosti;
+login mancante, annullamento e riprova non mostrano un successo. Il completamento
+richiede sempre la ricevuta finale dal Pocket. Sul dispositivo, Beyond è un
+pulsante leggibile nella raccolta e la guida mostra stato Wi-Fi e indirizzo sito.
+Formati PC/USB25/PDD44, partizioni, schede, impostazioni e SD invariati.
+[Passi correnti e distinzione delle prove](COLLEGAMENTO-BEYOND.md).
+
+Verifiche: 388 test JS, suite nativa completa, 173/173 viste e build ESP32-S3.
+Prove browser con API cookie/HTTP/USB simulate e viste native con servizi
+simulati. Nessuna nuova associazione reale o lettura privata confermata su
+ESP32: il riscontro dell’utente riguarda la difficoltà di iniziare il percorso.
 
 ## Nick, talento 2024 e maestrie · v0.114
 

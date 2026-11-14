@@ -1,49 +1,80 @@
-> v0.112: [Guida aggiornata e confronto delle copie](ARMI-COPIE-V112.md).
-> Dal sito premi **Associa Beyond** per aprire direttamente il percorso guidato.
-> I tre passi terminano solo dopo la ricevuta del Pocket; account reale su ESP32
-> ancora da collaudare. Aggiorna anche il componente se il sito lo richiede.
-
-> v0.106: [scelta account/ID, guida e confronto del codice](UX-RPG.md#v0106-ingresso-beyond-e-collegamento-account).
-> Ricollega apre la guida PC; codice HTTP e blocchi di conversione restano distinti.
-> Le nuove schermate sono verificate con dati sintetici, non con un login ESP32 reale.
-
-> v0.94: [ripresa dopo Wi-Fi e recupero degli errori](AUTONOMIA-RECUPERO.md).
-> Interfaccia PC v0.93 e autenticazione nativa v0.92 conservate;
-> nuove prove reali sul dispositivo ancora da eseguire.
-
 # Collega Beyond al Pocket una volta
 
-2 novembre 2026 · v0.92 · **percorso sperimentale, da collaudare sull’hardware**.
-Il codice ora comprende associazione dell’account, elenco sul Pocket e lettura
-anche autenticata delle schede. Le nuove prove usano sessioni e risposte
-sintetiche: non attestano un login reale ESP32 o la lettura reale di un PG privato.
+**14 novembre 2026 · v0.115.** Parti da questa pagina sul **PC**:
+[Associa Beyond](https://shydanrem.github.io/PocketD-D/#beyond).
+**Non devi cercare un comando di associazione sul dispositivo.** Il codice si
+apre automaticamente sul Pocket quando avvii il collegamento dalla pagina PC.
 
-![UI firmware con account e codice sintetici](previews/v092-beyond-account.png)
+## Prima volta: segui questo percorso
 
-## Prima associazione, flusso semplificato v0.93
+1. **Pocket:** acceso e sul Wi-Fi. Se manca la rete, apri **Menu → ingranaggio →
+   Wi-Fi → Cerca reti**, scegli la rete e inserisci la password. Poi lascia
+   aperta la schermata del personaggio e collega il cavo USB dati al PC.
+2. **PC, Chrome o Edge:** [accedi a Beyond](https://www.dndbeyond.com/my-characters)
+   nello stesso browser. Dal [sito Pocket](https://shydanrem.github.io/PocketD-D/#beyond)
+   premi **Associa Beyond**.
+3. **Se manca l’estensione**, il sito mostra i passaggi: scarica ed estrai lo ZIP,
+   apri `chrome://extensions` o `edge://extensions`, attiva **Modalità sviluppatore**,
+   premi **Carica estensione non pacchettizzata**, scegli la cartella `extension`.
+   Torna al sito e premi **Ho aggiunto l’estensione · continua**. Se la pagina si
+   ricarica, premi di nuovo Associa Beyond. Non serve il pacchetto PC completo.
+4. **Nella pagina che si apre**, autorizza **Inizia · consenti accesso Beyond**
+   se compare, poi **Scegli Pocket USB e collega**. Seleziona la porta del Pocket.
+   Il permesso e la scelta della porta sono richieste del browser distinte.
+5. **Adesso guarda il Pocket:** confronta le sei cifre con quelle sul PC. Lascia
+   **Ricorda accesso: SI** per poterlo usare dopo il riavvio senza PC, oppure
+   scegli NO per il solo accesso temporaneo. Premi **Collega sul display**.
+6. **Attendi Beyond collegato sul PC.** Il Pocket verifica account ed elenco via
+   Wi-Fi e, se scelto, salva/rilegge l’accesso. Solo la ricevuta finale conferma
+   l’associazione. A quel punto puoi scollegare il PC.
 
-1. Sul Pocket serve firmware **0.92 o successivo**. Dal [sito](https://shydanrem.github.io/PocketD-D/)
-   puoi aggiornarlo conservando i dati, poi **Associa Beyond**. Se manca il componente,
-   segui i passaggi iniziali mostrati dal sito per caricare l’estensione Chrome/Edge.
-2. Accedi a Beyond nello stesso browser e collega il Pocket al Wi-Fi.
-3. In Pocket PC premi **Collega Beyond**. La prima volta autorizza prima
-   **Consenti accesso a Beyond**. Non occorre una preparazione separata.
-4. Scegli la porta se necessario e confronta il codice sul PC e sul display.
-   Scegli **Ricorda accesso: SI/NO**, poi **Collega** sul Pocket. Solo dopo la
-   conferma fisica parte il trasferimento dell’accesso.
-5. Attendi **Beyond collegato** nel browser e l’elenco sul Pocket. Il dispositivo
-   verifica identità ed elenco via Wi-Fi e, se scelto, salva/rilegge l’accesso.
-   Solo la ricevuta finale conferma l’associazione. Puoi chiudere il PC.
+![Pagina PC reale prima dell’associazione, permessi e dispositivo simulati](previews/v115-association-start.png)
 
-La porta riconosciuta viene riutilizzata per Beyond, SD e backup nella stessa
-pagina. Il controllo dettagliato del solo elenco è facoltativo. La preparazione
-automatica dell’accesso resta temporanea: confronto entro due minuti, poi invio
-entro 30 secondi dalla conferma. Annullamento e commit tardivi non fingono di
-rimuovere un collegamento già salvato. [Guida Pocket PC](POCKET-PC.md).
+La pagina distingue **Sul PC**, **Sul Pocket** e **Attendi**; durante il codice
+nasconde preparazione e pulsanti d’avvio. Backup, look SD e controlli tecnici si
+aprono con **Backup, look SD e altri strumenti**, fuori dal percorso principale.
+Anche il popup dell’estensione ha il pulsante **Associa Beyond**: il codice a
+nove cifre del ponte sperimentale è un altro collegamento e qui non serve.
+
+![Guida del firmware reale con Wi-Fi simulato](previews/v115-association-device.png)
+
+### Se non va avanti
+
+- **Non sai dove iniziare:** usa il link in cima su Chrome/Edge del PC. Sul
+  dispositivo basta lasciare aperta la schermata del personaggio.
+- **Estensione non rilevata:** controlla di aver caricato la cartella estratta,
+  non lo ZIP. Ricarica la pagina del sito dopo averla installata.
+- **Estensione vecchia:** sostituisci i file nella sua cartella `extension`, premi
+  **Ricarica** nella gestione estensioni, poi ricarica il sito. Non rimuovere
+  dati o configurazioni sul Pocket.
+- **Porta occupata o assente:** chiudi installer, app PC, altre schede Pocket e
+  monitor seriali. Collega un cavo dati e riprova dalla stessa pagina.
+- **Richiesta di accesso Beyond:** accedi nello stesso browser, poi riprova.
+- **Codice sul Pocket ma Collega disabilitato:** manca il Wi-Fi. Annulla sul
+  dispositivo, collega la rete e riparti dalla pagina PC.
+- **Nessuna ricevuta finale:** associazione non confermata; leggi il messaggio
+  sul Pocket. La lettura del solo elenco nell’estensione non associa l’account.
+
+La porta verificata viene riutilizzata nella stessa pagina. Il confronto scade
+dopo due minuti; dopo la conferma l’invio deve partire entro 30 secondi.
+Annullare non dichiara annullato un collegamento eventualmente già salvato.
+
+## Cosa è verificato in questa revisione
+
+Pagina HTML/JS reale eseguita in Chromium: partenza senza permessi, login
+mancante, ritorno al percorso, annullamento e riprova, codice e ricevuta finale,
+strumenti secondari nascosti/apribili, nessun segreto in DOM/localStorage e
+larghezze 1000/390/320. Il sito è verificato con estensione assente, vecchia e
+corrente; Continua apre direttamente la vista Beyond quando la rileva.
+**Cookie, HTTP, browser-extension API e seriale sono simulati.** Le viste native
+usano servizi simulati; la compilazione ESP32 non prova il funzionamento RF/USB.
+L’utente riferisce di non trovare l’inizio: nessuna nuova associazione reale o
+lettura privata sul Pocket è stata confermata. HTTP, formato, conversione e
+ricevuta del dispositivo rimangono verifiche distinte.
 
 ## Uso autonomo
 
-Pocket → **I miei PG → Beyond** (nella raccolta vuota) oppure l’icona d’importazione apre Beyond. Se l’accesso è ricordato ma l’elenco
+Pocket → **Menu → I miei PG → Beyond**: il pulsante Beyond è scritto per esteso anche quando la raccolta contiene già personaggi. Se l’accesso è ricordato ma l’elenco
 non è in RAM, si prova a caricarlo quando il Wi-Fi è pronto. Altrimenti **Rileggi**
 carica/aggiorna l’elenco. Scegli il nome, attendi lettura/conversione, controlla
 caratteristiche, PF, CA e limiti, quindi **Importa**. Non serve lasciare il PC,
@@ -92,7 +123,7 @@ con Beyond. Offline puoi aprire i PG locali e giocare senza il servizio.
 | Preparazione/USB browser | Test JS e pagina Chromium con API cookie/serial/permessi simulate: consenso, cookie fisso, identità, cambio login, scadenza, codice prima del segreto, conferma, ricevuta finale e rifiuti; nessun segreto in DOM/localStorage |
 | Protocollo/archiviazione C | Grammatica stretta e 20.000 richieste malformate, JWT/identità/scadenza, duplicati/schema, salvataggio/rilettura/rimozione del solo namespace con NVS simulata |
 | Servizio nativo | Codice reale con HTTP/task simulati: cookie solo verso auth, bearer solo verso character-service, account atteso, elenco, lettura privata sintetica, RAM/persistenza, errori, annullamento tardivo e commit incerto |
-| UI | 148 viste LVGL, compresi confronto codice, scelta memoria, elenco e scollegamento. PG e progressi invariati dall’associazione |
+| UI | 173 viste LVGL, compresi pulsante Beyond nella raccolta, guida Wi-Fi/sito, confronto codice, scelta memoria, elenco e scollegamento. PG e progressi invariati dall’associazione |
 | Conversione | Stesso convertitore della v0.91, parità su sorgente pubblica reale già verificata; nessuna nuova lettura privata reale in questa release |
 | Hardware | Nuovi cookie MV3, handshake USB, POST autenticato ESP32, elenco e PG privati reali, persistenza dopo riavvio e prestazioni **ancora da provare** |
 
