@@ -1,4 +1,13 @@
-# Pocket PC: scegli cosa fare, il collegamento è automatico
+# Pocket PC: Beyond guidato, strumenti separati
+
+**v0.115:** per associare l’account parti da
+[Associa Beyond](https://shydanrem.github.io/PocketD-D/#beyond).
+Il codice si apre automaticamente sul Pocket: puoi lasciarlo sulla home.
+La pagina mostra chi deve agire (PC/Pocket) e la verifica in corso; backup,
+look e controlli avanzati si aprono separatamente. La stessa scelta compare
+nel popup dell’estensione. [Passi e recupero](COLLEGAMENTO-BEYOND.md).
+Questa revisione della UI richiede l’estensione 0.115; non cambia formati o
+partizioni. Sul firmware 0.115 il pulsante Beyond nella raccolta è esplicito.
 
 **v0.114:** aggiorna il componente per USB25 e backup PDDi. Inventario e armi
 contiene selettore delle otto maestrie, attacco Dual Wielder 2024 e contatori
@@ -26,15 +35,16 @@ nessuna verifica USB separata obbligatoria e nessuna preparazione manuale dell�
 
 ## Da dove partire
 
-Apri il [sito PocketD-D](https://shydanrem.github.io/PocketD-D/) e premi **Collega
-Pocket / Apri Pocket PC**. Se il componente è già caricato, si apre la sua pagina.
+Apri il [sito PocketD-D](https://shydanrem.github.io/PocketD-D/). Per l’account
+premi **Associa Beyond**; per gli altri strumenti premi **Backup e look SD**.
+Se il componente è già caricato, si apre la sua pagina.
 Il sito può solo rilevarne la presenza e aprire quella pagina: non riceve cookie,
 credenziali, dati del PG o messaggi USB.
 
 La prima volta il sito mostra come aggiungere il piccolo componente a Chrome/Edge:
 scarica lo ZIP, estrailo, apri `chrome://extensions` o `edge://extensions`, abilita
 Modalità sviluppatore e carica la cartella `extension`. Poi premi **Ho aggiunto
-Pocket · continua** sul sito. Se è già installato, sostituisci i file e ricaricalo.
+l’estensione · continua** sul sito. Se è già installato, sostituisci i file e ricaricalo.
 Chrome non permette a una pagina di installare automaticamente un’estensione
 non pubblicata nel suo store: questi passaggi iniziali non sono eliminabili.
 
@@ -46,7 +56,7 @@ Il sito scarica firmware, look o archivio PC solo quando apri lo strumento relat
 ## Beyond: un pulsante dopo il primo consenso
 
 1. Accedi a Beyond nello stesso browser e collega il Pocket al Wi-Fi.
-2. In Pocket PC premi **Collega Beyond**. Solo la prima volta compare prima
+2. In Pocket PC premi **Scegli Pocket USB e collega**. Solo la prima volta compare prima
    **Consenti accesso a Beyond**: autorizza i permessi, poi collega.
 3. Scegli la porta se non è già stata riconosciuta nella pagina. L’accesso viene
    verificato automaticamente; confronta il codice e conferma **sul Pocket**.

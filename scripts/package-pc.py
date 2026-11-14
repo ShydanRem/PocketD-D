@@ -31,6 +31,11 @@ with zipfile.ZipFile(args.output,'w',zipfile.ZIP_DEFLATED) as z:
  for name in ['node.exe','LICENSE','runtime-info.json']:z.write(runtime/name,'PocketDD-PC/runtime/'+name)
  z.writestr('PocketDD-PC/LEGGIMI.txt',f'''PocketD-D PC {version}
 
+Per associare Beyond e poi importare dal Pocket, parti dal sito:
+https://shydanrem.github.io/PocketD-D/#beyond
+Il codice si apre automaticamente sul dispositivo. Non serve il pacchetto completo.
+
+Strumenti PC avanzati / importazione locale:
 1. Estrai tutta la cartella PocketDD-PC (Windows x64).
 2. Apri Avvia-PocketDD.cmd. Node.js è già incluso: non installare altri strumenti.
 3. In Chrome o Edge segui la guida: Pocket -> Personaggio -> Al tavolo.
@@ -48,7 +53,8 @@ Uso pratico sul dispositivo, filtri e icone: docs/USO-PRATICO.md.
 Profilo PG, iniziativa e dotazioni: nuova importazione v20, firmware 0.78 / USB17.
 Wi-Fi: Menu > ingranaggio > Wi-Fi > Cerca reti; password sul display; vedi docs/WIFI.md.
 Beyond dal Pocket v0.91: I miei PG > ricerca > ID pubblico > Leggi > anteprima > Importa.
-Firmware v0.114: Nick, attacco Dual Wielder 2024, Cleave e otto maestrie configurabili.
+Firmware v0.115: associazione Beyond guidata dal sito, codice automatico sul Pocket.
+Backup e look separati; Nick, Dual Wielder 2024, Cleave e otto maestrie conservati.
 Guida docs/ATTACCHI-EXTRA-MAESTRIE.md. PC v28 / USB25 / PDDi per nuovi dati, precedenti leggibili.
 Conserva dati; aggiorna il componente PC. Look SD invariati. Effetti sui nemici assistiti al tavolo.
 Firmware v0.113: secondaria senza cambio arma, azione bonus condivisa e Scalfire/Graze 2024.

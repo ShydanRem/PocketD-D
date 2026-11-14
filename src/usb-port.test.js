@@ -50,6 +50,6 @@ test('Site relay allows an explicit Beyond view but never a supplied URL or priv
  receive({source:win,origin:location.origin,data:{...m,action:'ping'}});assert.equal(posts.at(-1).beyondEntry,true);
 });
 
-test('Installer helper: current USB25 release requires an updated component even when old Beyond routing exists',async()=>{
- const {supportsCurrentHelper}=await import('../web-install/helper-link.js');for(const v of ['0.93.0','0.112.0','0.112.99','0.113.99','bad','0.113'])assert.equal(supportsCurrentHelper(v),false);for(const v of ['0.114.0','0.114.1','0.115.0','1.0.0'])assert.equal(supportsCurrentHelper(v),true);
+test('Installer helper: current association guide requires an updated component even when old Beyond routing exists',async()=>{
+ const {supportsCurrentHelper}=await import('../web-install/helper-link.js');for(const v of ['0.93.0','0.112.0','0.112.99','0.113.99','0.114.99','bad','0.113'])assert.equal(supportsCurrentHelper(v),false);for(const v of ['0.115.0','0.115.1','0.116.0','1.0.0'])assert.equal(supportsCurrentHelper(v),true);
 });

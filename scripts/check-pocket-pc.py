@@ -9,15 +9,15 @@ class Handler(http.server.SimpleHTTPRequestHandler):
  def log_message(self,*args):pass
 server=http.server.ThreadingHTTPServer(('127.0.0.1',0),partial(Handler,directory=str(ROOT/'extension')))
 threading.Thread(target=server.serve_forever,daemon=True).start()
-diagnostic=json.loads((ROOT/'firmware/tests/fixtures/diagnostics-v1.synthetic.json').read_text());diagnostic['firmware']='0.114.0-synthetic';diagnostic['formats']['usb']=25;diagnostic['formats']['state']=44
+diagnostic=json.loads((ROOT/'firmware/tests/fixtures/diagnostics-v1.synthetic.json').read_text());diagnostic['firmware']='0.115.0-synthetic';diagnostic['formats']['usb']=25;diagnostic['formats']['state']=44
 backup=(ROOT/'firmware/tests/fixtures/device-backup-v1.synthetic.json').read_text()
 mock=r'''
-window.chooserCalls=0;window.secretWrites=0;
+window.chooserCalls=0;window.secretWrites=0;window.secretReads=0;window.permissionGranted=true;
 let reader,pending='';const nonce='0123456789abcdef0123456789abcdef',d=__DIAGNOSTIC__,backup=BACKUP,crc=CRC,hash='d439cacf0de37f60c16d3dec4e59fefe7cb19e9bf0d9feb10e3fec651d31950f';
 const push=text=>reader.enqueue(new TextEncoder().encode(text));window.approvePocket=()=>push('PDD ACCOUNT ACCEPT 1 '+nonce+'\n');
 const port={open:async()=>{pending='';port.readable=new ReadableStream({start(c){reader=c}});port.writable=new WritableStream({write(bytes){pending+=new TextDecoder().decode(bytes);let at;while((at=pending.indexOf('\n'))>=0){const line=pending.slice(0,at);pending=pending.slice(at+1);if(line==='PDD HELLO')push('PDD READY 25\n');else if(line==='PDD DIAGNOSTICS GET 1')push('PDD DIAGNOSTICS '+JSON.stringify(d)+'\n');else if(line==='PDD BACKUP HELLO')push('PDD BACKUP_READY 1\n');else if(line==='PDD BACKUP GET 1')push('PDD WAIT_BACKUP\nPDD BACKUP_DATA '+new TextEncoder().encode(backup).length+' '+crc+'\n'+backup+'\nPDD BACKUP_DONE\n');else if(line==='PDD ASSET HELLO 1')push('PDD ASSET READY 1\n');else if(line.startsWith('PDD ASSET BEGIN'))push('PDD ASSET DONE 1 '+hash+'\n');else if(line==='PDD ACCOUNT HELLO 1')push('PDD ACCOUNT CODE 1 '+nonce+' 123456\n');else if(line.startsWith('PDD ACCOUNT OFFER')){window.secretWrites++;push('PDD ACCOUNT LINKED 1 '+nonce+'\n');}}}})},close:async()=>{},setSignals:async()=>{}};
 Object.defineProperty(navigator,'serial',{value:{requestPort:async()=>{window.chooserCalls++;return port;}}});
-window.chrome={permissions:{contains:async()=>true,request:async()=>true,remove:async()=>true},cookies:{get:async()=>({value:'synthetic-session-only',expirationDate:Date.now()/1000+3600})}};
+window.chrome={permissions:{contains:async()=>window.permissionGranted,request:async()=>window.permissionGranted=true,remove:async()=>true},cookies:{get:async()=>{window.secretReads++;return window.loggedIn===false?null:{value:'synthetic-session-only',expirationDate:Date.now()/1000+3600}}}};
 '''
 mock=mock.replace('__DIAGNOSTIC__',json.dumps(diagnostic)).replace('BACKUP,crc=',json.dumps(backup)+',crc=').replace('CRC,hash=',json.dumps(f'{zlib.crc32(backup.encode()):08x}')+',hash=')
 try:
@@ -36,6 +36,7 @@ try:
    else:raise AssertionError('Unexpected remote endpoint')
    r.fulfill(status=200,headers=headers,body=json.dumps(data))
   context.route('**/*',route);page=context.new_page();errors=[];page.on('pageerror',lambda e:errors.append(str(e)));page.goto(local+'account.html#beyond');assert page.evaluate("Boolean(document.querySelector('#beyond').compareDocumentPosition(document.querySelector('.device-card'))&Node.DOCUMENT_POSITION_FOLLOWING)")
+  expect(page.locator('#device-looks')).not_to_be_visible();expect(page.locator('.read-only-check')).not_to_be_visible();page.locator('#show-tools').click()
   page.locator('#device-looks').click();expect(page.locator('#device-status')).to_contain_text('già aggiornati',timeout=15000);assert page.evaluate('chooserCalls')==1
   page.locator('#connect').click();expect(page.locator('#pair-code')).to_have_text('123456');expect(page.locator('[data-pair-step=\"1\"]')).to_have_attribute('data-state','current');expect(page.locator('#pair-finish')).not_to_be_visible();assert page.evaluate('chooserCalls')==1 and page.evaluate('secretWrites')==0;expect(page.locator('#device-backup')).to_be_disabled()
   page.evaluate('approvePocket()');expect(page.locator('#link-status')).to_contain_text('Beyond collegato');expect(page.locator('#pair-finish')).to_be_visible();assert page.locator('.pair-steps [data-state=done]').count()==3;assert page.evaluate('secretWrites')==1
@@ -43,9 +44,23 @@ try:
   assert Path(saved.value.path()).read_text()==backup;expect(page.locator('#device-status')).to_contain_text('Backup verificato')
   page.locator('#device-looks').click();expect(page.locator('#device-status')).to_contain_text('già aggiornati',timeout=15000);assert page.evaluate('chooserCalls')==1
   page.locator('#device-file').set_input_files({'name':'bad.json','mimeType':'application/json','buffer':b'{}'});expect(page.locator('#device-status')).not_to_contain_text('già aggiornati');assert page.evaluate('chooserCalls')==1
-  page.locator('#connection-info>summary').click();page.locator('#device-change').click();expect(page.locator('#device-status')).to_contain_text('firmware 0.114.0-synthetic');assert page.evaluate('chooserCalls')==2
+  page.locator('#connection-info>summary').click();page.locator('#device-change').click();expect(page.locator('#device-status')).to_contain_text('firmware 0.115.0-synthetic');assert page.evaluate('chooserCalls')==2
   assert 'synthetic-session-only' not in page.locator('body').inner_text() and page.evaluate('localStorage.length')==0
   for width in [1000,390,320]:page.set_viewport_size({'width':width,'height':1000});assert page.evaluate('document.documentElement.scrollWidth<=innerWidth')
-  page.set_viewport_size({'width':1000,'height':1000});page.locator('#connection-info>summary').click();page.locator('main').screenshot(path='/workspace/PocketDD-PC-hub-preview.png');assert not errors,errors;browser.close()
- print('PASS Pocket PC: one chooser across real UI connection/account/native backup/SD, fresh physical approval before secret, exclusive operations, explicit change, malformed restore rejected, responsive and no secret in DOM/storage. All Chrome, Beyond and hardware responses synthetic.')
+  page.set_viewport_size({'width':1000,'height':1000});page.locator('#connection-info>summary').click();page.locator('main').screenshot(path='/workspace/PocketDD-PC-hub-preview.png');assert not errors,errors
+  # First association, no cookie permission and no login: the production UI
+  # must explain the next action, recover and still require physical approval.
+  fresh=browser.new_context(viewport={'width':1000,'height':1100});fresh.add_init_script(mock+'\nwindow.permissionGranted=false;window.loggedIn=false;');fresh.route('**/*',route);first=fresh.new_page();first.on('pageerror',lambda e:errors.append(str(e)));first.goto(local+'account.html#beyond')
+  expect(first.locator('#prepare')).to_be_visible();expect(first.locator('#connect')).not_to_be_visible();expect(first.locator('#pair-start')).to_contain_text('si aprirà da solo');assert first.evaluate('chooserCalls===0&&secretReads===0&&secretWrites===0')
+  first.get_by_role('link',name='Come collego il Wi-Fi?').click();expect(first.locator('#wifi-help')).to_have_attribute('open','');assert first.evaluate("location.hash==='#beyond'&&document.body.classList.contains('beyond-focus')")
+  first.locator('#prepare').click();expect(first.locator('#connect')).to_be_visible();assert first.evaluate('chooserCalls===0&&secretReads===0')
+  first.locator('#connect').click();expect(first.locator('#link-status')).to_contain_text('Accedi a Beyond');expect(first.locator('#link-retry-help')).to_be_visible();expect(first.locator('#pair-finish')).not_to_be_visible();assert first.evaluate('secretWrites===0')
+  first.evaluate('window.loggedIn=true');first.locator('#connect').click();expect(first.locator('#pair-code')).to_have_text('123456');expect(first.locator('#pair-start')).not_to_be_visible();expect(first.locator('#connect')).not_to_be_visible();expect(first.locator('#pair-instruction')).to_contain_text('Sul Pocket');assert first.evaluate('secretWrites===0')
+  first.locator('#cancel-link').click();expect(first.locator('#connect')).to_be_visible();expect(first.locator('#pair-code')).to_have_text('');assert first.evaluate('secretWrites===0')
+  first.locator('#connect').click();expect(first.locator('#pair-code')).to_have_text('123456');first.screenshot(path='/workspace/PocketDD-Beyond-code-preview.png',full_page=True);first.evaluate('approvePocket()');expect(first.locator('#pair-finish')).to_be_visible();expect(first.locator('#connect')).not_to_be_visible();assert first.evaluate('secretWrites===1')
+  first.locator('#show-tools').click();expect(first.locator('#device-looks')).to_be_visible();assert 'synthetic-session-only' not in first.locator('body').inner_text() and first.evaluate('localStorage.length')==0
+  first.reload();expect(first.locator('#prepare')).to_be_visible()
+  for width in [1000,390,320]:first.set_viewport_size({'width':width,'height':1100});assert first.evaluate('document.documentElement.scrollWidth<=innerWidth')
+  first.set_viewport_size({'width':1000,'height':1100});first.screenshot(path='/workspace/PocketDD-Beyond-start-preview.png',full_page=True);assert not errors,errors;fresh.close();browser.close()
+ print('PASS Pocket PC: first association without permissions/login, actionable retry, cancel/restart, focused view and optional tools; one chooser across real UI connection/account/native backup/SD, fresh physical approval before secret, exclusive operations, explicit change, malformed restore rejected, responsive and no secret in DOM/storage. All Chrome, Beyond and hardware responses synthetic.')
 finally:server.shutdown();server.server_close()

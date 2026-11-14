@@ -11,16 +11,16 @@ static void render_beyond(void){
     char text[160];beyond_target_count=0;
     pd_beyond_info current;pd_beyond_snapshot(&current);pd_wifi_info wifi;pd_wifi_snapshot(&wifi);bool online=beyond_online(&wifi);
     if(beyond_guide&&(page==BEYOND_ACCOUNT||page==BEYOND_RECOVER)){
-        label("Collega dal PC",83,111,300,true);
-        beyond_step(PD_UI_PC,"1. Associa Beyond","Sul sito PocketD-D dal PC",165);
-        beyond_step(PD_UI_ACCOUNT,"2. Collega Beyond","Accedi e collega il cavo USB",229);
-        beyond_step(PD_UI_LOCK,"3. Conferma il codice","Stesso codice sui due schermi",293);
+        label("Inizia dal sito sul PC",83,111,300,true);
+        beyond_step(PD_UI_WIFI,online?"1. Wi-Fi pronto":"1. Collega il Wi-Fi",online?"Poi collega il cavo USB":"Wi-Fi nelle impostazioni",165);
+        beyond_step(PD_UI_PC,"2. PC: Associa Beyond","shydanrem.github.io/PocketD-D",229);
+        beyond_step(PD_UI_LOCK,"3. Codice automatico","Qui si apre da solo: conferma",293);
         beyond_control("Indietro",83,359,page==BEYOND_ACCOUNT?144:300,48,B_GUIDE_BACK,true);
         if(page==BEYOND_ACCOUNT)beyond_control("Wi-Fi",239,359,144,48,B_WIFI,true);
     }else if(page==BEYOND_ACCOUNT){
         if(!current.configured){
             label("Importa un PG",83,111,300,true);
-            beyond_card("Collega Beyond",PD_UI_ACCOUNT,"I miei PG","Primo collegamento dal PC",83,165,300,64,B_GUIDE,!current.locked);
+            beyond_card("Collega Beyond",PD_UI_ACCOUNT,"Associa Beyond","Prima volta? Inizia dal sito PC",83,165,300,64,B_GUIDE,!current.locked);
             beyond_card("PG pubblico",PD_UI_SHEET,"PG pubblico","ID, senza collegare l'account",83,237,300,64,B_PUBLIC,true);
             connection_note(current.locked?"Accesso incerto: riavvia Pocket":beyond_notice[0]?beyond_notice:online?"Wi-Fi collegato":"Wi-Fi da collegare",315,40,current.locked||beyond_notice[0]||!online?PD_GOLD:PD_MUTED);
             beyond_control("Indietro",83,359,144,48,B_BACK,true);beyond_control("Wi-Fi",239,359,144,48,B_WIFI,true);

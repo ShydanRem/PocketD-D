@@ -110,7 +110,7 @@ static void render_library(void){
         else{lv_obj_t *notice=small_label(library_notice,83,311,300,PD_DANGER);lv_label_set_long_mode(notice,LV_LABEL_LONG_WRAP);lv_obj_set_height(notice,40);}
         library_control("Indietro",83,359,144,48,5304,!library_failed);library_control("Apri e gioca",239,359,144,48,5305,!library_failed&&power_storage_ready());
     }else{
-        label("I miei PG",83,111,244,true);
+        label("I miei PG",83,111,192,true);
         lv_obj_t *notice=small_label(library_notice,83,153,300,PD_GOLD);lv_label_set_long_mode(notice,LV_LABEL_LONG_WRAP);lv_obj_set_height(notice,38);
         for(unsigned i=0;i<3&&library_page*3+i<library_catalog.count;i++){
             const pd_library_entry *e=library_catalog.entries+library_page*3+i;bool known=e->status==PD_LIBRARY_OK||e->status==PD_LIBRARY_RECOVERED;
@@ -123,7 +123,7 @@ static void render_library(void){
             small_label("Wi-Fi dal Pocket | USB dal PC",83,311,300,PD_MUTED);
         }
         library_control("Indietro",83,359,92,48,5301,true);library_control("<",187,359,92,48,5302,library_page>0);library_control(">",291,359,92,48,5303,(library_page+1)*3<library_catalog.count);
-        if(library_target_count<7)library_targets[library_target_count++]=icon_button("Importa da Beyond",PD_UI_SEARCH,335,99,48,44,5440,true);
+        library_control("Beyond",287,99,96,44,5440,true);
     }
     library_mark_focus();
 }

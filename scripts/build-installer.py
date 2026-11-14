@@ -446,3 +446,11 @@ section='''<section class="after"><h2>Nick, attacchi extra e maestrie · v0.114<
 <p><a href="downloads/PocketDD-ATTACCHI-EXTRA-MAESTRIE.md">Guida, compatibilita e limiti</a>. Aggiorna firmware e componente PC insieme con <strong>Conserva dati</strong>; look SD invariati. Nuove prove software sintetiche, da collaudare sul dispositivo. Nessuna nuova lettura o scrittura Beyond.</p>
 <div class="import-captures"><img src="assets/extra114-nick.png" width="466" height="466" alt="Nick selezionato con dati sintetici e costo Light distinto dalla bonus"><img src="assets/extra114-topple.png" width="466" height="466" alt="Maestria Topple assistita: CD dal colpo sintetico ed esito del DM"></div></section>'''
 page.write_text(page.read_text().replace('<section class="after">',section+'<section class="after">',1))
+
+# Association entry: real production UI with synthetic services/device only.
+for name in ('v115-association-start.png','v115-association-code.png','v115-association-device.png'):
+ shutil.copyfile(ROOT/'docs/previews'/name,out/'downloads/previews'/name)
+section='''<section class="after"><h2>Associa Beyond: inizia da qui · v0.115</h2>
+<p>Wi-Fi sul Pocket, login Beyond sul PC e Associa Beyond dal sito. Il codice si apre automaticamente sul dispositivo: puoi lasciarlo sulla schermata del personaggio. La pagina indica chi deve agire, separando il collegamento da backup, look e prove tecniche.</p>
+<p><a href="downloads/PocketDD-COLLEGAMENTO-BEYOND.md">Istruzioni correnti e recupero</a>. Aggiorna l’estensione Pocket PC e, per il nuovo pulsante Beyond nella raccolta, il firmware con Aggiorna PocketD-D. PG, impostazioni e SD conservati. Prove browser e firmware con servizi simulati; nessuna nuova associazione reale ESP32 o lettura privata confermata.</p></section>'''
+page.write_text(page.read_text().replace('<section class="after">',section+'<section class="after">',1))

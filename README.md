@@ -6,6 +6,13 @@ Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixe
 Firmware e look SD dal browser; nuovo percorso Beyond autonomo via Wi-Fi, da collaudare.
 [Come pubblicare gli aggiornamenti](docs/GITHUB-PAGES.md).
 
+**v0.115 — [Da dove inizio per associare Beyond?](docs/COLLEGAMENTO-BEYOND.md)**
+Sul [sito dal PC](https://shydanrem.github.io/PocketD-D/#beyond) premi **Associa Beyond**.
+Pocket sul Wi-Fi e collegato via USB: puoi lasciarlo sulla schermata del personaggio,
+il codice si apre da solo. La pagina indica PC/Pocket/attesa e separa gli strumenti
+secondari. Nuova interfaccia verificata con servizi simulati; associazione reale
+sull’ESP32 ancora da confermare. [Stato corrente](docs/STATO-SOFTWARE.md).
+
 **v0.95 — [Magie: prepara insieme e scegli lo slot](docs/MAGIE-USO-RAPIDO.md):**
 bozza di preparazione multipla, riepilogo e unico salvataggio; selettore diretto
 ordinari/patto per magie, Punizione e creazione del cannone. Proposta del livello

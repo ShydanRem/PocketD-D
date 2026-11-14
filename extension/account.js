@@ -25,7 +25,7 @@ find('check').onclick = async () => {
       term.textContent=label;value.textContent=result.checks[key]===null?'Da fare':result.checks[key]?'OK':'Fallito';
       find('checks').append(term,value);
     }
-    find('status').textContent = result.ok ? 'Login ed elenco letti. Puoi preparare il collegamento al Pocket nella sezione qui sotto.'
+    find('status').textContent = result.ok ? 'Login ed elenco letti. Per associare il Pocket usa il percorso Collega il tuo account Beyond, in alto.'
       : result.message + (result.status[result.stage] ? ' HTTP '+result.status[result.stage]+'.' : '');
     if (!result.ok) return;
     find('catalog').hidden=false;
