@@ -1,6 +1,6 @@
 # Da zero al tuo eroe — PocketD-D
 
-**Percorso attuale · v0.115**
+**Percorso attuale · v0.116**
 
 1. Se il Pocket mostra già l’eroe, vai al passo 2. Altrimenti dal
    [sito](https://shydanrem.github.io/PocketD-D/) apri **Installa / aggiorna firmware**.

@@ -1,5 +1,11 @@
 # Pocket PC: Beyond guidato, strumenti separati
 
+**v0.116:** corretti ritorno Beyond → strumenti, Continua del sito e diagnostici
+che interrompevano l’associazione. Benvenuto automatico alla sola prima installazione,
+cambio porta diretto, dodici motivi di errore e azione di recupero. Sul Pocket
+Wi-Fi dal codice senza perdere i PG; richiede firmware 0.116 per la nuova vista.
+[Report e prove distinte](REVISIONE-USO-V116.md).
+
 **v0.115:** per associare l’account parti da
 [Associa Beyond](https://shydanrem.github.io/PocketD-D/#beyond).
 Il codice si apre automaticamente sul Pocket: puoi lasciarlo sulla home.
