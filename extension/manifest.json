@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "PocketD-D · Pocket PC",
-  "version": "0.115.0",
+  "version": "0.116.0",
   "description": "Pocket PC: collegamento USB, Beyond, look SD e backup del proprio Pocket.",
   "permissions": [
     "storage",

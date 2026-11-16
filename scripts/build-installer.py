@@ -454,3 +454,13 @@ section='''<section class="after"><h2>Associa Beyond: inizia da qui · v0.115</h
 <p>Wi-Fi sul Pocket, login Beyond sul PC e Associa Beyond dal sito. Il codice si apre automaticamente sul dispositivo: puoi lasciarlo sulla schermata del personaggio. La pagina indica chi deve agire, separando il collegamento da backup, look e prove tecniche.</p>
 <p><a href="downloads/PocketDD-COLLEGAMENTO-BEYOND.md">Istruzioni correnti e recupero</a>. Aggiorna l’estensione Pocket PC e, per il nuovo pulsante Beyond nella raccolta, il firmware con Aggiorna PocketD-D. PG, impostazioni e SD conservati. Prove browser e firmware con servizi simulati; nessuna nuova associazione reale ESP32 o lettura privata confermata.</p></section>'''
 page.write_text(page.read_text().replace('<section class="after">',section+'<section class="after">',1))
+
+# Reviewed production flows; captures use synthetic services only.
+shutil.copyfile(ROOT/'docs/REVISIONE-USO-V116.md',out/'downloads/PocketDD-REVISIONE-USO-V116.md')
+for name in ('v116-beyond-recovery.png','v116-pair-wifi.png'):
+ shutil.copyfile(ROOT/'docs/previews'/name,out/'downloads/previews'/name)
+section='''<section class="after"><h2>Beyond: collegamento e recupero rivisti · v0.116</h2>
+<p>La prima installazione dell’estensione apre la guida. Cambio porta USB diretto, ritorno corretto a backup e look, fasi precise prima del codice e comandi diagnostici protetti durante il collegamento.</p>
+<p>Se manca la rete, dal codice sul Pocket premi Wi-Fi e collega la rete; poi riprova dal PC con un nuovo codice. Dodici motivi di errore distinti con azioni di recupero. Aggiorna estensione e firmware per tutte le novità, usando Aggiorna PocketD-D: PG, SD e impostazioni conservati.</p>
+<p><a href="downloads/PocketDD-REVISIONE-USO-V116.md">Report della revisione, prove e limiti</a>. Prove software con servizi simulati, build ESP32-S3; nuova associazione reale e lettura privata sul dispositivo ancora da confermare. Nessuna scrittura Beyond.</p></section>'''
+page.write_text(page.read_text().replace('<section class="after">',section+'<section class="after">',1))

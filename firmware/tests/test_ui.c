@@ -2255,7 +2255,7 @@ int main(void) {
     beyond_account_request(request);assert(page==BEYOND_PAIR&&beyond_pairing);click("Collega");assert(beyond_approved);
     request->kind=PD_ACCOUNT_OFFER;strcpy(request->nonce,beyond_nonce);request->access.version=1;strcpy(request->access.user,"1234");strcpy(request->access.cookie,"synthetic-session");
     beyond_account_request(request);assert(page==BEYOND_BUSY);beyond_mock.reconnect=false;beyond_mock.running=false;beyond_mock.phase=PD_BEYOND_FAILED;beyond_mock.error=PD_BEYOND_NETWORK;
-    beyond_poll();assert(page==BEYOND_RECOVER&&!beyond_pairing&&strstr(last_reply,"ACCOUNT FAILED"));
+    beyond_poll();assert(page==BEYOND_RECOVER&&!beyond_pairing&&strstr(last_reply,"ACCOUNT FAILED")&&strstr(last_reply," network\n"));
     unsigned links=beyond_link_calls;act(B_RETRY);beyond_poll();assert(page==BEYOND_RECOVER&&beyond_link_calls==links);
     pd_account_wipe(request,sizeof *request);free(request);click("Indietro");beyond_mock.reconnect=true;
     page=LIBRARY_HOME;render();act(B_OPEN);assert(page==BEYOND_ACCOUNT&&beyond_list_calls==lists+2);
@@ -2670,6 +2670,14 @@ int main(void) {
        starts an invalid Wi-Fi retry of the failed LINK operation. */
     beyond_retry_operation=PD_BEYOND_LINK;beyond_failed(PD_BEYOND_SESSION);render();click("Guida PC");assert(beyond_guide&&page==BEYOND_RECOVER);act(B_WIFI);act(B_RETRY);assert(page==BEYOND_RECOVER&&beyond_guide&&beyond_start_calls==starts&&beyond_link_calls==links&&wifi_command_calls==commands);
     pd_account_request *request=calloc(1,sizeof *request);assert(request);request->kind=PD_ACCOUNT_HELLO;beyond_account_request(request);assert(page==BEYOND_PAIR&&!beyond_guide&&beyond_pairing&&!beyond_approved);bounds();wrapped_tree_fits(lv_screen_active());screenshot("ux106-code.ppm");
+    /* Every recovery reply uses a fixed reason and the current challenge only. */
+    const unsigned pair_errors[]={PD_BEYOND_NO_WIFI,PD_BEYOND_TIME,PD_BEYOND_SESSION,PD_BEYOND_IDENTITY,PD_BEYOND_CATALOG_ERROR,PD_BEYOND_STORAGE,PD_BEYOND_MEMORY,PD_BEYOND_TIMEOUT,PD_BEYOND_BUSY,PD_BEYOND_RATE,PD_BEYOND_MIME,PD_BEYOND_NETWORK};
+    const char *pair_reasons[]={"wifi","clock","login","identity","catalog","storage","memory","timeout","busy","rate","format","network"};
+    for(unsigned i=0;i<sizeof pair_errors/sizeof pair_errors[0];i++){beyond_pair_failure(pair_errors[i]);char expected[112];snprintf(expected,sizeof expected,"PDD ACCOUNT FAILED 1 %s %s\n",beyond_nonce,pair_reasons[i]);assert(!strcmp(last_reply,expected));}
+    /* Offline recovery invalidates the code without approving or sending access. */
+    wifi_mock.state=PD_WIFI_OFF;beyond_poll();assert(named_control("Wi-Fi")&&!named_control("Collega"));
+    act(B_APPROVE);assert(!beyond_approved);click("Wi-Fi");assert(page==WIFI_HOME&&!beyond_pairing&&beyond_wifi_return&&strstr(last_reply," wifi\n")&&beyond_link_calls==links);bounds();wrapped_tree_fits(lv_screen_active());screenshot("ux116-pair-wifi.ppm");
+    click("Indietro");assert(page==BEYOND_ACCOUNT);wifi_mock.state=PD_WIFI_CONNECTED;beyond_account_request(request);assert(page==BEYOND_PAIR&&!beyond_approved);
     assert(visible_text(lv_screen_active(),"Memoria non cifrata: chi legge la flash puo recuperare l'accesso."));uint32_t pair_clock=beyond_pair_started;click("Ricorda accesso: SI");assert(!beyond_remember&&beyond_pair_started==pair_clock);wrapped_tree_fits(lv_screen_active());screenshot("ux106-temporary.ppm");
     request->kind=PD_ACCOUNT_OFFER;strcpy(request->nonce,beyond_nonce);beyond_account_request(request);assert(page==BEYOND_PAIR&&!beyond_approved&&beyond_link_calls==links);click("Annulla");assert(page==BEYOND_ACCOUNT&&!beyond_pairing&&!beyond_nonce[0]&&!beyond_code[0]&&beyond_mock.configured);pd_account_wipe(request,sizeof *request);free(request);
     assert(save_calls==writes&&history_save_calls==journal_writes&&random_calls==draws&&!memcmp(&state,&before,sizeof state)&&!memcmp(&history,&before_history,sizeof history));

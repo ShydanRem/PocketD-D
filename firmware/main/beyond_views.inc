@@ -42,11 +42,12 @@ static void render_beyond(void){
             beyond_control("Indietro",83,359,92,48,B_BACK,true);beyond_control("<",187,359,92,48,B_PREV,beyond_catalog_page>0);beyond_control(">",291,359,92,48,B_NEXT,(beyond_catalog_page+1)*2<current.count);
         }
     }else if(page==BEYOND_PAIR){
+        beyond_pair_online=online;
         label("Confronta il codice",83,111,300,true);lv_obj_t *code=label(beyond_code,83,157,300,true);label_font(code,&pd_pixel_6);lv_obj_set_style_text_color(code,lv_color_hex(PD_GOLD),0);
         connection_note(beyond_approved?"Attendo l'accesso dal browser":"Lo stesso codice deve apparire sul PC",209,20,PD_MUTED);
         beyond_card(beyond_remember?"Ricorda accesso: SI":"Ricorda accesso: NO",PD_UI_LOCK,"Ricorda accesso",beyond_remember?"Si, resta dopo il riavvio":"No, fino allo spegnimento",83,233,300,60,B_REMEMBER,!beyond_approved);
         connection_note(!online?"Collega prima il Wi-Fi e riprova":beyond_remember?"Memoria non cifrata: chi legge la flash puo recuperare l'accesso.":"Solo fino allo spegnimento. Il vecchio accesso salvato sara rimosso.",301,52,!online?PD_GOLD:PD_TEXT);
-        beyond_control("Annulla",83,359,144,48,B_BACK,true);beyond_control("Collega",239,359,144,48,B_APPROVE,online&&!beyond_approved);
+        beyond_control("Annulla",83,359,144,48,B_BACK,true);beyond_control(!online&&!beyond_approved?"Wi-Fi":"Collega",239,359,144,48,!online&&!beyond_approved?B_WIFI:B_APPROVE,!beyond_approved);
     }else if(page==BEYOND_FORGET){
         label("Scollegare Beyond?",83,111,300,true);
         status_tile(PD_UI_LOCK,"Accesso","Da rimuovere",83,169);status_tile(PD_UI_HOME,"Personaggi","Conservati",239,169);

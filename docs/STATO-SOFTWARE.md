@@ -1,6 +1,6 @@
 # PocketD-D: stato e lavoro rimanente
 
-Aggiornamento del **14 novembre 2026 — v0.115**. Il dispositivo è il prodotto;
+Aggiornamento del **16 novembre 2026 — v0.116**. Il dispositivo è il prodotto;
 l’obiettivo è renderlo autonomo anche per l’importazione Beyond. Il firmware
 ora contiene lettura e conversione Wi-Fi dei PG pubblici tramite ID, da collaudare
 sull’hardware. Il PC resta utile per installazione/aggiornamenti, backup e il
@@ -19,6 +19,26 @@ ora pubblico per scelta del proprietario. Il ramo gh-pages contiene il sito
 compilato e si aggiorna con il publisher verificato. Firmware e look SD si
 aggiornano dal browser; il pacchetto locale conserva il connettore Beyond PC.
 Non si pubblicano credenziali, raccolte o JSON completi di personaggi.
+
+## Revisione pratica e recupero Beyond · v0.116
+
+[Report della revisione e limiti](REVISIONE-USO-V116.md). Corretti instradamento
+Beyond/strumenti nella scheda riutilizzata e nel Continua del sito, accesso
+iniziale dopo installazione estensione, cambio porta USB nel percorso guidato,
+fasi prima del codice e comandi diagnostici che interrompevano l’associazione.
+
+Sul Pocket il codice senza rete offre **Wi-Fi**, con aggiornamento al cambio
+connessione e verifica anche nel comando Collega. Il PC distingue dodici errori
+nativi e propone l’azione utile, senza trasferire corpi HTTP o dati personali.
+Scadenza unica della conferma, segnalazione riavvii USB e nuovo collegamento a un
+altro Pocket dopo il successo. Formati, partizioni e dati personali invariati.
+
+Nuova estensione 0.116; firmware 0.116 per Wi-Fi dal codice e motivi di errore.
+Il nuovo componente supporta anche firmware 0.92–0.115, con i vecchi messaggi.
+Verifiche: **393 test JS**, suite nativa completa, **173/173 viste**, ASan/UBSan,
+browser e build ESP32-S3. Circa **136 KiB** liberi nella partizione applicazione.
+Nessuna nuova conferma reale dell’associazione su ESP32 o lettura privata:
+prove software e collaudo fisico restano distinti.
 
 ## Associazione Beyond: inizio e passaggi espliciti · v0.115
 

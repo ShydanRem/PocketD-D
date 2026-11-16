@@ -6,6 +6,13 @@ Un compagno tascabile per le sessioni di gioco di ruolo: il proprio eroe in pixe
 Firmware e look SD dal browser; nuovo percorso Beyond autonomo via Wi-Fi, da collaudare.
 [Come pubblicare gli aggiornamenti](docs/GITHUB-PAGES.md).
 
+**v0.116 — [Revisione pratica del software e del collegamento Beyond](docs/REVISIONE-USO-V116.md)**
+Cambio porta nel percorso guidato, benvenuto dopo la prima installazione,
+Wi-Fi direttamente dal codice sul Pocket e messaggi d’errore con recupero.
+Corretti scheda strumenti nascosta, Continua verso la vista sbagliata e controlli
+che interrompevano l’associazione. Nessun cambiamento a PG o formati; nuovo
+collegamento reale ESP32 ancora da confermare.
+
 **v0.115 — [Da dove inizio per associare Beyond?](docs/COLLEGAMENTO-BEYOND.md)**
 Sul [sito dal PC](https://shydanrem.github.io/PocketD-D/#beyond) premi **Associa Beyond**.
 Pocket sul Wi-Fi e collegato via USB: puoi lasciarlo sulla schermata del personaggio,

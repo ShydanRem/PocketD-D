@@ -1,6 +1,6 @@
 # Pocket PC · prima associazione Beyond
 
-**v0.115 — inizia da qui:**
+**v0.116 — inizia da qui:**
 [Apri Associa Beyond sul PC](https://shydanrem.github.io/PocketD-D/#beyond).
 
 1. **Sul Pocket:** collega il Wi-Fi da Menu → ingranaggio → Wi-Fi → Cerca reti.
@@ -8,13 +8,18 @@
 2. **Sul PC, Chrome/Edge:** accedi a Beyond nello stesso browser. Se stai leggendo
    questo file dallo ZIP, estrailo tutto e carica la cartella `extension` in
    `chrome://extensions` o `edge://extensions`, con Modalità sviluppatore attiva.
-3. Torna al sito Pocket e premi **Associa Beyond**. Autorizza l’accesso se richiesto,
+3. Alla prima installazione si apre già la pagina Beyond. Se non compare,
+   torna al sito Pocket e premi **Associa Beyond**. Autorizza l’accesso se richiesto,
    poi **Scegli Pocket USB e collega**. Seleziona la porta del dispositivo.
 4. **Il codice si apre da solo sul Pocket.** Confronta le sei cifre, scegli se
    ricordare l’accesso e premi **Collega sul display**. Attendi **Beyond collegato**
    nella pagina PC prima di scollegare il cavo.
 5. Sul Pocket: **Menu → I miei PG → Beyond → scegli PG → anteprima → Importa**.
    Con accesso ricordato e ancora valido, i successivi import richiedono solo Wi-Fi.
+
+Con firmware 0.116, se sul codice manca la rete, premi **Wi-Fi** sul Pocket,
+collega la rete e riprova dal PC: compare un nuovo codice da confermare. Per
+cambiare dispositivo usa **Cambia Pocket USB** o **Collega un altro Pocket**.
 
 Anche il pulsante dell’estensione **Associa Beyond** apre questo percorso.
 **Backup e look SD** apre gli altri strumenti. Il ponte sperimentale e il suo

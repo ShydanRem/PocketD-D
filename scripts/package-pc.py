@@ -53,7 +53,8 @@ Uso pratico sul dispositivo, filtri e icone: docs/USO-PRATICO.md.
 Profilo PG, iniziativa e dotazioni: nuova importazione v20, firmware 0.78 / USB17.
 Wi-Fi: Menu > ingranaggio > Wi-Fi > Cerca reti; password sul display; vedi docs/WIFI.md.
 Beyond dal Pocket v0.91: I miei PG > ricerca > ID pubblico > Leggi > anteprima > Importa.
-Firmware v0.115: associazione Beyond guidata dal sito, codice automatico sul Pocket.
+Firmware v0.116: Wi-Fi dal codice, cambio porta e recupero guidato degli errori Beyond.
+Report: docs/REVISIONE-USO-V116.md. Associazione reale ESP32 ancora da confermare.
 Backup e look separati; Nick, Dual Wielder 2024, Cleave e otto maestrie conservati.
 Guida docs/ATTACCHI-EXTRA-MAESTRIE.md. PC v28 / USB25 / PDDi per nuovi dati, precedenti leggibili.
 Conserva dati; aggiorna il componente PC. Look SD invariati. Effetti sui nemici assistiti al tavolo.

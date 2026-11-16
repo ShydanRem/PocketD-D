@@ -1,6 +1,6 @@
 # Collega Beyond al Pocket una volta
 
-**14 novembre 2026 · v0.115.** Parti da questa pagina sul **PC**:
+**16 novembre 2026 · v0.116.** Parti da questa pagina sul **PC**:
 [Associa Beyond](https://shydanrem.github.io/PocketD-D/#beyond).
 **Non devi cercare un comando di associazione sul dispositivo.** Il codice si
 apre automaticamente sul Pocket quando avvii il collegamento dalla pagina PC.
@@ -16,8 +16,10 @@ apre automaticamente sul Pocket quando avvii il collegamento dalla pagina PC.
 3. **Se manca l’estensione**, il sito mostra i passaggi: scarica ed estrai lo ZIP,
    apri `chrome://extensions` o `edge://extensions`, attiva **Modalità sviluppatore**,
    premi **Carica estensione non pacchettizzata**, scegli la cartella `extension`.
-   Torna al sito e premi **Ho aggiunto l’estensione · continua**. Se la pagina si
-   ricarica, premi di nuovo Associa Beyond. Non serve il pacchetto PC completo.
+   Alla prima installazione si apre già la pagina Beyond. Se non compare,
+   torna al sito e premi **Ho aggiunto l’estensione · continua**. Se la pagina si
+   ricarica, continua automaticamente verso la pagina richiesta quando rileva
+   l’estensione; se non la rileva mostra cosa controllare. Non serve il pacchetto PC completo.
 4. **Nella pagina che si apre**, autorizza **Inizia · consenti accesso Beyond**
    se compare, poi **Scegli Pocket USB e collega**. Seleziona la porta del Pocket.
    Il permesso e la scelta della porta sono richieste del browser distinte.
@@ -50,8 +52,15 @@ nove cifre del ponte sperimentale è un altro collegamento e qui non serve.
 - **Porta occupata o assente:** chiudi installer, app PC, altre schede Pocket e
   monitor seriali. Collega un cavo dati e riprova dalla stessa pagina.
 - **Richiesta di accesso Beyond:** accedi nello stesso browser, poi riprova.
-- **Codice sul Pocket ma Collega disabilitato:** manca il Wi-Fi. Annulla sul
-  dispositivo, collega la rete e riparti dalla pagina PC.
+- **Codice sul Pocket ma manca il Wi-Fi:** con firmware 0.116 premi **Wi-Fi**
+  sul display, collega la rete e premi **Wi-Fi pronto · riprova** sul PC. Il
+  vecchio codice viene chiuso; confronta e conferma quello nuovo. Con firmware
+  precedente annulla il codice e collega la rete dalle impostazioni.
+- **Porta sbagliata o altro Pocket:** usa **Cambia Pocket USB** nella pagina
+  Beyond, poi scegli la porta. Dopo un successo usa **Collega un altro Pocket**.
+- **Errore dopo la conferma:** dalla 0.116 il browser indica il motivo e l’azione
+  utile: login, Wi-Fi/Internet, orologio, salvataggio o altro. Il salvataggio non
+  confermato richiede il controllo del display e un riavvio prima di riprovare.
 - **Nessuna ricevuta finale:** associazione non confermata; leggi il messaggio
   sul Pocket. La lettura del solo elenco nell’estensione non associa l’account.
 
@@ -61,7 +70,7 @@ Annullare non dichiara annullato un collegamento eventualmente già salvato.
 
 ## Cosa è verificato in questa revisione
 
-Pagina HTML/JS reale eseguita in Chromium: partenza senza permessi, login
+[Report della revisione](REVISIONE-USO-V116.md). Pagina HTML/JS reale in Chromium: partenza senza permessi, login
 mancante, ritorno al percorso, annullamento e riprova, codice e ricevuta finale,
 strumenti secondari nascosti/apribili, nessun segreto in DOM/localStorage e
 larghezze 1000/390/320. Il sito è verificato con estensione assente, vecchia e

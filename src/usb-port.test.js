@@ -51,5 +51,19 @@ test('Site relay allows an explicit Beyond view but never a supplied URL or priv
 });
 
 test('Installer helper: current association guide requires an updated component even when old Beyond routing exists',async()=>{
- const {supportsCurrentHelper}=await import('../web-install/helper-link.js');for(const v of ['0.93.0','0.112.0','0.112.99','0.113.99','0.114.99','bad','0.113'])assert.equal(supportsCurrentHelper(v),false);for(const v of ['0.115.0','0.115.1','0.116.0','1.0.0'])assert.equal(supportsCurrentHelper(v),true);
+ const {supportsCurrentHelper}=await import('../web-install/helper-link.js');for(const v of ['0.93.0','0.112.0','0.112.99','0.113.99','0.114.99','0.115.99','bad','0.113'])assert.equal(supportsCurrentHelper(v),false);for(const v of ['0.116.0','0.116.1','0.117.0','1.0.0'])assert.equal(supportsCurrentHelper(v),true);
+});
+
+test('Switching from Beyond back to tools navigates the existing tab, including queued opposite intents',async()=>{
+ const {openPocketTools}=await import('../extension/open-tools.js');const base='chrome-extension://review/account.html';let url,created=0;
+ const api={runtime:{getURL:()=>base},tabs:{create:async options=>{created++;url=options.url;return{id:1};},get:async()=>({url}),update:async(id,options)=>{if(options.url)url=options.url;}}};
+ await openPocketTools(api,'beyond');await openPocketTools(api);assert.equal(url,base);assert.equal(created,1);
+ await Promise.all([openPocketTools(api,'beyond'),openPocketTools(api,'tools'),openPocketTools(api,'beyond')]);assert.equal(url,base+'#beyond');assert.equal(created,1);
+ await Promise.all([openPocketTools(api,'beyond'),openPocketTools(api,'tools')]);assert.equal(url,base);assert.equal(created,1);
+});
+test('Fresh extension install opens only its welcome page; update and startup do not open tabs or access credentials',async()=>{
+ const {registerPocketWelcome}=await import('../extension/open-tools.js');let installed;const opened=[];
+ const api={runtime:{onInstalled:{addListener:fn=>installed=fn},getURL:path=>'chrome-extension://welcome/'+path},tabs:{create:async options=>{opened.push(options.url);return{id:4};}}};
+ registerPocketWelcome(api);installed({reason:'update'});installed({reason:'chrome_update'});await new Promise(r=>setTimeout(r,0));assert.equal(opened.length,0);
+ installed({reason:'install'});await new Promise(r=>setTimeout(r,0));assert.deepEqual(opened,['chrome-extension://welcome/account.html#beyond']);
 });

@@ -6,7 +6,7 @@ PD_EXT static pd_beyond_report beyond_report;
 static pd_beyond_info beyond_visible;
 static unsigned beyond_note,beyond_focus,beyond_target_count;
 static bool beyond_keyboard,beyond_wifi_return,beyond_source_account;
-static bool beyond_pairing,beyond_approved,beyond_remember=true;
+static bool beyond_pairing,beyond_approved,beyond_remember=true,beyond_pair_online;
 static char beyond_nonce[33],beyond_code[7];
 static uint32_t beyond_pair_started;
 static unsigned beyond_catalog_page,beyond_report_http;
@@ -122,6 +122,25 @@ static void beyond_pair_reply(const char *result){char message[96];
     snprintf(message,sizeof message,"PDD ACCOUNT %s 1 %s\n",result,beyond_nonce);
     reply(message);
 }
+/* Fixed recovery codes only: no HTTP bodies, account identifiers or secrets. */
+static void beyond_pair_failure(unsigned error){
+    const char *reason="network";
+    switch(error){
+        case PD_BEYOND_NO_WIFI:reason="wifi";break;
+        case PD_BEYOND_TIME:reason="clock";break;
+        case PD_BEYOND_SESSION:case PD_BEYOND_DENIED:reason="login";break;
+        case PD_BEYOND_IDENTITY:reason="identity";break;
+        case PD_BEYOND_CATALOG_ERROR:reason="catalog";break;
+        case PD_BEYOND_STORAGE:reason="storage";break;
+        case PD_BEYOND_MEMORY:reason="memory";break;
+        case PD_BEYOND_TIMEOUT:reason="timeout";break;
+        case PD_BEYOND_BUSY:reason="busy";break;
+        case PD_BEYOND_RATE:reason="rate";break;
+        case PD_BEYOND_REDIRECT:case PD_BEYOND_MIME:case PD_BEYOND_SIZE:case PD_BEYOND_INVALID:reason="format";break;
+        default:break;
+    }
+    char message[112];snprintf(message,sizeof message,"PDD ACCOUNT FAILED 1 %s %s\n",beyond_nonce,reason);reply(message);
+}
 static void beyond_pair_cancel(void){beyond_pair_reply("CANCELLED");
     beyond_pair_clear();
     page=BEYOND_ACCOUNT;
@@ -217,8 +236,13 @@ static void beyond_action(intptr_t action){
         }
     }else if(page==BEYOND_PAIR){
         if(action==B_BACK)beyond_pair_cancel();
+        else if(action==B_WIFI&&!beyond_approved){
+            beyond_pair_failure(PD_BEYOND_NO_WIFI);beyond_pair_clear();
+            beyond_wifi_return=true;beyond_source_account=true;beyond_waiting=false;
+            wifi_notice="Collega la rete, poi riprova dal PC";wifi_keyboard=false;wifi_focus=0;connection_details=false;page=WIFI_HOME;
+        }
         else if(action==B_REMEMBER&&!beyond_approved)beyond_remember=!beyond_remember;
-        else if(action==B_APPROVE&&!beyond_approved){beyond_approved=true;
+        else if(action==B_APPROVE&&!beyond_approved){pd_wifi_info wifi;pd_wifi_snapshot(&wifi);if(!beyond_online(&wifi))return;beyond_approved=true;
             beyond_pair_started=lv_tick_get();
             beyond_pair_reply("ACCEPT");
         }
@@ -255,6 +279,7 @@ static void beyond_poll(void){
         render();
         return;
     }
+    if(page==BEYOND_PAIR&&beyond_pairing){pd_wifi_info wifi;pd_wifi_snapshot(&wifi);if(beyond_online(&wifi)!=beyond_pair_online)render();}
     if(page!=BEYOND_BUSY||import_pending)return;
     pd_beyond_info current;
     pd_beyond_snapshot(&current);
@@ -266,7 +291,7 @@ static void beyond_poll(void){
                 if(current.operation==PD_BEYOND_LINK)beyond_pair_reply("LINKED");
             }
             else{beyond_notice=beyond_error(current.error);
-                if(current.operation==PD_BEYOND_LINK)beyond_pair_reply(current.error==PD_BEYOND_CANCELLED?"CANCELLED":"FAILED");
+                if(current.operation==PD_BEYOND_LINK){if(current.error==PD_BEYOND_CANCELLED)beyond_pair_reply("CANCELLED");else beyond_pair_failure(current.error);}
             }
             if(current.operation==PD_BEYOND_LINK)beyond_pair_clear();
             page=BEYOND_ACCOUNT;

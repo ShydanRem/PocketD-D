@@ -29,3 +29,24 @@ test('One-click account association chooses the port before preparing access and
  const result=await pairPocketAccount(async()=>{order.push('prepare');const access=await preparePocketAccount({...opts,requestPermission:false});return access;},{...mock,serial:{requestPort:async()=>{order.push('port');return await mock.serial.requestPort();}},now});assert.ok(result.linked);assert.deepEqual(order,['port','prepare']);
  opts.api.permissions.contains=async()=>false;opts.api.cookies.get=async()=>{cookieReads++;};await assert.rejects(preparePocketAccount({...opts,requestPermission:false}));assert.equal(cookieReads,0);
 });
+
+test('Native recovery codes are accepted only for the matching nonce, never as a successful association',async()=>{
+ for(const code of ['wifi','clock','login','identity','catalog','storage','memory','timeout','busy','rate','format','network']){
+  const mock=usb();mock.onCode=()=>mock.enqueue(`PDD ACCOUNT FAILED 1 ${nonce} ${code}`);
+  await assert.rejects(pairPocketAccount({cookie,user,expires:now()+100000},{...mock,now}),e=>e.code===code&&!e.message.includes(cookie));assert.equal(mock.sent.some(s=>s.includes(cookie)),false);
+ }
+ for(const reply of [`PDD ACCOUNT FAILED 1 ${'f'.repeat(32)} login`,`PDD ACCOUNT FAILED 1 ${nonce} unknown`,`PDD ACCOUNT LINKED 1 ${nonce} wifi`]){
+  const mock=usb();mock.onCode=()=>mock.enqueue(reply);await assert.rejects(pairPocketAccount({cookie,user,expires:now()+100000},{...mock,now}),e=>e.code!=='login');assert.equal(mock.sent.some(s=>s.includes(cookie)),false);
+ }
+ const mock=usb();mock.onCode=()=>{mock.enqueue(`PDD ACCOUNT ACCEPT 1 ${nonce}`);mock.enqueue(`PDD ACCOUNT FAILED 1 ${nonce} storage`);};
+ await assert.rejects(pairPocketAccount({cookie,user,expires:now()+100000},{...mock,now}),e=>e.code==='storage');assert.equal(mock.sent.filter(s=>s.startsWith('PDD ACCOUNT OFFER')).length,1);
+});
+test('Repeated challenges cannot extend the original approval deadline or send the secret',async()=>{
+ const mock=usb();let tick=1800000000000;mock.onCode=()=>{for(let i=0;i<30;i++)mock.enqueue(`PDD ACCOUNT CODE 1 ${nonce} 123456`);};
+ await assert.rejects(pairPocketAccount({cookie,user,expires:tick+100000},{...mock,timeout:1000,now:()=>tick+=10}),e=>e.code==='timeout');assert.equal(mock.sent.some(s=>s.includes(cookie)),false);
+});
+test('Busy device and repeated boot messages get actionable errors before any cookie transfer',async()=>{
+ for(const [reply,code] of [['PDD ACCOUNT ERROR busy','busy'],['ESP-ROM: synthetic\nrst: synthetic\nESP-ROM: synthetic','restart']]){
+  const mock=usb();mock.onCode=()=>mock.enqueue(reply);await assert.rejects(pairPocketAccount({cookie,user,expires:now()+100000},{...mock,now}),e=>e.code===code);assert.equal(mock.sent.some(s=>s.includes(cookie)),false);
+ }
+});

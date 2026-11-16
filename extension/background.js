@@ -1,7 +1,8 @@
-import {openPocketTools} from './open-tools.js';
+import {openPocketTools,registerPocketWelcome} from './open-tools.js';
 import {pocketSite} from './helper-origin.js';
 import {pageAdapter} from './page-adapter.js';import {brokerRoll} from './protocol.js';
 const local=chrome.storage.local;
+registerPocketWelcome(chrome);
 async function api(path,data,connection){const r=await fetch(connection.url+path,{method:'POST',headers:{'Content-Type':'application/json',...(connection.token?{Authorization:'Bearer '+connection.token}:{})},body:JSON.stringify(data),signal:AbortSignal.timeout(10000)});if(!r.ok)throw Error('Ponte non disponibile o abbinamento scaduto');return r.json();}
 const busy=new Set();
 chrome.runtime.onMessage.addListener((m,sender,reply)=>{(async()=>{

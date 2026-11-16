@@ -1,18 +1,21 @@
 import './pocket-ui.js';
-import {cancelPocketLink} from './account-link-ui.js';
+import './account-link-ui.js';
+import {observeUsbPort,usbPortState} from './usb-port.js';
 import {ACCOUNT_ORIGINS, checkAccount} from './account-check.js';
 const find = id => document.getElementById(id);
 let controller, generation = 0;
+function refreshControls(){const busy=usbPortState().busy;find('check').disabled=busy||Boolean(controller);find('clear').disabled=busy;find('revoke').disabled=busy||Boolean(controller);}
+observeUsbPort(refreshControls);
 const labels = {authHTTP:'Accesso HTTP al login',authJSON:'Login: formato JSON',session:'Token: identità e scadenza',listHTTP:'Accesso HTTP all’elenco',listJSON:'Elenco: formato JSON',catalog:'Elenco: struttura e dati minimi'};
 function reset() {
-  cancelPocketLink();generation++; controller?.abort(); controller = undefined;
-  find('check').disabled = false;
+  generation++; controller?.abort(); controller = undefined;
+  refreshControls();
   find('checks').replaceChildren(); find('characters').replaceChildren(); find('catalog').hidden = true;
 }
-find('clear').onclick = () => {reset();find('status').textContent='Risultato cancellato dall’estensione. Per scollegare il Pocket usa Esci sul suo display.';};
+find('clear').onclick = () => {if(usbPortState().busy)return;reset();find('status').textContent='Risultato cancellato dall’estensione. Per scollegare il Pocket usa Esci sul suo display.';};
 find('check').onclick = async () => {
-  reset(); const run = generation; controller = new AbortController(); const signal = controller.signal;
-  find('check').disabled = true;find('status').textContent='Verifica in corso…';
+  if(usbPortState().busy)return;reset(); const run = generation; controller = new AbortController(); const signal = controller.signal;
+  refreshControls();find('status').textContent='Verifica in corso…';
   try {
     // Permission request is directly tied to this click, never to content-script ticks.
     const granted = await chrome.permissions.request({origins:ACCOUNT_ORIGINS});
@@ -38,10 +41,10 @@ find('check').onclick = async () => {
       item.append(name,detail);find('characters').append(item);
     }
   } catch { if(run===generation)find('status').textContent='Verifica non disponibile. Riprova dall’estensione PocketD-D in Chrome o Edge.'; }
-  finally { if(run===generation){controller=undefined;find('check').disabled=false;} }
+  finally { if(run===generation){controller=undefined;refreshControls();} }
 };
 find('revoke').onclick = async () => {
-  reset();const run=generation;
+  if(usbPortState().busy||controller)return;reset();const run=generation;
   try {
     const removed=await chrome.permissions.remove({origins:ACCOUNT_ORIGINS,permissions:['cookies']});
     if(run===generation)find('status').textContent=removed?'Permessi di verifica rimossi. Il login Beyond del browser è conservato.':'Il browser non ha rimosso i permessi. Controlla la gestione estensioni.';

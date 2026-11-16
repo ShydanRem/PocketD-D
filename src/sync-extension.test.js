@@ -1,4 +1,4 @@
-import {openPocketTools} from '../extension/open-tools.js';
+import {openPocketTools,registerPocketWelcome} from '../extension/open-tools.js';
 import {pocketSite} from '../extension/helper-origin.js';
 import test from 'node:test';import assert from 'node:assert/strict';import {readFileSync} from 'node:fs';import vm from 'node:vm';import {brokerRoll} from './sync-protocol.js';
 // Execute the actual worker source with explicit Chrome API doubles. This is not a loaded MV3 extension.
@@ -8,7 +8,7 @@ function harness({loseAck=false,failAttempt=false}={}){
  let listener,delivered=false,ackLost=false,writeFailed=false;
  const chrome={storage:{local:{get:async()=>structuredClone(stored),set:async x=>{if(failAttempt&&!writeFailed&&x.receipts?.[event.id]?.pending){writeFailed=true;throw Error('Storage unavailable')}Object.assign(stored,structuredClone(x));calls.push({type:'saved',receipts:structuredClone(stored.receipts)})}}},runtime:{id:'synthetic',getURL:path=>'chrome-extension://synthetic/'+path,onMessage:{addListener:f=>listener=f}},tabs:{create:async({url})=>{calls.push({type:'tab-open',url});return {id:9};},get:async()=>({url:'chrome-extension://synthetic/account.html'}),update:async()=>{}},scripting:{executeScript:async({args})=>{const op=args[0];calls.push(op);if(op.type==='read')return [{result:snap}];assert.equal(stored.receipts[event.id]?.pending,true,'Attempt must be saved before MAIN-world execution');return [{result:{outcome:'broker-observed'}}]}}};
  const fetch=async(url,{body})=>{const data=JSON.parse(body);calls.push({type:'api',url,data});if(url.endsWith('/extension/next')){const result=delivered?null:event;delivered=true;return {ok:true,json:async()=>({event:result})}}if(url.endsWith('/extension/report')){if(loseAck&&!ackLost){ackLost=true;throw Error('Lost acknowledgement')}return {ok:true,json:async()=>({state:'observed'})}}throw Error('Unexpected endpoint')};
- const source=readFileSync(new URL('../extension/background.js',import.meta.url),'utf8').replace(/^import .*?;.*\n/gm,'');vm.runInNewContext(source,{chrome,fetch,brokerRoll,pocketSite,openPocketTools,pageAdapter:()=>{},AbortSignal,Date,Error,Set,Object,JSON});
+ const source=readFileSync(new URL('../extension/background.js',import.meta.url),'utf8').replace(/^import .*?;.*\n/gm,'');vm.runInNewContext(source,{chrome,fetch,brokerRoll,pocketSite,openPocketTools,registerPocketWelcome,pageAdapter:()=>{},AbortSignal,Date,Error,Set,Object,JSON});
  const tick=()=>new Promise(resolve=>listener({type:'tick',instance:'fixture'},{tab:{id:1},url:'https://www.dndbeyond.com/characters/123456'},resolve));
  return {stored,calls,tick,event,send:(m,s)=>new Promise(resolve=>listener(m,s,resolve))};
 }
