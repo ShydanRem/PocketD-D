@@ -7,6 +7,22 @@ ROOT=Path(__file__).resolve().parents[1];site=ROOT.parent/'PocketDD-GitHub-Pages
 spec=importlib.util.spec_from_file_location('publisher',ROOT/'scripts/publish-pages.py');publisher=importlib.util.module_from_spec(spec);spec.loader.exec_module(publisher)
 base=ROOT/'dist/install';m=json.loads((base/'manifest.json').read_text())
 publisher.validate(base,m['commit'],m['version'])
+with zipfile.ZipFile(base/'downloads/PocketDD-PC.zip') as archive:
+ info=json.loads(archive.read('PocketDD-PC/package-info.json'));assert info['source_commit']==m['commit'] and info['version']==m['version']
+ for name in ('docs/REVISIONE-USO-V116.md','docs/previews/v115-association-start.png','docs/previews/v115-association-device.png','docs/previews/v116-beyond-recovery.png','docs/previews/v116-pair-wifi.png'):
+  assert archive.read('PocketDD-PC/'+name)==(ROOT/name).read_bytes()
+# Temporary extension/bridge/script files must never enter a distributable ZIP.
+with tempfile.TemporaryDirectory(prefix='pdd-pc-input-guard-') as tmp:
+ guards=[]
+ try:
+  for folder in ('extension','tools/bridge','scripts'):
+   guard=ROOT/folder/'pdd-archive-guard.synthetic.json'
+   with guard.open('x') as output:output.write('{"synthetic":"excluded temporary input"}')
+   guards.append(guard)
+  clean=Path(tmp)/'PocketDD-PC.zip';subprocess.run(['python3',str(ROOT/'scripts/package-pc.py'),str(clean)],cwd=ROOT,check=True,stdout=subprocess.DEVNULL)
+  with zipfile.ZipFile(clean) as archive:assert not any('pdd-archive-guard.synthetic.json' in name for name in archive.namelist())
+ finally:
+  for guard in guards:guard.unlink()
 # Fail before pushing on accidental private JSON or a damaged firmware region.
 with tempfile.TemporaryDirectory(prefix='pdd-pages-bad-') as tmp:
  clone=Path(tmp)/'site';publisher.shutil.copytree(base,clone,copy_function=publisher.shutil.copyfile)

@@ -26,6 +26,12 @@ le regole D&D o le periferiche senza un collaudo fisico.
 
 ![Wi-Fi aperto dal codice nella UI reale del firmware con rete simulata](previews/v116-pair-wifi.png)
 
+Il controllo del pacchetto completo ha rilevato anche immagini mancanti delle
+guide recenti. Ora report e immagini sono inclusi, con verifica dei byte nello
+ZIP. Il pacchetto prende i file di estensione, ponte e sorgenti dai percorsi
+versionati: i file temporanei non vengono distribuiti. Una prova aggiunge tre
+file sintetici non versionati e verifica che restino esclusi dall’archivio.
+
 ## Percorsi rivisti
 
 - **Installazione/aggiornamento:** download e regioni firmware verificati, partizioni
