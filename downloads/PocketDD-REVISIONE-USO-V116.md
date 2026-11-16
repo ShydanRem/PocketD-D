@@ -64,7 +64,8 @@ della nuova conferma fisica. Il browser non dichiara un successo sul solo HTTP. 
 solo l’intento temporaneo tools/beyond per continuare una volta dopo il ricaricamento,
 mai account, porta USB o credenziali.
 Accesso ricordato opzionale in memoria attualmente non cifrata, separato dai PG;
-nessun cookie o token sul sito, nell’estensione, sulla SD o nei backup PG.
+l’estensione usa l’accesso in RAM durante la singola operazione, senza salvarlo
+nel proprio archivio. Il sito non lo riceve; SD e backup PG non lo contengono.
 
 ## Verifiche e lavoro ancora aperto
 
